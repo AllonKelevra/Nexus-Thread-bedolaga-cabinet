@@ -70,11 +70,11 @@ export function ThemeTab() {
       <div className="p-6 rounded-2xl bg-dark-800/50 border border-dark-700/50">
         <h3 className="text-lg font-semibold text-dark-100 mb-4">{t('admin.settings.availableThemes')}</h3>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex items-center justify-between p-4 rounded-xl bg-dark-700/30">
-            <div className="flex items-center gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl bg-dark-700/30">
+            <div className="flex items-center gap-2 sm:gap-3">
               <MoonIcon />
-              <span className="font-medium text-dark-200">{t('admin.settings.darkTheme')}</span>
+              <span className="font-medium text-dark-200 text-sm sm:text-base">{t('admin.settings.darkTheme')}</span>
             </div>
             <Toggle
               checked={enabledThemes?.dark ?? true}
@@ -86,10 +86,10 @@ export function ThemeTab() {
             />
           </div>
 
-          <div className="flex items-center justify-between p-4 rounded-xl bg-dark-700/30">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl bg-dark-700/30">
+            <div className="flex items-center gap-2 sm:gap-3">
               <SunIcon />
-              <span className="font-medium text-dark-200">{t('admin.settings.lightTheme')}</span>
+              <span className="font-medium text-dark-200 text-sm sm:text-base">{t('admin.settings.lightTheme')}</span>
             </div>
             <Toggle
               checked={enabledThemes?.light ?? true}
