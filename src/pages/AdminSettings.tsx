@@ -72,20 +72,44 @@ export default function AdminSettings() {
     }))
   }, [currentMenuItem, allSettings, t])
 
-  // Filter settings for search
+  // Helper to format setting key for translation lookup
+  const formatSettingKey = (name: string): string => {
+    return name
+      .replace(/_/g, ' ')
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ')
+  }
+
+  // Filter settings for search - GLOBAL search across all settings
   const filteredSettings = useMemo(() => {
     if (!allSettings || !Array.isArray(allSettings) || !searchQuery) return []
 
-    const q = searchQuery.toLowerCase()
-    let settings = allSettings.filter((s: SettingDefinition) =>
-      currentMenuItem?.categories?.includes(s.category.key)
-    )
+    const q = searchQuery.toLowerCase().trim()
+    if (!q) return []
 
-    return settings.filter((s: SettingDefinition) =>
-      s.key.toLowerCase().includes(q) ||
-      s.name?.toLowerCase().includes(q)
-    )
-  }, [allSettings, currentMenuItem, searchQuery])
+    return allSettings.filter((s: SettingDefinition) => {
+      // Search by key
+      if (s.key.toLowerCase().includes(q)) return true
+
+      // Search by original name
+      if (s.name?.toLowerCase().includes(q)) return true
+
+      // Search by translated name
+      const formattedKey = formatSettingKey(s.name || s.key)
+      const translatedName = t(`admin.settings.settingNames.${formattedKey}`, formattedKey)
+      if (translatedName.toLowerCase().includes(q)) return true
+
+      // Search by description
+      if (s.hint?.description?.toLowerCase().includes(q)) return true
+
+      // Search by category
+      const categoryLabel = t(`admin.settings.categories.${s.category.key}`, s.category.key)
+      if (categoryLabel.toLowerCase().includes(q)) return true
+
+      return false
+    })
+  }, [allSettings, searchQuery, t])
 
   // Favorite settings
   const favoriteSettings = useMemo(() => {
@@ -95,6 +119,19 @@ export default function AdminSettings() {
 
   // Render content based on active section
   const renderContent = () => {
+    // If searching, always show search results regardless of active section
+    if (searchQuery.trim()) {
+      return (
+        <SettingsTab
+          categories={[]}
+          searchQuery={searchQuery}
+          filteredSettings={filteredSettings}
+          isFavorite={isFavorite}
+          toggleFavorite={toggleFavorite}
+        />
+      )
+    }
+
     switch (activeSection) {
       case 'branding':
         return <BrandingTab accentColor={themeColors?.accent} />
@@ -218,11 +255,19 @@ export default function AdminSettings() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('admin.settings.searchPlaceholder')}
-                className="w-48 lg:w-64 pl-10 pr-4 py-2 rounded-xl bg-dark-800 border border-dark-700 text-dark-100 placeholder-dark-500 focus:outline-none focus:border-accent-500 text-sm"
+                className="w-48 lg:w-64 pl-10 pr-10 py-2 rounded-xl bg-dark-800 border border-dark-700 text-dark-100 placeholder-dark-500 focus:outline-none focus:border-accent-500 text-sm"
               />
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-500">
                 <SearchIcon />
               </div>
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-500 hover:text-dark-300 transition-colors"
+                >
+                  <CloseIcon />
+                </button>
+              )}
             </div>
           </div>
 
@@ -233,12 +278,34 @@ export default function AdminSettings() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('admin.settings.searchPlaceholder')}
-              className="w-full pl-10 pr-4 py-2 rounded-xl bg-dark-800 border border-dark-700 text-dark-100 placeholder-dark-500 focus:outline-none focus:border-accent-500 text-sm"
+              className="w-full pl-10 pr-10 py-2 rounded-xl bg-dark-800 border border-dark-700 text-dark-100 placeholder-dark-500 focus:outline-none focus:border-accent-500 text-sm"
             />
             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-500">
               <SearchIcon />
             </div>
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-500 hover:text-dark-300 transition-colors"
+              >
+                <CloseIcon />
+              </button>
+            )}
           </div>
+
+          {/* Search results count */}
+          {searchQuery.trim() && (
+            <div className="mt-3 flex items-center gap-2 text-sm">
+              <span className="text-dark-400">
+                {filteredSettings.length > 0
+                  ? `Найдено: ${filteredSettings.length}`
+                  : 'Ничего не найдено'}
+              </span>
+              {filteredSettings.length > 0 && (
+                <span className="text-dark-500">по запросу «{searchQuery}»</span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Content */}
