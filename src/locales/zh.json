@@ -188,15 +188,12 @@
     "paymentMethod": "支付方式",
     "paymentMethods": {
       "yookassa": {
-        "name": "YooKassa",
         "description": "通过YooKassa支付"
       },
       "cryptobot": {
-        "name": "CryptoBot",
         "description": "通过CryptoBot加密货币支付"
       },
       "telegram_stars": {
-        "name": "Telegram Stars",
         "description": "通过Telegram Stars支付"
       }
     },

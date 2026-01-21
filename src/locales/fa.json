@@ -187,15 +187,12 @@
     "paymentMethod": "روش پرداخت",
     "paymentMethods": {
       "yookassa": {
-        "name": "YooKassa",
         "description": "پرداخت از طریق YooKassa"
       },
       "cryptobot": {
-        "name": "CryptoBot",
         "description": "پرداخت با ارز دیجیتال"
       },
       "telegram_stars": {
-        "name": "Telegram Stars",
         "description": "پرداخت با Telegram Stars"
       }
     },
