@@ -398,6 +398,11 @@ interface PromoGroupModalProps {
   isLoading?: boolean
 }
 
+interface PeriodDiscount {
+  days: number
+  percent: number
+}
+
 function PromoGroupModal({ group, onSave, onClose, isLoading }: PromoGroupModalProps) {
   const isEdit = !!group
 
@@ -410,12 +415,46 @@ function PromoGroupModal({ group, onSave, onClose, isLoading }: PromoGroupModalP
     group?.auto_assign_total_spent_kopeks ? group.auto_assign_total_spent_kopeks / 100 : 0
   )
 
+  // Period discounts state
+  const [periodDiscounts, setPeriodDiscounts] = useState<PeriodDiscount[]>(() => {
+    if (group?.period_discounts && typeof group.period_discounts === 'object') {
+      return Object.entries(group.period_discounts).map(([days, percent]) => ({
+        days: parseInt(days),
+        percent: typeof percent === 'number' ? percent : 0,
+      }))
+    }
+    return []
+  })
+
+  const addPeriodDiscount = () => {
+    setPeriodDiscounts([...periodDiscounts, { days: 30, percent: 0 }])
+  }
+
+  const removePeriodDiscount = (index: number) => {
+    setPeriodDiscounts(periodDiscounts.filter((_, i) => i !== index))
+  }
+
+  const updatePeriodDiscount = (index: number, field: 'days' | 'percent', value: number) => {
+    const updated = [...periodDiscounts]
+    updated[index][field] = value
+    setPeriodDiscounts(updated)
+  }
+
   const handleSubmit = () => {
+    // Convert periodDiscounts array to Record<number, number>
+    const periodDiscountsRecord: Record<number, number> = {}
+    periodDiscounts.forEach(pd => {
+      if (pd.days > 0 && pd.percent > 0) {
+        periodDiscountsRecord[pd.days] = pd.percent
+      }
+    })
+
     const data: PromoGroupCreateRequest | PromoGroupUpdateRequest = {
       name,
       server_discount_percent: serverDiscount,
       traffic_discount_percent: trafficDiscount,
       device_discount_percent: deviceDiscount,
+      period_discounts: Object.keys(periodDiscountsRecord).length > 0 ? periodDiscountsRecord : undefined,
       apply_discounts_to_addons: applyToAddons,
       auto_assign_total_spent_kopeks: autoAssignSpent > 0 ? Math.round(autoAssignSpent * 100) : null,
     }
@@ -449,9 +488,9 @@ function PromoGroupModal({ group, onSave, onClose, isLoading }: PromoGroupModalP
             />
           </div>
 
-          {/* Discounts */}
+          {/* Category Discounts */}
           <div className="p-4 bg-dark-700/50 rounded-lg space-y-3">
-            <h4 className="text-sm font-medium text-dark-200 mb-3">Скидки</h4>
+            <h4 className="text-sm font-medium text-dark-200 mb-3">Скидки по категориям</h4>
 
             <div className="flex items-center gap-3">
               <span className="text-sm text-dark-400 w-32">На серверы:</span>
@@ -491,6 +530,61 @@ function PromoGroupModal({ group, onSave, onClose, isLoading }: PromoGroupModalP
               />
               <span className="text-dark-400">%</span>
             </div>
+          </div>
+
+          {/* Period Discounts */}
+          <div className="p-4 bg-dark-700/50 rounded-lg space-y-3">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-sm font-medium text-dark-200">Скидки по периодам</h4>
+              <button
+                type="button"
+                onClick={addPeriodDiscount}
+                className="flex items-center gap-1 px-2 py-1 text-xs bg-accent-500/20 text-accent-400 rounded hover:bg-accent-500/30 transition-colors"
+              >
+                <PlusIcon />
+                Добавить
+              </button>
+            </div>
+            <p className="text-xs text-dark-500 mb-3">
+              Скидка применяется при покупке подписки на указанное кол-во дней
+            </p>
+
+            {periodDiscounts.length === 0 ? (
+              <p className="text-sm text-dark-500 text-center py-2">Нет скидок по периодам</p>
+            ) : (
+              <div className="space-y-2">
+                {periodDiscounts.map((pd, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      value={pd.days}
+                      onChange={e => updatePeriodDiscount(index, 'days', Math.max(1, parseInt(e.target.value) || 1))}
+                      className="w-20 px-2 py-1 bg-dark-600 border border-dark-500 rounded text-dark-100 focus:outline-none focus:border-accent-500"
+                      min={1}
+                      placeholder="Дни"
+                    />
+                    <span className="text-xs text-dark-400">дней →</span>
+                    <input
+                      type="number"
+                      value={pd.percent}
+                      onChange={e => updatePeriodDiscount(index, 'percent', Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
+                      className="w-20 px-2 py-1 bg-dark-600 border border-dark-500 rounded text-dark-100 focus:outline-none focus:border-accent-500"
+                      min={0}
+                      max={100}
+                      placeholder="%"
+                    />
+                    <span className="text-dark-400">%</span>
+                    <button
+                      type="button"
+                      onClick={() => removePeriodDiscount(index)}
+                      className="p-1 text-dark-400 hover:text-error-400 transition-colors"
+                    >
+                      <TrashIcon />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Auto-assign */}
@@ -1070,6 +1164,18 @@ export default function AdminPromocodes() {
                         )}
                         {group.device_discount_percent > 0 && (
                           <span>Устройства: -{group.device_discount_percent}%</span>
+                        )}
+                        {group.period_discounts && Object.keys(group.period_discounts).length > 0 && (
+                          Object.entries(group.period_discounts).map(([days, percent]) => (
+                            <span key={days} className="text-accent-400">
+                              {days} дн.: -{percent}%
+                            </span>
+                          ))
+                        )}
+                        {group.auto_assign_total_spent_kopeks && group.auto_assign_total_spent_kopeks > 0 && (
+                          <span className="text-amber-400">
+                            Авто от {group.auto_assign_total_spent_kopeks / 100} руб.
+                          </span>
                         )}
                         <span className="flex items-center gap-1">
                           <UsersIcon />
