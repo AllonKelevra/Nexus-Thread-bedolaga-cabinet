@@ -384,7 +384,8 @@
       "referral_first_payment": "Первая оплата реферала",
       "referral_subscription_renewal": "Продление подписки реферала",
       "referral_bonus": "Бонус за реферала"
-    }
+    },
+    "disabled": "Реферальная программа временно отключена"
   },
   "support": {
     "title": "Поддержка",
