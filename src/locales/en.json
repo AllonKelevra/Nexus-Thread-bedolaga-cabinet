@@ -384,7 +384,8 @@
       "referral_first_payment": "Referral First Payment",
       "referral_subscription_renewal": "Referral Subscription Renewal",
       "referral_bonus": "Referral Bonus"
-    }
+    },
+    "disabled": "Referral program is currently disabled"
   },
   "support": {
     "title": "Support",
