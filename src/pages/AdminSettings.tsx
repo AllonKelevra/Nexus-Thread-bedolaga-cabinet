@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { adminSettingsApi, SettingDefinition } from '../api/adminSettings'
@@ -27,6 +27,16 @@ export default function AdminSettings() {
 
   // Favorites hook
   const { favorites, toggleFavorite, isFavorite } = useFavoriteSettings()
+
+  // Scroll to top on mount and section change (fix for mobile webviews)
+  useEffect(() => {
+    // Use requestAnimationFrame for smoother scroll on mobile
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: 'instant' })
+      document.documentElement.scrollTop = 0
+      document.body.scrollTop = 0
+    })
+  }, [activeSection])
 
   // Queries
   const { data: themeColors } = useQuery({
@@ -151,7 +161,7 @@ export default function AdminSettings() {
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen pt-safe">
       {/* Mobile overlay */}
       {mobileMenuOpen && (
         <div
