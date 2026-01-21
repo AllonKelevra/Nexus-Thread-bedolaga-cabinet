@@ -13,8 +13,8 @@ export function Toggle({ checked, onChange, disabled }: ToggleProps) {
         checked ? 'bg-accent-500' : 'bg-dark-600'
       } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
     >
-      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-        checked ? 'left-7' : 'left-1'
+      <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 ${
+        checked ? 'translate-x-6' : 'translate-x-0'
       }`} />
     </button>
   )
