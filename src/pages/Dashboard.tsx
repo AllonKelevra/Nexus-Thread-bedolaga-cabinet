@@ -122,6 +122,7 @@ export default function Dashboard() {
       setTrialError(null)
       queryClient.invalidateQueries({ queryKey: ['subscription'] })
       queryClient.invalidateQueries({ queryKey: ['trial-info'] })
+      queryClient.invalidateQueries({ queryKey: ['balance'] })
       refreshUser()
     },
     onError: (error: { response?: { data?: { detail?: string } } }) => {
@@ -455,7 +456,9 @@ export default function Dashboard() {
             </div>
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-dark-100 mb-2">
-                {t('subscription.trial.title', 'Free Trial')}
+                {trialInfo.requires_payment
+                  ? t('subscription.trial.titlePaid', 'Trial Subscription')
+                  : t('subscription.trial.title', 'Free Trial')}
               </h3>
               <p className="text-dark-400 text-sm mb-4">
                 {t('subscription.trial.description', 'Try our VPN service for free!')}
@@ -467,7 +470,7 @@ export default function Dashboard() {
                   <div className="text-xs text-dark-500">{t('subscription.trial.days', 'days')}</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-accent-400">{trialInfo.traffic_limit_gb}</div>
+                  <div className="text-2xl font-bold text-accent-400">{trialInfo.traffic_limit_gb || '∞'}</div>
                   <div className="text-xs text-dark-500">GB</div>
                 </div>
                 <div className="text-center">
@@ -477,9 +480,23 @@ export default function Dashboard() {
               </div>
 
               {trialInfo.requires_payment && trialInfo.price_rubles > 0 && (
-                <p className="text-sm text-dark-400 mb-4">
-                  {t('subscription.trial.price', 'Activation price')}: {trialInfo.price_rubles.toFixed(2)} ₽
-                </p>
+                <div className="bg-dark-800/50 rounded-xl p-4 mb-4 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-dark-400">{t('subscription.trial.price', 'Activation price')}:</span>
+                    <span className="text-lg font-semibold text-accent-400">{trialInfo.price_rubles.toFixed(2)} {currencySymbol}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-dark-400">{t('balance.currentBalance', 'Your balance')}:</span>
+                    <span className={`text-lg font-semibold ${(balanceData?.balance_kopeks || 0) >= trialInfo.price_kopeks ? 'text-success-400' : 'text-warning-400'}`}>
+                      {formatAmount(balanceData?.balance_rubles || 0)} {currencySymbol}
+                    </span>
+                  </div>
+                  {(balanceData?.balance_kopeks || 0) < trialInfo.price_kopeks && (
+                    <div className="text-xs text-warning-400 pt-1">
+                      {t('subscription.trial.insufficientBalance', 'Top up your balance to activate')}
+                    </div>
+                  )}
+                </div>
               )}
 
               {trialError && (
@@ -488,15 +505,33 @@ export default function Dashboard() {
                 </div>
               )}
 
-              <button
-                onClick={() => activateTrialMutation.mutate()}
-                disabled={activateTrialMutation.isPending}
-                className="btn-primary"
-              >
-                {activateTrialMutation.isPending
-                  ? t('common.loading', 'Loading...')
-                  : t('subscription.trial.activate', 'Activate Free Trial')}
-              </button>
+              {trialInfo.requires_payment && trialInfo.price_kopeks > 0 ? (
+                (balanceData?.balance_kopeks || 0) >= trialInfo.price_kopeks ? (
+                  <button
+                    onClick={() => activateTrialMutation.mutate()}
+                    disabled={activateTrialMutation.isPending}
+                    className="btn-primary w-full"
+                  >
+                    {activateTrialMutation.isPending
+                      ? t('common.loading', 'Loading...')
+                      : t('subscription.trial.payAndActivate', 'Pay from Balance & Activate')}
+                  </button>
+                ) : (
+                  <Link to="/balance" className="btn-primary w-full text-center block">
+                    {t('subscription.trial.topUpToActivate', 'Top Up Balance')}
+                  </Link>
+                )
+              ) : (
+                <button
+                  onClick={() => activateTrialMutation.mutate()}
+                  disabled={activateTrialMutation.isPending}
+                  className="btn-primary w-full"
+                >
+                  {activateTrialMutation.isPending
+                    ? t('common.loading', 'Loading...')
+                    : t('subscription.trial.activate', 'Activate Free Trial')}
+                </button>
+              )}
             </div>
           </div>
         </div>
