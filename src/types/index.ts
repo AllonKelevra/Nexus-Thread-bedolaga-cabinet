@@ -482,6 +482,7 @@ export interface AppConfig {
   platformNames: Record<string, LocalizedText>
   hasSubscription: boolean
   subscriptionUrl: string | null
+  hideLink?: boolean
   branding?: {
     name?: string
     logoUrl?: string

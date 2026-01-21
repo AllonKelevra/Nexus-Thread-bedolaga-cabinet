@@ -455,19 +455,21 @@ export default function Subscription() {
                 {t('subscription.getConfig')}
               </button>
 
-              {/* Subscription URL */}
-              <div className="flex gap-2">
-                <code className="flex-1 bg-dark-900/50 border border-dark-700/50 px-3 py-2 rounded-lg text-xs text-dark-300 overflow-x-auto scrollbar-hide break-all">
-                  {subscription.subscription_url}
-                </code>
-                <button
-                  onClick={copyUrl}
-                  className={`btn-secondary px-3 ${copied ? 'text-success-400 border-success-500/30' : ''}`}
-                  title={t('subscription.copyLink')}
-                >
-                  {copied ? <CheckIcon /> : <CopyIcon />}
-                </button>
-              </div>
+              {/* Subscription URL - hidden when hide_subscription_link is true */}
+              {!subscription.hide_subscription_link && (
+                <div className="flex gap-2">
+                  <code className="flex-1 bg-dark-900/50 border border-dark-700/50 px-3 py-2 rounded-lg text-xs text-dark-300 overflow-x-auto scrollbar-hide break-all">
+                    {subscription.subscription_url}
+                  </code>
+                  <button
+                    onClick={copyUrl}
+                    className={`btn-secondary px-3 ${copied ? 'text-success-400 border-success-500/30' : ''}`}
+                    title={t('subscription.copyLink')}
+                  >
+                    {copied ? <CheckIcon /> : <CopyIcon />}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
