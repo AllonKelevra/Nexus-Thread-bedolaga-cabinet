@@ -34,6 +34,27 @@ export interface ClaimOfferResponse {
   expires_at: string | null
 }
 
+export interface LoyaltyTierInfo {
+  id: number
+  name: string
+  threshold_rubles: number
+  server_discount_percent: number
+  traffic_discount_percent: number
+  device_discount_percent: number
+  period_discounts: Record<string, number>
+  is_current: boolean
+  is_achieved: boolean
+}
+
+export interface LoyaltyTiersResponse {
+  tiers: LoyaltyTierInfo[]
+  current_spent_rubles: number
+  current_tier_name: string | null
+  next_tier_name: string | null
+  next_tier_threshold_rubles: number | null
+  progress_percent: number
+}
+
 export const promoApi = {
   // Get available promo offers
   getOffers: async (): Promise<PromoOffer[]> => {
@@ -50,6 +71,12 @@ export const promoApi = {
   // Get promo group discounts
   getGroupDiscounts: async (): Promise<PromoGroupDiscounts> => {
     const response = await apiClient.get<PromoGroupDiscounts>('/cabinet/promo/group-discounts')
+    return response.data
+  },
+
+  // Get loyalty tiers (promo groups with spending thresholds)
+  getLoyaltyTiers: async (): Promise<LoyaltyTiersResponse> => {
+    const response = await apiClient.get<LoyaltyTiersResponse>('/cabinet/promo/loyalty-tiers')
     return response.data
   },
 
