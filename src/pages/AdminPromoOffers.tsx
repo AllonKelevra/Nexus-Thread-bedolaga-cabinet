@@ -527,9 +527,18 @@ export default function AdminPromoOffers() {
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['admin-promo-logs'] })
       setShowSendModal(false)
+
+      let message = `Создано предложений: ${result.created_offers}`
+      if (result.notifications_sent > 0 || result.notifications_failed > 0) {
+        message += `\nУведомлений отправлено: ${result.notifications_sent}`
+        if (result.notifications_failed > 0) {
+          message += ` (не доставлено: ${result.notifications_failed})`
+        }
+      }
+
       setResultModal({
         title: 'Отправлено!',
-        message: `Промопредложение отправлено ${result.created_offers} пользователям`,
+        message,
         isSuccess: true,
       })
     },
@@ -557,6 +566,10 @@ export default function AdminPromoOffers() {
         test_duration_hours: template.test_duration_hours,
         test_squad_uuids: template.test_squad_uuids,
       },
+      // Send Telegram notification with template text
+      send_notification: true,
+      message_text: template.message_text,
+      button_text: template.button_text,
     }
 
     if (target) {
