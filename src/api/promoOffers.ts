@@ -55,12 +55,18 @@ export interface PromoOfferBroadcastRequest {
   target?: string
   user_id?: number
   telegram_id?: number
+  // Telegram notification options
+  send_notification?: boolean
+  message_text?: string
+  button_text?: string
 }
 
 export interface PromoOfferBroadcastResponse {
   created_offers: number
   user_ids: number[]
   target: string | null
+  notifications_sent: number
+  notifications_failed: number
 }
 
 export interface PromoOfferTemplate {
