@@ -324,14 +324,14 @@ export default function ConnectionModal({ onClose }: ConnectionModalProps) {
           </button>
           <h2 className="font-bold text-dark-100 text-lg">{t('subscription.connection.selectApp')}</h2>
         </div>
-        <div className={`${isMobile ? 'flex-1' : 'max-h-[60vh]'} overflow-y-auto p-4 space-y-5`}>
+        <div className={`${isMobile ? 'flex-1' : 'max-h-[60vh]'} overflow-y-auto p-4 space-y-6`}>
           {availablePlatforms.map(platform => {
             const apps = appConfig.platforms[platform]
             if (!apps?.length) return null
             const isCurrentPlatform = platform === detectedPlatform
             return (
               <div key={platform}>
-                <div className="flex items-center gap-2 mb-2 px-1">
+                <div className="flex items-center gap-2 mb-3">
                   <span className={`text-sm font-semibold ${isCurrentPlatform ? 'text-accent-400' : 'text-dark-400'}`}>
                     {platformNames[platform] || platform}
                   </span>
@@ -341,30 +341,48 @@ export default function ConnectionModal({ onClose }: ConnectionModalProps) {
                     </span>
                   )}
                 </div>
-                <div className="space-y-2">
-                  {apps.map(app => (
-                    <button
-                      key={app.id}
-                      onClick={() => { setSelectedApp(app); setShowAppSelector(false) }}
-                      className={`w-full p-3 rounded-xl flex items-center gap-3 transition-all ${
-                        selectedApp?.id === app.id
-                          ? 'bg-accent-500/10 ring-1 ring-accent-500/30'
-                          : 'bg-dark-800/50 hover:bg-dark-800'
-                      }`}
-                    >
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                        selectedApp?.id === app.id ? 'bg-accent-500/20 text-accent-400' : 'bg-dark-700 text-dark-300'
-                      }`}>
-                        {getAppIcon(app.name)}
-                      </div>
-                      <div className="flex-1 text-left">
-                        <span className="font-medium text-dark-100">{app.name}</span>
+                <div className="grid grid-cols-3 gap-2">
+                  {apps.map(app => {
+                    const isSelected = selectedApp?.id === app.id
+                    return (
+                      <button
+                        key={app.id}
+                        onClick={() => { setSelectedApp(app); setShowAppSelector(false) }}
+                        className={`relative flex flex-col items-center p-3 rounded-xl transition-all ${
+                          isSelected
+                            ? 'bg-accent-500/15 ring-2 ring-accent-500/50'
+                            : 'bg-dark-800/50 hover:bg-dark-800 active:scale-95'
+                        }`}
+                      >
+                        {/* Featured badge */}
                         {app.isFeatured && (
-                          <span className="ml-2 text-xs text-accent-400">{t('subscription.connection.featured')}</span>
+                          <div className="absolute -top-1 -right-1 w-5 h-5 bg-accent-500 rounded-full flex items-center justify-center shadow-lg">
+                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                          </div>
                         )}
-                      </div>
-                    </button>
-                  ))}
+                        {/* App icon */}
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-2 transition-colors ${
+                          isSelected
+                            ? 'bg-accent-500/20 text-accent-400'
+                            : 'bg-dark-700/80 text-dark-300'
+                        }`}>
+                          {getAppIcon(app.name)}
+                        </div>
+                        {/* App name */}
+                        <span className={`text-xs font-medium text-center leading-tight line-clamp-2 ${
+                          isSelected ? 'text-accent-400' : 'text-dark-200'
+                        }`}>
+                          {app.name}
+                        </span>
+                        {/* Selection indicator */}
+                        {isSelected && (
+                          <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-accent-500 rounded-full" />
+                        )}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
             )
