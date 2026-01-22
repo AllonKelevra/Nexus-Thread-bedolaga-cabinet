@@ -9,28 +9,6 @@ import { checkRateLimit, getRateLimitResetTime, RATE_LIMIT_KEYS } from '../utils
 import type { PaymentMethod } from '../types'
 import BentoCard from './ui/BentoCard'
 
-const TELEGRAM_LINK_REGEX = /^https?:\/\/t\.me\//i
-const isTelegramPaymentLink = (url: string): boolean => TELEGRAM_LINK_REGEX.test(url)
-
-const openPaymentLink = (url: string, reservedWindow?: Window | null) => {
-  if (typeof window === 'undefined' || !url) return
-  const webApp = window.Telegram?.WebApp
-
-  if (isTelegramPaymentLink(url) && webApp?.openTelegramLink) {
-    try { webApp.openTelegramLink(url); return } catch (e) { console.warn('[TopUpModal] openTelegramLink failed:', e) }
-  }
-  if (webApp?.openLink) {
-    try { webApp.openLink(url, { try_instant_view: false, try_browser: true }); return } catch (e) { console.warn('[TopUpModal] webApp.openLink failed:', e) }
-  }
-  if (reservedWindow && !reservedWindow.closed) {
-    try { reservedWindow.location.href = url; reservedWindow.focus?.() } catch (e) { console.warn('[TopUpModal] Failed to use reserved window:', e) }
-    return
-  }
-  const w2 = window.open(url, '_blank', 'noopener,noreferrer')
-  if (w2) { w2.opener = null; return }
-  window.location.href = url
-}
-
 // Icons
 const CloseIcon = () => (
   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -65,6 +43,24 @@ const CryptoIcon = () => (
 const SparklesIcon = () => (
   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
     <path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+  </svg>
+)
+
+const ExternalLinkIcon = () => (
+  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+  </svg>
+)
+
+const CopyIcon = () => (
+  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
+  </svg>
+)
+
+const CheckIcon = () => (
+  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
   </svg>
 )
 
@@ -117,7 +113,8 @@ export default function TopUpModal({ method, onClose, initialAmountRubles }: Top
   const [selectedOption, setSelectedOption] = useState<string | null>(
     method.options && method.options.length > 0 ? method.options[0].id : null
   )
-  const popupRef = useRef<Window | null>(null)
+  const [paymentUrl, setPaymentUrl] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
   const [isInputFocused, setIsInputFocused] = useState(false)
 
   const handleClose = useCallback(() => {
@@ -177,7 +174,6 @@ export default function TopUpModal({ method, onClose, initialAmountRubles }: Top
   const methodKey = method.id.toLowerCase().replace(/-/g, '_')
   const isStarsMethod = methodKey.includes('stars')
   const methodName = t(`balance.paymentMethods.${methodKey}.name`, { defaultValue: '' }) || method.name
-  const isTelegramMiniApp = typeof window !== 'undefined' && Boolean(window.Telegram?.WebApp?.initData)
 
   const starsPaymentMutation = useMutation({
     mutationFn: (amountKopeks: number) => balanceApi.createStarsInvoice(amountKopeks),
@@ -205,13 +201,23 @@ export default function TopUpModal({ method, onClose, initialAmountRubles }: Top
     mutationFn: (amountKopeks: number) => balanceApi.createTopUp(amountKopeks, method.id, selectedOption || undefined),
     onSuccess: (data) => {
       const redirectUrl = data.payment_url || (data as any).invoice_url
-      if (redirectUrl) openPaymentLink(redirectUrl, popupRef.current)
-      popupRef.current = null
-      onClose()
+      if (redirectUrl) {
+        // In Telegram Mini App, try to open directly
+        const webApp = window.Telegram?.WebApp
+        if (webApp?.openLink) {
+          try {
+            webApp.openLink(redirectUrl, { try_instant_view: false, try_browser: true })
+            onClose()
+            return
+          } catch (e) {
+            console.warn('[TopUpModal] webApp.openLink failed:', e)
+          }
+        }
+        // Otherwise show the link for user to click
+        setPaymentUrl(redirectUrl)
+      }
     },
     onError: (err: unknown) => {
-      try { if (popupRef.current && !popupRef.current.closed) popupRef.current.close() } catch {}
-      popupRef.current = null
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail || ''
       setError(detail.includes('not yet implemented') ? t('balance.useBot') : (detail || t('common.error')))
     },
@@ -219,6 +225,7 @@ export default function TopUpModal({ method, onClose, initialAmountRubles }: Top
 
   const handleSubmit = () => {
     setError(null)
+    setPaymentUrl(null)
     inputRef.current?.blur()
 
     if (!checkRateLimit(RATE_LIMIT_KEYS.PAYMENT, 3, 30000)) {
@@ -234,9 +241,6 @@ export default function TopUpModal({ method, onClose, initialAmountRubles }: Top
     }
 
     const amountKopeks = Math.round(amountRubles * 100)
-    if (!isTelegramMiniApp) {
-      try { popupRef.current = window.open('', '_blank') } catch { popupRef.current = null }
-    }
     if (isStarsMethod) { starsPaymentMutation.mutate(amountKopeks) }
     else { topUpMutation.mutate(amountKopeks) }
   }
@@ -247,6 +251,22 @@ export default function TopUpModal({ method, onClose, initialAmountRubles }: Top
     ? Math.round(convertAmount(rub)).toString()
     : convertAmount(rub).toFixed(currencyDecimals)
   const isPending = topUpMutation.isPending || starsPaymentMutation.isPending
+
+  const handleCopyUrl = async () => {
+    if (!paymentUrl) return
+    try {
+      await navigator.clipboard.writeText(paymentUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (e) {
+      console.warn('Failed to copy:', e)
+    }
+  }
+
+  const handleOpenUrl = () => {
+    if (!paymentUrl) return
+    window.open(paymentUrl, '_blank', 'noopener,noreferrer')
+  }
 
   // Auto-focus input - works on mobile in Telegram WebApp
   useEffect(() => {
@@ -260,9 +280,6 @@ export default function TopUpModal({ method, onClose, initialAmountRubles }: Top
     }, 100)
     return () => clearTimeout(timer)
   }, [])
-
-  // Calculate display amount for preview
-  const displayAmount = amount && parseFloat(amount) > 0 ? parseFloat(amount) : 0
 
   // Content JSX - shared between mobile and desktop
   const contentJSX = (
@@ -314,33 +331,55 @@ export default function TopUpModal({ method, onClose, initialAmountRubles }: Top
         </div>
       )}
 
-      {/* Amount input - modern design */}
+      {/* Amount input + Submit button - inline */}
       <div className="space-y-2">
         <label className="text-sm font-medium text-dark-400">{t('balance.enterAmount')}</label>
-        <div className={`relative rounded-2xl transition-all duration-200 ${
-          isInputFocused
-            ? 'ring-2 ring-accent-500/50 bg-dark-800'
-            : 'bg-dark-800/70 border border-dark-700/50'
-        }`}>
-          <input
-            ref={inputRef}
-            type="number"
-            inputMode="decimal"
-            enterKeyHint="done"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            onFocus={() => setIsInputFocused(true)}
-            onBlur={() => setIsInputFocused(false)}
-            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSubmit() } }}
-            placeholder="0"
-            className="w-full h-16 px-5 pr-16 text-2xl font-bold bg-transparent text-dark-100 placeholder:text-dark-600 focus:outline-none"
-            style={{ fontSize: '24px' }}
-            autoComplete="off"
-            autoFocus
-          />
-          <span className="absolute right-5 top-1/2 -translate-y-1/2 text-lg font-semibold text-dark-500">
-            {currencySymbol}
-          </span>
+        <div className="flex gap-2">
+          <div className={`relative flex-1 rounded-2xl transition-all duration-200 ${
+            isInputFocused
+              ? 'ring-2 ring-accent-500/50 bg-dark-800'
+              : 'bg-dark-800/70 border border-dark-700/50'
+          }`}>
+            <input
+              ref={inputRef}
+              type="number"
+              inputMode="decimal"
+              enterKeyHint="done"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              onFocus={() => setIsInputFocused(true)}
+              onBlur={() => setIsInputFocused(false)}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSubmit() } }}
+              placeholder="0"
+              className="w-full h-14 px-4 pr-12 text-xl font-bold bg-transparent text-dark-100 placeholder:text-dark-600 focus:outline-none"
+              autoComplete="off"
+              autoFocus
+            />
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-base font-semibold text-dark-500">
+              {currencySymbol}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={isPending || !amount || parseFloat(amount) <= 0}
+            className={`shrink-0 h-14 px-6 rounded-2xl text-base font-bold transition-colors duration-200 overflow-hidden flex items-center justify-center gap-2 ${
+              isPending || !amount || parseFloat(amount) <= 0
+                ? 'bg-dark-700 text-dark-500 cursor-not-allowed'
+                : isStarsMethod
+                  ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-lg shadow-yellow-500/25 hover:from-yellow-400 hover:to-orange-400 active:from-yellow-600 active:to-orange-600'
+                  : 'bg-gradient-to-r from-accent-500 to-accent-600 text-white shadow-lg shadow-accent-500/25 hover:from-accent-400 hover:to-accent-500 active:from-accent-600 active:to-accent-700'
+            }`}
+          >
+            {isPending ? (
+              <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <>
+                <SparklesIcon />
+                <span>{t('balance.topUp')}</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
 
@@ -386,36 +425,53 @@ export default function TopUpModal({ method, onClose, initialAmountRubles }: Top
         </div>
       )}
 
-      {/* Submit button */}
-      <button
-        type="button"
-        onClick={handleSubmit}
-        disabled={isPending || !amount || parseFloat(amount) <= 0}
-        className={`relative w-full h-14 rounded-2xl text-base font-bold transition-colors duration-200 overflow-hidden ${
-          isPending || !amount || parseFloat(amount) <= 0
-            ? 'bg-dark-700 text-dark-500 cursor-not-allowed'
-            : isStarsMethod
-              ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-lg shadow-yellow-500/25 hover:from-yellow-400 hover:to-orange-400 active:from-yellow-600 active:to-orange-600'
-              : 'bg-gradient-to-r from-accent-500 to-accent-600 text-white shadow-lg shadow-accent-500/25 hover:from-accent-400 hover:to-accent-500 active:from-accent-600 active:to-accent-700'
-        }`}
-      >
-        {isPending ? (
-          <div className="flex items-center justify-center gap-2">
-            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            <span>{t('common.loading')}</span>
+      {/* Payment link display - shown when URL is received */}
+      {paymentUrl && (
+        <div className="space-y-3 p-4 rounded-2xl bg-success-500/10 border border-success-500/20">
+          <div className="flex items-center gap-2 text-success-400">
+            <CheckIcon />
+            <span className="font-semibold">{t('balance.paymentReady', 'Ссылка на оплату готова')}</span>
           </div>
-        ) : (
-          <div className="flex items-center justify-center gap-2">
-            <SparklesIcon />
-            <span>{t('balance.topUp')}</span>
-            {displayAmount > 0 && (
-              <span className="opacity-90">
-                {formatAmount(displayAmount, currencyDecimals)} {currencySymbol}
-              </span>
-            )}
+
+          <p className="text-sm text-dark-400">
+            {t('balance.clickToOpenPayment', 'Нажмите кнопку ниже, чтобы открыть страницу оплаты в новой вкладке')}
+          </p>
+
+          {/* Main open button */}
+          <a
+            href={paymentUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => {
+              e.preventDefault()
+              handleOpenUrl()
+            }}
+            className="flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-success-500 text-white font-bold hover:bg-success-400 active:bg-success-600 transition-colors"
+          >
+            <ExternalLinkIcon />
+            <span>{t('balance.openPaymentPage', 'Открыть страницу оплаты')}</span>
+          </a>
+
+          {/* Copy and link display */}
+          <div className="flex items-center gap-2">
+            <div className="flex-1 min-w-0 px-3 py-2 rounded-lg bg-dark-800/70 border border-dark-700/50">
+              <p className="text-xs text-dark-500 truncate">{paymentUrl}</p>
+            </div>
+            <button
+              type="button"
+              onClick={handleCopyUrl}
+              className={`shrink-0 p-2.5 rounded-lg transition-colors ${
+                copied
+                  ? 'bg-success-500/20 text-success-400'
+                  : 'bg-dark-800/70 text-dark-400 hover:bg-dark-700 hover:text-dark-200'
+              }`}
+              title={t('common.copy', 'Копировать')}
+            >
+              {copied ? <CheckIcon /> : <CopyIcon />}
+            </button>
           </div>
-        )}
-      </button>
+        </div>
+      )}
     </div>
   )
 
