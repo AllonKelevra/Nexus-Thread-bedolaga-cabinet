@@ -132,6 +132,7 @@ export default function ConnectionModal({ onClose }: ConnectionModalProps) {
   const [selectedApp, setSelectedApp] = useState<AppInfo | null>(null)
   const [copied, setCopied] = useState(false)
   const [showAppSelector, setShowAppSelector] = useState(false)
+  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null)
 
   const { isTelegramWebApp, isFullscreen, safeAreaInset, contentSafeAreaInset, webApp } = useTelegramWebApp()
   const isMobileScreen = useIsMobile()
@@ -180,8 +181,12 @@ export default function ConnectionModal({ onClose }: ConnectionModalProps) {
   }, [onClose])
 
   const handleBack = useCallback(() => {
-    setShowAppSelector(false)
-  }, [])
+    if (selectedPlatform) {
+      setSelectedPlatform(null)
+    } else {
+      setShowAppSelector(false)
+    }
+  }, [selectedPlatform])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -332,82 +337,166 @@ export default function ConnectionModal({ onClose }: ConnectionModalProps) {
       macos: 'macOS', linux: 'Linux', androidTV: 'Android TV', appleTV: 'Apple TV'
     }
 
+    const platformIcons: Record<string, React.ReactNode> = {
+      ios: (
+        <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+        </svg>
+      ),
+      android: (
+        <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17.6 9.48l1.84-3.18c.16-.31.04-.69-.26-.85-.29-.15-.65-.06-.83.22l-1.88 3.24c-1.39-.59-2.94-.92-4.58-.92s-3.19.33-4.58.92L5.5 5.67c-.16-.28-.54-.37-.83-.22-.31.16-.43.54-.26.85l1.84 3.18C3.38 11.11 1.5 14.12 1.5 17.5h21c0-3.38-1.88-6.39-4.9-8.02zM7 15.25c-.69 0-1.25-.56-1.25-1.25s.56-1.25 1.25-1.25 1.25.56 1.25 1.25-.56 1.25-1.25 1.25zm10 0c-.69 0-1.25-.56-1.25-1.25s.56-1.25 1.25-1.25 1.25.56 1.25 1.25-.56 1.25-1.25 1.25z"/>
+        </svg>
+      ),
+      windows: (
+        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M3 12V6.75l6-1.32v6.48L3 12zm17-9v8.75l-10 .15V5.21L20 3zM3 13l6 .09v6.81l-6-1.15V13zm17 .25V22l-10-1.91V13.1l10 .15z"/>
+        </svg>
+      ),
+      macos: (
+        <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+        </svg>
+      ),
+      linux: (
+        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12.504 0c-.155 0-.315.008-.48.021-4.226.333-3.105 4.807-3.17 6.298-.076 1.092-.3 1.953-1.05 3.02-.885 1.051-2.127 2.75-2.716 4.521-.278.832-.41 1.684-.287 2.489.117.779.456 1.462 1.047 1.993.545.487 1.183.805 1.894.983.718.178 1.463.201 2.215.201.752 0 1.498-.023 2.215-.201.711-.178 1.349-.496 1.894-.983.591-.531.93-1.214 1.047-1.993.123-.805-.009-1.657-.287-2.489-.589-1.77-1.831-3.47-2.716-4.521-.75-1.067-.974-1.928-1.05-3.02-.065-1.491 1.056-5.965-3.17-6.298-.165-.013-.325-.021-.48-.021zm-.126 1.09c.99.063 1.783.569 2.172 1.443.376.844.413 1.903.199 2.999-.215 1.096-.687 2.23-1.357 3.18-.669.95-1.405 1.705-2.017 2.379-.611.674-1.074 1.252-1.316 1.857-.242.605-.262 1.233-.006 1.873.256.64.755 1.198 1.36 1.547.606.35 1.247.536 1.88.536.634 0 1.275-.186 1.88-.536.606-.349 1.105-.907 1.36-1.547.256-.64.236-1.268-.006-1.873-.242-.605-.705-1.183-1.316-1.857-.612-.674-1.348-1.429-2.017-2.379-.67-.95-1.142-2.084-1.357-3.18-.214-1.096-.177-2.155.199-2.999.389-.874 1.182-1.38 2.172-1.443z"/>
+        </svg>
+      ),
+      androidTV: (
+        <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/>
+        </svg>
+      ),
+      appleTV: (
+        <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/>
+        </svg>
+      ),
+    }
+
+    // Step 1: Platform selection
+    if (!selectedPlatform) {
+      return (
+        <Wrapper>
+          <div className="flex items-center gap-3 p-4 border-b border-dark-800">
+            <button onClick={handleBack} className="p-2 -ml-2 rounded-xl hover:bg-dark-800 text-dark-300">
+              <BackIcon />
+            </button>
+            <h2 className="font-bold text-dark-100 text-lg">{t('subscription.connection.selectPlatform') || 'Выберите платформу'}</h2>
+          </div>
+          <div className="p-4 space-y-2">
+            {availablePlatforms.map(platform => {
+              const apps = appConfig.platforms[platform]
+              if (!apps?.length) return null
+              const isCurrentPlatform = platform === detectedPlatform
+              const appCount = apps.length
+
+              return (
+                <button
+                  key={platform}
+                  onClick={() => setSelectedPlatform(platform)}
+                  className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all active:scale-[0.98] ${
+                    isCurrentPlatform
+                      ? 'bg-accent-500/10 ring-1 ring-accent-500/30'
+                      : 'bg-dark-800/50 hover:bg-dark-800'
+                  }`}
+                >
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                    isCurrentPlatform ? 'bg-accent-500/20 text-accent-400' : 'bg-dark-700 text-dark-300'
+                  }`}>
+                    {platformIcons[platform] || <span className="text-xl">📱</span>}
+                  </div>
+                  <div className="flex-1 text-left">
+                    <div className="flex items-center gap-2">
+                      <span className={`font-medium ${isCurrentPlatform ? 'text-accent-400' : 'text-dark-100'}`}>
+                        {platformNames[platform] || platform}
+                      </span>
+                      {isCurrentPlatform && (
+                        <span className="text-xs text-accent-500 bg-accent-500/10 px-2 py-0.5 rounded-full">
+                          {t('subscription.connection.yourDevice')}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-sm text-dark-400">
+                      {appCount} {appCount === 1 ? (t('subscription.connection.app') || 'приложение') : (t('subscription.connection.apps') || 'приложений')}
+                    </span>
+                  </div>
+                  <ChevronIcon />
+                </button>
+              )
+            })}
+          </div>
+        </Wrapper>
+      )
+    }
+
+    // Step 2: App selection for chosen platform
+    const apps = appConfig.platforms[selectedPlatform] || []
+    const isCurrentPlatform = selectedPlatform === detectedPlatform
+
     return (
       <Wrapper>
         <div className="flex items-center gap-3 p-4 border-b border-dark-800">
           <button onClick={handleBack} className="p-2 -ml-2 rounded-xl hover:bg-dark-800 text-dark-300">
             <BackIcon />
           </button>
-          <h2 className="font-bold text-dark-100 text-lg">{t('subscription.connection.selectApp')}</h2>
+          <div className="flex-1">
+            <h2 className="font-bold text-dark-100 text-lg">{platformNames[selectedPlatform] || selectedPlatform}</h2>
+            {isCurrentPlatform && (
+              <span className="text-xs text-accent-500">{t('subscription.connection.yourDevice')}</span>
+            )}
+          </div>
         </div>
         <div
           ref={scrollContainerRef}
-          className={`${isMobile ? 'flex-1' : 'max-h-[60vh]'} overflow-y-auto p-4 space-y-6`}
+          className={`${isMobile ? 'flex-1' : 'max-h-[60vh]'} overflow-y-auto p-4`}
           style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' }}
           onWheel={handleScrollContainerWheel}
         >
-          {availablePlatforms.map(platform => {
-            const apps = appConfig.platforms[platform]
-            if (!apps?.length) return null
-            const isCurrentPlatform = platform === detectedPlatform
-            return (
-              <div key={platform}>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className={`text-sm font-semibold ${isCurrentPlatform ? 'text-accent-400' : 'text-dark-400'}`}>
-                    {platformNames[platform] || platform}
-                  </span>
-                  {isCurrentPlatform && (
-                    <span className="text-xs text-accent-500 bg-accent-500/10 px-2 py-0.5 rounded-full">
-                      {t('subscription.connection.yourDevice')}
-                    </span>
+          <div className="grid grid-cols-3 gap-3">
+            {apps.map(app => {
+              const isSelected = selectedApp?.id === app.id
+              return (
+                <button
+                  key={app.id}
+                  onClick={() => { setSelectedApp(app); setShowAppSelector(false); setSelectedPlatform(null) }}
+                  className={`relative flex flex-col items-center p-4 rounded-xl transition-all active:scale-95 ${
+                    isSelected
+                      ? 'bg-accent-500/15 ring-2 ring-accent-500/50'
+                      : 'bg-dark-800/50 hover:bg-dark-800'
+                  }`}
+                >
+                  {/* Featured badge */}
+                  {app.isFeatured && (
+                    <div className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-accent-500 rounded-full flex items-center justify-center shadow-lg">
+                      <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    </div>
                   )}
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {apps.map(app => {
-                    const isSelected = selectedApp?.id === app.id
-                    return (
-                      <button
-                        key={app.id}
-                        onClick={() => { setSelectedApp(app); setShowAppSelector(false) }}
-                        className={`relative flex flex-col items-center p-3 rounded-xl transition-all ${
-                          isSelected
-                            ? 'bg-accent-500/15 ring-2 ring-accent-500/50'
-                            : 'bg-dark-800/50 hover:bg-dark-800 active:scale-95'
-                        }`}
-                      >
-                        {/* Featured badge */}
-                        {app.isFeatured && (
-                          <div className="absolute -top-1 -right-1 w-5 h-5 bg-accent-500 rounded-full flex items-center justify-center shadow-lg">
-                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                            </svg>
-                          </div>
-                        )}
-                        {/* App icon */}
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-2 transition-colors ${
-                          isSelected
-                            ? 'bg-accent-500/20 text-accent-400'
-                            : 'bg-dark-700/80 text-dark-300'
-                        }`}>
-                          {getAppIcon(app.name)}
-                        </div>
-                        {/* App name */}
-                        <span className={`text-xs font-medium text-center leading-tight line-clamp-2 ${
-                          isSelected ? 'text-accent-400' : 'text-dark-200'
-                        }`}>
-                          {app.name}
-                        </span>
-                        {/* Selection indicator */}
-                        {isSelected && (
-                          <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-accent-500 rounded-full" />
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            )
-          })}
+                  {/* App icon */}
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-3 transition-colors ${
+                    isSelected
+                      ? 'bg-accent-500/20 text-accent-400'
+                      : 'bg-dark-700/80 text-dark-300'
+                  }`}>
+                    {getAppIcon(app.name)}
+                  </div>
+                  {/* App name */}
+                  <span className={`text-sm font-medium text-center leading-tight line-clamp-2 ${
+                    isSelected ? 'text-accent-400' : 'text-dark-200'
+                  }`}>
+                    {app.name}
+                  </span>
+                  {/* Selection indicator */}
+                  {isSelected && (
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-2 h-2 bg-accent-500 rounded-full" />
+                  )}
+                </button>
+              )
+            })}
+          </div>
         </div>
       </Wrapper>
     )
