@@ -35,9 +35,50 @@ export function usePullToRefresh({
   useEffect(() => {
     if (disabled) return
 
+    // Check if a modal/overlay is currently open
+    const isModalOpen = (): boolean => {
+      // Check if body scroll is locked (common pattern for modals)
+      if (document.body.style.overflow === 'hidden') return true
+      // Check for high z-index fixed elements (modals typically use z-index > 50)
+      const fixedElements = document.querySelectorAll('[style*="position: fixed"], [style*="position:fixed"]')
+      for (const el of fixedElements) {
+        const style = window.getComputedStyle(el)
+        const zIndex = parseInt(style.zIndex, 10)
+        if (zIndex >= 50 && el.clientHeight > window.innerHeight * 0.5) {
+          return true
+        }
+      }
+      return false
+    }
+
+    // Check if element or any parent is scrollable and not at top
+    const isInsideScrollableContainer = (element: HTMLElement | null): boolean => {
+      while (element && element !== document.body) {
+        const style = window.getComputedStyle(element)
+        const overflowY = style.overflowY
+        const isScrollable = overflowY === 'auto' || overflowY === 'scroll'
+
+        if (isScrollable && element.scrollHeight > element.clientHeight) {
+          // Element is scrollable - check if it's at the top
+          if (element.scrollTop > 0) {
+            return true // Not at top, don't trigger pull-to-refresh
+          }
+        }
+        element = element.parentElement
+      }
+      return false
+    }
+
     const handleTouchStart = (e: TouchEvent) => {
+      // Don't trigger if a modal is open
+      if (isModalOpen()) return
+
       // Only trigger if at top of page
       if (window.scrollY > 5) return
+
+      // Don't trigger if touch started inside a scrollable container that's not at top
+      const target = e.target as HTMLElement
+      if (isInsideScrollableContainer(target)) return
 
       startY.current = e.touches[0].clientY
       currentY.current = e.touches[0].clientY
@@ -45,8 +86,26 @@ export function usePullToRefresh({
 
     const handleTouchMove = (e: TouchEvent) => {
       if (startY.current === 0) return
+
+      // Cancel if modal opened during gesture
+      if (isModalOpen()) {
+        startY.current = 0
+        setPullDistance(0)
+        setIsPulling(false)
+        return
+      }
+
       if (window.scrollY > 5) {
         // User scrolled down, reset
+        startY.current = 0
+        setPullDistance(0)
+        setIsPulling(false)
+        return
+      }
+
+      // Also check during move - user might start at top then scroll inside container
+      const target = e.target as HTMLElement
+      if (isInsideScrollableContainer(target)) {
         startY.current = 0
         setPullDistance(0)
         setIsPulling(false)
