@@ -139,6 +139,9 @@ export default function ConnectionModal({ onClose }: ConnectionModalProps) {
   const isMobile = isMobileScreen
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
+  // Ref для хранения актуального обработчика BackButton (фикс мигания)
+  const backButtonHandlerRef = useRef<() => void>(() => {})
+
   // Prevent scroll events from bubbling to parent/Telegram
   const handleScrollContainerWheel = useCallback((e: React.WheelEvent) => {
     const container = e.currentTarget
@@ -200,16 +203,28 @@ export default function ConnectionModal({ onClose }: ConnectionModalProps) {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [handleClose, handleBack, showAppSelector])
 
+  // Обновляем ref при изменении логики (без перезапуска эффекта BackButton)
+  useEffect(() => {
+    backButtonHandlerRef.current = showAppSelector ? handleBack : handleClose
+  }, [showAppSelector, handleBack, handleClose])
+
+  // Управление BackButton — эффект запускается только при mount/unmount
+  // Используем стабильный обработчик через ref, чтобы избежать мигания
   useEffect(() => {
     if (!webApp?.BackButton) return
-    const handler = showAppSelector ? handleBack : handleClose
+
+    const stableHandler = () => {
+      backButtonHandlerRef.current()
+    }
+
     webApp.BackButton.show()
-    webApp.BackButton.onClick(handler)
+    webApp.BackButton.onClick(stableHandler)
+
     return () => {
-      webApp.BackButton.offClick(handler)
+      webApp.BackButton.offClick(stableHandler)
       webApp.BackButton.hide()
     }
-  }, [webApp, handleClose, handleBack, showAppSelector])
+  }, [webApp]) // Только webApp в зависимостях!
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'
