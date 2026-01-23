@@ -202,18 +202,8 @@ export default function TopUpModal({ method, onClose, initialAmountRubles }: Top
     onSuccess: (data) => {
       const redirectUrl = data.payment_url || (data as any).invoice_url
       if (redirectUrl) {
-        // In Telegram Mini App, try to open directly
-        const webApp = window.Telegram?.WebApp
-        if (webApp?.openLink) {
-          try {
-            webApp.openLink(redirectUrl, { try_instant_view: false, try_browser: true })
-            onClose()
-            return
-          } catch (e) {
-            console.warn('[TopUpModal] webApp.openLink failed:', e)
-          }
-        }
-        // Otherwise show the link for user to click
+        // Always show the payment link for user to click manually
+        // This ensures it works on all platforms including iOS Safari
         setPaymentUrl(redirectUrl)
       }
     },
