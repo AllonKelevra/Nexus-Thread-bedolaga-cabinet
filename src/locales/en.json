@@ -216,6 +216,7 @@
       "pausedMessage": "Subscription paused",
       "resumedMessage": "Subscription resumed",
       "dailyOnly": "Pause is only available for daily tariffs",
+      "insufficientBalance": "Insufficient balance to resume subscription",
       "pausedInfo": "Subscription paused",
       "pausedDescription": "Charges stopped. Subscription will be active until",
       "nextCharge": "Until next charge",

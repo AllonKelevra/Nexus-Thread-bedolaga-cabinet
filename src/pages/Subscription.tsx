@@ -21,6 +21,20 @@ const getErrorMessage = (error: unknown): string => {
   return 'Произошла ошибка'
 }
 
+// Helper to extract insufficient balance error details
+const getInsufficientBalanceError = (error: unknown): { required: number; balance: number } | null => {
+  if (error instanceof AxiosError) {
+    const detail = error.response?.data?.detail
+    if (typeof detail === 'object' && detail?.code === 'insufficient_balance') {
+      return {
+        required: detail.required || 0,
+        balance: detail.balance || 0,
+      }
+    }
+  }
+  return null
+}
+
 // Icons
 const CopyIcon = () => (
   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -742,11 +756,26 @@ export default function Subscription() {
           </div>
 
           {/* Pause mutation error */}
-          {pauseMutation.isError && (
-            <div className="mt-4 text-sm text-error-400 bg-error-500/10 px-4 py-3 rounded-lg text-center">
-              {getErrorMessage(pauseMutation.error)}
-            </div>
-          )}
+          {pauseMutation.isError && (() => {
+            const balanceError = getInsufficientBalanceError(pauseMutation.error)
+            if (balanceError) {
+              const missingAmount = balanceError.required - balanceError.balance
+              return (
+                <div className="mt-4">
+                  <InsufficientBalancePrompt
+                    missingAmountKopeks={missingAmount}
+                    message={t('subscription.pause.insufficientBalance')}
+                    compact
+                  />
+                </div>
+              )
+            }
+            return (
+              <div className="mt-4 text-sm text-error-400 bg-error-500/10 px-4 py-3 rounded-lg text-center">
+                {getErrorMessage(pauseMutation.error)}
+              </div>
+            )
+          })()}
 
           {/* Paused info or Next charge progress bar */}
           {subscription.is_daily_paused ? (
@@ -2276,10 +2305,17 @@ export default function Subscription() {
                         <div className="text-sm text-success-400 text-center">{preview.discount_label}</div>
                       )}
 
-                      {!preview.can_purchase && preview.status_message && (
-                        <div className="text-sm text-error-400 bg-error-500/10 px-4 py-3 rounded-lg text-center">
-                          {preview.status_message}
-                        </div>
+                      {!preview.can_purchase && (
+                        preview.missing_amount_kopeks > 0 ? (
+                          <InsufficientBalancePrompt
+                            missingAmountKopeks={preview.missing_amount_kopeks}
+                            compact
+                          />
+                        ) : preview.status_message ? (
+                          <div className="text-sm text-error-400 bg-error-500/10 px-4 py-3 rounded-lg text-center">
+                            {preview.status_message}
+                          </div>
+                        ) : null
                       )}
                     </div>
                   ) : null}
