@@ -136,7 +136,7 @@ function PeriodTariffModal({ tariff, servers, onSave, onClose, isLoading }: Peri
 
   const [name, setName] = useState(tariff?.name || '')
   const [description, setDescription] = useState(tariff?.description || '')
-  const [trafficLimitGb, setTrafficLimitGb] = useState(tariff?.traffic_limit_gb || 100)
+  const [trafficLimitGb, setTrafficLimitGb] = useState(tariff?.traffic_limit_gb ?? 100)
   const [deviceLimit, setDeviceLimit] = useState(tariff?.device_limit || 1)
   const [devicePriceKopeks, setDevicePriceKopeks] = useState(tariff?.device_price_kopeks || 0)
   const [maxDeviceLimit, setMaxDeviceLimit] = useState(tariff?.max_device_limit || 0)
@@ -182,7 +182,7 @@ function PeriodTariffModal({ tariff, servers, onSave, onClose, isLoading }: Peri
       device_price_kopeks: devicePriceKopeks > 0 ? devicePriceKopeks : undefined,
       max_device_limit: maxDeviceLimit > 0 ? maxDeviceLimit : undefined,
       tier_level: tierLevel,
-      period_prices: periodPrices.filter(p => p.price_kopeks > 0),
+      period_prices: periodPrices.filter(p => p.price_kopeks >= 0),
       allowed_squads: selectedSquads,
       traffic_topup_enabled: trafficTopupEnabled,
       traffic_topup_packages: trafficTopupPackages,
@@ -757,7 +757,7 @@ function DailyTariffModal({ tariff, servers, onSave, onClose, isLoading }: Daily
 
   const [name, setName] = useState(tariff?.name || '')
   const [description, setDescription] = useState(tariff?.description || '')
-  const [trafficLimitGb, setTrafficLimitGb] = useState(tariff?.traffic_limit_gb || 100)
+  const [trafficLimitGb, setTrafficLimitGb] = useState(tariff?.traffic_limit_gb ?? 100)
   const [deviceLimit, setDeviceLimit] = useState(tariff?.device_limit || 1)
   const [devicePriceKopeks, setDevicePriceKopeks] = useState(tariff?.device_price_kopeks || 0)
   const [maxDeviceLimit, setMaxDeviceLimit] = useState(tariff?.max_device_limit || 0)
