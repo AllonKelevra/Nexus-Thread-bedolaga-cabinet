@@ -61,6 +61,8 @@
     "email": "Email",
     "password": "Пароль",
     "confirmPassword": "Подтвердите пароль",
+    "firstName": "Имя",
+    "firstNamePlaceholder": "Ваше имя (необязательно)",
     "forgotPassword": "Забыли пароль?",
     "resetPassword": "Сбросить пароль",
     "loginWithTelegram": "Войти через Telegram",
@@ -76,7 +78,14 @@
     "tryAgain": "Попробовать снова",
     "welcomeBack": "Добро пожаловать!",
     "loginTitle": "Вход в личный кабинет",
-    "loginSubtitle": "Войдите через Telegram или используйте email"
+    "loginSubtitle": "Войдите через Telegram или используйте email",
+    "passwordMismatch": "Пароли не совпадают",
+    "passwordTooShort": "Пароль должен быть минимум 8 символов",
+    "invalidEmail": "Введите корректный email адрес",
+    "emailAlreadyRegistered": "Этот email уже зарегистрирован",
+    "invalidCredentials": "Неверный email или пароль",
+    "tooManyAttempts": "Слишком много попыток. Попробуйте позже",
+    "verificationEmailNotice": "После регистрации на вашу почту будет отправлено письмо для подтверждения"
   },
   "emailVerification": {
     "title": "Подтверждение email",
@@ -1880,6 +1889,7 @@
     "linkEmailDescription": "Привяжите email для входа без Telegram. После привязки на ваш email придёт письмо для подтверждения.",
     "linkEmail": "Привязать Email",
     "emailRequired": "Введите email",
+    "invalidEmail": "Введите корректный email адрес",
     "passwordMinLength": "Пароль должен быть минимум 8 символов",
     "passwordsMismatch": "Пароли не совпадают",
     "passwordPlaceholder": "Введите пароль",

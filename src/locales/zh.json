@@ -670,6 +670,7 @@
     "linkEmailDescription": "绑定邮箱以便无需Telegram登录。绑定后将收到验证邮件。",
     "linkEmail": "绑定邮箱",
     "emailRequired": "请输入邮箱",
+    "invalidEmail": "请输入有效的电子邮件地址",
     "passwordMinLength": "密码至少8个字符",
     "passwordsMismatch": "密码不匹配",
     "passwordPlaceholder": "输入密码",
