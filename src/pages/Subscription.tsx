@@ -2305,10 +2305,17 @@ export default function Subscription() {
                         <div className="text-sm text-success-400 text-center">{preview.discount_label}</div>
                       )}
 
-                      {!preview.can_purchase && preview.status_message && (
-                        <div className="text-sm text-error-400 bg-error-500/10 px-4 py-3 rounded-lg text-center">
-                          {preview.status_message}
-                        </div>
+                      {!preview.can_purchase && (
+                        preview.missing_amount_kopeks > 0 ? (
+                          <InsufficientBalancePrompt
+                            missingAmountKopeks={preview.missing_amount_kopeks}
+                            compact
+                          />
+                        ) : preview.status_message ? (
+                          <div className="text-sm text-error-400 bg-error-500/10 px-4 py-3 rounded-lg text-center">
+                            {preview.status_message}
+                          </div>
+                        ) : null
                       )}
                     </div>
                   ) : null}
