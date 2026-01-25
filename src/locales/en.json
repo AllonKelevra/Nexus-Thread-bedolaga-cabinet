@@ -79,6 +79,7 @@
     "welcomeBack": "Welcome back!",
     "loginTitle": "Login to Cabinet",
     "loginSubtitle": "Sign in with Telegram or use your email",
+    "referralInvite": "You've been invited via referral link!",
     "passwordMismatch": "Passwords do not match",
     "passwordTooShort": "Password must be at least 8 characters",
     "invalidEmail": "Please enter a valid email address",

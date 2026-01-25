@@ -79,6 +79,7 @@
     "welcomeBack": "Добро пожаловать!",
     "loginTitle": "Вход в личный кабинет",
     "loginSubtitle": "Войдите через Telegram или используйте email",
+    "referralInvite": "Вы приглашены по реферальной ссылке!",
     "passwordMismatch": "Пароли не совпадают",
     "passwordTooShort": "Пароль должен быть минимум 8 символов",
     "invalidEmail": "Введите корректный email адрес",

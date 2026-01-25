@@ -74,7 +74,8 @@
     "tryAgain": "重试",
     "welcomeBack": "欢迎回来！",
     "loginTitle": "登录个人中心",
-    "loginSubtitle": "通过Telegram或邮箱登录"
+    "loginSubtitle": "通过Telegram或邮箱登录",
+    "referralInvite": "您已通过推荐链接受邀！"
   },
   "emailVerification": {
     "title": "邮箱验证",

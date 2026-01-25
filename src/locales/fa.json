@@ -73,7 +73,8 @@
     "tryAgain": "تلاش مجدد",
     "welcomeBack": "خوش آمدید!",
     "loginTitle": "ورود به کابین",
-    "loginSubtitle": "با تلگرام یا ایمیل وارد شوید"
+    "loginSubtitle": "با تلگرام یا ایمیل وارد شوید",
+    "referralInvite": "شما از طریق لینک معرفی دعوت شده‌اید!"
   },
   "emailVerification": {
     "title": "تایید ایمیل",
