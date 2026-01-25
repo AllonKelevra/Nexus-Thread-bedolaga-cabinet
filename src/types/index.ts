@@ -31,6 +31,12 @@ export interface TokenResponse {
   expires_in: number
 }
 
+export interface RegisterResponse {
+  message: string
+  email: string
+  requires_verification: boolean
+}
+
 // Subscription types
 export interface ServerInfo {
   uuid: string
