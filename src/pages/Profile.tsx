@@ -111,7 +111,14 @@ export default function Profile() {
       queryClient.invalidateQueries({ queryKey: ['user'] })
     },
     onError: (err: { response?: { data?: { detail?: string } } }) => {
-      setError(err.response?.data?.detail || t('common.error'))
+      const detail = err.response?.data?.detail
+      if (detail?.includes('already registered')) {
+        setError(t('profile.emailAlreadyRegistered'))
+      } else if (detail?.includes('already have a verified email')) {
+        setError(t('profile.alreadyHaveEmail'))
+      } else {
+        setError(detail || t('common.error'))
+      }
       setSuccess(null)
     },
   })
