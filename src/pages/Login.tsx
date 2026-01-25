@@ -32,6 +32,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false)
   const [isTelegramWebApp, setIsTelegramWebApp] = useState(false)
   const [logoLoaded, setLogoLoaded] = useState(() => isLogoPreloaded())
+  const [registeredEmail, setRegisteredEmail] = useState<string | null>(null)
 
   // Получаем URL для возврата после авторизации
   const getReturnUrl = useCallback(() => {
@@ -134,10 +135,12 @@ export default function Login() {
     try {
       if (authMode === 'login') {
         await loginWithEmail(email, password)
+        navigate(getReturnUrl(), { replace: true })
       } else {
-        await registerWithEmail(email, password, firstName || undefined, referralCode || undefined)
+        const result = await registerWithEmail(email, password, firstName || undefined, referralCode || undefined)
+        // Show "check your email" screen
+        setRegisteredEmail(result.email)
       }
-      navigate(getReturnUrl(), { replace: true })
     } catch (err: unknown) {
       const error = err as { response?: { status?: number; data?: { detail?: string } } }
       const status = error.response?.status
@@ -146,11 +149,15 @@ export default function Login() {
       if (status === 400 && detail?.includes('already registered')) {
         setError(t('auth.emailAlreadyRegistered', 'This email is already registered'))
       } else if (status === 401 || status === 403) {
-        setError(t('auth.invalidCredentials', 'Invalid email or password'))
+        if (detail?.includes('verify your email')) {
+          setError(t('auth.emailNotVerified', 'Please verify your email first'))
+        } else {
+          setError(t('auth.invalidCredentials', 'Invalid email or password'))
+        }
       } else if (status === 429) {
         setError(t('auth.tooManyAttempts', 'Too many attempts. Please try again later'))
       } else {
-        setError(t('common.error'))
+        setError(detail || t('common.error'))
       }
     } finally {
       setIsLoading(false)
@@ -208,7 +215,36 @@ export default function Login() {
           )}
         </div>
 
-        {/* Card */}
+        {/* Check Email Screen */}
+        {registeredEmail ? (
+          <div className="card text-center">
+            <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-success-500/20 flex items-center justify-center">
+              <svg className="w-8 h-8 text-success-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-dark-50 mb-2">
+              {t('auth.checkEmail', 'Check your email')}
+            </h2>
+            <p className="text-dark-400 mb-4">
+              {t('auth.verificationSent', 'We sent a verification link to:')}
+            </p>
+            <p className="text-accent-400 font-medium mb-6">{registeredEmail}</p>
+            <p className="text-sm text-dark-500 mb-6">
+              {t('auth.clickLinkToVerify', 'Click the link in the email to verify your account and log in.')}
+            </p>
+            <button
+              onClick={() => {
+                setRegisteredEmail(null)
+                setAuthMode('login')
+              }}
+              className="btn-secondary w-full"
+            >
+              {t('auth.backToLogin', 'Back to login')}
+            </button>
+          </div>
+        ) : (
+        /* Card */
         <div className="card">
           {/* Tabs */}
           <div className="flex mb-6">
@@ -389,6 +425,7 @@ export default function Login() {
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   )
