@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '../store/auth'
@@ -12,9 +12,18 @@ export default function Login() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
+  const [searchParams] = useSearchParams()
   const { isAuthenticated, loginWithTelegram, loginWithEmail, registerWithEmail } = useAuthStore()
-  const [activeTab, setActiveTab] = useState<'telegram' | 'email'>('telegram')
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
+
+  // Extract referral code from URL
+  const referralCode = searchParams.get('ref') || ''
+
+  const [activeTab, setActiveTab] = useState<'telegram' | 'email'>(() =>
+    referralCode ? 'email' : 'telegram'
+  )
+  const [authMode, setAuthMode] = useState<'login' | 'register'>(() =>
+    referralCode ? 'register' : 'login'
+  )
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -126,7 +135,7 @@ export default function Login() {
       if (authMode === 'login') {
         await loginWithEmail(email, password)
       } else {
-        await registerWithEmail(email, password, firstName || undefined)
+        await registerWithEmail(email, password, firstName || undefined, referralCode || undefined)
       }
       navigate(getReturnUrl(), { replace: true })
     } catch (err: unknown) {
@@ -185,6 +194,18 @@ export default function Login() {
           <p className="mt-2 text-dark-400">
             {t('auth.loginSubtitle')}
           </p>
+
+          {/* Referral Banner */}
+          {referralCode && (
+            <div className="mt-4 p-3 rounded-xl bg-accent-500/10 border border-accent-500/30">
+              <div className="flex items-center gap-2 text-accent-400">
+                <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                </svg>
+                <span className="text-sm font-medium">{t('auth.referralInvite')}</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Card */}
