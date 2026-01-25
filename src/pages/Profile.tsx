@@ -63,11 +63,10 @@ export default function Profile() {
     staleTime: 60000,
   })
 
-  // Build referral link
-  const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME
-  const referralLink = referralInfo?.referral_code && botUsername
-    ? `https://t.me/${botUsername}?start=${referralInfo.referral_code}`
-    : referralInfo?.referral_link || ''
+  // Build referral link for cabinet
+  const referralLink = referralInfo?.referral_code
+    ? `${window.location.origin}/login?ref=${referralInfo.referral_code}`
+    : ''
 
   const copyReferralLink = () => {
     if (referralLink) {
