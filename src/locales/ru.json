@@ -85,6 +85,10 @@
     "invalidEmail": "Введите корректный email адрес",
     "emailAlreadyRegistered": "Этот email уже зарегистрирован",
     "invalidCredentials": "Неверный email или пароль",
+    "forgotPassword": "Забыли пароль?",
+    "forgotPasswordHint": "Введите email и мы отправим инструкции для сброса пароля.",
+    "passwordResetSent": "Если аккаунт с таким email существует, мы отправили инструкции по сбросу пароля.",
+    "sendResetLink": "Отправить ссылку",
     "tooManyAttempts": "Слишком много попыток. Попробуйте позже",
     "verificationEmailNotice": "После регистрации на вашу почту будет отправлено письмо для подтверждения",
     "checkEmail": "Проверьте почту",
@@ -102,6 +106,15 @@
     "redirecting": "Переходим в личный кабинет...",
     "failed": "Ошибка подтверждения",
     "goToLogin": "Перейти к входу"
+  },
+  "resetPassword": {
+    "title": "Новый пароль",
+    "enterNewPassword": "Введите новый пароль ниже.",
+    "success": "Пароль изменён!",
+    "redirectingToLogin": "Переходим на страницу входа...",
+    "setPassword": "Установить пароль",
+    "invalidToken": "Недействительная ссылка",
+    "tokenExpiredOrInvalid": "Ссылка для сброса пароля недействительна или истекла."
   },
   "dashboard": {
     "title": "Личный кабинет",
