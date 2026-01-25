@@ -1210,6 +1210,8 @@
     "resendVerification": "Resend Verification Email",
     "verificationResent": "Verification email resent!",
     "canLoginWithEmail": "You can now log in using your email and password.",
+    "emailAlreadyRegistered": "This email is already linked to another account. If this is your email, log in with it or contact support.",
+    "alreadyHaveEmail": "You already have a verified email linked.",
     "notifications": {
       "title": "Notification Settings",
       "subscriptionExpiry": "Subscription Expiry",
