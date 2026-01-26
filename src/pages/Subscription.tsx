@@ -1960,7 +1960,7 @@ export default function Subscription() {
                           ) : selectedTariffPeriod && (
                             <>
                               {/* Если есть доп. устройства - показываем разбивку */}
-                              {selectedTariffPeriod.extra_devices_count > 0 && selectedTariffPeriod.base_tariff_price_kopeks ? (
+                              {(selectedTariffPeriod.extra_devices_count ?? 0) > 0 && selectedTariffPeriod.base_tariff_price_kopeks ? (
                                 <>
                                   <div className="flex justify-between text-sm text-dark-300">
                                     <span>{t('subscription.baseTariff')}: {selectedTariffPeriod.label}</span>
@@ -1968,7 +1968,7 @@ export default function Subscription() {
                                   </div>
                                   <div className="flex justify-between text-sm text-dark-300">
                                     <span>{t('subscription.extraDevices')} ({selectedTariffPeriod.extra_devices_count})</span>
-                                    <span>+{formatPrice(selectedTariffPeriod.extra_devices_cost_kopeks)}</span>
+                                    <span>+{formatPrice(selectedTariffPeriod.extra_devices_cost_kopeks ?? 0)}</span>
                                   </div>
                                 </>
                               ) : (
