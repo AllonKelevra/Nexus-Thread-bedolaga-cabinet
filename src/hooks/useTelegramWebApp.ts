@@ -101,14 +101,22 @@ export function useTelegramWebApp() {
   }, [isFullscreen, requestFullscreen, exitFullscreen])
 
   const disableVerticalSwipes = useCallback(() => {
-    if (webApp?.disableVerticalSwipes) {
-      webApp.disableVerticalSwipes()
+    try {
+      if (webApp?.disableVerticalSwipes && webApp.version && webApp.version >= '7.7') {
+        webApp.disableVerticalSwipes()
+      }
+    } catch {
+      // Not supported in this version
     }
   }, [webApp])
 
   const enableVerticalSwipes = useCallback(() => {
-    if (webApp?.enableVerticalSwipes) {
-      webApp.enableVerticalSwipes()
+    try {
+      if (webApp?.enableVerticalSwipes && webApp.version && webApp.version >= '7.7') {
+        webApp.enableVerticalSwipes()
+      }
+    } catch {
+      // Not supported in this version
     }
   }, [webApp])
 
@@ -140,9 +148,13 @@ export function initTelegramWebApp() {
     webApp.ready()
     webApp.expand()
 
-    // Disable vertical swipes to prevent accidental closing
-    if (webApp.disableVerticalSwipes) {
-      webApp.disableVerticalSwipes()
+    // Disable vertical swipes to prevent accidental closing (requires Bot API 7.7+)
+    try {
+      if (webApp.disableVerticalSwipes && webApp.version && webApp.version >= '7.7') {
+        webApp.disableVerticalSwipes()
+      }
+    } catch {
+      // Swipe control not supported in this version
     }
 
     // Auto-enter fullscreen if enabled in settings (use cached value for instant response)
