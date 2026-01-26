@@ -230,6 +230,12 @@ export interface TariffPeriod {
   discount_percent?: number
   discount_amount_kopeks?: number
   discount_label?: string
+  // Extra devices info (additional devices beyond tariff base)
+  extra_devices_count?: number
+  extra_devices_cost_kopeks?: number
+  extra_devices_cost_label?: string
+  base_tariff_price_kopeks?: number
+  base_tariff_price_label?: string
 }
 
 export interface TariffServer {
@@ -246,6 +252,8 @@ export interface Tariff {
   traffic_limit_label: string
   is_unlimited_traffic: boolean
   device_limit: number
+  base_device_limit?: number
+  extra_devices_count: number
   servers_count: number
   servers: TariffServer[]
   periods: TariffPeriod[]
