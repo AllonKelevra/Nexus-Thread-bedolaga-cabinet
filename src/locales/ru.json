@@ -515,7 +515,8 @@
       "users": "Пользователи",
       "payments": "Платежи",
       "remnawave": "RemnaWave",
-      "emailTemplates": "Email-шаблоны"
+      "emailTemplates": "Email-шаблоны",
+      "paymentMethods": "Платёжные методы"
     },
     "panel": {
       "title": "Панель администратора",
@@ -532,7 +533,8 @@
       "usersDesc": "Управление пользователями бота",
       "paymentsDesc": "Проверка платежей",
       "remnawaveDesc": "Управление панелью и статистика",
-      "emailTemplatesDesc": "Шаблоны email-уведомлений"
+      "emailTemplatesDesc": "Шаблоны email-уведомлений",
+      "paymentMethodsDesc": "Настройка и порядок платежек"
     },
     "emailTemplates": {
       "title": "Email-шаблоны",
