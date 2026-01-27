@@ -355,7 +355,7 @@
       "manageServers": "Управление серверами",
       "manageServersTitle": "Управление серверами"
     },
-    "servers": {
+    "serverManagement": {
       "statusLegend": "✅ — подключено • ➕ — будет добавлено (платно) • ➖ — будет отключено",
       "discountBanner": "Ваша скидка на серверы: -{{percent}}%",
       "forDays": "(за {{days}} дн.)",

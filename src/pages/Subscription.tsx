@@ -1287,13 +1287,13 @@ export default function Subscription() {
                   ) : countriesData && countriesData.countries.length > 0 ? (
                     <div className="space-y-4">
                       <div className="rounded-lg bg-dark-700/30 p-2 text-xs text-dark-500">
-                        {t('subscription.servers.statusLegend')}
+                        {t('subscription.serverManagement.statusLegend')}
                       </div>
 
                       {countriesData.discount_percent > 0 && (
                         <div className="rounded-lg border border-success-500/30 bg-success-500/10 p-2 text-xs text-success-400">
                           🎁{' '}
-                          {t('subscription.servers.discountBanner', {
+                          {t('subscription.serverManagement.discountBanner', {
                             percent: countriesData.discount_percent,
                           })}
                         </div>
@@ -1351,7 +1351,7 @@ export default function Subscription() {
                                   {willBeAdded && (
                                     <div className="text-xs text-success-400">
                                       +{formatPrice(country.price_kopeks)}{' '}
-                                      {t('subscription.servers.forDays', {
+                                      {t('subscription.serverManagement.forDays', {
                                         days: countriesData.days_left,
                                       })}
                                       {country.has_discount && (
@@ -1370,7 +1370,7 @@ export default function Subscription() {
                                   {!willBeAdded && !isCurrentlyConnected && (
                                     <div className="text-xs text-dark-500">
                                       {formatPrice(country.price_per_month_kopeks)}
-                                      {t('subscription.servers.perMonth')}
+                                      {t('subscription.serverManagement.perMonth')}
                                       {country.has_discount && (
                                         <span className="ml-1 text-dark-600 line-through">
                                           {formatPrice(country.base_price_kopeks)}
@@ -1380,7 +1380,7 @@ export default function Subscription() {
                                   )}
                                   {!country.is_available && !isCurrentlyConnected && (
                                     <div className="text-xs text-dark-500">
-                                      {t('subscription.servers.unavailable')}
+                                      {t('subscription.serverManagement.unavailable')}
                                     </div>
                                   )}
                                 </div>
@@ -1423,7 +1423,7 @@ export default function Subscription() {
                             {added.length > 0 && (
                               <div className="text-sm">
                                 <span className="text-success-400">
-                                  {t('subscription.servers.toAdd')}
+                                  {t('subscription.serverManagement.toAdd')}
                                 </span>{' '}
                                 <span className="text-dark-300">
                                   {addedServers.map((s) => s.name).join(', ')}
@@ -1433,7 +1433,7 @@ export default function Subscription() {
                             {removed.length > 0 && (
                               <div className="text-sm">
                                 <span className="text-error-400">
-                                  {t('subscription.servers.toDisconnect')}
+                                  {t('subscription.serverManagement.toDisconnect')}
                                 </span>{' '}
                                 <span className="text-dark-300">
                                   {countriesData.countries
@@ -1446,7 +1446,7 @@ export default function Subscription() {
                             {totalCost > 0 && (
                               <div className="text-center">
                                 <div className="text-sm text-dark-400">
-                                  {t('subscription.servers.paymentProrated')}
+                                  {t('subscription.serverManagement.paymentProrated')}
                                 </div>
                                 <div className="text-xl font-bold text-accent-400">
                                   {formatPrice(totalCost)}
@@ -1477,13 +1477,13 @@ export default function Subscription() {
                                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                                 </span>
                               ) : (
-                                t('subscription.servers.applyChanges')
+                                t('subscription.serverManagement.applyChanges')
                               )}
                             </button>
                           </div>
                         ) : (
                           <div className="py-2 text-center text-sm text-dark-500">
-                            {t('subscription.servers.selectServersHint')}
+                            {t('subscription.serverManagement.selectServersHint')}
                           </div>
                         );
                       })()}
@@ -1496,7 +1496,7 @@ export default function Subscription() {
                     </div>
                   ) : (
                     <div className="py-4 text-center text-sm text-dark-400">
-                      {t('subscription.servers.noServersAvailable')}
+                      {t('subscription.serverManagement.noServersAvailable')}
                     </div>
                   )}
                 </div>

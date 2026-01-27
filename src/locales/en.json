@@ -333,7 +333,7 @@
       "manageServers": "Server management",
       "manageServersTitle": "Server management"
     },
-    "servers": {
+    "serverManagement": {
       "statusLegend": "✅ — connected • ➕ — will be added (paid) • ➖ — will be disconnected",
       "discountBanner": "Your server discount: -{{percent}}%",
       "forDays": "(for {{days}} days)",

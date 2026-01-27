@@ -242,7 +242,7 @@
       "manageServers": "مدیریت سرورها",
       "manageServersTitle": "مدیریت سرورها"
     },
-    "servers": {
+    "serverManagement": {
       "statusLegend": "✅ — متصل • ➕ — اضافه خواهد شد (پولی) • ➖ — قطع خواهد شد",
       "discountBanner": "تخفیف سرور شما: -{{percent}}%",
       "forDays": "(برای {{days}} روز)",
