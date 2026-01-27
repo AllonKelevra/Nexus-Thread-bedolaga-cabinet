@@ -10,6 +10,16 @@ import ConnectionModal from '../components/ConnectionModal'
 import InsufficientBalancePrompt from '../components/InsufficientBalancePrompt'
 import { useCurrency } from '../hooks/useCurrency'
 
+// Russian pluralization for "день/дня/дней"
+const pluralizeDays = (n: number): string => {
+  const mod100 = n % 100
+  const mod10 = n % 10
+  if (mod100 >= 11 && mod100 <= 19) return 'дней'
+  if (mod10 === 1) return 'день'
+  if (mod10 >= 2 && mod10 <= 4) return 'дня'
+  return 'дней'
+}
+
 // Helper to extract error message from axios/api errors
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof AxiosError) {
@@ -656,7 +666,7 @@ export default function Subscription() {
                           ) : purchase.days_remaining === 1 ? (
                             <span className="text-orange-400">Остался 1 день</span>
                           ) : (
-                            <span>Осталось {purchase.days_remaining} {purchase.days_remaining >= 5 ? 'дней' : purchase.days_remaining === 1 ? 'день' : 'дня'}</span>
+                            <span>Осталось {purchase.days_remaining} {pluralizeDays(purchase.days_remaining)}</span>
                           )}
                         </div>
                         <div className="text-xs text-dark-500 flex items-center gap-1">
@@ -1844,7 +1854,7 @@ export default function Subscription() {
                           const promoCustom = applyPromoDiscount(basePrice, hasExistingDiscount)
                           return (
                             <div className="flex justify-between text-sm">
-                              <span className="text-dark-400">{customDays} дней × {formatPrice(selectedTariff.price_per_day_kopeks ?? 0)}/день</span>
+                              <span className="text-dark-400">{customDays} {pluralizeDays(customDays)} × {formatPrice(selectedTariff.price_per_day_kopeks ?? 0)}/день</span>
                               <div className="flex items-center gap-2">
                                 <span className="text-accent-400 font-medium">{formatPrice(promoCustom.price)}</span>
                                 {promoCustom.original && (
@@ -1949,7 +1959,7 @@ export default function Subscription() {
                         <div className="space-y-2 mb-4">
                           {useCustomDays ? (
                             <div className="flex justify-between text-sm text-dark-300">
-                              <span>Период: {customDays} дней</span>
+                              <span>Период: {customDays} {pluralizeDays(customDays)}</span>
                               <div className="flex items-center gap-2">
                                 <span>{formatPrice(promoPeriod.price)}</span>
                                 {promoPeriod.original && (
