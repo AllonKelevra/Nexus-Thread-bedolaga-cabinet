@@ -20,6 +20,7 @@ export const MENU_SECTIONS: MenuSection[] = [
       { id: 'favorites', iconType: 'star' },
       { id: 'branding', iconType: null },
       { id: 'theme', iconType: null },
+      { id: 'analytics', iconType: null },
     ]
   },
   {

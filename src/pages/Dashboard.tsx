@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { DotLottieReact } from '@lottiefiles/dotlottie-react'
 import { useAuthStore } from '../store/auth'
 import { subscriptionApi } from '../api/subscription'
 import { referralApi } from '../api/referral'
@@ -38,33 +37,11 @@ const RefreshIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
   </svg>
 )
 
-// Check if device might be low-performance (Telegram WebApp on mobile)
-const isLowPerfDevice = (() => {
-  const isTelegramWebApp = !!(window as unknown as { Telegram?: { WebApp?: unknown } }).Telegram?.WebApp
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
-  return isTelegramWebApp && isMobile
-})()
-
-const SupportLottieIcon = () => {
-  // Use static icon on low-performance devices
-  if (isLowPerfDevice) {
-    return (
-      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
-      </svg>
-    )
-  }
-
-  return (
-    <div className="w-6 h-6">
-      <DotLottieReact
-        src="https://lottie.host/51d2c570-0aa0-47af-a8cb-2bd4afe8d6ae/RzpYZ5zUKX.lottie"
-        loop
-        autoplay
-      />
-    </div>
-  )
-}
+const SupportLottieIcon = () => (
+  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+  </svg>
+)
 
 export default function Dashboard() {
   const { t } = useTranslation()

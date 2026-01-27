@@ -6,6 +6,7 @@ import Layout from './components/layout/Layout'
 import PageLoader from './components/common/PageLoader'
 import { MaintenanceScreen, ChannelSubscriptionScreen } from './components/blocking'
 import { saveReturnUrl } from './utils/token'
+import { useAnalyticsCounters } from './hooks/useAnalyticsCounters'
 
 // Auth pages - load immediately (small)
 import Login from './pages/Login'
@@ -109,6 +110,8 @@ function BlockingOverlay() {
 }
 
 function App() {
+  useAnalyticsCounters()
+
   return (
     <>
       <BlockingOverlay />
