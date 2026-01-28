@@ -207,8 +207,12 @@ export default function Wheel() {
   const starsInvoiceMutation = useMutation({
     mutationFn: wheelApi.createStarsInvoice,
     onSuccess: (data) => {
-      if (window.Telegram?.WebApp?.openInvoice) {
-        window.Telegram.WebApp.openInvoice(data.invoice_url, async (status) => {
+      const webApp = window.Telegram?.WebApp;
+      // openInvoice requires WebApp version 6.1+
+      const supportsInvoice =
+        webApp?.openInvoice && webApp?.isVersionAtLeast && webApp.isVersionAtLeast('6.1');
+      if (supportsInvoice) {
+        webApp.openInvoice(data.invoice_url, async (status) => {
           if (status === 'paid') {
             // Mark this as a Stars spin so handleSpinComplete knows to use the pending result
             isStarsSpinRef.current = true;

@@ -207,7 +207,10 @@ export default function TopUpModal({ method, onClose, initialAmountRubles }: Top
         setError(t('balance.errors.noPaymentLink'));
         return;
       }
-      if (!webApp?.openInvoice) {
+      // openInvoice requires WebApp version 6.1+
+      const supportsInvoice =
+        webApp?.openInvoice && webApp?.isVersionAtLeast && webApp.isVersionAtLeast('6.1');
+      if (!supportsInvoice) {
         setError(t('balance.errors.starsOnlyInTelegram'));
         return;
       }
