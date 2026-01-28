@@ -85,6 +85,8 @@ interface TelegramWebApp {
     button_color?: string;
     button_text_color?: string;
   };
+  // Version check helper
+  isVersionAtLeast: (version: string) => boolean;
 }
 
 interface Window {
