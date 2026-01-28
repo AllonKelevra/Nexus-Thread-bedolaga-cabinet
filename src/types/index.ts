@@ -86,6 +86,12 @@ export interface Subscription {
   tariff_name?: string;
 }
 
+// Response wrapper for subscription status endpoint
+export interface SubscriptionStatusResponse {
+  has_subscription: boolean;
+  subscription: Subscription | null;
+}
+
 // Device types
 export interface Device {
   hwid: string;
