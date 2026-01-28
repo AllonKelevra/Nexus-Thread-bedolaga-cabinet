@@ -342,6 +342,7 @@
       "title": "Дополнительные опции",
       "buyDevices": "Докупить устройства",
       "currentDeviceLimit": "Текущий лимит: {{count}} устройств",
+      "maxDevices": "максимум {{count}}",
       "devicesUnavailable": "Докупка устройств недоступна",
       "devicesUnit": "устройств",
       "buy": "Купить",

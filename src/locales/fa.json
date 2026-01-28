@@ -229,6 +229,7 @@
       "title": "گزینه‌های اضافی",
       "buyDevices": "خرید دستگاه بیشتر",
       "currentDeviceLimit": "محدودیت فعلی: {{count}} دستگاه",
+      "maxDevices": "حداکثر {{count}}",
       "devicesUnavailable": "خرید دستگاه در دسترس نیست",
       "devicesUnit": "دستگاه",
       "buy": "خرید",

@@ -229,6 +229,7 @@
       "title": "附加选项",
       "buyDevices": "购买更多设备",
       "currentDeviceLimit": "当前限制：{{count}} 台设备",
+      "maxDevices": "最多 {{count}} 台",
       "devicesUnavailable": "设备购买不可用",
       "devicesUnit": "台设备",
       "buy": "购买",
