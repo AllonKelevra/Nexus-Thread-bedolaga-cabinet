@@ -1,6 +1,7 @@
 import apiClient from './client';
 import type {
   Subscription,
+  SubscriptionStatusResponse,
   RenewalOption,
   TrafficPackage,
   TrialInfo,
@@ -11,9 +12,9 @@ import type {
 } from '../types';
 
 export const subscriptionApi = {
-  // Get current subscription
-  getSubscription: async (): Promise<Subscription> => {
-    const response = await apiClient.get<Subscription>('/cabinet/subscription');
+  // Get current subscription status
+  getSubscription: async (): Promise<SubscriptionStatusResponse> => {
+    const response = await apiClient.get<SubscriptionStatusResponse>('/cabinet/subscription');
     return response.data;
   },
 
