@@ -134,6 +134,21 @@ cabinet.yourdomain.com {
         uri strip_prefix /api
         reverse_proxy backend_bot:8080
     }
+    @websockets {
+        header_regexp Connection *Upgrade*
+        header        Upgrade websocket
+    }
+
+    # WebSocket соединения
+    handle /cabinet/ws {
+        uri strip_prefix /api
+        reverse_proxy backend_bot:8080 {
+            transport http {
+                read_timeout 0
+                write_timeout 0
+            }
+        }
+    }
 
     # Статические файлы
     handle {
@@ -141,6 +156,7 @@ cabinet.yourdomain.com {
         file_server
     }
 }
+
 ```
 
 docker-compose.yml для Caddy:
