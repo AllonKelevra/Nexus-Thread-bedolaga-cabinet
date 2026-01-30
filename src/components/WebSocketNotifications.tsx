@@ -1,6 +1,6 @@
 /**
  * Global WebSocket notifications handler.
- * Listens to all WebSocket events and shows appropriate toasts.
+ * Listens to all WebSocket events and shows appropriate toasts or modals.
  */
 
 import { useCallback } from 'react';
@@ -11,6 +11,7 @@ import { useWebSocket, WSMessage } from '../hooks/useWebSocket';
 import { useToast } from './Toast';
 import { useAuthStore } from '../store/auth';
 import { useCurrency } from '../hooks/useCurrency';
+import { useSuccessNotification } from '../store/successNotification';
 
 export default function WebSocketNotifications() {
   const { t } = useTranslation();
@@ -19,6 +20,7 @@ export default function WebSocketNotifications() {
   const { showToast } = useToast();
   const { refreshUser } = useAuthStore();
   const { formatAmount, currencySymbol } = useCurrency();
+  const { show: showSuccessModal } = useSuccessNotification();
 
   const handleMessage = useCallback(
     (message: WSMessage) => {
@@ -31,21 +33,11 @@ export default function WebSocketNotifications() {
 
       // Balance events
       if (type === 'balance.topup') {
-        const amount = message.amount_rubles ?? (message.amount_kopeks ?? 0) / 100;
-        showToast({
-          type: 'success',
-          title: t('wsNotifications.balance.topupTitle', 'Balance topped up'),
-          message: t(
-            'wsNotifications.balance.topupMessage',
-            'Your balance has been topped up by {{amount}} {{currency}}',
-            {
-              amount: formatAmount(amount),
-              currency: currencySymbol,
-            },
-          ),
-          icon: <span className="text-lg">💰</span>,
-          onClick: () => navigate('/balance'),
-          duration: 6000,
+        // Show prominent success modal for balance top-up
+        showSuccessModal({
+          type: 'balance_topup',
+          amountKopeks: message.amount_kopeks,
+          newBalanceKopeks: message.new_balance_kopeks,
         });
         // Refresh data
         queryClient.invalidateQueries({ queryKey: ['balance'] });
@@ -82,22 +74,11 @@ export default function WebSocketNotifications() {
 
       // Subscription events
       if (type === 'subscription.activated') {
-        showToast({
-          type: 'success',
-          title: t('wsNotifications.subscription.activatedTitle', 'Subscription activated'),
-          message: message.tariff_name
-            ? t(
-                'wsNotifications.subscription.activatedWithTariff',
-                'Your subscription "{{tariff}}" is now active!',
-                { tariff: message.tariff_name },
-              )
-            : t(
-                'wsNotifications.subscription.activatedMessage',
-                'Your subscription is now active!',
-              ),
-          icon: <span className="text-lg">🎉</span>,
-          onClick: () => navigate('/subscription'),
-          duration: 8000,
+        // Show prominent success modal for subscription activation
+        showSuccessModal({
+          type: 'subscription_activated',
+          expiresAt: message.expires_at,
+          tariffName: message.tariff_name,
         });
         queryClient.invalidateQueries({ queryKey: ['subscription'] });
         queryClient.invalidateQueries({ queryKey: ['balance'] });
@@ -106,27 +87,11 @@ export default function WebSocketNotifications() {
       }
 
       if (type === 'subscription.renewed') {
-        const amount = message.amount_rubles ?? (message.amount_kopeks ?? 0) / 100;
-        showToast({
-          type: 'success',
-          title: t('wsNotifications.subscription.renewedTitle', 'Subscription renewed'),
-          message:
-            amount > 0
-              ? t(
-                  'wsNotifications.subscription.renewedWithAmount',
-                  'Your subscription has been renewed for {{amount}} {{currency}}',
-                  {
-                    amount: formatAmount(amount),
-                    currency: currencySymbol,
-                  },
-                )
-              : t(
-                  'wsNotifications.subscription.renewedMessage',
-                  'Your subscription has been renewed!',
-                ),
-          icon: <span className="text-lg">✨</span>,
-          onClick: () => navigate('/subscription'),
-          duration: 8000,
+        // Show prominent success modal for subscription renewal
+        showSuccessModal({
+          type: 'subscription_renewed',
+          amountKopeks: message.amount_kopeks,
+          expiresAt: message.new_expires_at,
         });
         queryClient.invalidateQueries({ queryKey: ['subscription'] });
         queryClient.invalidateQueries({ queryKey: ['balance'] });
@@ -385,7 +350,16 @@ export default function WebSocketNotifications() {
         return;
       }
     },
-    [t, showToast, navigate, queryClient, refreshUser, formatAmount, currencySymbol],
+    [
+      t,
+      showToast,
+      showSuccessModal,
+      navigate,
+      queryClient,
+      refreshUser,
+      formatAmount,
+      currencySymbol,
+    ],
   );
 
   // Connect to WebSocket and handle messages

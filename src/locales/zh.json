@@ -114,6 +114,27 @@
       "receivedMessage": "收到付款 {{amount}} {{currency}}"
     }
   },
+  "successNotification": {
+    "balanceTopup": {
+      "title": "余额已充值！"
+    },
+    "subscriptionActivated": {
+      "title": "订阅已激活！"
+    },
+    "subscriptionRenewed": {
+      "title": "订阅已续期！"
+    },
+    "subscriptionPurchased": {
+      "title": "订阅已购买！"
+    },
+    "amount": "金额",
+    "price": "价格",
+    "newBalance": "新余额",
+    "tariff": "套餐",
+    "validUntil": "有效期至",
+    "goToSubscription": "查看订阅",
+    "goToBalance": "查看余额"
+  },
   "auth": {
     "login": "登录",
     "register": "注册",

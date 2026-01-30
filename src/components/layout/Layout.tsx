@@ -7,6 +7,7 @@ import LanguageSwitcher from '../LanguageSwitcher';
 import PromoDiscountBadge from '../PromoDiscountBadge';
 import TicketNotificationBell from '../TicketNotificationBell';
 import WebSocketNotifications from '../WebSocketNotifications';
+import SuccessNotificationModal from '../SuccessNotificationModal';
 import AnimatedBackground from '../AnimatedBackground';
 import { contestsApi } from '../../api/contests';
 import { pollsApi } from '../../api/polls';
@@ -455,6 +456,9 @@ export default function Layout({ children }: LayoutProps) {
     <div className="flex min-h-screen flex-col">
       {/* Global WebSocket notifications handler */}
       <WebSocketNotifications />
+
+      {/* Global success notification modal */}
+      <SuccessNotificationModal />
 
       {/* Animated Background */}
       <AnimatedBackground />

@@ -123,6 +123,27 @@
       "receivedMessage": "Получен платёж на сумму {{amount}} {{currency}}"
     }
   },
+  "successNotification": {
+    "balanceTopup": {
+      "title": "Баланс пополнен!"
+    },
+    "subscriptionActivated": {
+      "title": "Подписка активирована!"
+    },
+    "subscriptionRenewed": {
+      "title": "Подписка продлена!"
+    },
+    "subscriptionPurchased": {
+      "title": "Подписка оплачена!"
+    },
+    "amount": "Сумма",
+    "price": "Стоимость",
+    "newBalance": "Новый баланс",
+    "tariff": "Тариф",
+    "validUntil": "Действует до",
+    "goToSubscription": "Перейти к подписке",
+    "goToBalance": "Перейти к балансу"
+  },
   "auth": {
     "login": "Вход",
     "register": "Регистрация",

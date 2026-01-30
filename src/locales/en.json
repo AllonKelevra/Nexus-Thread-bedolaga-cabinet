@@ -120,6 +120,27 @@
       "receivedMessage": "Payment of {{amount}} {{currency}} received"
     }
   },
+  "successNotification": {
+    "balanceTopup": {
+      "title": "Balance topped up!"
+    },
+    "subscriptionActivated": {
+      "title": "Subscription activated!"
+    },
+    "subscriptionRenewed": {
+      "title": "Subscription renewed!"
+    },
+    "subscriptionPurchased": {
+      "title": "Subscription purchased!"
+    },
+    "amount": "Amount",
+    "price": "Price",
+    "newBalance": "New balance",
+    "tariff": "Tariff",
+    "validUntil": "Valid until",
+    "goToSubscription": "Go to Subscription",
+    "goToBalance": "Go to Balance"
+  },
   "auth": {
     "login": "Login",
     "register": "Register",
