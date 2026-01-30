@@ -499,6 +499,10 @@
       "selectMethod": "Выберите способ",
       "enterAmount": "Введите сумму",
       "amountRange": "Сумма: {{min}} – {{max}} ₽"
+    },
+    "paymentSuccess": {
+      "title": "Оплата прошла успешно",
+      "message": "Ваш баланс успешно пополнен. Средства уже доступны."
     }
   },
   "referral": {

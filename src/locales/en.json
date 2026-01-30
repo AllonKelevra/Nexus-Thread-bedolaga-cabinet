@@ -477,6 +477,10 @@
       "selectMethod": "Select a method",
       "enterAmount": "Enter an amount",
       "amountRange": "Amount: {{min}} – {{max}} ₽"
+    },
+    "paymentSuccess": {
+      "title": "Payment Successful",
+      "message": "Your balance has been topped up successfully. The funds are now available."
     }
   },
   "referral": {
