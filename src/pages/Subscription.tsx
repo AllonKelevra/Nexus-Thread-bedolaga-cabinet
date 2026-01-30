@@ -2446,8 +2446,6 @@ export default function Subscription() {
                           const originalTotal = promoPeriod.original
                             ? promoPeriod.original + trafficPrice
                             : null;
-                          const hasEnoughBalance =
-                            purchaseOptions && totalPrice <= purchaseOptions.balance_kopeks;
 
                           return (
                             <>
