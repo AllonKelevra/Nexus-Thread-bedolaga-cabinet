@@ -6,6 +6,7 @@ import { useAuthStore } from '../../store/auth';
 import LanguageSwitcher from '../LanguageSwitcher';
 import PromoDiscountBadge from '../PromoDiscountBadge';
 import TicketNotificationBell from '../TicketNotificationBell';
+import WebSocketNotifications from '../WebSocketNotifications';
 import AnimatedBackground from '../AnimatedBackground';
 import { contestsApi } from '../../api/contests';
 import { pollsApi } from '../../api/polls';
@@ -452,6 +453,9 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <div className="flex min-h-screen flex-col">
+      {/* Global WebSocket notifications handler */}
+      <WebSocketNotifications />
+
       {/* Animated Background */}
       <AnimatedBackground />
 
