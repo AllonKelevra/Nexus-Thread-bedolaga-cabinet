@@ -52,6 +52,8 @@ export default function Balance() {
       refetchBalance();
       refreshUser();
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      // Also invalidate subscription in case auto-activation happened
+      queryClient.invalidateQueries({ queryKey: ['subscription'] });
 
       // Show success toast
       showToast({
