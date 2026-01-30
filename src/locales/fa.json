@@ -403,7 +403,11 @@
     "missing": "کمبود",
     "noPaymentMethods": "روش پرداخت در دسترس نیست",
     "selectPaymentMethod": "روش پرداخت را انتخاب کنید",
-    "topUpToComplete": "برای تکمیل خرید شارژ کنید"
+    "topUpToComplete": "برای تکمیل خرید شارژ کنید",
+    "paymentSuccess": {
+      "title": "پرداخت موفق",
+      "message": "موجودی شما با موفقیت شارژ شد. وجوه اکنون در دسترس است."
+    }
   },
   "referral": {
     "title": "برنامه معرفی",
