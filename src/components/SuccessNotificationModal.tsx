@@ -58,6 +58,16 @@ const DevicesIcon = () => (
   </svg>
 );
 
+const TrafficIcon = () => (
+  <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+    />
+  </svg>
+);
+
 const CloseIcon = () => (
   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -125,6 +135,7 @@ export default function SuccessNotificationModal() {
     data.type === 'subscription_renewed' ||
     data.type === 'subscription_purchased';
   const isDevicesPurchased = data.type === 'devices_purchased';
+  const isTrafficPurchased = data.type === 'traffic_purchased';
 
   // Format amount
   const formattedAmount = data.amountKopeks
@@ -173,6 +184,10 @@ export default function SuccessNotificationModal() {
       title = t('successNotification.devicesPurchased.title', 'Devices added!');
       icon = <DevicesIcon />;
       gradientClass = 'from-blue-500 to-cyan-600';
+    } else if (data.type === 'traffic_purchased') {
+      title = t('successNotification.trafficPurchased.title', 'Traffic added!');
+      icon = <TrafficIcon />;
+      gradientClass = 'from-emerald-500 to-teal-600';
     }
   }
 
@@ -227,9 +242,9 @@ export default function SuccessNotificationModal() {
                   : t('successNotification.price', 'Price')}
               </span>
               <span
-                className={`text-lg font-bold ${isDevicesPurchased ? 'text-dark-100' : 'text-success-400'}`}
+                className={`text-lg font-bold ${isDevicesPurchased || isTrafficPurchased ? 'text-dark-100' : 'text-success-400'}`}
               >
-                {isDevicesPurchased ? '' : '+'}
+                {isDevicesPurchased || isTrafficPurchased ? '' : '+'}
                 {formattedAmount}
               </span>
             </div>
@@ -251,6 +266,25 @@ export default function SuccessNotificationModal() {
                 {t('successNotification.totalDevices', 'Total devices')}
               </span>
               <span className="font-semibold text-dark-100">{data.newDeviceLimit}</span>
+            </div>
+          )}
+
+          {/* Traffic info (for traffic purchase) */}
+          {isTrafficPurchased && data.trafficGbAdded && (
+            <div className="flex items-center justify-between rounded-xl bg-dark-800/50 px-4 py-3">
+              <span className="text-dark-400">
+                {t('successNotification.trafficAdded', 'Traffic added')}
+              </span>
+              <span className="text-lg font-bold text-emerald-400">+{data.trafficGbAdded} GB</span>
+            </div>
+          )}
+
+          {isTrafficPurchased && data.newTrafficLimitGb && (
+            <div className="flex items-center justify-between rounded-xl bg-dark-800/50 px-4 py-3">
+              <span className="text-dark-400">
+                {t('successNotification.totalTraffic', 'Total traffic')}
+              </span>
+              <span className="font-semibold text-dark-100">{data.newTrafficLimitGb} GB</span>
             </div>
           )}
 
@@ -310,6 +344,16 @@ export default function SuccessNotificationModal() {
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-600 py-3.5 font-bold text-white shadow-lg shadow-blue-500/25 transition-all hover:from-blue-400 hover:to-cyan-500 active:from-blue-600 active:to-cyan-700"
               >
                 <DevicesIcon />
+                <span>{t('successNotification.goToSubscription', 'Go to Subscription')}</span>
+              </button>
+            )}
+
+            {isTrafficPurchased && (
+              <button
+                onClick={handleGoToSubscription}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 py-3.5 font-bold text-white shadow-lg shadow-emerald-500/25 transition-all hover:from-emerald-400 hover:to-teal-500 active:from-emerald-600 active:to-teal-700"
+              >
+                <TrafficIcon />
                 <span>{t('successNotification.goToSubscription', 'Go to Subscription')}</span>
               </button>
             )}
