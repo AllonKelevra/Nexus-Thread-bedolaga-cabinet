@@ -1360,6 +1360,7 @@
       "title": "用户",
       "subtitle": "机器人用户管理",
       "search": "按ID、姓名、用户名搜索...",
+      "searchEmail": "按邮箱搜索...",
       "noData": "未找到用户",
       "purchaseCount": "{{count}} 次购买",
       "noPurchases": "无购买记录",
