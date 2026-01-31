@@ -48,6 +48,16 @@ const RocketIcon = () => (
   </svg>
 );
 
+const DevicesIcon = () => (
+  <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"
+    />
+  </svg>
+);
+
 const CloseIcon = () => (
   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -114,6 +124,7 @@ export default function SuccessNotificationModal() {
     data.type === 'subscription_activated' ||
     data.type === 'subscription_renewed' ||
     data.type === 'subscription_purchased';
+  const isDevicesPurchased = data.type === 'devices_purchased';
 
   // Format amount
   const formattedAmount = data.amountKopeks
@@ -158,6 +169,10 @@ export default function SuccessNotificationModal() {
       title = t('successNotification.subscriptionPurchased.title', 'Subscription purchased!');
       icon = <RocketIcon />;
       gradientClass = 'from-accent-500 to-purple-600';
+    } else if (data.type === 'devices_purchased') {
+      title = t('successNotification.devicesPurchased.title', 'Devices added!');
+      icon = <DevicesIcon />;
+      gradientClass = 'from-blue-500 to-cyan-600';
     }
   }
 
@@ -211,7 +226,31 @@ export default function SuccessNotificationModal() {
                   ? t('successNotification.amount', 'Amount')
                   : t('successNotification.price', 'Price')}
               </span>
-              <span className="text-lg font-bold text-success-400">+{formattedAmount}</span>
+              <span
+                className={`text-lg font-bold ${isDevicesPurchased ? 'text-dark-100' : 'text-success-400'}`}
+              >
+                {isDevicesPurchased ? '' : '+'}
+                {formattedAmount}
+              </span>
+            </div>
+          )}
+
+          {/* Devices info (for devices purchase) */}
+          {isDevicesPurchased && data.devicesAdded && (
+            <div className="flex items-center justify-between rounded-xl bg-dark-800/50 px-4 py-3">
+              <span className="text-dark-400">
+                {t('successNotification.devicesAdded', 'Devices added')}
+              </span>
+              <span className="text-lg font-bold text-blue-400">+{data.devicesAdded}</span>
+            </div>
+          )}
+
+          {isDevicesPurchased && data.newDeviceLimit && (
+            <div className="flex items-center justify-between rounded-xl bg-dark-800/50 px-4 py-3">
+              <span className="text-dark-400">
+                {t('successNotification.totalDevices', 'Total devices')}
+              </span>
+              <span className="font-semibold text-dark-100">{data.newDeviceLimit}</span>
             </div>
           )}
 
@@ -262,6 +301,16 @@ export default function SuccessNotificationModal() {
               >
                 <WalletIcon />
                 <span>{t('successNotification.goToBalance', 'Go to Balance')}</span>
+              </button>
+            )}
+
+            {isDevicesPurchased && (
+              <button
+                onClick={handleGoToSubscription}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-600 py-3.5 font-bold text-white shadow-lg shadow-blue-500/25 transition-all hover:from-blue-400 hover:to-cyan-500 active:from-blue-600 active:to-cyan-700"
+              >
+                <DevicesIcon />
+                <span>{t('successNotification.goToSubscription', 'Go to Subscription')}</span>
               </button>
             )}
 
