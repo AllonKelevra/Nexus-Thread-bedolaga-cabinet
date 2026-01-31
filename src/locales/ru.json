@@ -2053,6 +2053,7 @@
       "title": "Пользователи",
       "subtitle": "Управление пользователями бота",
       "search": "Поиск по ID, имени, username...",
+      "searchEmail": "Поиск по email...",
       "noData": "Пользователи не найдены",
       "purchaseCount": "{{count}} покупок",
       "noPurchases": "Нет покупок",

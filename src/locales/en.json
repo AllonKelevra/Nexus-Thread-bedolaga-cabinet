@@ -1542,6 +1542,7 @@
       "title": "Users",
       "subtitle": "Bot user management",
       "search": "Search by ID, name, username...",
+      "searchEmail": "Search by email...",
       "noData": "No users found",
       "purchaseCount": "{{count}} purchases",
       "noPurchases": "No purchases",
