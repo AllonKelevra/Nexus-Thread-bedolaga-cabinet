@@ -105,7 +105,7 @@ export const subscriptionApi = {
 
   // Save traffic cart for later purchase after top-up
   saveTrafficCart: async (trafficGb: number): Promise<void> => {
-    await apiClient.post('/cabinet/subscription/traffic/save-cart', { traffic_gb: trafficGb });
+    await apiClient.post('/cabinet/subscription/traffic/save-cart', { gb: trafficGb });
   },
 
   // Update autopay settings
