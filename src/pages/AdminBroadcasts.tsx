@@ -815,16 +815,16 @@ function CreateBroadcastModal({ onClose, onSuccess }: CreateModalProps) {
 
         {/* Footer */}
         <div className="flex items-center justify-between border-t border-dark-700 p-4">
-          <div className="text-sm text-dark-400">
+          <div className="flex items-center gap-4 text-sm text-dark-400">
             {(channel === 'telegram' || channel === 'both') && telegramRecipientsCount !== null && (
-              <span className="mr-4">
-                <TelegramIcon className="mr-1 inline h-4 w-4" />
+              <span className="flex items-center gap-1">
+                <TelegramIcon />
                 <strong className="text-blue-400">{telegramRecipientsCount}</strong>
               </span>
             )}
             {(channel === 'email' || channel === 'both') && emailRecipientsCount !== null && (
-              <span>
-                <EmailIcon className="mr-1 inline h-4 w-4" />
+              <span className="flex items-center gap-1">
+                <EmailIcon />
                 <strong className="text-purple-400">{emailRecipientsCount}</strong>
               </span>
             )}
@@ -921,8 +921,8 @@ function BroadcastDetailModal({ broadcast, onClose, onStop, isStopping }: Detail
           {/* Telegram Message */}
           {broadcast.message_text && (
             <div>
-              <p className="mb-1 text-sm text-dark-400">
-                <TelegramIcon className="mr-1 inline h-4 w-4" />
+              <p className="mb-1 flex items-center gap-1 text-sm text-dark-400">
+                <TelegramIcon />
                 {t('admin.broadcasts.message')}
               </p>
               <div className="max-h-40 overflow-y-auto whitespace-pre-wrap rounded-lg bg-dark-700 p-3 text-sm text-dark-100">
@@ -934,8 +934,8 @@ function BroadcastDetailModal({ broadcast, onClose, onStop, isStopping }: Detail
           {/* Email Subject */}
           {broadcast.email_subject && (
             <div>
-              <p className="mb-1 text-sm text-dark-400">
-                <EmailIcon className="mr-1 inline h-4 w-4" />
+              <p className="mb-1 flex items-center gap-1 text-sm text-dark-400">
+                <EmailIcon />
                 {t('admin.broadcasts.emailSubject')}
               </p>
               <div className="rounded-lg bg-dark-700 p-3 text-sm text-dark-100">
