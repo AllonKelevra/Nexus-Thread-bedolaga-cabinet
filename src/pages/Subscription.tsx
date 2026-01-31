@@ -1257,6 +1257,9 @@ export default function Subscription() {
                                   missingAmountKopeks={missingAmount}
                                   compact
                                   className="mb-3"
+                                  onBeforeTopUp={async () => {
+                                    await subscriptionApi.saveTrafficCart(selectedTrafficPackage);
+                                  }}
                                 />
                               )}
                               <button
