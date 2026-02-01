@@ -427,6 +427,7 @@
       "connectedDevices": "Подключено устройств: {{count}}",
       "disconnectDevicesFirst": "Сначала отключите устройства, чтобы уменьшить лимит ниже {{count}}",
       "reduceUnavailable": "Уменьшение устройств недоступно",
+      "alreadyAtMinDeviceLimit": "Уже достигнут минимальный лимит устройств для вашего тарифа",
       "reduce": "Уменьшить",
       "reducing": "Уменьшение...",
       "newDeviceLimit": "Новый лимит: {{count}} устройств",

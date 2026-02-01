@@ -1253,8 +1253,10 @@ export default function Subscription() {
 
                 {deviceReductionInfo?.available === false ? (
                   <div className="py-4 text-center text-sm text-dark-400">
-                    {deviceReductionInfo.reason ||
-                      t('subscription.additionalOptions.reduceUnavailable')}
+                    {deviceReductionInfo.reason?.includes('minimum device limit')
+                      ? t('subscription.additionalOptions.alreadyAtMinDeviceLimit')
+                      : deviceReductionInfo.reason ||
+                        t('subscription.additionalOptions.reduceUnavailable')}
                   </div>
                 ) : deviceReductionInfo ? (
                   <div className="space-y-4">

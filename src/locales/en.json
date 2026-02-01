@@ -405,6 +405,7 @@
       "connectedDevices": "Connected devices: {{count}}",
       "disconnectDevicesFirst": "Disconnect devices first to reduce the limit below {{count}}",
       "reduceUnavailable": "Device reduction is not available",
+      "alreadyAtMinDeviceLimit": "Already at minimum device limit for your tariff",
       "reduce": "Reduce",
       "reducing": "Reducing...",
       "newDeviceLimit": "New limit: {{count}} devices",
