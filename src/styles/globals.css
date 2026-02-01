@@ -8,13 +8,13 @@
   :root {
     --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
 
-    /* Bento Design System */
-    --bento-radius: 24px;
-    --bento-radius-lg: 32px;
+    /* Unified Card System */
+    --bento-radius: 16px;
+    --bento-radius-lg: 20px;
     --bento-gap: 16px;
     --bento-gap-lg: 24px;
-    --bento-padding: 24px;
-    --bento-padding-lg: 32px;
+    --bento-padding: 20px;
+    --bento-padding-lg: 24px;
 
     /* Linear Design Tokens */
     --linear-radius: 8px;
@@ -548,11 +548,12 @@
 
   /* ========== DARK THEME COMPONENTS (default) ========== */
 
-  /* Cards - Dark (optimized for mobile) */
+  /* Cards - Dark (unified style) */
   .card {
-    @apply rounded-2xl border border-dark-800/50 bg-dark-900/70 p-5 transition-all duration-300 ease-smooth sm:p-6;
-    /* GPU acceleration for smooth scroll */
+    @apply border border-dark-700/40 bg-dark-900/70 p-5 transition-all duration-200 sm:p-6;
+    border-radius: var(--bento-radius);
     transform: translateZ(0);
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
   }
 
   /* Enable backdrop-blur only on desktop */
@@ -563,11 +564,11 @@
   }
 
   .card-hover {
-    @apply card cursor-pointer hover:scale-[1.01] hover:border-dark-700/50 hover:bg-dark-800/50 hover:shadow-card active:scale-[0.99];
+    @apply card cursor-pointer hover:border-dark-600/50 hover:bg-dark-800/60 active:scale-[0.98];
   }
 
   .card-glow {
-    @apply card hover:scale-[1.01] hover:border-accent-500/30 hover:shadow-glow;
+    @apply card cursor-pointer hover:border-accent-500/30 hover:shadow-glow;
   }
 
   .card-animated {
@@ -760,8 +761,10 @@
 
   /* Cards - Light */
   .light .card {
-    @apply rounded-2xl border border-champagne-300/50 bg-white/90 p-5 shadow-sm sm:p-6;
+    @apply border-champagne-300/50 bg-white/90 p-5 shadow-sm sm:p-6;
+    border-radius: var(--bento-radius);
     transform: translateZ(0);
+    box-shadow: inset 0 1px 0 0 rgba(0, 0, 0, 0.03);
   }
 
   @media (min-width: 1024px) {

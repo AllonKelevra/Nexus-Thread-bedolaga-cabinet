@@ -10,7 +10,7 @@ const cardVariants = cva(
   [
     'relative overflow-hidden',
     'border border-dark-700/40 bg-dark-900/70',
-    'rounded-linear-lg',
+    'rounded-[var(--bento-radius)]',
     'transition-all duration-200',
     // GPU acceleration
     'transform-gpu',
