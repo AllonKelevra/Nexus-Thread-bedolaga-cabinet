@@ -6,7 +6,8 @@ import {
   adminBroadcastsApi,
   BroadcastFilter,
   TariffFilter,
-  BroadcastCreateRequest,
+  BroadcastChannel,
+  CombinedBroadcastCreateRequest,
 } from '../api/adminBroadcasts';
 import { AdminBackButton } from '../components/admin';
 
@@ -83,6 +84,22 @@ const ChevronDownIcon = () => (
   </svg>
 );
 
+const TelegramIcon = () => (
+  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
+  </svg>
+);
+
+const EmailIcon = () => (
+  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
+    />
+  </svg>
+);
+
 // Filter labels
 const FILTER_GROUP_LABEL_KEYS: Record<string, string> = {
   basic: 'admin.broadcasts.filterGroups.basic',
@@ -92,6 +109,7 @@ const FILTER_GROUP_LABEL_KEYS: Record<string, string> = {
   activity: 'admin.broadcasts.filterGroups.activity',
   source: 'admin.broadcasts.filterGroups.source',
   tariff: 'admin.broadcasts.filterGroups.tariff',
+  email: 'admin.broadcasts.filterGroups.email',
 };
 
 export default function AdminBroadcastCreate() {
@@ -100,7 +118,14 @@ export default function AdminBroadcastCreate() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Channel selection
+  const [channel, setChannel] = useState<BroadcastChannel>('telegram');
+
+  // Common state
   const [target, setTarget] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Telegram-specific state
   const [messageText, setMessageText] = useState('');
   const [selectedButtons, setSelectedButtons] = useState<string[]>(['home']);
   const [mediaFile, setMediaFile] = useState<File | null>(null);
@@ -108,52 +133,65 @@ export default function AdminBroadcastCreate() {
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const [uploadedFileId, setUploadedFileId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
 
-  // Fetch filters
+  // Email-specific state
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailContent, setEmailContent] = useState('');
+
+  // Fetch Telegram filters
   const { data: filtersData, isLoading: filtersLoading } = useQuery({
     queryKey: ['admin', 'broadcasts', 'filters'],
     queryFn: adminBroadcastsApi.getFilters,
+    enabled: channel === 'telegram',
+  });
+
+  // Fetch Email filters
+  const { data: emailFiltersData, isLoading: emailFiltersLoading } = useQuery({
+    queryKey: ['admin', 'broadcasts', 'email-filters'],
+    queryFn: adminBroadcastsApi.getEmailFilters,
+    enabled: channel === 'email',
   });
 
   // Fetch buttons
   const { data: buttonsData } = useQuery({
     queryKey: ['admin', 'broadcasts', 'buttons'],
     queryFn: adminBroadcastsApi.getButtons,
+    enabled: channel === 'telegram',
   });
 
-  // Preview mutation
+  // Preview mutations
   const previewMutation = useMutation({
     mutationFn: adminBroadcastsApi.preview,
   });
 
+  const emailPreviewMutation = useMutation({
+    mutationFn: adminBroadcastsApi.previewEmail,
+  });
+
   // Create mutation
   const createMutation = useMutation({
-    mutationFn: adminBroadcastsApi.create,
+    mutationFn: adminBroadcastsApi.createCombined,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'broadcasts'] });
       navigate(`/admin/broadcasts/${data.id}`);
     },
   });
 
-  // Group filters
+  // Group Telegram filters
   const groupedFilters = useMemo(() => {
     if (!filtersData) return {};
     const groups: Record<string, (BroadcastFilter | TariffFilter)[]> = {};
 
-    // Basic filters
     filtersData.filters.forEach((f) => {
       const group = f.group || 'basic';
       if (!groups[group]) groups[group] = [];
       groups[group].push(f);
     });
 
-    // Tariff filters
     if (filtersData.tariff_filters.length > 0) {
       groups['tariff'] = filtersData.tariff_filters;
     }
 
-    // Custom filters
     filtersData.custom_filters.forEach((f) => {
       const group = f.group || 'custom';
       if (!groups[group]) groups[group] = [];
@@ -163,16 +201,63 @@ export default function AdminBroadcastCreate() {
     return groups;
   }, [filtersData]);
 
+  // Group Email filters
+  const groupedEmailFilters = useMemo(() => {
+    if (!emailFiltersData) return {};
+    const groups: Record<string, BroadcastFilter[]> = {};
+
+    emailFiltersData.filters.forEach((f) => {
+      const group = f.group || 'email';
+      if (!groups[group]) groups[group] = [];
+      groups[group].push(f);
+    });
+
+    return groups;
+  }, [emailFiltersData]);
+
+  // Current filters based on channel
+  const currentFilters = channel === 'telegram' ? groupedFilters : groupedEmailFilters;
+  const isFiltersLoading = channel === 'telegram' ? filtersLoading : emailFiltersLoading;
+
   // Selected filter info
   const selectedFilter = useMemo(() => {
-    if (!target || !filtersData) return null;
-    const all = [
-      ...filtersData.filters,
-      ...filtersData.tariff_filters,
-      ...filtersData.custom_filters,
-    ];
-    return all.find((f) => f.key === target);
-  }, [target, filtersData]);
+    if (!target) return null;
+
+    if (channel === 'telegram' && filtersData) {
+      const all = [
+        ...filtersData.filters,
+        ...filtersData.tariff_filters,
+        ...filtersData.custom_filters,
+      ];
+      return all.find((f) => f.key === target);
+    }
+
+    if (channel === 'email' && emailFiltersData) {
+      return emailFiltersData.filters.find((f) => f.key === target);
+    }
+
+    return null;
+  }, [target, channel, filtersData, emailFiltersData]);
+
+  // Handle channel change
+  const handleChannelChange = (newChannel: BroadcastChannel) => {
+    setChannel(newChannel);
+    setTarget('');
+    previewMutation.reset();
+    emailPreviewMutation.reset();
+  };
+
+  // Handle filter selection
+  const handleFilterSelect = (filterKey: string) => {
+    setTarget(filterKey);
+    setShowFilters(false);
+
+    if (channel === 'telegram') {
+      previewMutation.mutate(filterKey);
+    } else {
+      emailPreviewMutation.mutate(filterKey);
+    }
+  };
 
   // Handle file selection
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -181,7 +266,6 @@ export default function AdminBroadcastCreate() {
 
     setMediaFile(file);
 
-    // Determine media type
     if (file.type.startsWith('image/')) {
       setMediaType('photo');
       setMediaPreview(URL.createObjectURL(file));
@@ -193,7 +277,6 @@ export default function AdminBroadcastCreate() {
       setMediaPreview(null);
     }
 
-    // Upload file
     setIsUploading(true);
     try {
       const result = await adminBroadcastsApi.uploadMedia(file, mediaType);
@@ -224,27 +307,54 @@ export default function AdminBroadcastCreate() {
     );
   };
 
+  // Validate form
+  const isValid = useMemo(() => {
+    if (!target) return false;
+
+    if (channel === 'telegram') {
+      return messageText.trim().length > 0;
+    }
+
+    if (channel === 'email') {
+      return emailSubject.trim().length > 0 && emailContent.trim().length > 0;
+    }
+
+    return false;
+  }, [target, channel, messageText, emailSubject, emailContent]);
+
   // Submit
   const handleSubmit = () => {
-    if (!target || !messageText.trim()) return;
+    if (!isValid) return;
 
-    const data: BroadcastCreateRequest = {
+    const data: CombinedBroadcastCreateRequest = {
+      channel,
       target,
-      message_text: messageText,
-      selected_buttons: selectedButtons,
     };
 
-    if (uploadedFileId) {
-      data.media = {
-        type: mediaType,
-        file_id: uploadedFileId,
-      };
+    if (channel === 'telegram') {
+      data.message_text = messageText;
+      data.selected_buttons = selectedButtons;
+
+      if (uploadedFileId) {
+        data.media = {
+          type: mediaType,
+          file_id: uploadedFileId,
+        };
+      }
+    }
+
+    if (channel === 'email') {
+      data.email_subject = emailSubject;
+      data.email_html_content = emailContent;
     }
 
     createMutation.mutate(data);
   };
 
-  const recipientsCount = previewMutation.data?.count ?? selectedFilter?.count ?? null;
+  const recipientsCount =
+    channel === 'telegram'
+      ? (previewMutation.data?.count ?? selectedFilter?.count ?? null)
+      : (emailPreviewMutation.data?.count ?? selectedFilter?.count ?? null);
 
   return (
     <div className="space-y-6">
@@ -257,17 +367,57 @@ export default function AdminBroadcastCreate() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-dark-100">{t('admin.broadcasts.create')}</h1>
-            <p className="text-sm text-dark-400">{t('admin.broadcasts.createSubtitle')}</p>
+            <p className="text-sm text-dark-400">{t('admin.broadcasts.subtitle')}</p>
           </div>
+        </div>
+      </div>
+
+      {/* Channel selection */}
+      <div className="card">
+        <label className="mb-3 block text-sm font-medium text-dark-300">
+          {t('admin.broadcasts.selectChannel')}
+        </label>
+        <div className="flex gap-3">
+          <button
+            onClick={() => handleChannelChange('telegram')}
+            className={`flex flex-1 items-center justify-center gap-2 rounded-lg border p-4 transition-all ${
+              channel === 'telegram'
+                ? 'border-accent-500 bg-accent-500/10 text-accent-400'
+                : 'border-dark-700 bg-dark-800 text-dark-300 hover:border-dark-600'
+            }`}
+          >
+            <TelegramIcon />
+            <span className="font-medium">{t('admin.broadcasts.channel.telegram')}</span>
+          </button>
+          <button
+            onClick={() => handleChannelChange('email')}
+            className={`flex flex-1 items-center justify-center gap-2 rounded-lg border p-4 transition-all ${
+              channel === 'email'
+                ? 'border-accent-500 bg-accent-500/10 text-accent-400'
+                : 'border-dark-700 bg-dark-800 text-dark-300 hover:border-dark-600'
+            }`}
+          >
+            <EmailIcon />
+            <span className="font-medium">{t('admin.broadcasts.channel.email')}</span>
+          </button>
         </div>
       </div>
 
       {/* Content */}
       <div className="card space-y-6">
+        {/* Section title */}
+        <h2 className="text-lg font-semibold text-dark-100">
+          {channel === 'telegram'
+            ? t('admin.broadcasts.telegramSection')
+            : t('admin.broadcasts.emailSection')}
+        </h2>
+
         {/* Filter selection */}
         <div>
           <label className="mb-2 block text-sm font-medium text-dark-300">
-            {t('admin.broadcasts.selectFilter')}
+            {channel === 'telegram'
+              ? t('admin.broadcasts.selectFilter')
+              : t('admin.broadcasts.selectEmailFilter')}
           </label>
           <div className="relative">
             <button
@@ -279,7 +429,9 @@ export default function AdminBroadcastCreate() {
                 <span className={selectedFilter ? 'text-dark-100' : 'text-dark-400'}>
                   {selectedFilter
                     ? selectedFilter.label
-                    : t('admin.broadcasts.selectFilterPlaceholder')}
+                    : channel === 'telegram'
+                      ? t('admin.broadcasts.selectFilterPlaceholder')
+                      : t('admin.broadcasts.selectEmailFilterPlaceholder')}
                 </span>
                 {recipientsCount !== null && (
                   <span className="rounded-full bg-accent-500/20 px-2 py-0.5 text-xs text-accent-400">
@@ -292,10 +444,10 @@ export default function AdminBroadcastCreate() {
 
             {showFilters && (
               <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-64 overflow-y-auto rounded-lg border border-dark-700 bg-dark-800 shadow-xl">
-                {filtersLoading ? (
+                {isFiltersLoading ? (
                   <div className="p-4 text-center text-dark-400">{t('common.loading')}</div>
                 ) : (
-                  Object.entries(groupedFilters).map(([group, filters]) => (
+                  Object.entries(currentFilters).map(([group, filters]) => (
                     <div key={group}>
                       <div className="sticky top-0 bg-dark-900 px-3 py-2 text-xs font-medium text-dark-400">
                         {FILTER_GROUP_LABEL_KEYS[group] ? t(FILTER_GROUP_LABEL_KEYS[group]) : group}
@@ -303,11 +455,7 @@ export default function AdminBroadcastCreate() {
                       {filters.map((filter) => (
                         <button
                           key={filter.key}
-                          onClick={() => {
-                            setTarget(filter.key);
-                            setShowFilters(false);
-                            previewMutation.mutate(filter.key);
-                          }}
+                          onClick={() => handleFilterSelect(filter.key)}
                           className={`flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-dark-700 ${
                             target === filter.key ? 'bg-accent-500/20' : ''
                           }`}
@@ -326,104 +474,161 @@ export default function AdminBroadcastCreate() {
           </div>
         </div>
 
-        {/* Message text */}
-        <div>
-          <label className="mb-2 block text-sm font-medium text-dark-300">
-            {t('admin.broadcasts.messageText')}
-          </label>
-          <textarea
-            value={messageText}
-            onChange={(e) => setMessageText(e.target.value)}
-            placeholder={t('admin.broadcasts.messageTextPlaceholder')}
-            rows={6}
-            maxLength={4000}
-            className="input min-h-[150px] resize-y"
-          />
-          <div className="mt-1 text-right text-xs text-dark-400">{messageText.length}/4000</div>
-        </div>
-
-        {/* Media upload */}
-        <div>
-          <label className="mb-2 block text-sm font-medium text-dark-300">
-            {t('admin.broadcasts.media')}
-          </label>
-          {mediaFile ? (
-            <div className="rounded-lg border border-dark-700 bg-dark-800 p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {mediaType === 'photo' && <PhotoIcon />}
-                  {mediaType === 'video' && <VideoIcon />}
-                  {mediaType === 'document' && <DocumentIcon />}
-                  <div>
-                    <p className="text-sm text-dark-100">{mediaFile.name}</p>
-                    <p className="text-xs text-dark-400">
-                      {(mediaFile.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={handleRemoveMedia}
-                  className="rounded-lg p-2 text-dark-400 hover:bg-dark-700 hover:text-error-400"
-                  disabled={isUploading}
-                >
-                  <XIcon />
-                </button>
-              </div>
-              {mediaPreview && (
-                <img
-                  src={mediaPreview}
-                  alt="Preview"
-                  className="mt-3 max-h-48 rounded-lg object-cover"
-                />
-              )}
-              {isUploading && (
-                <div className="mt-2 flex items-center gap-2 text-sm text-accent-400">
-                  <RefreshIcon />
-                  {t('admin.broadcasts.uploading')}
-                </div>
-              )}
-            </div>
-          ) : (
+        {/* Telegram-specific fields */}
+        {channel === 'telegram' && (
+          <>
+            {/* Message text */}
             <div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*,video/*,application/*"
-                onChange={handleFileSelect}
-                className="hidden"
+              <label className="mb-2 block text-sm font-medium text-dark-300">
+                {t('admin.broadcasts.messageText')}
+              </label>
+              <textarea
+                value={messageText}
+                onChange={(e) => setMessageText(e.target.value)}
+                placeholder={t('admin.broadcasts.messageTextPlaceholder')}
+                rows={6}
+                maxLength={4000}
+                className="input min-h-[150px] resize-y"
               />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-dark-600 bg-dark-800/50 p-6 text-dark-400 transition-colors hover:border-dark-500 hover:bg-dark-800 hover:text-dark-300"
-              >
-                <PhotoIcon />
-                <span>{t('admin.broadcasts.addMedia')}</span>
-              </button>
+              <div className="mt-1 text-right text-xs text-dark-400">{messageText.length}/4000</div>
             </div>
-          )}
-        </div>
 
-        {/* Buttons selection */}
-        <div>
-          <label className="mb-2 block text-sm font-medium text-dark-300">
-            {t('admin.broadcasts.buttons')}
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {buttonsData?.buttons.map((button) => (
-              <button
-                key={button.key}
-                onClick={() => toggleButton(button.key)}
-                className={`rounded-lg px-3 py-2 text-sm transition-colors ${
-                  selectedButtons.includes(button.key)
-                    ? 'bg-accent-500 text-white'
-                    : 'border border-dark-700 bg-dark-800 text-dark-300 hover:bg-dark-700'
-                }`}
-              >
-                {button.label}
-              </button>
-            ))}
-          </div>
-        </div>
+            {/* Media upload */}
+            <div>
+              <label className="mb-2 block text-sm font-medium text-dark-300">
+                {t('admin.broadcasts.media')}
+              </label>
+              {mediaFile ? (
+                <div className="rounded-lg border border-dark-700 bg-dark-800 p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {mediaType === 'photo' && <PhotoIcon />}
+                      {mediaType === 'video' && <VideoIcon />}
+                      {mediaType === 'document' && <DocumentIcon />}
+                      <div>
+                        <p className="text-sm text-dark-100">{mediaFile.name}</p>
+                        <p className="text-xs text-dark-400">
+                          {(mediaFile.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleRemoveMedia}
+                      className="rounded-lg p-2 text-dark-400 hover:bg-dark-700 hover:text-error-400"
+                      disabled={isUploading}
+                    >
+                      <XIcon />
+                    </button>
+                  </div>
+                  {mediaPreview && (
+                    <img
+                      src={mediaPreview}
+                      alt="Preview"
+                      className="mt-3 max-h-48 rounded-lg object-cover"
+                    />
+                  )}
+                  {isUploading && (
+                    <div className="mt-2 flex items-center gap-2 text-sm text-accent-400">
+                      <RefreshIcon />
+                      {t('admin.broadcasts.uploading')}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*,video/*,application/*"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-dark-600 bg-dark-800/50 p-6 text-dark-400 transition-colors hover:border-dark-500 hover:bg-dark-800 hover:text-dark-300"
+                  >
+                    <PhotoIcon />
+                    <span>{t('admin.broadcasts.addMedia')}</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Buttons selection */}
+            <div>
+              <label className="mb-2 block text-sm font-medium text-dark-300">
+                {t('admin.broadcasts.buttons')}
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {buttonsData?.buttons.map((button) => (
+                  <button
+                    key={button.key}
+                    onClick={() => toggleButton(button.key)}
+                    className={`rounded-lg px-3 py-2 text-sm transition-colors ${
+                      selectedButtons.includes(button.key)
+                        ? 'bg-accent-500 text-white'
+                        : 'border border-dark-700 bg-dark-800 text-dark-300 hover:bg-dark-700'
+                    }`}
+                  >
+                    {button.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Email-specific fields */}
+        {channel === 'email' && (
+          <>
+            {/* Email subject */}
+            <div>
+              <label className="mb-2 block text-sm font-medium text-dark-300">
+                {t('admin.broadcasts.emailSubject')}
+              </label>
+              <input
+                type="text"
+                value={emailSubject}
+                onChange={(e) => setEmailSubject(e.target.value)}
+                placeholder={t('admin.broadcasts.emailSubjectPlaceholder')}
+                className="input"
+                maxLength={200}
+              />
+            </div>
+
+            {/* Email content */}
+            <div>
+              <label className="mb-2 block text-sm font-medium text-dark-300">
+                {t('admin.broadcasts.emailContent')}
+              </label>
+              <p className="mb-2 text-xs text-dark-400">{t('admin.broadcasts.emailContentHint')}</p>
+              <textarea
+                value={emailContent}
+                onChange={(e) => setEmailContent(e.target.value)}
+                placeholder={t('admin.broadcasts.emailContentPlaceholder')}
+                rows={10}
+                className="input min-h-[200px] resize-y font-mono text-sm"
+              />
+            </div>
+
+            {/* Email variables hint */}
+            <div className="rounded-lg border border-dark-700 bg-dark-800/50 p-4">
+              <p className="mb-2 text-sm font-medium text-dark-300">
+                {t('admin.broadcasts.emailVariables')}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {['{{user_name}}', '{{email}}', '{{user_id}}'].map((variable) => (
+                  <code
+                    key={variable}
+                    className="rounded bg-dark-700 px-2 py-1 text-xs text-accent-400"
+                  >
+                    {variable}
+                  </code>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Footer */}
@@ -443,7 +648,7 @@ export default function AdminBroadcastCreate() {
           </button>
           <button
             onClick={handleSubmit}
-            disabled={!target || !messageText.trim() || createMutation.isPending || isUploading}
+            disabled={!isValid || createMutation.isPending || isUploading}
             className="btn-primary flex items-center gap-2"
           >
             {createMutation.isPending ? <RefreshIcon /> : <BroadcastIcon />}
