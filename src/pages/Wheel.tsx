@@ -1,10 +1,11 @@
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { wheelApi, type SpinResult, type SpinHistoryItem } from '../api/wheel';
 import FortuneWheel from '../components/wheel/FortuneWheel';
 import InsufficientBalancePrompt from '../components/InsufficientBalancePrompt';
 import { useCurrency } from '../hooks/useCurrency';
+import { usePlatform } from '@/platform';
 
 // Pre-calculated confetti positions (stable across re-renders)
 const CONFETTI_POSITIONS = Array.from({ length: 20 }, (_, i) => ({
@@ -72,6 +73,7 @@ export default function Wheel() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { formatAmount, currencySymbol } = useCurrency();
+  const { platform, openInvoice, capabilities } = usePlatform();
 
   const [isSpinning, setIsSpinning] = useState(false);
   const [targetRotation, setTargetRotation] = useState<number | null>(null);
@@ -83,11 +85,8 @@ export default function Wheel() {
   const [showHistory, setShowHistory] = useState(false);
   const [isPayingStars, setIsPayingStars] = useState(false);
 
-  const isTelegramMiniApp = useMemo(() => {
-    // Check if we're in Telegram Mini App environment
-    const webApp = window.Telegram?.WebApp;
-    return !!(webApp && typeof webApp.initData === 'string');
-  }, []);
+  // Check if we're in Telegram Mini App environment
+  const isTelegramMiniApp = platform === 'telegram';
 
   const {
     data: config,
@@ -206,64 +205,43 @@ export default function Wheel() {
 
   const starsInvoiceMutation = useMutation({
     mutationFn: wheelApi.createStarsInvoice,
-    onSuccess: (data) => {
-      const webApp = window.Telegram?.WebApp;
-      // openInvoice requires WebApp version 6.1+
-      const supportsInvoice =
-        webApp?.openInvoice && webApp?.isVersionAtLeast && webApp.isVersionAtLeast('6.1');
-      if (supportsInvoice) {
-        webApp.openInvoice(data.invoice_url, async (status) => {
-          if (status === 'paid') {
-            // Mark this as a Stars spin so handleSpinComplete knows to use the pending result
-            isStarsSpinRef.current = true;
-            pendingStarsResultRef.current = null;
+    onSuccess: async (data) => {
+      // Use platform's openInvoice if available
+      if (capabilities.hasInvoice) {
+        const status = await openInvoice(data.invoice_url);
 
-            // Cancel any existing polling
-            if (pollingAbortRef.current) {
-              pollingAbortRef.current.abort();
-            }
-            pollingAbortRef.current = new AbortController();
+        if (status === 'paid') {
+          // Mark this as a Stars spin so handleSpinComplete knows to use the pending result
+          isStarsSpinRef.current = true;
+          pendingStarsResultRef.current = null;
 
-            // Payment done - reset paying state immediately
-            setIsPayingStars(false);
+          // Cancel any existing polling
+          if (pollingAbortRef.current) {
+            pollingAbortRef.current.abort();
+          }
+          pollingAbortRef.current = new AbortController();
 
-            // Start spinning animation (5 seconds duration in FortuneWheel)
-            setIsSpinning(true);
-            setTargetRotation(360 * 5 + Math.random() * 360);
+          // Payment done - reset paying state immediately
+          setIsPayingStars(false);
 
-            // Poll for the result in the background - don't await here!
-            // The result will be stored and shown when animation completes
-            const abortSignal = pollingAbortRef.current.signal;
-            pollForSpinResult(abortSignal)
-              .then((result) => {
-                if (abortSignal.aborted) return;
+          // Start spinning animation (5 seconds duration in FortuneWheel)
+          setIsSpinning(true);
+          setTargetRotation(360 * 5 + Math.random() * 360);
 
-                queryClient.invalidateQueries({ queryKey: ['wheel-config'] });
-                queryClient.invalidateQueries({ queryKey: ['wheel-history'] });
+          // Poll for the result in the background - don't await here!
+          // The result will be stored and shown when animation completes
+          const abortSignal = pollingAbortRef.current.signal;
+          pollForSpinResult(abortSignal)
+            .then((result) => {
+              if (abortSignal.aborted) return;
 
-                if (result) {
-                  pendingStarsResultRef.current = result;
-                } else {
-                  // Fallback: couldn't get result
-                  pendingStarsResultRef.current = {
-                    success: true,
-                    prize_id: null,
-                    prize_type: null,
-                    prize_value: 0,
-                    prize_display_name: '',
-                    emoji: '🎰',
-                    color: '#8B5CF6',
-                    rotation_degrees: 0,
-                    message: t('wheel.starsPaymentSuccessCheckHistory'),
-                    promocode: null,
-                    error: null,
-                  };
-                }
-              })
-              .catch(() => {
-                if (abortSignal.aborted) return;
+              queryClient.invalidateQueries({ queryKey: ['wheel-config'] });
+              queryClient.invalidateQueries({ queryKey: ['wheel-history'] });
 
-                // Error polling, show generic success
+              if (result) {
+                pendingStarsResultRef.current = result;
+              } else {
+                // Fallback: couldn't get result
                 pendingStarsResultRef.current = {
                   success: true,
                   prize_id: null,
@@ -277,29 +255,47 @@ export default function Wheel() {
                   promocode: null,
                   error: null,
                 };
-              });
-          } else if (status !== 'cancelled') {
-            setIsPayingStars(false);
-            setSpinResult({
-              success: false,
-              prize_id: null,
-              prize_type: null,
-              prize_value: 0,
-              prize_display_name: '',
-              emoji: '😔',
-              color: '#EF4444',
-              rotation_degrees: 0,
-              message: t('wheel.starsPaymentFailed'),
-              promocode: null,
-              error: 'payment_failed',
+              }
+            })
+            .catch(() => {
+              if (abortSignal.aborted) return;
+
+              // Error polling, show generic success
+              pendingStarsResultRef.current = {
+                success: true,
+                prize_id: null,
+                prize_type: null,
+                prize_value: 0,
+                prize_display_name: '',
+                emoji: '🎰',
+                color: '#8B5CF6',
+                rotation_degrees: 0,
+                message: t('wheel.starsPaymentSuccessCheckHistory'),
+                promocode: null,
+                error: null,
+              };
             });
-            setShowResultModal(true);
-          } else {
-            setIsPayingStars(false);
-          }
-        });
+        } else if (status !== 'cancelled') {
+          setIsPayingStars(false);
+          setSpinResult({
+            success: false,
+            prize_id: null,
+            prize_type: null,
+            prize_value: 0,
+            prize_display_name: '',
+            emoji: '😔',
+            color: '#EF4444',
+            rotation_degrees: 0,
+            message: t('wheel.starsPaymentFailed'),
+            promocode: null,
+            error: 'payment_failed',
+          });
+          setShowResultModal(true);
+        } else {
+          setIsPayingStars(false);
+        }
       } else {
-        // Fallback: open invoice URL in Telegram (browser or unsupported WebApp version)
+        // Fallback: open invoice URL in browser (unsupported platform)
         setIsPayingStars(false);
         window.open(data.invoice_url, '_blank', 'noopener,noreferrer');
         setSpinResult({

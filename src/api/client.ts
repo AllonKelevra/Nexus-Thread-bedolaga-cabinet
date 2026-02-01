@@ -6,6 +6,7 @@ import {
   safeRedirectToLogin,
 } from '../utils/token';
 import { useBlockingStore } from '../store/blocking';
+import { getTelegramInitData as getSDKInitData } from '../hooks/useTelegramSDK';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -41,7 +42,8 @@ function ensureCsrfToken(): string {
 const getTelegramInitData = (): string | null => {
   if (typeof window === 'undefined') return null;
 
-  const initData = window.Telegram?.WebApp?.initData;
+  // Use SDK helper to get initData
+  const initData = getSDKInitData();
   if (initData) {
     tokenStorage.setTelegramInitData(initData);
     return initData;

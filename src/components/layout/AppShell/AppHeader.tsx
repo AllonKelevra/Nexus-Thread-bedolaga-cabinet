@@ -45,14 +45,17 @@ import {
 const FALLBACK_NAME = import.meta.env.VITE_APP_NAME || 'Cabinet';
 const FALLBACK_LOGO = import.meta.env.VITE_APP_LOGO || 'V';
 
+import type { TelegramPlatform } from '@/hooks/useTelegramSDK';
+
 interface AppHeaderProps {
   mobileMenuOpen: boolean;
   setMobileMenuOpen: (open: boolean) => void;
   onCommandPaletteOpen: () => void;
   headerHeight: number;
   isFullscreen: boolean;
-  safeAreaInset: { top: number; bottom: number };
-  contentSafeAreaInset: { top: number; bottom: number };
+  safeAreaInset: { top: number; bottom: number; left: number; right: number };
+  contentSafeAreaInset: { top: number; bottom: number; left: number; right: number };
+  telegramPlatform?: TelegramPlatform;
   wheelEnabled?: boolean;
   referralEnabled?: boolean;
   hasContests?: boolean;
@@ -67,6 +70,7 @@ export function AppHeader({
   isFullscreen,
   safeAreaInset,
   contentSafeAreaInset,
+  telegramPlatform,
   wheelEnabled,
   referralEnabled,
   hasContests,
@@ -178,7 +182,7 @@ export function AppHeader({
         className="glass fixed left-0 right-0 top-0 z-50 shadow-lg shadow-black/10 lg:hidden"
         style={{
           paddingTop: isFullscreen
-            ? `${Math.max(safeAreaInset.top, contentSafeAreaInset.top) + 45}px`
+            ? `${Math.max(safeAreaInset.top, contentSafeAreaInset.top) + (telegramPlatform === 'android' ? 0 : 45)}px`
             : undefined,
         }}
       >

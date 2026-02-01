@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 
 import { useAuthStore } from '@/store/auth';
 import { useBackButton, useHaptic } from '@/platform';
-import { useTelegramWebApp } from '@/hooks/useTelegramWebApp';
+import { useTelegramSDK } from '@/hooks/useTelegramSDK';
 import { referralApi } from '@/api/referral';
 import { wheelApi } from '@/api/wheel';
 import { contestsApi } from '@/api/contests';
@@ -18,7 +18,7 @@ import {
   preloadLogo,
   isLogoPreloaded,
 } from '@/api/branding';
-import { setCachedFullscreenEnabled, isTelegramMobile } from '@/hooks/useTelegramWebApp';
+import { setCachedFullscreenEnabled } from '@/hooks/useTelegramSDK';
 import { cn } from '@/lib/utils';
 
 import WebSocketNotifications from '@/components/WebSocketNotifications';
@@ -157,12 +157,19 @@ export function AppShell({ children }: AppShellProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAdmin, isAuthenticated, logout } = useAuthStore();
-  const { isFullscreen, safeAreaInset, contentSafeAreaInset, requestFullscreen, isTelegramWebApp } =
-    useTelegramWebApp();
+  const {
+    isFullscreen,
+    safeAreaInset,
+    contentSafeAreaInset,
+    requestFullscreen,
+    isTelegramWebApp,
+    platform,
+    isMobile,
+  } = useTelegramSDK();
   const haptic = useHaptic();
 
   // Only apply fullscreen UI adjustments on mobile Telegram (iOS/Android)
-  const isMobileFullscreen = isFullscreen && isTelegramMobile();
+  const isMobileFullscreen = isFullscreen && isMobile;
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
@@ -256,10 +263,10 @@ export function AppShell({ children }: AppShellProps) {
     setCachedFullscreenEnabled(fullscreenSetting.enabled);
 
     // Request fullscreen if enabled, not already fullscreen, and on mobile Telegram
-    if (fullscreenSetting.enabled && !isFullscreen && isTelegramMobile()) {
+    if (fullscreenSetting.enabled && !isFullscreen && isMobile) {
       requestFullscreen();
     }
-  }, [fullscreenSetting, isTelegramWebApp, isFullscreen, requestFullscreen]);
+  }, [fullscreenSetting, isTelegramWebApp, isFullscreen, requestFullscreen, isMobile]);
 
   // Feature flags
   const { data: referralTerms } = useQuery({
@@ -356,8 +363,9 @@ export function AppShell({ children }: AppShellProps) {
   };
 
   // Calculate header height based on fullscreen mode (only on mobile Telegram)
+  // On Android, don't add extra 45px padding as the native header is already accounted for
   const headerHeight = isMobileFullscreen
-    ? 64 + Math.max(safeAreaInset.top, contentSafeAreaInset.top) + 45
+    ? 64 + Math.max(safeAreaInset.top, contentSafeAreaInset.top) + (platform === 'android' ? 0 : 45)
     : 64;
 
   return (
@@ -478,6 +486,7 @@ export function AppShell({ children }: AppShellProps) {
         isFullscreen={isMobileFullscreen}
         safeAreaInset={safeAreaInset}
         contentSafeAreaInset={contentSafeAreaInset}
+        telegramPlatform={platform}
         wheelEnabled={wheelConfig?.is_enabled}
         referralEnabled={referralTerms?.is_enabled}
         hasContests={(contestsCount?.count ?? 0) > 0}

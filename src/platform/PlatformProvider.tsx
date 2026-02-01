@@ -2,6 +2,7 @@ import { useMemo, type ReactNode } from 'react';
 import { PlatformContext } from '@/platform/PlatformContext';
 import { createTelegramAdapter } from '@/platform/adapters/TelegramAdapter';
 import { createWebAdapter } from '@/platform/adapters/WebAdapter';
+import { isInTelegramWebApp } from '@/hooks/useTelegramSDK';
 import type { PlatformContext as PlatformContextType } from '@/platform/types';
 
 interface PlatformProviderProps {
@@ -9,16 +10,7 @@ interface PlatformProviderProps {
 }
 
 function detectPlatform(): 'telegram' | 'web' {
-  // Check if Telegram WebApp is available and actually initialized with data
-  // initData is an empty string when not in real Telegram context
-  if (
-    typeof window !== 'undefined' &&
-    window.Telegram?.WebApp?.initData &&
-    window.Telegram.WebApp.initData.length > 0
-  ) {
-    return 'telegram';
-  }
-  return 'web';
+  return isInTelegramWebApp() ? 'telegram' : 'web';
 }
 
 function createAdapter(): PlatformContextType {

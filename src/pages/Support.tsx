@@ -11,6 +11,7 @@ import type { TicketDetail, TicketMessage } from '../types';
 import { Card } from '@/components/data-display/Card';
 import { Button } from '@/components/primitives/Button';
 import { staggerContainer, staggerItem } from '@/components/motion/transitions';
+import { usePlatform } from '@/platform';
 
 const log = logger.createLogger('Support');
 
@@ -152,6 +153,7 @@ export default function Support() {
   const { t } = useTranslation();
   const { isAdmin } = useAuthStore();
   const queryClient = useQueryClient();
+  const { openTelegramLink, openLink } = usePlatform();
   const [selectedTicket, setSelectedTicket] = useState<TicketDetail | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newTitle, setNewTitle] = useState('');
@@ -314,7 +316,6 @@ export default function Support() {
           buttonText: t('support.contactUs'),
           buttonAction: () => {
             log.debug('Button clicked, opening:', supportUsername);
-            const webApp = window.Telegram?.WebApp;
 
             // Extract username without @
             const username = supportUsername.startsWith('@')
@@ -322,36 +323,10 @@ export default function Support() {
               : supportUsername;
 
             const webUrl = `https://t.me/${username}`;
-            log.debug('Web URL:', webUrl, 'WebApp methods:', {
-              openTelegramLink: !!webApp?.openTelegramLink,
-              openLink: !!webApp?.openLink,
-            });
+            log.debug('Web URL:', webUrl);
 
-            // Try openTelegramLink first (for tg:// links)
-            if (webApp?.openTelegramLink) {
-              log.debug('Using openTelegramLink with web URL');
-              try {
-                webApp.openTelegramLink(webUrl);
-                return;
-              } catch (e) {
-                log.error('openTelegramLink failed:', e);
-              }
-            }
-
-            // Fallback to openLink
-            if (webApp?.openLink) {
-              log.debug('Using openLink');
-              try {
-                webApp.openLink(webUrl, { try_browser: true });
-                return;
-              } catch (e) {
-                log.error('openLink failed:', e);
-              }
-            }
-
-            // Last resort - window.open
-            log.debug('Using window.open');
-            window.open(webUrl, '_blank');
+            // Use platform's openTelegramLink
+            openTelegramLink(webUrl);
           },
         };
       }
@@ -362,12 +337,7 @@ export default function Support() {
           message: t('support.useExternalLink'),
           buttonText: t('support.openSupport'),
           buttonAction: () => {
-            const webApp = window.Telegram?.WebApp;
-            if (webApp?.openLink) {
-              webApp.openLink(supportConfig.support_url!, { try_browser: true });
-            } else {
-              window.open(supportConfig.support_url!, '_blank');
-            }
+            openLink(supportConfig.support_url!, { tryInstantView: false });
           },
         };
       }
@@ -381,7 +351,6 @@ export default function Support() {
         buttonText: t('support.contactUs'),
         buttonAction: () => {
           log.debug('Fallback button clicked, opening:', supportUsername);
-          const webApp = window.Telegram?.WebApp;
 
           // Extract username without @
           const username = supportUsername.startsWith('@')
@@ -391,16 +360,8 @@ export default function Support() {
           const webUrl = `https://t.me/${username}`;
           log.debug('Fallback opening URL:', webUrl);
 
-          if (webApp?.openTelegramLink) {
-            log.debug('Fallback using openTelegramLink');
-            webApp.openTelegramLink(webUrl);
-          } else if (webApp?.openLink) {
-            log.debug('Fallback using openLink');
-            webApp.openLink(webUrl, { try_browser: true });
-          } else {
-            log.debug('Fallback using window.open');
-            window.open(webUrl, '_blank');
-          }
+          // Use platform's openTelegramLink
+          openTelegramLink(webUrl);
         },
       };
     };

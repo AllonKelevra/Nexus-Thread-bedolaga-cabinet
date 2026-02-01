@@ -8,12 +8,12 @@ import { ThemeColorsProvider } from './providers/ThemeColorsProvider';
 import { ToastProvider } from './components/Toast';
 import { TooltipProvider } from './components/primitives/Tooltip';
 import { initLogoPreload } from './api/branding';
-import { initTelegramWebApp } from './hooks/useTelegramWebApp';
+import { initTelegramSDK } from './hooks/useTelegramSDK';
 import './i18n';
 import './styles/globals.css';
 
-// Initialize Telegram WebApp (expand, disable swipes)
-initTelegramWebApp();
+// Initialize Telegram SDK (init, viewport mount, CSS vars binding, swipe control)
+initTelegramSDK();
 
 // Preload logo from cache immediately on page load
 initLogoPreload();
