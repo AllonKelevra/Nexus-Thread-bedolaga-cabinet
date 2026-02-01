@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { AnimatePresence, motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 
 import { useAuthStore } from '@/store/auth';
@@ -29,8 +28,6 @@ import TicketNotificationBell from '@/components/TicketNotificationBell';
 import { MobileBottomNav } from './MobileBottomNav';
 import { AppHeader } from './AppHeader';
 import { Aurora } from './Aurora';
-
-import { slideUp, slideUpTransition } from '@/components/motion/transitions';
 
 // Desktop nav icons
 const HomeIcon = ({ className }: { className?: string }) => (
@@ -502,25 +499,7 @@ export function AppShell({ children }: AppShellProps) {
       <div className="lg:hidden" style={{ height: headerHeight }} />
 
       {/* Main content */}
-      <main className="mx-auto max-w-6xl px-4 py-6 pb-28 lg:px-6 lg:pb-8">
-        {/* Disable animations in admin pages (scroll restoration conflicts with animations) */}
-        {location.pathname.startsWith('/admin') ? (
-          children
-        ) : (
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={location.pathname}
-              variants={slideUp}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={slideUpTransition}
-            >
-              {children}
-            </motion.div>
-          </AnimatePresence>
-        )}
-      </main>
+      <main className="mx-auto max-w-6xl px-4 py-6 pb-28 lg:px-6 lg:pb-8">{children}</main>
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav
