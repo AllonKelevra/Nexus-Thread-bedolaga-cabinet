@@ -28,5 +28,36 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-query': ['@tanstack/react-query'],
+          'vendor-i18n': ['i18next', 'react-i18next', 'i18next-browser-languagedetector'],
+          'vendor-motion': ['framer-motion'],
+          'vendor-radix': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-tooltip',
+            '@radix-ui/react-select',
+            '@radix-ui/react-popover',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-switch',
+            '@radix-ui/react-alert-dialog',
+          ],
+          'vendor-dnd': ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
+          'vendor-telegram': ['@tma.js/sdk-react'],
+          'vendor-utils': [
+            'axios',
+            'zustand',
+            'clsx',
+            'tailwind-merge',
+            'class-variance-authority',
+          ],
+          'vendor-lottie': ['@lottiefiles/dotlottie-react'],
+          'vendor-webgl': ['ogl'],
+        },
+      },
+    },
   },
 });

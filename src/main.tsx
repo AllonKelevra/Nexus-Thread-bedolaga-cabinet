@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import { PlatformProvider } from './platform/PlatformProvider';
 import { ThemeColorsProvider } from './providers/ThemeColorsProvider';
+import { WebSocketProvider } from './providers/WebSocketProvider';
 import { ToastProvider } from './components/Toast';
 import { TooltipProvider } from './components/primitives/Tooltip';
 import { initLogoPreload } from './api/branding';
@@ -35,7 +36,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <ThemeColorsProvider>
             <TooltipProvider>
               <ToastProvider>
-                <App />
+                <WebSocketProvider>
+                  <App />
+                </WebSocketProvider>
               </ToastProvider>
             </TooltipProvider>
           </ThemeColorsProvider>
