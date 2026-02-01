@@ -1,12 +1,3 @@
-import {
-  backButton,
-  mainButton,
-  hapticFeedback,
-  cloudStorage,
-  themeParams,
-  popup,
-  miniApp,
-} from '@tma.js/sdk-react';
 import { isInTelegramWebApp } from '@/hooks/useTelegramSDK';
 import type {
   PlatformContext,
@@ -24,17 +15,9 @@ import type {
   HapticNotificationType,
 } from '@/platform/types';
 
-// Keep reference to raw Telegram WebApp for features not in SDK
+// Use raw Telegram WebApp API directly - SDK has initialization issues
 function getTelegram(): TelegramWebApp | null {
   return window.Telegram?.WebApp ?? null;
-}
-
-function safeIsSupported(checkFn: () => boolean): boolean {
-  try {
-    return checkFn();
-  } catch {
-    return false;
-  }
 }
 
 function createCapabilities(): PlatformCapabilities {
@@ -42,199 +25,170 @@ function createCapabilities(): PlatformCapabilities {
   const inTelegram = isInTelegramWebApp();
 
   return {
-    hasBackButton: inTelegram && safeIsSupported(() => backButton.isSupported()),
-    hasMainButton: inTelegram,
-    hasHapticFeedback: inTelegram && safeIsSupported(() => hapticFeedback.isSupported()),
-    hasNativeDialogs: inTelegram && safeIsSupported(() => popup.isSupported()),
+    hasBackButton: inTelegram && !!tg?.BackButton,
+    hasMainButton: inTelegram && !!tg?.MainButton,
+    hasHapticFeedback: inTelegram && !!tg?.HapticFeedback,
+    hasNativeDialogs: inTelegram && !!tg?.showPopup,
     hasThemeSync: inTelegram,
     hasInvoice: !!tg?.openInvoice,
-    hasCloudStorage: inTelegram && safeIsSupported(() => cloudStorage.isSupported()),
+    hasCloudStorage: inTelegram && !!tg?.CloudStorage,
     hasShare: true,
     version: tg?.version,
   };
 }
 
 function createBackButtonController(): BackButtonController {
+  const tg = getTelegram();
   const inTelegram = isInTelegramWebApp();
-  let removeClickListener: VoidFunction | null = null;
-
-  // Mount back button on first use
-  let mounted = false;
-  const ensureMounted = () => {
-    if (!mounted && inTelegram && safeIsSupported(() => backButton.isSupported())) {
-      try {
-        backButton.mount();
-        mounted = true;
-      } catch {
-        // Already mounted or not supported
-      }
-    }
-  };
+  let currentCallback: (() => void) | null = null;
 
   return {
     get isVisible() {
-      if (!inTelegram || !mounted) return false;
-      try {
-        return backButton.isVisible();
-      } catch {
-        return false;
-      }
+      if (!inTelegram || !tg?.BackButton) return false;
+      return tg.BackButton.isVisible;
     },
 
     show(onClick: () => void) {
-      if (!inTelegram || !safeIsSupported(() => backButton.isSupported())) return;
-
-      ensureMounted();
+      if (!inTelegram || !tg?.BackButton) return;
 
       // Remove previous callback if exists
-      if (removeClickListener) {
-        removeClickListener();
-        removeClickListener = null;
+      if (currentCallback) {
+        tg.BackButton.offClick(currentCallback);
       }
 
-      removeClickListener = backButton.onClick(onClick);
-      backButton.show();
+      currentCallback = onClick;
+      tg.BackButton.onClick(onClick);
+      tg.BackButton.show();
     },
 
     hide() {
-      if (!inTelegram || !safeIsSupported(() => backButton.isSupported())) return;
+      if (!inTelegram || !tg?.BackButton) return;
 
-      if (removeClickListener) {
-        removeClickListener();
-        removeClickListener = null;
+      if (currentCallback) {
+        tg.BackButton.offClick(currentCallback);
+        currentCallback = null;
       }
-      backButton.hide();
+      tg.BackButton.hide();
     },
   };
 }
 
 function createMainButtonController(): MainButtonController {
+  const tg = getTelegram();
   const inTelegram = isInTelegramWebApp();
-  let removeClickListener: VoidFunction | null = null;
-
-  // Mount main button on first use
-  let mounted = false;
-  const ensureMounted = () => {
-    if (!mounted && inTelegram) {
-      try {
-        mainButton.mount();
-        mounted = true;
-      } catch {
-        // Already mounted or not supported
-      }
-    }
-  };
+  let currentCallback: (() => void) | null = null;
 
   return {
     get isVisible() {
-      if (!inTelegram || !mounted) return false;
-      try {
-        return mainButton.isVisible();
-      } catch {
-        return false;
-      }
+      if (!inTelegram || !tg?.MainButton) return false;
+      return tg.MainButton.isVisible;
     },
 
     show(config: MainButtonConfig) {
-      if (!inTelegram) return;
-
-      ensureMounted();
+      if (!inTelegram || !tg?.MainButton) return;
 
       // Remove previous callback if exists
-      if (removeClickListener) {
-        removeClickListener();
-        removeClickListener = null;
+      if (currentCallback) {
+        tg.MainButton.offClick(currentCallback);
       }
 
       // Set button parameters
-      mainButton.setParams({
-        text: config.text,
-        bgColor: config.color as `#${string}` | undefined,
-        textColor: config.textColor as `#${string}` | undefined,
-        isEnabled: config.isActive !== false,
-        isVisible: true,
-        isLoaderVisible: config.isLoading || false,
-      });
+      tg.MainButton.setText(config.text);
+      if (config.color) {
+        tg.MainButton.color = config.color;
+      }
+      if (config.textColor) {
+        tg.MainButton.textColor = config.textColor;
+      }
 
-      removeClickListener = mainButton.onClick(config.onClick);
-      mainButton.show();
+      if (config.isActive === false) {
+        tg.MainButton.disable();
+      } else {
+        tg.MainButton.enable();
+      }
+
+      if (config.isLoading) {
+        tg.MainButton.showProgress();
+      } else {
+        tg.MainButton.hideProgress();
+      }
+
+      currentCallback = config.onClick;
+      tg.MainButton.onClick(config.onClick);
+      tg.MainButton.show();
     },
 
     hide() {
-      if (!inTelegram) return;
+      if (!inTelegram || !tg?.MainButton) return;
 
-      if (removeClickListener) {
-        removeClickListener();
-        removeClickListener = null;
+      if (currentCallback) {
+        tg.MainButton.offClick(currentCallback);
+        currentCallback = null;
       }
 
-      mainButton.hideLoader();
-      mainButton.hide();
+      tg.MainButton.hideProgress();
+      tg.MainButton.hide();
     },
 
     showProgress(show: boolean) {
-      if (!inTelegram) return;
+      if (!inTelegram || !tg?.MainButton) return;
 
       if (show) {
-        mainButton.showLoader();
+        tg.MainButton.showProgress();
       } else {
-        mainButton.hideLoader();
+        tg.MainButton.hideProgress();
       }
     },
 
     setText(text: string) {
-      if (!inTelegram) return;
-      mainButton.setText(text);
+      if (!inTelegram || !tg?.MainButton) return;
+      tg.MainButton.setText(text);
     },
 
     setActive(active: boolean) {
-      if (!inTelegram) return;
+      if (!inTelegram || !tg?.MainButton) return;
 
       if (active) {
-        mainButton.enable();
+        tg.MainButton.enable();
       } else {
-        mainButton.disable();
+        tg.MainButton.disable();
       }
     },
   };
 }
 
 function createHapticController(): HapticController {
+  const tg = getTelegram();
   const inTelegram = isInTelegramWebApp();
-  const isSupported = inTelegram && safeIsSupported(() => hapticFeedback.isSupported());
+  const haptic = tg?.HapticFeedback;
 
   return {
     impact(style: HapticImpactStyle = 'medium') {
-      if (!isSupported) return;
-      hapticFeedback.impactOccurred(style);
+      if (!inTelegram || !haptic) return;
+      haptic.impactOccurred(style);
     },
 
     notification(type: HapticNotificationType) {
-      if (!isSupported) return;
-      hapticFeedback.notificationOccurred(type);
+      if (!inTelegram || !haptic) return;
+      haptic.notificationOccurred(type);
     },
 
     selection() {
-      if (!isSupported) return;
-      hapticFeedback.selectionChanged();
+      if (!inTelegram || !haptic) return;
+      haptic.selectionChanged();
     },
   };
 }
 
 function createDialogController(): DialogController {
+  const tg = getTelegram();
   const inTelegram = isInTelegramWebApp();
-  const isSupported = inTelegram && safeIsSupported(() => popup.isSupported());
 
   return {
     alert(message: string, _title?: string): Promise<void> {
       return new Promise((resolve) => {
-        if (isSupported) {
-          popup
-            .show({
-              message,
-              buttons: [{ type: 'ok' }],
-            })
-            .then(() => resolve());
+        if (inTelegram && tg?.showPopup) {
+          tg.showPopup({ message, buttons: [{ type: 'ok' }] }, () => resolve());
         } else {
           window.alert(message);
           resolve();
@@ -244,16 +198,17 @@ function createDialogController(): DialogController {
 
     confirm(message: string, _title?: string): Promise<boolean> {
       return new Promise((resolve) => {
-        if (isSupported) {
-          popup
-            .show({
+        if (inTelegram && tg?.showPopup) {
+          tg.showPopup(
+            {
               message,
               buttons: [
                 { id: 'ok', type: 'ok' },
                 { id: 'cancel', type: 'cancel' },
               ],
-            })
-            .then((buttonId) => resolve(buttonId === 'ok'));
+            },
+            (buttonId) => resolve(buttonId === 'ok'),
+          );
         } else {
           resolve(window.confirm(message));
         }
@@ -262,9 +217,9 @@ function createDialogController(): DialogController {
 
     popup(options: PopupOptions): Promise<string | null> {
       return new Promise((resolve) => {
-        if (isSupported) {
-          popup
-            .show({
+        if (inTelegram && tg?.showPopup) {
+          tg.showPopup(
+            {
               title: options.title,
               message: options.message,
               buttons: options.buttons?.map((btn) => ({
@@ -272,8 +227,9 @@ function createDialogController(): DialogController {
                 type: btn.type,
                 text: btn.text,
               })),
-            })
-            .then((buttonId) => resolve(buttonId ?? null));
+            },
+            (buttonId) => resolve(buttonId ?? null),
+          );
         } else {
           const confirmed = window.confirm(options.message);
           resolve(confirmed ? 'ok' : null);
@@ -284,85 +240,87 @@ function createDialogController(): DialogController {
 }
 
 function createThemeController(): ThemeController {
+  const tg = getTelegram();
   const inTelegram = isInTelegramWebApp();
-
-  // Mount theme params on first use
-  let mounted = false;
-  const ensureMounted = () => {
-    if (!mounted && inTelegram) {
-      try {
-        themeParams.mount();
-        mounted = true;
-      } catch {
-        // Already mounted
-      }
-    }
-  };
 
   return {
     setHeaderColor(color: string) {
-      if (!inTelegram) return;
-      miniApp.setHeaderColor(color as `#${string}`);
+      if (!inTelegram || !tg?.setHeaderColor) return;
+      tg.setHeaderColor(color as `#${string}`);
     },
 
     setBottomBarColor(color: string) {
-      if (!inTelegram) return;
+      if (!inTelegram || !tg?.setBottomBarColor) return;
       try {
-        miniApp.setBottomBarColor(color as `#${string}`);
+        tg.setBottomBarColor(color as `#${string}`);
       } catch {
         // Not supported in this version
       }
     },
 
     getThemeParams() {
-      if (!inTelegram) return null;
-      ensureMounted();
-      try {
-        const state = themeParams.state();
-        // Convert SDK format to our format
-        return {
-          bg_color: state.bgColor,
-          text_color: state.textColor,
-          hint_color: state.hintColor,
-          link_color: state.linkColor,
-          button_color: state.buttonColor,
-          button_text_color: state.buttonTextColor,
-          secondary_bg_color: state.secondaryBgColor,
-          header_bg_color: state.headerBgColor,
-          bottom_bar_bg_color: state.bottomBarBgColor,
-          accent_text_color: state.accentTextColor,
-          section_bg_color: state.sectionBgColor,
-          section_header_text_color: state.sectionHeaderTextColor,
-          subtitle_text_color: state.subtitleTextColor,
-          destructive_text_color: state.destructiveTextColor,
-        };
-      } catch {
-        return null;
-      }
+      if (!inTelegram || !tg?.themeParams) return null;
+      const params = tg.themeParams;
+      return {
+        bg_color: params.bg_color,
+        text_color: params.text_color,
+        hint_color: params.hint_color,
+        link_color: params.link_color,
+        button_color: params.button_color,
+        button_text_color: params.button_text_color,
+        secondary_bg_color: params.secondary_bg_color,
+        header_bg_color: params.header_bg_color,
+        bottom_bar_bg_color: params.bottom_bar_bg_color,
+        accent_text_color: params.accent_text_color,
+        section_bg_color: params.section_bg_color,
+        section_header_text_color: params.section_header_text_color,
+        subtitle_text_color: params.subtitle_text_color,
+        destructive_text_color: params.destructive_text_color,
+      };
     },
   };
 }
 
 function createCloudStorageController(): CloudStorageController | null {
+  const tg = getTelegram();
   const inTelegram = isInTelegramWebApp();
-  if (!inTelegram || !safeIsSupported(() => cloudStorage.isSupported())) return null;
+  const storage = tg?.CloudStorage;
+
+  if (!inTelegram || !storage) return null;
 
   return {
     async getItem(key: string): Promise<string | null> {
-      const value = await cloudStorage.getItem(key);
-      return value || null;
+      return new Promise((resolve) => {
+        storage.getItem(key, (error, value) => {
+          resolve(error ? null : value || null);
+        });
+      });
     },
 
     async setItem(key: string, value: string): Promise<void> {
-      await cloudStorage.setItem(key, value);
+      return new Promise((resolve, reject) => {
+        storage.setItem(key, value, (error) => {
+          if (error) reject(new Error(String(error)));
+          else resolve();
+        });
+      });
     },
 
     async removeItem(key: string): Promise<void> {
-      await cloudStorage.deleteItem(key);
+      return new Promise((resolve, reject) => {
+        storage.removeItem(key, (error) => {
+          if (error) reject(new Error(String(error)));
+          else resolve();
+        });
+      });
     },
 
     async getKeys(): Promise<string[]> {
-      return cloudStorage.getKeys();
+      return new Promise((resolve) => {
+        storage.getKeys((error, keys) => {
+          resolve(error ? [] : keys || []);
+        });
+      });
     },
   };
 }
@@ -385,7 +343,6 @@ export function createTelegramAdapter(): PlatformContext {
         if (tg?.openInvoice) {
           tg.openInvoice(url, (status) => resolve(status));
         } else {
-          // Fallback: open in new window
           window.open(url, '_blank');
           resolve('pending');
         }
@@ -411,17 +368,15 @@ export function createTelegramAdapter(): PlatformContext {
     async share(text: string, url?: string): Promise<boolean> {
       const shareText = url ? `${text}\n${url}` : text;
 
-      // Try native share API first (if available on mobile)
       if (navigator.share) {
         try {
           await navigator.share({ text: shareText, url });
           return true;
         } catch {
-          // User cancelled or share failed, continue to Telegram share
+          // User cancelled or share failed
         }
       }
 
-      // Use Telegram share
       const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME;
       if (botUsername && tg?.openTelegramLink) {
         const encoded = encodeURIComponent(shareText);
