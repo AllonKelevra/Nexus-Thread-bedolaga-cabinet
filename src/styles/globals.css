@@ -1290,6 +1290,63 @@ input[type='number'] {
   -moz-appearance: textfield;
 }
 
+/* Custom checkbox styling - more visible */
+input[type='checkbox'] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 1.5px solid rgb(var(--color-dark-600));
+  border-radius: 0.375rem;
+  background-color: rgb(var(--color-dark-700));
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+  flex-shrink: 0;
+}
+
+input[type='checkbox']:checked {
+  background-color: rgb(var(--color-accent-500));
+  border-color: rgb(var(--color-accent-500));
+}
+
+input[type='checkbox']:checked::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: 5px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+input[type='checkbox']:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(var(--color-accent-500), 0.3);
+}
+
+input[type='checkbox']:hover:not(:checked) {
+  border-color: rgb(var(--color-dark-500));
+  background-color: rgb(var(--color-dark-600));
+}
+
+.light input[type='checkbox'] {
+  border-color: rgb(var(--color-champagne-400));
+  background-color: rgb(var(--color-champagne-100));
+}
+
+.light input[type='checkbox']:checked {
+  background-color: rgb(var(--color-accent-500));
+  border-color: rgb(var(--color-accent-500));
+}
+
+.light input[type='checkbox']:hover:not(:checked) {
+  border-color: rgb(var(--color-champagne-500));
+  background-color: rgb(var(--color-champagne-200));
+}
+
 /* Selection color */
 ::selection {
   @apply bg-accent-500/30 text-dark-50;

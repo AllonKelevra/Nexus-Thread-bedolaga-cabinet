@@ -503,11 +503,11 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* Main content */}
       <main className="mx-auto max-w-6xl px-4 py-6 pb-28 lg:px-6 lg:pb-8">
-        {/* Disable animations in Telegram Mini App and admin pages to prevent visual glitches */}
-        {isTelegramWebApp || location.pathname.startsWith('/admin') ? (
+        {/* Disable animations in admin pages (scroll restoration conflicts with animations) */}
+        {location.pathname.startsWith('/admin') ? (
           children
         ) : (
-          <AnimatePresence mode="popLayout">
+          <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={location.pathname}
               variants={slideUp}
