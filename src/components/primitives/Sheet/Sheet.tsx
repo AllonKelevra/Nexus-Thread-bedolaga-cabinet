@@ -7,12 +7,10 @@ import {
   useContext,
   useState,
   useCallback,
-  useEffect,
 } from 'react';
 import { cn } from '@/lib/utils';
 import { usePlatform } from '@/platform';
 import { useBackButton } from '@/platform';
-import { useTelegramSDK } from '@/hooks/useTelegramSDK';
 import {
   backdrop,
   backdropTransition,
@@ -140,25 +138,8 @@ export const SheetContent = forwardRef<HTMLDivElement, SheetContentProps>(
     const { open, onClose } = useContext(SheetContext);
     const { haptic } = usePlatform();
     const dragControls = useDragControls();
-    const { disableVerticalSwipes, enableVerticalSwipes, isTelegramWebApp } = useTelegramSDK();
-
     // Back button integration
     useBackButton(open ? onClose : null);
-
-    // Disable Telegram vertical swipes when sheet is open (prevents conflict with drag gestures)
-    useEffect(() => {
-      if (!isTelegramWebApp) return;
-
-      if (open) {
-        disableVerticalSwipes();
-      }
-
-      return () => {
-        if (open) {
-          enableVerticalSwipes();
-        }
-      };
-    }, [open, isTelegramWebApp, disableVerticalSwipes, enableVerticalSwipes]);
 
     const handleDragEnd = useCallback(
       (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {

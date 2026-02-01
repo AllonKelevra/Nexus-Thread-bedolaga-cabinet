@@ -67,6 +67,9 @@ export function initTelegramSDK() {
   // Disable closing confirmation by default
   tg.disableClosingConfirmation?.();
 
+  // Disable vertical swipes to prevent accidental closures
+  tg.disableVerticalSwipes?.();
+
   // Auto-enter fullscreen if enabled in settings (mobile only)
   const fullscreenEnabled = getCachedFullscreenEnabled();
   if (fullscreenEnabled && isTelegramMobile() && tg.requestFullscreen) {

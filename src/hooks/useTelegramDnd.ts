@@ -1,50 +1,25 @@
-import { useCallback, useRef } from 'react';
+import { useCallback } from 'react';
 import { useTelegramSDK } from './useTelegramSDK';
 
 /**
- * Hook to manage Telegram vertical swipes during drag-and-drop operations.
- * Disables Telegram's swipe-to-close gesture while dragging to prevent conflicts.
- *
- * Usage with @dnd-kit:
- * ```tsx
- * const { onDragStart, onDragEnd } = useTelegramDnd();
- *
- * <DndContext
- *   onDragStart={(e) => {
- *     onDragStart();
- *     // your drag start logic
- *   }}
- *   onDragEnd={(e) => {
- *     onDragEnd();
- *     // your drag end logic
- *   }}
- * >
- * ```
+ * Hook for drag-and-drop operations in Telegram Mini App.
+ * Note: Vertical swipes are now globally disabled at app init,
+ * so this hook just provides no-op callbacks for compatibility.
  */
 export function useTelegramDnd() {
-  const { disableVerticalSwipes, enableVerticalSwipes, isTelegramWebApp } = useTelegramSDK();
-  const isDraggingRef = useRef(false);
+  const { isTelegramWebApp } = useTelegramSDK();
 
   const onDragStart = useCallback(() => {
-    if (isTelegramWebApp && !isDraggingRef.current) {
-      isDraggingRef.current = true;
-      disableVerticalSwipes();
-    }
-  }, [isTelegramWebApp, disableVerticalSwipes]);
+    // No-op: swipes are globally disabled
+  }, []);
 
   const onDragEnd = useCallback(() => {
-    if (isTelegramWebApp && isDraggingRef.current) {
-      isDraggingRef.current = false;
-      enableVerticalSwipes();
-    }
-  }, [isTelegramWebApp, enableVerticalSwipes]);
+    // No-op: swipes are globally disabled
+  }, []);
 
   const onDragCancel = useCallback(() => {
-    if (isTelegramWebApp && isDraggingRef.current) {
-      isDraggingRef.current = false;
-      enableVerticalSwipes();
-    }
-  }, [isTelegramWebApp, enableVerticalSwipes]);
+    // No-op: swipes are globally disabled
+  }, []);
 
   return {
     onDragStart,
