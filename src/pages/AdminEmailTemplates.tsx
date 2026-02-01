@@ -9,7 +9,7 @@ import {
   EmailTemplateLanguageData,
 } from '../api/adminEmailTemplates';
 import { AdminBackButton, BackIcon } from '../components/admin';
-import { useIsTelegram } from '../platform/hooks/usePlatform';
+import { useIsTelegram, usePlatform } from '../platform/hooks/usePlatform';
 
 // Hook to check if on mobile
 function useIsMobile() {
@@ -159,6 +159,7 @@ function TemplateEditor({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { dialog } = usePlatform();
   const isTelegram = useIsTelegram();
   const isMobile = useIsMobile();
   const isPreviewDisabled = isTelegram || isMobile;
@@ -171,7 +172,6 @@ function TemplateEditor({
     type: 'success' | 'error' | 'info';
     message: string;
   } | null>(null);
-  const [showPreviewAlert, setShowPreviewAlert] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const langData: EmailTemplateLanguageData | undefined = detail.languages[activeLang];
@@ -401,7 +401,10 @@ function TemplateEditor({
           <button
             onClick={() => {
               if (isPreviewDisabled) {
-                setShowPreviewAlert(true);
+                dialog.alert(
+                  t('admin.emailTemplates.previewDesktopOnly'),
+                  t('admin.emailTemplates.previewNotAvailable'),
+                );
                 return;
               }
               navigate(`/admin/email-templates/preview/${detail.notification_type}/${activeLang}`, {
@@ -457,56 +460,6 @@ function TemplateEditor({
           }`}
         >
           {toast.message}
-        </div>
-      )}
-
-      {/* Preview Disabled Alert */}
-      {showPreviewAlert && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-            onClick={() => setShowPreviewAlert(false)}
-          />
-          {/* Alert Modal */}
-          <div className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-dark-700 bg-dark-800 shadow-2xl">
-            {/* Icon */}
-            <div className="flex justify-center pt-6">
-              <div className="rounded-full bg-warning-500/20 p-4">
-                <svg
-                  className="h-8 w-8 text-warning-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25"
-                  />
-                </svg>
-              </div>
-            </div>
-            {/* Content */}
-            <div className="px-6 pb-2 pt-4 text-center">
-              <h3 className="text-lg font-semibold text-dark-100">
-                {t('admin.emailTemplates.previewNotAvailable')}
-              </h3>
-              <p className="mt-2 text-sm text-dark-400">
-                {t('admin.emailTemplates.previewDesktopOnly')}
-              </p>
-            </div>
-            {/* Button */}
-            <div className="p-6 pt-4">
-              <button
-                onClick={() => setShowPreviewAlert(false)}
-                className="w-full rounded-xl bg-dark-700 py-3 text-sm font-medium text-dark-100 transition-colors hover:bg-dark-600"
-              >
-                {t('common.understand')}
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>
