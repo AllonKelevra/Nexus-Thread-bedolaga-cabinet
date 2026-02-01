@@ -992,6 +992,7 @@
       "cannotDeleteHasSubscriptions": "حذف ممکن نیست: اشتراک‌های فعال وجود دارد",
       "confirmDelete": "تعرفه حذف شود؟",
       "confirmDeleteText": "این عمل قابل بازگشت نیست. تعرفه برای همیشه حذف می‌شود.",
+      "deleteSuccess": "تعرفه با موفقیت حذف شد",
       "days": "روز",
       "days_other": "{{count}} روز",
       "tabs": {

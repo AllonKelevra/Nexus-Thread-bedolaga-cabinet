@@ -1030,6 +1030,7 @@
       "cannotDeleteHasSubscriptions": "无法删除：有活跃订阅",
       "confirmDelete": "删除套餐？",
       "confirmDeleteText": "此操作不可撤销。套餐将被永久删除。",
+      "deleteSuccess": "套餐删除成功",
       "days": "天",
       "days_other": "{{count}} 天",
       "tabs": {

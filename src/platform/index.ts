@@ -31,3 +31,4 @@ export { useBackButton, useConditionalBackButton } from './hooks/useBackButton';
 export { useMainButton, useSimpleMainButton } from './hooks/useMainButton';
 export { useHaptic, useHapticClick, useHapticFeedback } from './hooks/useHaptic';
 export { useNativeDialog, useDestructiveConfirm, PopupButtons } from './hooks/useNativeDialog';
+export { useNotify } from './hooks/useNotify';

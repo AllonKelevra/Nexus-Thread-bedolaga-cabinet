@@ -1,9 +1,9 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { tariffsApi, TariffListItem } from '../api/tariffs';
 import { AdminBackButton } from '../components/admin';
+import { useDestructiveConfirm, useNotify } from '@/platform';
 
 // Icons
 const PlusIcon = () => (
@@ -48,8 +48,8 @@ export default function AdminTariffs() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-
-  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+  const confirmDelete = useDestructiveConfirm();
+  const notify = useNotify();
 
   // Queries
   const { data: tariffsData, isLoading } = useQuery({
@@ -62,9 +62,26 @@ export default function AdminTariffs() {
     mutationFn: tariffsApi.deleteTariff,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-tariffs'] });
-      setDeleteConfirm(null);
+      notify.success(t('admin.tariffs.deleteSuccess'));
     },
   });
+
+  const handleDelete = async (tariff: TariffListItem) => {
+    if (tariff.subscriptions_count > 0) {
+      notify.warning(t('admin.tariffs.cannotDeleteHasSubscriptions'));
+      return;
+    }
+
+    const confirmed = await confirmDelete(
+      t('admin.tariffs.confirmDeleteText'),
+      t('common.delete'),
+      t('admin.tariffs.confirmDelete'),
+    );
+
+    if (confirmed) {
+      deleteMutation.mutate(tariff.id);
+    }
+  };
 
   const toggleMutation = useMutation({
     mutationFn: tariffsApi.toggleTariff,
@@ -204,18 +221,9 @@ export default function AdminTariffs() {
 
                   {/* Delete */}
                   <button
-                    onClick={() => setDeleteConfirm(tariff.id)}
-                    className={`rounded-lg p-2 transition-colors ${
-                      tariff.subscriptions_count > 0
-                        ? 'cursor-not-allowed bg-dark-700/50 text-dark-500'
-                        : 'bg-dark-700 text-dark-300 hover:bg-error-500/20 hover:text-error-400'
-                    }`}
-                    title={
-                      tariff.subscriptions_count > 0
-                        ? t('admin.tariffs.cannotDeleteHasSubscriptions')
-                        : t('admin.tariffs.delete')
-                    }
-                    disabled={tariff.subscriptions_count > 0}
+                    onClick={() => handleDelete(tariff)}
+                    className="rounded-lg bg-dark-700 p-2 text-dark-300 transition-colors hover:bg-error-500/20 hover:text-error-400"
+                    title={t('admin.tariffs.delete')}
                   >
                     <TrashIcon />
                   </button>
@@ -223,36 +231,6 @@ export default function AdminTariffs() {
               </div>
             </div>
           ))}
-        </div>
-      )}
-
-      {/* Delete Confirmation */}
-      {deleteConfirm !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setDeleteConfirm(null)}
-          />
-          <div className="relative w-full max-w-sm rounded-xl bg-dark-800 p-6">
-            <h3 className="mb-2 text-lg font-semibold text-dark-100">
-              {t('admin.tariffs.confirmDelete')}
-            </h3>
-            <p className="mb-6 text-dark-400">{t('admin.tariffs.confirmDeleteText')}</p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 text-dark-300 transition-colors hover:text-dark-100"
-              >
-                {t('common.cancel')}
-              </button>
-              <button
-                onClick={() => deleteMutation.mutate(deleteConfirm)}
-                className="rounded-lg bg-error-500 px-4 py-2 text-white transition-colors hover:bg-error-600"
-              >
-                {t('common.delete')}
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>

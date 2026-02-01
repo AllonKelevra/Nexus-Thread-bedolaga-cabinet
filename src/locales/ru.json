@@ -1728,6 +1728,7 @@
       "cannotDeleteHasSubscriptions": "Нельзя удалить: есть активные подписки",
       "confirmDelete": "Удалить тариф?",
       "confirmDeleteText": "Это действие нельзя отменить. Тариф будет удален навсегда.",
+      "deleteSuccess": "Тариф успешно удален",
       "days": "дней",
       "days_one": "{{count}} день",
       "days_few": "{{count}} дня",

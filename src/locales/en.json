@@ -1218,6 +1218,7 @@
       "cannotDeleteHasSubscriptions": "Cannot delete: has active subscriptions",
       "confirmDelete": "Delete tariff?",
       "confirmDeleteText": "This action cannot be undone. The tariff will be permanently deleted.",
+      "deleteSuccess": "Tariff deleted successfully",
       "days": "days",
       "days_one": "{{count}} day",
       "days_other": "{{count}} days",

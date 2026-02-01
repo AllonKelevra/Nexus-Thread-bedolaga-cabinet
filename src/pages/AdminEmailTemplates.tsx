@@ -9,7 +9,8 @@ import {
   EmailTemplateLanguageData,
 } from '../api/adminEmailTemplates';
 import { AdminBackButton, BackIcon } from '../components/admin';
-import { useIsTelegram, usePlatform } from '../platform/hooks/usePlatform';
+import { useIsTelegram } from '../platform/hooks/usePlatform';
+import { useNotify } from '@/platform';
 
 // Hook to check if on mobile
 function useIsMobile() {
@@ -159,7 +160,7 @@ function TemplateEditor({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { dialog } = usePlatform();
+  const notify = useNotify();
   const isTelegram = useIsTelegram();
   const isMobile = useIsMobile();
   const isPreviewDisabled = isTelegram || isMobile;
@@ -401,7 +402,7 @@ function TemplateEditor({
           <button
             onClick={() => {
               if (isPreviewDisabled) {
-                dialog.alert(
+                notify.warning(
                   t('admin.emailTemplates.previewDesktopOnly'),
                   t('admin.emailTemplates.previewNotAvailable'),
                 );
