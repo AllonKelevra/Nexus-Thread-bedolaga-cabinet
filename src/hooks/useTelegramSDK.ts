@@ -75,23 +75,11 @@ export function initTelegramSDK() {
     initCleanup = init();
     sdkInitialized = true;
 
-    // Mount viewport and bind CSS variables
-    viewport
-      .mount()
-      .then(() => {
-        viewport.bindCssVars();
-        // Expand the mini app
-        viewport.expand();
-      })
-      .catch((err) => {
-        console.warn('Viewport mount failed:', err);
-      });
-
-    // Mount mini app and call ready
+    // Mount mini app and call ready (sync)
     miniApp.mount();
     miniApp.ready();
 
-    // Mount theme params and bind CSS variables
+    // Mount theme params and bind CSS variables (sync)
     try {
       themeParams.mount();
       themeParams.bindCssVars();
@@ -99,25 +87,38 @@ export function initTelegramSDK() {
       // Theme params may already be mounted or not supported
     }
 
-    // Disable vertical swipes if supported
+    // Disable vertical swipes if supported (sync)
     if (swipeBehavior.isSupported()) {
       swipeBehavior.mount();
       swipeBehavior.disableVertical();
     }
 
-    // Auto-enter fullscreen if enabled in settings (mobile only)
-    const fullscreenEnabled = getCachedFullscreenEnabled();
-    if (fullscreenEnabled && isTelegramMobile()) {
-      // Wait for viewport to be mounted
-      setTimeout(() => {
-        const isFullscreen = viewport.isFullscreen();
-        if (!isFullscreen) {
-          viewport.requestFullscreen().catch((e) => {
-            console.warn('Auto-fullscreen failed:', e);
-          });
+    // Mount viewport and bind CSS variables (async)
+    viewport
+      .mount()
+      .then(() => {
+        viewport.bindCssVars();
+        // Expand the mini app
+        viewport.expand();
+
+        // Auto-enter fullscreen if enabled in settings (mobile only)
+        const fullscreenEnabled = getCachedFullscreenEnabled();
+        if (fullscreenEnabled && isTelegramMobile()) {
+          try {
+            const isFullscreen = viewport.isFullscreen();
+            if (!isFullscreen) {
+              viewport.requestFullscreen().catch((e) => {
+                console.warn('Auto-fullscreen failed:', e);
+              });
+            }
+          } catch {
+            // Viewport signal not available
+          }
         }
-      }, 100);
-    }
+      })
+      .catch((err) => {
+        console.warn('Viewport mount failed:', err);
+      });
   } catch (e) {
     console.warn('Telegram SDK initialization failed:', e);
   }
@@ -153,6 +154,7 @@ const defaultInsets = { top: 0, bottom: 0, left: 0, right: 0 };
 
 /**
  * Helper to subscribe to SDK signals using useSyncExternalStore pattern
+ * Safely handles unmounted components by returning default values
  */
 function useSDKSignal<T>(
   signal: { (): T; sub(fn: VoidFunction): VoidFunction } | null,
@@ -161,9 +163,22 @@ function useSDKSignal<T>(
   return useSyncExternalStore(
     (callback) => {
       if (!signal) return () => {};
-      return signal.sub(callback);
+      try {
+        return signal.sub(callback);
+      } catch {
+        // Signal not available (component unmounted)
+        return () => {};
+      }
     },
-    () => (signal ? signal() : defaultValue),
+    () => {
+      if (!signal) return defaultValue;
+      try {
+        return signal();
+      } catch {
+        // Signal not available (component unmounted)
+        return defaultValue;
+      }
+    },
     () => defaultValue,
   );
 }

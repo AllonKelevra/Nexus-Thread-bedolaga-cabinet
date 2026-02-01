@@ -65,8 +65,12 @@ function createBackButtonController(): BackButtonController {
 
   return {
     get isVisible() {
-      if (!inTelegram) return false;
-      return backButton.isVisible();
+      if (!inTelegram || !mounted) return false;
+      try {
+        return backButton.isVisible();
+      } catch {
+        return false;
+      }
     },
 
     show(onClick: () => void) {
@@ -115,8 +119,12 @@ function createMainButtonController(): MainButtonController {
 
   return {
     get isVisible() {
-      if (!inTelegram) return false;
-      return mainButton.isVisible();
+      if (!inTelegram || !mounted) return false;
+      try {
+        return mainButton.isVisible();
+      } catch {
+        return false;
+      }
     },
 
     show(config: MainButtonConfig) {
@@ -301,24 +309,28 @@ function createThemeController(): ThemeController {
     getThemeParams() {
       if (!inTelegram) return null;
       ensureMounted();
-      const state = themeParams.state();
-      // Convert SDK format to our format
-      return {
-        bg_color: state.bgColor,
-        text_color: state.textColor,
-        hint_color: state.hintColor,
-        link_color: state.linkColor,
-        button_color: state.buttonColor,
-        button_text_color: state.buttonTextColor,
-        secondary_bg_color: state.secondaryBgColor,
-        header_bg_color: state.headerBgColor,
-        bottom_bar_bg_color: state.bottomBarBgColor,
-        accent_text_color: state.accentTextColor,
-        section_bg_color: state.sectionBgColor,
-        section_header_text_color: state.sectionHeaderTextColor,
-        subtitle_text_color: state.subtitleTextColor,
-        destructive_text_color: state.destructiveTextColor,
-      };
+      try {
+        const state = themeParams.state();
+        // Convert SDK format to our format
+        return {
+          bg_color: state.bgColor,
+          text_color: state.textColor,
+          hint_color: state.hintColor,
+          link_color: state.linkColor,
+          button_color: state.buttonColor,
+          button_text_color: state.buttonTextColor,
+          secondary_bg_color: state.secondaryBgColor,
+          header_bg_color: state.headerBgColor,
+          bottom_bar_bg_color: state.bottomBarBgColor,
+          accent_text_color: state.accentTextColor,
+          section_bg_color: state.sectionBgColor,
+          section_header_text_color: state.sectionHeaderTextColor,
+          subtitle_text_color: state.subtitleTextColor,
+          destructive_text_color: state.destructiveTextColor,
+        };
+      } catch {
+        return null;
+      }
     },
   };
 }
