@@ -284,7 +284,7 @@ export default function AdminTariffCreate() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">
-          <AdminBackButton />
+          <AdminBackButton to="/admin/tariffs" />
           <div>
             <h1 className="text-xl font-bold text-dark-100">{t('admin.tariffs.selectType')}</h1>
             <p className="text-sm text-dark-400">{t('admin.tariffs.selectTypeDesc')}</p>
@@ -326,15 +326,18 @@ export default function AdminTariffCreate() {
   }
 
   const isDaily = tariffType === 'daily';
-  const accentColor = isDaily ? 'warning' : 'accent';
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <AdminBackButton />
+        <AdminBackButton to="/admin/tariffs" />
         <div className="flex items-center gap-3">
-          <div className={`rounded-lg bg-${accentColor}-500/20 p-2 text-${accentColor}-400`}>
+          <div
+            className={`rounded-lg p-2 ${
+              isDaily ? 'bg-warning-500/20 text-warning-400' : 'bg-accent-500/20 text-accent-400'
+            }`}
+          >
             {isDaily ? <SunIcon /> : <CalendarIcon />}
           </div>
           <div>
@@ -366,7 +369,9 @@ export default function AdminTariffCreate() {
             onClick={() => setActiveTab(tab)}
             className={`shrink-0 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
               activeTab === tab
-                ? `bg-${accentColor}-500/15 text-${accentColor}-400 ring-1 ring-${accentColor}-500/30`
+                ? isDaily
+                  ? 'bg-warning-500/15 text-warning-400 ring-1 ring-warning-500/30'
+                  : 'bg-accent-500/15 text-accent-400 ring-1 ring-accent-500/30'
                 : 'bg-dark-800/50 text-dark-400 hover:bg-dark-700'
             }`}
           >
@@ -592,13 +597,19 @@ export default function AdminTariffCreate() {
                     onClick={() => toggleServer(server.squad_uuid)}
                     className={`flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors ${
                       isSelected
-                        ? `bg-${accentColor}-500/20 text-${accentColor}-300`
+                        ? isDaily
+                          ? 'bg-warning-500/20 text-warning-300'
+                          : 'bg-accent-500/20 text-accent-300'
                         : 'bg-dark-800 text-dark-300 hover:bg-dark-700'
                     }`}
                   >
                     <div
                       className={`flex h-5 w-5 items-center justify-center rounded ${
-                        isSelected ? 'bg-accent-500 text-white' : 'bg-dark-600'
+                        isSelected
+                          ? isDaily
+                            ? 'bg-warning-500 text-white'
+                            : 'bg-accent-500 text-white'
+                          : 'bg-dark-600'
                       }`}
                     >
                       {isSelected && <CheckIcon />}
@@ -890,7 +901,9 @@ export default function AdminTariffCreate() {
                   onClick={() => setTrafficResetMode(option.value)}
                   className={`rounded-lg p-3 text-left text-sm transition-colors ${
                     trafficResetMode === option.value
-                      ? `bg-${accentColor}-500/20 text-${accentColor}-300 ring-1 ring-${accentColor}-500/30`
+                      ? isDaily
+                        ? 'bg-warning-500/20 text-warning-300 ring-1 ring-warning-500/30'
+                        : 'bg-accent-500/20 text-accent-300 ring-1 ring-accent-500/30'
                       : 'bg-dark-800 text-dark-300 hover:bg-dark-700'
                   }`}
                 >
