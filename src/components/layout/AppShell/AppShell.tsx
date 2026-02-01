@@ -364,8 +364,8 @@ export function AppShell({ children }: AppShellProps) {
 
   // Calculate header height based on fullscreen mode (only on mobile Telegram)
   // On iOS: contentSafeAreaInset.top includes status bar + dynamic island + Telegram header
-  // On Android: safeAreaInset.top only includes status bar, need to add Telegram header height (~56px)
-  const telegramHeaderHeight = platform === 'android' ? 56 : 45;
+  // On Android: safeAreaInset.top only includes status bar, need to add Telegram header height (~48px)
+  const telegramHeaderHeight = platform === 'android' ? 48 : 45;
   const headerHeight = isMobileFullscreen
     ? 64 + Math.max(safeAreaInset.top, contentSafeAreaInset.top) + telegramHeaderHeight
     : 64;
@@ -503,8 +503,8 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* Main content */}
       <main className="mx-auto max-w-6xl px-4 py-6 pb-28 lg:px-6 lg:pb-8">
-        {/* Disable animations for admin pages to prevent scroll jumps in Telegram Mini App */}
-        {location.pathname.startsWith('/admin') ? (
+        {/* Disable animations in Telegram Mini App and admin pages to prevent visual glitches */}
+        {isTelegramWebApp || location.pathname.startsWith('/admin') ? (
           children
         ) : (
           <AnimatePresence mode="popLayout">
