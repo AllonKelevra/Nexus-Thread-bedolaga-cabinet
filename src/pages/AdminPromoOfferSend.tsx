@@ -350,7 +350,7 @@ export default function AdminPromoOfferSend() {
             <div className="mb-4 flex gap-2">
               <button
                 onClick={() => setSendMode('segment')}
-                className={`flex flex-1 items-center justify-center gap-2 rounded-lg border py-3 text-sm font-medium transition-colors ${
+                className={`flex flex-1 items-center justify-center gap-2 rounded-lg border py-2.5 text-sm font-medium transition-colors ${
                   sendMode === 'segment'
                     ? 'border-accent-500 bg-accent-500/10 text-accent-400'
                     : 'border-dark-600 text-dark-400 hover:text-dark-200'
@@ -361,7 +361,7 @@ export default function AdminPromoOfferSend() {
               </button>
               <button
                 onClick={() => setSendMode('user')}
-                className={`flex flex-1 items-center justify-center gap-2 rounded-lg border py-3 text-sm font-medium transition-colors ${
+                className={`flex flex-1 items-center justify-center gap-2 rounded-lg border py-2.5 text-sm font-medium transition-colors ${
                   sendMode === 'user'
                     ? 'border-accent-500 bg-accent-500/10 text-accent-400'
                     : 'border-dark-600 text-dark-400 hover:text-dark-200'
