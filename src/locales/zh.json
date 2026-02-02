@@ -1281,7 +1281,9 @@
         "deleteText": "此操作不可撤销。有注册记录的活动无法删除。",
         "cancel": "取消",
         "delete": "删除"
-      }
+      },
+      "loadError": "加载活动失败",
+      "updateError": "保存更改失败"
     },
     "promocodes": {
       "title": "促销码",

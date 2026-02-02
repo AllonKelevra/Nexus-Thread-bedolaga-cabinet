@@ -1489,7 +1489,9 @@
         "deleteText": "This action cannot be undone. Campaigns with registrations cannot be deleted.",
         "cancel": "Cancel",
         "delete": "Delete"
-      }
+      },
+      "loadError": "Failed to load campaign",
+      "updateError": "Failed to save changes"
     },
     "promocodes": {
       "title": "Promo Codes",
