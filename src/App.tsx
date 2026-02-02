@@ -58,6 +58,7 @@ const AdminPromoOffers = lazy(() => import('./pages/AdminPromoOffers'));
 const AdminPromoOfferTemplateEdit = lazy(() => import('./pages/AdminPromoOfferTemplateEdit'));
 const AdminPromoOfferSend = lazy(() => import('./pages/AdminPromoOfferSend'));
 const AdminRemnawave = lazy(() => import('./pages/AdminRemnawave'));
+const AdminRemnawaveSquadDetail = lazy(() => import('./pages/AdminRemnawaveSquadDetail'));
 const AdminEmailTemplates = lazy(() => import('./pages/AdminEmailTemplates'));
 const AdminUserDetail = lazy(() => import('./pages/AdminUserDetail'));
 const AdminBroadcastDetail = lazy(() => import('./pages/AdminBroadcastDetail'));
@@ -566,6 +567,16 @@ function App() {
             <AdminRoute>
               <LazyPage>
                 <AdminRemnawave />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/remnawave/squads/:uuid"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminRemnawaveSquadDetail />
               </LazyPage>
             </AdminRoute>
           }

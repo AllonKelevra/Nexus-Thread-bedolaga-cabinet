@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
@@ -9,140 +10,18 @@ import {
   AutoSyncStatus,
 } from '../api/adminRemnawave';
 import { AdminBackButton } from '../components/admin';
-
-// ============ Icons ============
-
-const ServerIcon = ({ className = 'w-6 h-6' }: { className?: string }) => (
-  <svg
-    className={className}
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={1.5}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M5.25 14.25h13.5m-13.5 0a3 3 0 01-3-3m3 3a3 3 0 100 6h13.5a3 3 0 100-6m-16.5-3a3 3 0 013-3h13.5a3 3 0 013 3m-19.5 0a4.5 4.5 0 01.9-2.7L5.737 5.1a3.375 3.375 0 012.7-1.35h7.126c1.062 0 2.062.5 2.7 1.35l2.587 3.45a4.5 4.5 0 01.9 2.7m0 0a3 3 0 01-3 3m0 3h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008zm-3 6h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008z"
-    />
-  </svg>
-);
-
-const ChartIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
-  <svg
-    className={className}
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={1.5}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"
-    />
-  </svg>
-);
-
-const GlobeIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
-  <svg
-    className={className}
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={1.5}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418"
-    />
-  </svg>
-);
-
-const UsersIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
-  <svg
-    className={className}
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={1.5}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
-    />
-  </svg>
-);
-
-const SyncIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
-  <svg
-    className={className}
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={1.5}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
-    />
-  </svg>
-);
-
-const RefreshIcon = ({
-  className = 'w-4 h-4',
-  spinning = false,
-}: {
-  className?: string;
-  spinning?: boolean;
-}) => (
-  <svg
-    className={`${className} ${spinning ? 'animate-spin' : ''}`}
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-    />
-  </svg>
-);
-
-const PlayIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"
-    />
-  </svg>
-);
-
-const StopIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M5.25 7.5A2.25 2.25 0 017.5 5.25h9a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25h-9a2.25 2.25 0 01-2.25-2.25v-9z"
-    />
-  </svg>
-);
-
-const ArrowPathIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
-    />
-  </svg>
-);
+import {
+  ServerIcon,
+  ChartIcon,
+  GlobeIcon,
+  UsersIcon,
+  SyncIcon,
+  RefreshIcon,
+  PlayIcon,
+  StopIcon,
+  ArrowPathIcon,
+  RemnawaveIcon,
+} from '../components/icons';
 
 // ============ Helpers ============
 
@@ -320,15 +199,15 @@ function NodeCard({ node, onAction, isLoading }: NodeCardProps) {
 
 interface SquadCardProps {
   squad: SquadWithLocalInfo;
-  onSelect: (squad: SquadWithLocalInfo) => void;
+  onClick: () => void;
 }
 
-function SquadCard({ squad, onSelect }: SquadCardProps) {
+function SquadCard({ squad, onClick }: SquadCardProps) {
   const { t } = useTranslation();
 
   return (
     <div
-      onClick={() => onSelect(squad)}
+      onClick={onClick}
       className="cursor-pointer rounded-xl border border-dark-700 bg-dark-800/50 p-4 transition-colors hover:border-dark-600"
     >
       <div className="flex items-start justify-between gap-3">
@@ -693,12 +572,19 @@ interface SquadsTabProps {
   squads: SquadWithLocalInfo[];
   isLoading: boolean;
   onRefresh: () => void;
-  onSelect: (squad: SquadWithLocalInfo) => void;
+  onNavigate: (uuid: string) => void;
   onSync: () => void;
   isSyncing: boolean;
 }
 
-function SquadsTab({ squads, isLoading, onRefresh, onSelect, onSync, isSyncing }: SquadsTabProps) {
+function SquadsTab({
+  squads,
+  isLoading,
+  onRefresh,
+  onNavigate,
+  onSync,
+  isSyncing,
+}: SquadsTabProps) {
   const { t } = useTranslation();
 
   const stats = useMemo(() => {
@@ -763,7 +649,9 @@ function SquadsTab({ squads, isLoading, onRefresh, onSelect, onSync, isSyncing }
             {t('admin.remnawave.squads.noSquads', 'No squads found')}
           </p>
         ) : (
-          squads.map((squad) => <SquadCard key={squad.uuid} squad={squad} onSelect={onSelect} />)
+          squads.map((squad) => (
+            <SquadCard key={squad.uuid} squad={squad} onClick={() => onNavigate(squad.uuid)} />
+          ))
         )}
       </div>
     </div>
@@ -955,11 +843,11 @@ type TabType = 'overview' | 'nodes' | 'squads' | 'sync';
 
 export default function AdminRemnawave() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   // State
   const [activeTab, setActiveTab] = useState<TabType>('overview');
-  const [selectedSquad, setSelectedSquad] = useState<SquadWithLocalInfo | null>(null);
   const [syncResults, setSyncResults] = useState<
     Record<string, { success: boolean; message?: string } | null>
   >({});
@@ -1094,7 +982,7 @@ export default function AdminRemnawave() {
         <div className="flex items-center gap-3">
           <AdminBackButton />
           <div className="rounded-lg bg-accent-500/20 p-2">
-            <ServerIcon className="h-6 w-6 text-accent-400" />
+            <RemnawaveIcon className="h-6 w-6 text-accent-400" />
           </div>
           <div>
             <h1 className="text-xl font-semibold text-dark-100">
@@ -1171,7 +1059,7 @@ export default function AdminRemnawave() {
           squads={squadsData?.items || []}
           isLoading={isLoadingSquads}
           onRefresh={() => refetchSquads()}
-          onSelect={setSelectedSquad}
+          onNavigate={(uuid) => navigate(`/admin/remnawave/squads/${uuid}`)}
           onSync={handleSyncServers}
           isSyncing={syncServersMutation.isPending}
         />
@@ -1194,117 +1082,6 @@ export default function AdminRemnawave() {
           syncResults={syncResults}
           loadingStates={loadingStates}
         />
-      )}
-
-      {/* Squad Detail Modal */}
-      {selectedSquad && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          onClick={() => setSelectedSquad(null)}
-        >
-          <div
-            className="max-h-[80vh] w-full max-w-lg overflow-auto rounded-xl bg-dark-800"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="sticky top-0 flex items-center justify-between border-b border-dark-700 bg-dark-800 p-4">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">{getCountryFlag(selectedSquad.country_code)}</span>
-                <h2 className="text-lg font-semibold text-dark-100">
-                  {selectedSquad.display_name || selectedSquad.name}
-                </h2>
-              </div>
-              <button
-                onClick={() => setSelectedSquad(null)}
-                className="rounded-lg p-1 text-dark-400 hover:bg-dark-700"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="space-y-4 p-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-dark-500">UUID</p>
-                  <p className="break-all font-mono text-xs text-dark-200">{selectedSquad.uuid}</p>
-                </div>
-                <div>
-                  <p className="text-dark-500">Original Name</p>
-                  <p className="text-dark-200">{selectedSquad.name}</p>
-                </div>
-                <div>
-                  <p className="text-dark-500">Members</p>
-                  <p className="text-dark-200">{selectedSquad.members_count}</p>
-                </div>
-                <div>
-                  <p className="text-dark-500">Inbounds</p>
-                  <p className="text-dark-200">{selectedSquad.inbounds_count}</p>
-                </div>
-                {selectedSquad.is_synced && (
-                  <>
-                    <div>
-                      <p className="text-dark-500">Price</p>
-                      <p className="text-dark-200">
-                        {((selectedSquad.price_kopeks ?? 0) / 100).toFixed(2)} ₽
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-dark-500">Users</p>
-                      <p className="text-dark-200">
-                        {selectedSquad.current_users ?? 0} / {selectedSquad.max_users ?? '∞'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-dark-500">Available</p>
-                      <p
-                        className={
-                          selectedSquad.is_available ? 'text-success-400' : 'text-error-400'
-                        }
-                      >
-                        {selectedSquad.is_available ? 'Yes' : 'No'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-dark-500">Trial Eligible</p>
-                      <p
-                        className={
-                          selectedSquad.is_trial_eligible ? 'text-success-400' : 'text-dark-400'
-                        }
-                      >
-                        {selectedSquad.is_trial_eligible ? 'Yes' : 'No'}
-                      </p>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Inbounds */}
-              {selectedSquad.inbounds.length > 0 && (
-                <div>
-                  <p className="mb-2 text-sm text-dark-500">Inbounds</p>
-                  <div className="space-y-1">
-                    {selectedSquad.inbounds.map((inbound: Record<string, unknown>, idx) => (
-                      <div
-                        key={idx}
-                        className="rounded bg-dark-700/50 px-2 py-1 text-xs text-dark-300"
-                      >
-                        {String(inbound.tag || inbound.uuid || `Inbound ${idx + 1}`)}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Footer */}
-            <div className="flex justify-end gap-2 border-t border-dark-700 p-4">
-              <button onClick={() => setSelectedSquad(null)} className="btn-secondary">
-                {t('common.close', 'Close')}
-              </button>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );
