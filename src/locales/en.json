@@ -1817,6 +1817,9 @@
         "segment": "Segment",
         "user": "User",
         "userIdPlaceholder": "Telegram ID or User ID",
+        "searchUserPlaceholder": "Search by name, username or Telegram ID...",
+        "noUsersFound": "No users found",
+        "hasSubscription": "Sub",
         "preview": "Preview",
         "sending": "Sending...",
         "sendButton": "Send"

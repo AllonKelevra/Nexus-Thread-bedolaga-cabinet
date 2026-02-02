@@ -1610,6 +1610,9 @@
         "segment": "بخش",
         "user": "کاربر",
         "userIdPlaceholder": "شناسه تلگرام یا شناسه کاربر",
+        "searchUserPlaceholder": "جستجو بر اساس نام، نام کاربری یا شناسه تلگرام...",
+        "noUsersFound": "کاربری یافت نشد",
+        "hasSubscription": "اشتراک",
         "preview": "پیش‌نمایش",
         "sending": "در حال ارسال...",
         "sendButton": "ارسال"

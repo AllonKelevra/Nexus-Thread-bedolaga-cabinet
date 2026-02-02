@@ -427,10 +427,7 @@ export default function AdminPromoOfferSend() {
                           setShowDropdown(true);
                         }}
                         onFocus={() => setShowDropdown(true)}
-                        placeholder={t(
-                          'admin.promoOffers.send.searchUserPlaceholder',
-                          'Search by name, username or Telegram ID...',
-                        )}
+                        placeholder={t('admin.promoOffers.send.searchUserPlaceholder')}
                         className="w-full rounded-lg border border-dark-600 bg-dark-700 py-2.5 pl-10 pr-3 text-dark-100 focus:border-accent-500 focus:outline-none"
                       />
                       {isSearching && (
@@ -464,14 +461,14 @@ export default function AdminPromoOfferSend() {
                               </div>
                               {user.has_subscription && (
                                 <span className="flex-shrink-0 rounded bg-success-500/20 px-1.5 py-0.5 text-xs text-success-400">
-                                  {t('admin.users.hasSubscription', 'Sub')}
+                                  {t('admin.promoOffers.send.hasSubscription')}
                                 </span>
                               )}
                             </button>
                           ))
                         ) : !isSearching ? (
                           <div className="px-3 py-4 text-center text-sm text-dark-400">
-                            {t('admin.promoOffers.send.noUsersFound', 'No users found')}
+                            {t('admin.promoOffers.send.noUsersFound')}
                           </div>
                         ) : null}
                       </div>

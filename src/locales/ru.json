@@ -2328,6 +2328,9 @@
         "segment": "Сегмент",
         "user": "Пользователь",
         "userIdPlaceholder": "Telegram ID или User ID",
+        "searchUserPlaceholder": "Поиск по имени, username или Telegram ID...",
+        "noUsersFound": "Пользователи не найдены",
+        "hasSubscription": "Подп",
         "preview": "Предпросмотр",
         "sending": "Отправка...",
         "sendButton": "Отправить"

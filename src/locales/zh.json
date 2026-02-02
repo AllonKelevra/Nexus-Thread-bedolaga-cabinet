@@ -1609,6 +1609,9 @@
         "segment": "分组",
         "user": "用户",
         "userIdPlaceholder": "Telegram ID 或 User ID",
+        "searchUserPlaceholder": "按姓名、用户名或Telegram ID搜索...",
+        "noUsersFound": "未找到用户",
+        "hasSubscription": "订阅",
         "preview": "预览",
         "sending": "发送中...",
         "sendButton": "发送"
