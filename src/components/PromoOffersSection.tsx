@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { promoApi, PromoOffer } from '../api/promo';
 
 // Icons
@@ -148,22 +149,26 @@ export default function PromoOffersSection({ className = '' }: PromoOffersSectio
 
   return (
     <div className={`space-y-4 ${className}`}>
-      {/* Active Discount Banner */}
+      {/* Active Discount Banner - clickable, navigates to subscription */}
       {activeDiscount && activeDiscount.is_active && activeDiscount.discount_percent > 0 && (
-        <div className="card border-accent-500/30 bg-gradient-to-br from-accent-500/10 to-transparent">
+        <Link
+          to="/subscription"
+          state={{ scrollToExtend: true }}
+          className="card group block cursor-pointer border-success-500/30 bg-gradient-to-br from-success-500/10 to-accent-500/5 transition-all duration-200 hover:scale-[1.01] hover:border-success-500/50 hover:from-success-500/20 hover:to-accent-500/10 hover:shadow-lg hover:shadow-success-500/10 active:scale-[0.99]"
+        >
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-accent-500/20 text-accent-400">
-              <CheckIcon />
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-success-500/20 text-success-400 transition-transform duration-200 group-hover:scale-110">
+              <span className="text-2xl">🏷️</span>
             </div>
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <div className="mb-1 flex items-center gap-2">
                 <h3 className="font-semibold text-dark-100">
                   {t('promo.offers.discountActiveTitle', {
                     percent: activeDiscount.discount_percent,
                   })}
                 </h3>
-                <span className="rounded bg-accent-500/20 px-2 py-0.5 text-xs text-accent-400">
-                  {t('promo.offers.statusActive')}
+                <span className="rounded bg-success-500/20 px-2 py-0.5 text-xs font-bold text-success-400">
+                  -{activeDiscount.discount_percent}%
                 </span>
               </div>
               <div className="flex items-center gap-4 text-sm text-dark-400">
@@ -179,8 +184,20 @@ export default function PromoOffersSection({ className = '' }: PromoOffersSectio
                 )}
               </div>
             </div>
+            {/* Arrow indicator */}
+            <div className="flex-shrink-0 text-dark-500 transition-all duration-200 group-hover:translate-x-1 group-hover:text-success-400">
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
+            </div>
           </div>
-        </div>
+        </Link>
       )}
 
       {/* Success/Error Messages */}

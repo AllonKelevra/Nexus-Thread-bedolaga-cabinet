@@ -14,11 +14,9 @@ import {
   isLogoPreloaded,
 } from '@/api/branding';
 import { themeColorsApi } from '@/api/themeColors';
-import { promoApi } from '@/api/promo';
 import { cn } from '@/lib/utils';
 
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import PromoDiscountBadge from '@/components/PromoDiscountBadge';
 import TicketNotificationBell from '@/components/TicketNotificationBell';
 
 // Icons
@@ -78,7 +76,7 @@ export function AppHeader({
 }: AppHeaderProps) {
   const { t } = useTranslation();
   const location = useLocation();
-  const { user, logout, isAdmin, isAuthenticated } = useAuthStore();
+  const { user, logout, isAdmin } = useAuthStore();
   const { toggleTheme, isDark } = useTheme();
   const { haptic, platform } = usePlatform();
   const [userPhotoUrl, setUserPhotoUrl] = useState<string | null>(null);
@@ -111,15 +109,6 @@ export function AppHeader({
     staleTime: 1000 * 60 * 5,
   });
   const canToggle = enabledThemes?.dark && enabledThemes?.light;
-
-  // Promo active check
-  const { data: activeDiscount } = useQuery({
-    queryKey: ['active-discount'],
-    queryFn: promoApi.getActiveDiscount,
-    enabled: isAuthenticated,
-    staleTime: 30000,
-  });
-  const isPromoActive = activeDiscount?.is_active && activeDiscount?.discount_percent;
 
   // Get user photo from Telegram
   useEffect(() => {
@@ -274,15 +263,9 @@ export function AppHeader({
               )}
 
               <div onClick={() => setMobileMenuOpen(false)}>
-                <PromoDiscountBadge />
-              </div>
-              <div onClick={() => setMobileMenuOpen(false)}>
                 <TicketNotificationBell isAdmin={isAdminActive()} />
               </div>
-              <div
-                className={isPromoActive ? 'hidden sm:block' : ''}
-                onClick={() => setMobileMenuOpen(false)}
-              >
+              <div onClick={() => setMobileMenuOpen(false)}>
                 <LanguageSwitcher />
               </div>
 
@@ -358,7 +341,6 @@ export function AppHeader({
                     </div>
                   </div>
                 </div>
-                {isPromoActive && <LanguageSwitcher />}
               </div>
 
               {/* Nav items */}
