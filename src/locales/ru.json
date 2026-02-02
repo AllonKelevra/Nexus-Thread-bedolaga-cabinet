@@ -2339,6 +2339,10 @@
         "notificationsFailed": "(не доставлено: {{count}})",
         "sendError": "Не удалось отправить предложение"
       },
+      "notFound": "Шаблон не найден",
+      "noActiveTemplates": "Нет активных шаблонов",
+      "backToList": "К списку предложений",
+      "sendAnother": "Отправить еще",
       "actions": {
         "created": "Создано",
         "claimed": "Активировано",

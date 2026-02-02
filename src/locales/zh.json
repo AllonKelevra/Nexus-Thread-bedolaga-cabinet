@@ -1620,6 +1620,10 @@
         "notificationsFailed": "（失败: {{count}}）",
         "sendError": "发送优惠失败"
       },
+      "notFound": "未找到模板",
+      "noActiveTemplates": "没有活跃的模板",
+      "backToList": "返回优惠列表",
+      "sendAnother": "再发送一个",
       "actions": {
         "created": "已创建",
         "claimed": "已领取",

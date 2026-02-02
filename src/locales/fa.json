@@ -1621,6 +1621,10 @@
         "notificationsFailed": "(ناموفق: {{count}})",
         "sendError": "ارسال پیشنهاد ناموفق بود"
       },
+      "notFound": "قالب یافت نشد",
+      "noActiveTemplates": "قالب فعالی وجود ندارد",
+      "backToList": "بازگشت به لیست پیشنهادات",
+      "sendAnother": "ارسال دیگری",
       "actions": {
         "created": "ایجاد شده",
         "claimed": "فعال شده",

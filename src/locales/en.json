@@ -1828,6 +1828,10 @@
         "notificationsFailed": "(failed: {{count}})",
         "sendError": "Failed to send offer"
       },
+      "notFound": "Template not found",
+      "noActiveTemplates": "No active templates",
+      "backToList": "Back to offers",
+      "sendAnother": "Send another",
       "actions": {
         "created": "Created",
         "claimed": "Claimed",

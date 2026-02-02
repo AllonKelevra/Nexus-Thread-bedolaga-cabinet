@@ -51,6 +51,8 @@ const AdminUsers = lazy(() => import('./pages/AdminUsers'));
 const AdminPayments = lazy(() => import('./pages/AdminPayments'));
 const AdminPaymentMethods = lazy(() => import('./pages/AdminPaymentMethods'));
 const AdminPromoOffers = lazy(() => import('./pages/AdminPromoOffers'));
+const AdminPromoOfferTemplateEdit = lazy(() => import('./pages/AdminPromoOfferTemplateEdit'));
+const AdminPromoOfferSend = lazy(() => import('./pages/AdminPromoOfferSend'));
 const AdminRemnawave = lazy(() => import('./pages/AdminRemnawave'));
 const AdminEmailTemplates = lazy(() => import('./pages/AdminEmailTemplates'));
 const AdminUserDetail = lazy(() => import('./pages/AdminUserDetail'));
@@ -490,6 +492,26 @@ function App() {
             <AdminRoute>
               <LazyPage>
                 <AdminPromoOffers />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/promo-offers/templates/:id/edit"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminPromoOfferTemplateEdit />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/promo-offers/send"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminPromoOfferSend />
               </LazyPage>
             </AdminRoute>
           }
