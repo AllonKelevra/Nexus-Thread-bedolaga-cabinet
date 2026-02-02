@@ -364,7 +364,7 @@ export default function AdminServers() {
   return (
     <div className="animate-fade-in">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <AdminBackButton />
           <div>
@@ -375,7 +375,7 @@ export default function AdminServers() {
         <button
           onClick={() => syncMutation.mutate()}
           disabled={syncMutation.isPending}
-          className="flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-white transition-colors hover:bg-accent-600 disabled:opacity-50"
+          className="flex items-center justify-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-white transition-colors hover:bg-accent-600 disabled:opacity-50"
         >
           <SyncIcon />
           {syncMutation.isPending ? t('admin.servers.syncing') : t('admin.servers.sync')}

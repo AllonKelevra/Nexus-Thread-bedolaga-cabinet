@@ -128,7 +128,7 @@ export default function AdminPromocodes() {
   return (
     <div className="animate-fade-in">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <AdminBackButton />
           <div>
@@ -138,7 +138,7 @@ export default function AdminPromocodes() {
         </div>
         <button
           onClick={() => navigate('/admin/promocodes/create')}
-          className="flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-white transition-colors hover:bg-accent-600"
+          className="flex items-center justify-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-white transition-colors hover:bg-accent-600"
         >
           <PlusIcon />
           {t('admin.promocodes.addPromocode')}
