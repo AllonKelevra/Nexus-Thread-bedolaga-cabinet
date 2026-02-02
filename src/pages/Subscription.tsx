@@ -519,15 +519,16 @@ export default function Subscription() {
   // Auto-scroll to tariffs section when coming from Dashboard "Продлить" button
   useEffect(() => {
     const state = location.state as { scrollToExtend?: boolean } | null;
-    if (state?.scrollToExtend && tariffsCardRef.current) {
+    // Wait for tariffs to load before scrolling
+    if (state?.scrollToExtend && tariffsCardRef.current && tariffs.length > 0) {
       const timer = setTimeout(() => {
-        tariffsCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 300);
+        tariffsCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
       // Clear the state to prevent re-scrolling on subsequent renders
       window.history.replaceState({}, document.title);
       return () => clearTimeout(timer);
     }
-  }, [location.state]);
+  }, [location.state, tariffs.length]);
 
   const copyUrl = () => {
     if (subscription?.subscription_url) {
