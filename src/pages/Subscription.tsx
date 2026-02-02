@@ -666,7 +666,9 @@ export default function Subscription() {
                       <span className="text-dark-500">{t('subscription.trialInfo.remaining')}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-warning-400">{subscription.traffic_limit_gb || '∞'} GB</span>
+                      <span className="text-warning-400">
+                        {subscription.traffic_limit_gb || '∞'} GB
+                      </span>
                       <span className="text-dark-500">{t('subscription.traffic')}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
