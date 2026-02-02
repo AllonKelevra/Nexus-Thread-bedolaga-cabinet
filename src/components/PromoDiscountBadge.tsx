@@ -21,6 +21,7 @@ export default function PromoDiscountBadge() {
   return (
     <Link
       to="/subscription"
+      state={{ scrollToExtend: true }}
       className="group relative flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-success-500/20 to-accent-500/15 px-2.5 py-1.5 transition-all hover:from-success-500/30 hover:to-accent-500/25"
       title={t('promo.activeDiscount', 'Active discount')}
     >
