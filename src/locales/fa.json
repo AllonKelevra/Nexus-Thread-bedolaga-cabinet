@@ -1704,6 +1704,7 @@
         "restart": "راه‌اندازی مجدد",
         "restartAll": "راه‌اندازی مجدد همه",
         "usersOnline": "آنلاین",
+        "usersOnlineCount_other": "{{count}} آنلاین",
         "trafficUsed": "استفاده شده",
         "uptimeLabel": "زمان فعالیت",
         "stats": {
@@ -1742,7 +1743,9 @@
         "syncServers": "همگام‌سازی سرورها",
         "synced": "همگام شده",
         "members": "اعضا",
+        "membersCount_other": "{{count}} عضو",
         "inbounds": "ورودی‌ها",
+        "inboundsCount_other": "{{count}} ورودی",
         "available": "در دسترس",
         "unavailable": "در دسترس نیست",
         "stats": {

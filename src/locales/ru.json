@@ -897,6 +897,9 @@
         "restartAll": "Перезапустить все",
         "confirmRestartAll": "Вы уверены, что хотите перезапустить все ноды?",
         "usersOnline": "онлайн",
+        "usersOnlineCount_one": "{{count}} онлайн",
+        "usersOnlineCount_few": "{{count}} онлайн",
+        "usersOnlineCount_many": "{{count}} онлайн",
         "trafficUsed": "использовано",
         "uptimeLabel": "Аптайм",
         "stats": {
@@ -913,7 +916,13 @@
         "noSquads": "Сквады не найдены",
         "syncServers": "Синхронизировать серверы",
         "members": "участников",
+        "membersCount_one": "{{count}} участник",
+        "membersCount_few": "{{count}} участника",
+        "membersCount_many": "{{count}} участников",
         "inbounds": "inbounds",
+        "inboundsCount_one": "{{count}} inbound",
+        "inboundsCount_few": "{{count}} inbounds",
+        "inboundsCount_many": "{{count}} inbounds",
         "available": "Доступен",
         "unavailable": "Недоступен",
         "stats": {

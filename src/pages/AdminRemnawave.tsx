@@ -157,7 +157,9 @@ function NodeCard({ node, onAction, isLoading }: NodeCardProps) {
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-dark-400">
             <span className="flex items-center gap-1">
               <UsersIcon className="h-3.5 w-3.5" />
-              {node.users_online ?? 0} {t('admin.remnawave.nodes.usersOnline', 'online')}
+              {t('admin.remnawave.nodes.usersOnlineCount', '{{count}} online', {
+                count: node.users_online ?? 0,
+              })}
             </span>
             {node.traffic_used_bytes !== undefined && (
               <span>
@@ -239,7 +241,9 @@ function SquadCard({ squad, onClick }: SquadCardProps) {
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-dark-400">
             <span className="flex items-center gap-1">
               <UsersIcon className="h-3.5 w-3.5" />
-              {squad.members_count} {t('admin.remnawave.squads.members', 'members')}
+              {t('admin.remnawave.squads.membersCount', '{{count}} members', {
+                count: squad.members_count,
+              })}
             </span>
             {squad.current_users !== undefined && (
               <span>
@@ -247,7 +251,9 @@ function SquadCard({ squad, onClick }: SquadCardProps) {
               </span>
             )}
             <span>
-              {squad.inbounds_count} {t('admin.remnawave.squads.inbounds', 'inbounds')}
+              {t('admin.remnawave.squads.inboundsCount', '{{count}} inbounds', {
+                count: squad.inbounds_count,
+              })}
             </span>
             {squad.is_available !== undefined && (
               <span className={squad.is_available ? 'text-success-400' : 'text-error-400'}>
@@ -389,7 +395,7 @@ function OverviewTab({ stats, isLoading, onRefresh }: OverviewTabProps) {
         <h3 className="mb-3 text-sm font-medium text-dark-300">
           {t('admin.remnawave.overview.bandwidth', 'Realtime Bandwidth')}
         </h3>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <StatCard
             label={t('admin.remnawave.overview.download', 'Download')}
             value={formatBytes(stats.bandwidth.realtime_download) + '/s'}

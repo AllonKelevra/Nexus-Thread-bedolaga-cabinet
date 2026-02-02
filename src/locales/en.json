@@ -881,6 +881,8 @@
         "restartAll": "Restart All",
         "confirmRestartAll": "Are you sure you want to restart all nodes?",
         "usersOnline": "online",
+        "usersOnlineCount_one": "{{count}} online",
+        "usersOnlineCount_other": "{{count}} online",
         "trafficUsed": "used",
         "uptimeLabel": "Uptime",
         "stats": {
@@ -897,7 +899,11 @@
         "noSquads": "No squads found",
         "syncServers": "Sync Servers",
         "members": "members",
+        "membersCount_one": "{{count}} member",
+        "membersCount_other": "{{count}} members",
         "inbounds": "inbounds",
+        "inboundsCount_one": "{{count}} inbound",
+        "inboundsCount_other": "{{count}} inbounds",
         "available": "Available",
         "unavailable": "Unavailable",
         "stats": {

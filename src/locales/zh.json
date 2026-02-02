@@ -1712,6 +1712,7 @@
         "restart": "重启",
         "restartAll": "全部重启",
         "usersOnline": "在线",
+        "usersOnlineCount_other": "{{count}} 在线",
         "trafficUsed": "已使用",
         "uptimeLabel": "运行时间",
         "stats": {
@@ -1750,7 +1751,9 @@
         "syncServers": "同步服务器",
         "synced": "已同步",
         "members": "成员",
+        "membersCount_other": "{{count}} 成员",
         "inbounds": "入站",
+        "inboundsCount_other": "{{count}} 入站",
         "available": "可用",
         "unavailable": "不可用",
         "stats": {
