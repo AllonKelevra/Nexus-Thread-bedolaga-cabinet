@@ -1382,7 +1382,10 @@
       "enable": "Enable",
       "disable": "Disable",
       "toggleTrial": "Toggle Trial",
-      "loadError": "Failed to load server"
+      "loadError": "Failed to load server",
+      "mainSettings": "Main Settings",
+      "pricingAndLimits": "Pricing & Limits",
+      "updateError": "Failed to save changes"
     },
     "campaigns": {
       "title": "Ad Campaigns",

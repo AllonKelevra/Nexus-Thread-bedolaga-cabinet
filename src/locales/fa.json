@@ -1137,7 +1137,10 @@
       "enable": "فعال",
       "disable": "غیرفعال",
       "toggleTrial": "تغییر آزمایشی",
-      "loadError": "بارگذاری سرور ناموفق بود"
+      "loadError": "بارگذاری سرور ناموفق بود",
+      "mainSettings": "تنظیمات اصلی",
+      "pricingAndLimits": "قیمت‌گذاری و محدودیت‌ها",
+      "updateError": "ذخیره تغییرات ناموفق بود"
     },
     "paymentMethods": {
       "title": "روش‌های پرداخت",

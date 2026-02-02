@@ -1174,7 +1174,10 @@
       "enable": "启用",
       "disable": "禁用",
       "toggleTrial": "切换试用",
-      "loadError": "加载服务器失败"
+      "loadError": "加载服务器失败",
+      "mainSettings": "基本设置",
+      "pricingAndLimits": "价格和限制",
+      "updateError": "保存更改失败"
     },
     "campaigns": {
       "title": "广告活动",
