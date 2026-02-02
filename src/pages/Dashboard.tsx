@@ -300,13 +300,59 @@ export default function Dashboard() {
           </div>
         </div>
       ) : subscription ? (
-        <div className="bento-card">
+        <div
+          className={`bento-card ${subscription.is_trial ? 'border-warning-500/30 bg-gradient-to-br from-warning-500/5 to-transparent' : ''}`}
+        >
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-dark-100">{t('subscription.status')}</h2>
-            <span className={subscription.is_active ? 'badge-success' : 'badge-error'}>
-              {subscription.is_active ? t('subscription.active') : t('subscription.expired')}
+            <div>
+              <h2 className="text-lg font-semibold text-dark-100">{t('subscription.status')}</h2>
+              {subscription.tariff_name && (
+                <div className="mt-1 text-sm text-accent-400">{subscription.tariff_name}</div>
+              )}
+            </div>
+            <span
+              className={
+                subscription.is_trial
+                  ? 'badge-warning'
+                  : subscription.is_active
+                    ? 'badge-success'
+                    : 'badge-error'
+              }
+            >
+              {subscription.is_trial
+                ? t('subscription.trialStatus')
+                : subscription.is_active
+                  ? t('subscription.active')
+                  : t('subscription.expired')}
             </span>
           </div>
+
+          {/* Trial Info Banner */}
+          {subscription.is_trial && subscription.is_active && (
+            <div className="mb-6 rounded-xl border border-warning-500/30 bg-warning-500/10 p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-warning-500/20 text-xl">
+                  <SparklesIcon />
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium text-warning-300">
+                    {t('subscription.trialBanner.title')}
+                  </div>
+                  <div className="mt-1 text-sm text-dark-400">
+                    {t('subscription.trialBanner.description', { days: subscription.days_left })}
+                  </div>
+                  <Link
+                    to="/subscription"
+                    state={{ scrollToExtend: true }}
+                    className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-warning-400 transition-colors hover:text-warning-300"
+                  >
+                    {t('subscription.trialBanner.upgrade')}
+                    <ArrowRightIcon />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
             <div>
