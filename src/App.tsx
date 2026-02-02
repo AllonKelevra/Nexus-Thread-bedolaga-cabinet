@@ -30,6 +30,7 @@ const Wheel = lazy(() => import('./pages/Wheel'));
 // Admin pages - lazy load (only for admins)
 const AdminPanel = lazy(() => import('./pages/AdminPanel'));
 const AdminTickets = lazy(() => import('./pages/AdminTickets'));
+const AdminTicketSettings = lazy(() => import('./pages/AdminTicketSettings'));
 const AdminSettings = lazy(() => import('./pages/AdminSettings'));
 const AdminApps = lazy(() => import('./pages/AdminApps'));
 const AdminWheel = lazy(() => import('./pages/AdminWheel'));
@@ -253,6 +254,16 @@ function App() {
             <AdminRoute>
               <LazyPage>
                 <AdminTickets />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/tickets/settings"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminTicketSettings />
               </LazyPage>
             </AdminRoute>
           }

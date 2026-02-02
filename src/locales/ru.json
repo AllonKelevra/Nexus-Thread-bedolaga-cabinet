@@ -1686,6 +1686,8 @@
       "replyPlaceholder": "Введите ваш ответ...",
       "sendReply": "Отправить",
       "settings": "Настройки",
+      "settingsSubtitle": "Настройка тикетной системы и SLA",
+      "settingsLoadError": "Не удалось загрузить настройки",
       "supportMode": "Режим поддержки",
       "supportModeDesc": "Выберите, как пользователи могут связаться с поддержкой",
       "modeBoth": "Тикеты и контакт",

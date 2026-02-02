@@ -1179,6 +1179,8 @@
       "replyPlaceholder": "Type your reply...",
       "sendReply": "Send Reply",
       "settings": "Settings",
+      "settingsSubtitle": "Configure ticket system and SLA",
+      "settingsLoadError": "Failed to load settings",
       "supportMode": "Support mode",
       "supportModeDesc": "Choose how users can contact support",
       "modeBoth": "Tickets and contact",

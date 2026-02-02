@@ -941,6 +941,8 @@
       "replyPlaceholder": "پاسخ خود را بنویسید...",
       "sendReply": "ارسال پاسخ",
       "settings": "تنظیمات",
+      "settingsSubtitle": "پیکربندی سیستم تیکت و SLA",
+      "settingsLoadError": "خطا در بارگذاری تنظیمات",
       "supportMode": "حالت پشتیبانی",
       "supportModeDesc": "انتخاب کنید کاربران چگونه می‌توانند با پشتیبانی تماس بگیرند",
       "modeBoth": "تیکت و تماس",

@@ -979,6 +979,8 @@
       "replyPlaceholder": "输入您的回复...",
       "sendReply": "发送回复",
       "settings": "设置",
+      "settingsSubtitle": "配置工单系统和SLA",
+      "settingsLoadError": "加载设置失败",
       "supportMode": "支持模式",
       "supportModeDesc": "选择用户如何联系支持",
       "modeBoth": "工单和联系方式",
