@@ -1231,6 +1231,9 @@
         "saving": "保存中..."
       },
       "stats": {
+        "title": "活动统计",
+        "loadError": "加载统计失败",
+        "detailedStats": "详细统计",
         "registrations": "注册数",
         "revenue": "收入",
         "paidUsers": "已付费",
@@ -1248,7 +1251,10 @@
         "inactive": "未激活",
         "copy": "复制",
         "copied": "已复制！",
-        "users": "用户"
+        "users": "用户",
+        "noUsers": "没有注册用户",
+        "paid": "已付费",
+        "hasSub": "有订阅"
       },
       "users": {
         "title": "活动用户",

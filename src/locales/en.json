@@ -1439,6 +1439,9 @@
         "saving": "Saving..."
       },
       "stats": {
+        "title": "Campaign Statistics",
+        "loadError": "Failed to load statistics",
+        "detailedStats": "Detailed Statistics",
         "registrations": "Registrations",
         "revenue": "Revenue",
         "paidUsers": "Paid",
@@ -1456,7 +1459,10 @@
         "inactive": "Inactive",
         "copy": "Copy",
         "copied": "Copied!",
-        "users": "Users"
+        "users": "Users",
+        "noUsers": "No registered users",
+        "paid": "Paid",
+        "hasSub": "Has sub"
       },
       "users": {
         "title": "Campaign Users",

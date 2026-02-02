@@ -7,12 +7,10 @@ import {
   campaignsApi,
   CampaignListItem,
   CampaignDetail,
-  CampaignStatistics,
   CampaignUpdateRequest,
   CampaignBonusType,
   ServerSquadInfo,
   TariffListItem,
-  CampaignRegistrationItem,
 } from '../api/campaigns';
 import { AdminBackButton } from '../components/admin';
 import { createNumberInputHandler, toNumber } from '../utils/inputHelpers';
@@ -67,36 +65,6 @@ const ChartIcon = () => (
   </svg>
 );
 
-const UsersIcon = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
-    />
-  </svg>
-);
-
-const LinkIcon = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"
-    />
-  </svg>
-);
-
-const CopyIcon = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184"
-    />
-  </svg>
-);
-
 // Bonus type labels and colors
 const bonusTypeConfig: Record<
   CampaignBonusType,
@@ -134,19 +102,6 @@ const formatRubles = (kopeks: number) => {
     (kopeks / 100).toLocaleString(locale, { minimumFractionDigits: 0, maximumFractionDigits: 2 }) +
     ' ₽'
   );
-};
-
-// Format date
-const formatDate = (dateStr: string | null) => {
-  if (!dateStr) return '-';
-  const locale = localeMap[i18n.language] || 'ru-RU';
-  return new Date(dateStr).toLocaleDateString(locale, {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 };
 
 // Campaign Edit Modal
@@ -485,340 +440,6 @@ function CampaignModal({
   );
 }
 
-// Statistics Modal
-interface StatsModalProps {
-  stats: CampaignStatistics;
-  onClose: () => void;
-  onViewUsers: () => void;
-}
-
-function StatsModal({ stats, onClose, onViewUsers }: StatsModalProps) {
-  const { t } = useTranslation();
-  const [copied, setCopied] = useState(false);
-
-  const copyLink = () => {
-    if (stats.deep_link) {
-      navigator.clipboard.writeText(stats.deep_link);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl bg-dark-800">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-dark-700 p-4">
-          <div>
-            <h2 className="text-lg font-semibold text-dark-100">{stats.name}</h2>
-            <div className="mt-1 flex items-center gap-2">
-              <span
-                className={`rounded px-2 py-0.5 text-xs ${bonusTypeConfig[stats.bonus_type].bgColor} ${bonusTypeConfig[stats.bonus_type].color}`}
-              >
-                {t(bonusTypeConfig[stats.bonus_type].labelKey)}
-              </span>
-              {stats.is_active ? (
-                <span className="rounded bg-success-500/20 px-2 py-0.5 text-xs text-success-400">
-                  {t('admin.campaigns.stats.active')}
-                </span>
-              ) : (
-                <span className="rounded bg-dark-600 px-2 py-0.5 text-xs text-dark-400">
-                  {t('admin.campaigns.stats.inactive')}
-                </span>
-              )}
-            </div>
-          </div>
-          <button onClick={onClose} className="rounded-lg p-1 transition-colors hover:bg-dark-700">
-            <XIcon />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 space-y-4 overflow-y-auto p-4">
-          {/* Deep Link */}
-          {stats.deep_link && (
-            <div className="rounded-lg bg-dark-700 p-3">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex min-w-0 items-center gap-2">
-                  <LinkIcon />
-                  <span className="truncate text-sm text-dark-300">{stats.deep_link}</span>
-                </div>
-                <button
-                  onClick={copyLink}
-                  className="flex shrink-0 items-center gap-1 rounded-lg bg-dark-600 px-3 py-1.5 text-dark-300 transition-colors hover:bg-dark-500"
-                >
-                  <CopyIcon />
-                  <span className="text-sm">
-                    {copied ? t('admin.campaigns.stats.copied') : t('admin.campaigns.stats.copy')}
-                  </span>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Main Stats */}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div className="rounded-lg bg-dark-700 p-3 text-center">
-              <div className="text-2xl font-bold text-dark-100">{stats.registrations}</div>
-              <div className="text-xs text-dark-500">
-                {t('admin.campaigns.stats.registrations')}
-              </div>
-            </div>
-            <div className="rounded-lg bg-dark-700 p-3 text-center">
-              <div className="text-2xl font-bold text-success-400">
-                {formatRubles(stats.total_revenue_kopeks)}
-              </div>
-              <div className="text-xs text-dark-500">{t('admin.campaigns.stats.revenue')}</div>
-            </div>
-            <div className="rounded-lg bg-dark-700 p-3 text-center">
-              <div className="text-2xl font-bold text-accent-400">{stats.paid_users_count}</div>
-              <div className="text-xs text-dark-500">{t('admin.campaigns.stats.paidUsers')}</div>
-            </div>
-            <div className="rounded-lg bg-dark-700 p-3 text-center">
-              <div className="text-2xl font-bold text-accent-400">{stats.conversion_rate}%</div>
-              <div className="text-xs text-dark-500">{t('admin.campaigns.stats.conversion')}</div>
-            </div>
-          </div>
-
-          {/* Detailed Stats */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-lg bg-dark-700/50 p-3">
-              <div className="mb-2 text-sm text-dark-400">
-                {t('admin.campaigns.stats.bonusesIssued')}
-              </div>
-              {stats.bonus_type === 'balance' && (
-                <div className="text-lg font-medium text-success-400">
-                  {formatRubles(stats.balance_issued_kopeks)}
-                </div>
-              )}
-              {stats.bonus_type === 'subscription' && (
-                <div className="text-lg font-medium text-accent-400">
-                  {t('admin.campaigns.stats.subscriptionsIssued', {
-                    count: stats.subscription_issued,
-                  })}
-                </div>
-              )}
-              {stats.bonus_type === 'tariff' && (
-                <div className="text-lg font-medium text-accent-400">
-                  {t('admin.campaigns.stats.tariffsIssued', { count: stats.subscription_issued })}
-                </div>
-              )}
-              {stats.bonus_type === 'none' && (
-                <div className="text-lg font-medium text-dark-400">-</div>
-              )}
-            </div>
-            <div className="rounded-lg bg-dark-700/50 p-3">
-              <div className="mb-2 text-sm text-dark-400">
-                {t('admin.campaigns.stats.avgRevenuePerUser')}
-              </div>
-              <div className="text-lg font-medium text-dark-200">
-                {formatRubles(stats.avg_revenue_per_user_kopeks)}
-              </div>
-            </div>
-            <div className="rounded-lg bg-dark-700/50 p-3">
-              <div className="mb-2 text-sm text-dark-400">
-                {t('admin.campaigns.stats.avgFirstPayment')}
-              </div>
-              <div className="text-lg font-medium text-dark-200">
-                {formatRubles(stats.avg_first_payment_kopeks)}
-              </div>
-            </div>
-            <div className="rounded-lg bg-dark-700/50 p-3">
-              <div className="mb-2 text-sm text-dark-400">
-                {t('admin.campaigns.stats.trialSubscriptions')}
-              </div>
-              <div className="text-lg font-medium text-dark-200">
-                {t('admin.campaigns.stats.trialCount', {
-                  total: stats.trial_users_count,
-                  active: stats.active_trials_count,
-                })}
-              </div>
-            </div>
-            <div className="rounded-lg bg-dark-700/50 p-3">
-              <div className="mb-2 text-sm text-dark-400">
-                {t('admin.campaigns.stats.trialConversion')}
-              </div>
-              <div className="text-lg font-medium text-dark-200">
-                {stats.trial_conversion_rate}%
-              </div>
-            </div>
-            <div className="rounded-lg bg-dark-700/50 p-3">
-              <div className="mb-2 text-sm text-dark-400">
-                {t('admin.campaigns.stats.lastRegistration')}
-              </div>
-              <div className="text-sm font-medium text-dark-200">
-                {formatDate(stats.last_registration)}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="flex justify-between gap-3 border-t border-dark-700 p-4">
-          <button
-            onClick={onViewUsers}
-            className="flex items-center gap-2 rounded-lg bg-dark-700 px-4 py-2 text-dark-300 transition-colors hover:bg-dark-600"
-          >
-            <UsersIcon />
-            {t('admin.campaigns.stats.users')}
-          </button>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-dark-300 transition-colors hover:text-dark-100"
-          >
-            {t('admin.campaigns.modal.close')}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Users Modal
-interface UsersModalProps {
-  campaignId: number;
-  campaignName: string;
-  onClose: () => void;
-}
-
-function UsersModal({ campaignId, campaignName, onClose }: UsersModalProps) {
-  const { t } = useTranslation();
-  const [page, setPage] = useState(1);
-
-  const { data, isLoading } = useQuery({
-    queryKey: ['campaign-registrations', campaignId, page],
-    queryFn: () => campaignsApi.getCampaignRegistrations(campaignId, page, 20),
-  });
-
-  const registrations = data?.registrations || [];
-  const total = data?.total || 0;
-  const totalPages = Math.ceil(total / 20);
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl bg-dark-800">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-dark-700 p-4">
-          <div>
-            <h2 className="text-lg font-semibold text-dark-100">
-              {t('admin.campaigns.users.title')}
-            </h2>
-            <p className="text-sm text-dark-400">
-              {t('admin.campaigns.users.campaignRegistrations', {
-                name: campaignName,
-                count: total,
-              })}
-            </p>
-          </div>
-          <button onClick={onClose} className="rounded-lg p-1 transition-colors hover:bg-dark-700">
-            <XIcon />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
-            </div>
-          ) : registrations.length === 0 ? (
-            <div className="py-12 text-center text-dark-400">
-              {t('admin.campaigns.users.noUsers')}
-            </div>
-          ) : (
-            <table className="w-full">
-              <thead className="sticky top-0 bg-dark-700">
-                <tr>
-                  <th className="p-3 text-left text-xs font-medium text-dark-400">
-                    {t('admin.campaigns.users.user')}
-                  </th>
-                  <th className="p-3 text-left text-xs font-medium text-dark-400">
-                    {t('admin.campaigns.users.bonus')}
-                  </th>
-                  <th className="p-3 text-left text-xs font-medium text-dark-400">
-                    {t('admin.campaigns.users.balance')}
-                  </th>
-                  <th className="p-3 text-left text-xs font-medium text-dark-400">
-                    {t('admin.campaigns.users.status')}
-                  </th>
-                  <th className="p-3 text-left text-xs font-medium text-dark-400">
-                    {t('admin.campaigns.users.date')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-dark-700">
-                {registrations.map((reg: CampaignRegistrationItem) => (
-                  <tr key={reg.id} className="hover:bg-dark-700/50">
-                    <td className="p-3">
-                      <div className="text-sm text-dark-100">
-                        {reg.first_name || t('admin.campaigns.users.noName')}
-                        {reg.username && (
-                          <span className="ml-1 text-dark-400">@{reg.username}</span>
-                        )}
-                      </div>
-                      <div className="text-xs text-dark-500">{reg.telegram_id}</div>
-                    </td>
-                    <td className="p-3">
-                      <span
-                        className={`rounded px-2 py-0.5 text-xs ${bonusTypeConfig[reg.bonus_type as CampaignBonusType]?.bgColor || 'bg-dark-600'} ${bonusTypeConfig[reg.bonus_type as CampaignBonusType]?.color || 'text-dark-400'}`}
-                      >
-                        {bonusTypeConfig[reg.bonus_type as CampaignBonusType]?.labelKey
-                          ? t(bonusTypeConfig[reg.bonus_type as CampaignBonusType].labelKey)
-                          : reg.bonus_type}
-                      </span>
-                    </td>
-                    <td className="p-3 text-sm text-dark-300">
-                      {formatRubles(reg.user_balance_kopeks)}
-                    </td>
-                    <td className="p-3">
-                      <div className="flex gap-1">
-                        {reg.has_subscription && (
-                          <span className="rounded bg-accent-500/20 px-1.5 py-0.5 text-xs text-accent-400">
-                            VPN
-                          </span>
-                        )}
-                        {reg.has_paid && (
-                          <span className="rounded bg-success-500/20 px-1.5 py-0.5 text-xs text-success-400">
-                            {t('admin.campaigns.users.paid')}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="p-3 text-sm text-dark-400">{formatDate(reg.created_at)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 border-t border-dark-700 p-4">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="rounded-lg bg-dark-700 px-3 py-1.5 text-dark-300 hover:bg-dark-600 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {t('admin.campaigns.users.prev')}
-            </button>
-            <span className="text-sm text-dark-400">
-              {t('admin.campaigns.users.pageOf', { page, totalPages })}
-            </span>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-              className="rounded-lg bg-dark-700 px-3 py-1.5 text-dark-300 hover:bg-dark-600 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {t('admin.campaigns.users.next')}
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
 // Main Component
 export default function AdminCampaigns() {
   const { t } = useTranslation();
@@ -826,8 +447,6 @@ export default function AdminCampaigns() {
   const queryClient = useQueryClient();
 
   const [editingCampaign, setEditingCampaign] = useState<CampaignDetail | null>(null);
-  const [showStats, setShowStats] = useState<CampaignStatistics | null>(null);
-  const [showUsers, setShowUsers] = useState<{ id: number; name: string } | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
 
   // Queries
@@ -883,15 +502,6 @@ export default function AdminCampaigns() {
       setEditingCampaign(detail);
     } catch (error) {
       console.error('Failed to load campaign:', error);
-    }
-  };
-
-  const handleViewStats = async (campaignId: number) => {
-    try {
-      const stats = await campaignsApi.getCampaignStats(campaignId);
-      setShowStats(stats);
-    } catch (error) {
-      console.error('Failed to load stats:', error);
     }
   };
 
@@ -1011,7 +621,7 @@ export default function AdminCampaigns() {
                 <div className="flex items-center gap-2">
                   {/* Stats */}
                   <button
-                    onClick={() => handleViewStats(campaign.id)}
+                    onClick={() => navigate(`/admin/campaigns/${campaign.id}/stats`)}
                     className="rounded-lg bg-dark-700 p-2 text-dark-300 transition-colors hover:bg-dark-600 hover:text-dark-100"
                     title={t('admin.campaigns.table.statistics')}
                   >
@@ -1069,27 +679,6 @@ export default function AdminCampaigns() {
           onSave={handleSave}
           onClose={handleCloseModal}
           isLoading={updateMutation.isPending}
-        />
-      )}
-
-      {/* Stats Modal */}
-      {showStats && (
-        <StatsModal
-          stats={showStats}
-          onClose={() => setShowStats(null)}
-          onViewUsers={() => {
-            setShowUsers({ id: showStats.id, name: showStats.name });
-            setShowStats(null);
-          }}
-        />
-      )}
-
-      {/* Users Modal */}
-      {showUsers && (
-        <UsersModal
-          campaignId={showUsers.id}
-          campaignName={showUsers.name}
-          onClose={() => setShowUsers(null)}
         />
       )}
 
