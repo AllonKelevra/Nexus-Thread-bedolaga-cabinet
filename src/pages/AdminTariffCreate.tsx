@@ -542,6 +542,7 @@ export default function AdminTariffCreate() {
                   onChange={createNumberInputHandler(setNewPeriodDays, 1)}
                   className="input w-24"
                   min={1}
+                  placeholder="30"
                 />
               </div>
               <div>
@@ -554,6 +555,7 @@ export default function AdminTariffCreate() {
                   onChange={createNumberInputHandler(setNewPeriodPrice, 1)}
                   className="input w-28"
                   min={1}
+                  placeholder="300"
                 />
               </div>
               <button
@@ -589,6 +591,7 @@ export default function AdminTariffCreate() {
                     className="input w-28"
                     min={0}
                     step={1}
+                    placeholder="0"
                   />
                   <span className="text-dark-400">₽</span>
                   <div className="flex-1" />
@@ -677,6 +680,7 @@ export default function AdminTariffCreate() {
                 className="input w-24"
                 min={0}
                 step={1}
+                placeholder="0"
               />
               <span className="text-dark-400">₽</span>
             </div>
@@ -691,6 +695,7 @@ export default function AdminTariffCreate() {
                 onChange={createNumberInputHandler(setMaxDeviceLimit, 0)}
                 className="input w-24"
                 min={0}
+                placeholder="0"
               />
             </div>
             <p className="text-xs text-dark-500">{t('admin.tariffs.noLimitHint')}</p>
@@ -728,6 +733,7 @@ export default function AdminTariffCreate() {
                     onChange={createNumberInputHandler(setMaxTopupTrafficGb, 0)}
                     className="input w-24"
                     min={0}
+                    placeholder="0"
                   />
                   <span className="text-dark-400">{t('admin.tariffs.gbUnit')}</span>
                 </div>
@@ -754,6 +760,7 @@ export default function AdminTariffCreate() {
                           className="input w-20"
                           min={0}
                           step={1}
+                          placeholder="0"
                         />
                         <span className="text-xs text-dark-400">₽</span>
                       </div>
@@ -808,6 +815,7 @@ export default function AdminTariffCreate() {
                       className="input w-24"
                       min={0}
                       step={0.1}
+                      placeholder="0"
                     />
                     <span className="text-dark-400">₽</span>
                   </div>
@@ -821,6 +829,7 @@ export default function AdminTariffCreate() {
                       onChange={createNumberInputHandler(setMinDays, 1)}
                       className="input w-24"
                       min={1}
+                      placeholder="1"
                     />
                   </div>
                   <div className="flex items-center gap-3">
@@ -833,6 +842,7 @@ export default function AdminTariffCreate() {
                       onChange={createNumberInputHandler(setMaxDays, 1)}
                       className="input w-24"
                       min={1}
+                      placeholder="365"
                     />
                   </div>
                 </div>
@@ -886,6 +896,7 @@ export default function AdminTariffCreate() {
                       className="input w-24"
                       min={0}
                       step={0.1}
+                      placeholder="0"
                     />
                     <span className="text-dark-400">₽</span>
                   </div>
@@ -899,6 +910,7 @@ export default function AdminTariffCreate() {
                       onChange={createNumberInputHandler(setMinTrafficGb, 1)}
                       className="input w-24"
                       min={1}
+                      placeholder="1"
                     />
                   </div>
                   <div className="flex items-center gap-3">
@@ -911,6 +923,7 @@ export default function AdminTariffCreate() {
                       onChange={createNumberInputHandler(setMaxTrafficGb, 1)}
                       className="input w-24"
                       min={1}
+                      placeholder="1000"
                     />
                   </div>
                 </div>
