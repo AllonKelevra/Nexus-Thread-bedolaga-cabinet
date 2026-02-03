@@ -43,15 +43,6 @@ const WheelLegend = memo(function WheelLegend({ prizes }: WheelLegendProps) {
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-medium text-dark-100">{prize.display_name}</div>
             </div>
-
-            {/* Prize value (if applicable) */}
-            {prize.prize_type !== 'nothing' && prize.value && (
-              <div className="shrink-0 text-xs text-dark-400">
-                {prize.prize_type === 'balance' && `${prize.value} ₽`}
-                {prize.prize_type === 'subscription_days' && `${prize.value}д`}
-                {prize.prize_type === 'promocode' && '🎫'}
-              </div>
-            )}
           </div>
         );
       })}
