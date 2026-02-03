@@ -26,16 +26,17 @@ const FortuneWheel = memo(function FortuneWheel({
   const [displayRotation, setDisplayRotation] = useState(0);
   const [lightPhase, setLightPhase] = useState(0);
 
-  // Animated lights effect - running lights when spinning
+  // Animated lights effect - always running, speed depends on spinning state
   useEffect(() => {
-    if (isSpinning) {
-      const interval = setInterval(() => {
-        setLightPhase((p) => (p + 1) % 20); // Shift position around the wheel
-      }, 150); // Fast interval for running effect
-      return () => clearInterval(interval);
-    } else {
-      setLightPhase(0);
-    }
+    // Faster animation when spinning, slower when idle
+    const interval = setInterval(
+      () => {
+        setLightPhase((p) => (p + 1) % 20);
+      },
+      isSpinning ? 100 : 300,
+    ); // 100ms when spinning, 300ms when idle
+
+    return () => clearInterval(interval);
   }, [isSpinning]);
 
   useEffect(() => {
@@ -58,13 +59,16 @@ const FortuneWheel = memo(function FortuneWheel({
 
   // Memoize light pattern calculation
   const lightPattern = useMemo(() => {
+    const numLights = isSpinning ? 3 : 4; // 3 lights when spinning, 4 when idle
+
     return Array.from({ length: 20 }, (_, i) => {
-      if (!isSpinning) {
-        return i % 2 === 0; // Static alternating pattern
+      // Check if this light index is within the active range
+      for (let j = 0; j < numLights; j++) {
+        if (i === (lightPhase + j) % 20) {
+          return true;
+        }
       }
-      // Running lights - 3 lit lights move around the wheel
-      const pos = (i - lightPhase + 20) % 20;
-      return pos < 3;
+      return false;
     });
   }, [isSpinning, lightPhase]);
 
@@ -118,17 +122,6 @@ const FortuneWheel = memo(function FortuneWheel({
     };
   };
 
-  // Position for text - between hub and emoji
-  const getTextPosition = (index: number) => {
-    const angle = (index * sectorAngle + sectorAngle / 2 - 90) * (Math.PI / 180);
-    const textRadius = prizeRadius * 0.45;
-    return {
-      x: center + textRadius * Math.cos(angle),
-      y: center + textRadius * Math.sin(angle),
-      rotation: index * sectorAngle + sectorAngle / 2,
-    };
-  };
-
   // Alternate colors for sectors
   const getSectorColors = (index: number, baseColor?: string) => {
     if (baseColor) return baseColor;
@@ -144,15 +137,6 @@ const FortuneWheel = memo(function FortuneWheel({
     ];
     return colors[index % colors.length];
   };
-
-  // Truncate text intelligently
-  const truncateText = (text: string, maxLen: number) => {
-    if (text.length <= maxLen) return text;
-    return text.substring(0, maxLen - 1) + '..';
-  };
-
-  // Calculate max text length based on number of sectors
-  const maxTextLength = prizes.length <= 4 ? 12 : prizes.length <= 6 ? 10 : 8;
 
   return (
     <div className="relative mx-auto w-full max-w-[380px] select-none">
@@ -366,28 +350,7 @@ const FortuneWheel = memo(function FortuneWheel({
               );
             })}
 
-            {/* Prize content - Text */}
-            {prizes.map((prize, index) => {
-              const pos = getTextPosition(index);
-              const displayText = truncateText(prize.display_name, maxTextLength);
-              return (
-                <text
-                  key={`text-${prize.id}`}
-                  x={pos.x}
-                  y={pos.y}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fontSize={prizes.length <= 4 ? '13' : prizes.length <= 6 ? '11' : '9'}
-                  fontWeight="700"
-                  fill="#FFFFFF"
-                  transform={`rotate(${pos.rotation}, ${pos.x}, ${pos.y})`}
-                  filter="url(#textShadow)"
-                  style={{ letterSpacing: '0.03em' }}
-                >
-                  {displayText}
-                </text>
-              );
-            })}
+            {/* Prize content - Text removed, only emoji visible on wheel */}
           </g>
 
           {/* Center hub */}

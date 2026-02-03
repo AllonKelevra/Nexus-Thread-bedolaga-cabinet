@@ -678,6 +678,7 @@
   "wheel": {
     "title": "Fortune Wheel",
     "disabled": "Fortune Wheel is currently unavailable",
+    "prizes": "Prizes",
     "spinsRemaining": "Spins remaining today",
     "choosePayment": "Choose payment method",
     "stars": "Stars",
@@ -983,6 +984,8 @@
         "deletePrize": "Delete Prize",
         "confirmDelete": "Are you sure you want to delete this prize? This action cannot be undone.",
         "dragToReorder": "Drag to reorder",
+        "unsavedOrder": "Unsaved order changes",
+        "unsavedOrderHint": "Save or discard your changes",
         "types": {
           "subscription_days": "Subscription Days",
           "balance_bonus": "Balance Bonus",

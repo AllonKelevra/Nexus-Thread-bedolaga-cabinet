@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { wheelApi, type SpinResult, type SpinHistoryItem } from '../api/wheel';
 import FortuneWheel from '../components/wheel/FortuneWheel';
+import WheelLegend from '../components/wheel/WheelLegend';
 import InsufficientBalancePrompt from '../components/InsufficientBalancePrompt';
 import { useCurrency } from '../hooks/useCurrency';
 import { usePlatform, useHaptic } from '@/platform';
@@ -499,133 +500,145 @@ export default function Wheel() {
 
       {/* Wheel Section */}
       <Card>
-        <div className="p-6 sm:p-8">
-          {/* Wheel */}
-          <FortuneWheel
-            prizes={config.prizes}
-            isSpinning={isSpinning}
-            targetRotation={targetRotation}
-            onSpinComplete={handleSpinComplete}
-          />
+        <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[1fr,280px]">
+          {/* Left: Wheel and Controls */}
+          <div>
+            {/* Wheel */}
+            <FortuneWheel
+              prizes={config.prizes}
+              isSpinning={isSpinning}
+              targetRotation={targetRotation}
+              onSpinComplete={handleSpinComplete}
+            />
 
-          {/* Spin Controls */}
-          <div className="mt-8 space-y-4">
-            {/* Payment type toggle - only if both methods available */}
-            {bothMethodsAvailable && (
-              <div className="rounded-xl border border-dark-700/30 bg-dark-800/30 p-1">
-                <div className="grid grid-cols-2 gap-1">
-                  <button
-                    onClick={() => setPaymentType('telegram_stars')}
-                    disabled={isSpinning}
-                    className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                      paymentType === 'telegram_stars'
-                        ? 'bg-accent-500/15 text-accent-400'
-                        : 'text-dark-400 hover:text-dark-200'
-                    }`}
-                  >
-                    <StarIcon />
-                    {isTelegramMiniApp
-                      ? `${config.spin_cost_stars} ⭐`
-                      : `${formatAmount(config.required_balance_kopeks / 100)} ${currencySymbol}`}
-                  </button>
-                  <button
-                    onClick={() => setPaymentType('subscription_days')}
-                    disabled={isSpinning}
-                    className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                      paymentType === 'subscription_days'
-                        ? 'bg-accent-500/15 text-accent-400'
-                        : 'text-dark-400 hover:text-dark-200'
-                    }`}
-                  >
-                    <CalendarIcon />
-                    {t('wheel.days', { count: config.spin_cost_days ?? 0 })}
-                  </button>
+            {/* Spin Controls */}
+            <div className="mt-8 space-y-4">
+              {/* Payment type toggle - only if both methods available */}
+              {bothMethodsAvailable && (
+                <div className="rounded-xl border border-dark-700/30 bg-dark-800/30 p-1">
+                  <div className="grid grid-cols-2 gap-1">
+                    <button
+                      onClick={() => setPaymentType('telegram_stars')}
+                      disabled={isSpinning}
+                      className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                        paymentType === 'telegram_stars'
+                          ? 'bg-accent-500/15 text-accent-400'
+                          : 'text-dark-400 hover:text-dark-200'
+                      }`}
+                    >
+                      <StarIcon />
+                      {isTelegramMiniApp
+                        ? `${config.spin_cost_stars} ⭐`
+                        : `${formatAmount(config.required_balance_kopeks / 100)} ${currencySymbol}`}
+                    </button>
+                    <button
+                      onClick={() => setPaymentType('subscription_days')}
+                      disabled={isSpinning}
+                      className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                        paymentType === 'subscription_days'
+                          ? 'bg-accent-500/15 text-accent-400'
+                          : 'text-dark-400 hover:text-dark-200'
+                      }`}
+                    >
+                      <CalendarIcon />
+                      {t('wheel.days', { count: config.spin_cost_days ?? 0 })}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Single Spin Button */}
-            <Button
-              variant="primary"
-              size="lg"
-              fullWidth
-              onClick={handleUnifiedSpin}
-              disabled={spinDisabled}
-              loading={isSpinning || isPayingStars}
-            >
-              {isSpinning ? t('wheel.spinning') : t('wheel.spin')}
-            </Button>
-
-            {/* Cost subtitle when no toggle */}
-            {costSubtitle && !bothMethodsAvailable && (
-              <p className="text-center text-sm text-dark-400">{costSubtitle}</p>
-            )}
-
-            {/* Cannot spin hint */}
-            {!config.can_spin && !isSpinning && (
-              <>
-                {config.can_spin_reason === 'daily_limit_reached' ? (
-                  <div className="rounded-linear border border-dark-700/30 bg-dark-800/30 p-4 text-center">
-                    <p className="text-dark-400">{t('wheel.errors.dailyLimitReached')}</p>
-                  </div>
-                ) : config.can_spin_reason === 'insufficient_balance' ? (
-                  <InsufficientBalancePrompt
-                    missingAmountKopeks={
-                      config.required_balance_kopeks - config.user_balance_kopeks
-                    }
-                  />
-                ) : (
-                  <div className="rounded-linear border border-dark-700/30 bg-dark-800/30 p-4 text-center">
-                    <p className="text-dark-400">{t('wheel.errors.cannotSpin')}</p>
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* Inline Result Card */}
-            {spinResult && !isSpinning && (
-              <div
-                className={`animate-fade-in rounded-linear border p-4 ${
-                  spinResult.success
-                    ? 'border-accent-500/30 bg-accent-500/10'
-                    : 'border-red-500/30 bg-red-500/10'
-                }`}
+              {/* Single Spin Button */}
+              <Button
+                variant="primary"
+                size="lg"
+                fullWidth
+                onClick={handleUnifiedSpin}
+                disabled={spinDisabled}
+                loading={isSpinning || isPayingStars}
               >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-linear bg-dark-700/50 text-2xl">
-                    {spinResult.success ? spinResult.emoji || '🎉' : '😔'}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="font-semibold text-dark-100">
-                      {spinResult.success && spinResult.prize_display_name
-                        ? spinResult.prize_display_name
-                        : spinResult.success
-                          ? spinResult.prize_type === 'nothing'
-                            ? t('wheel.noLuck')
-                            : t('wheel.congratulations')
-                          : t('wheel.oops')}
-                    </div>
-                    <div className="text-sm text-dark-400">{spinResult.message}</div>
-                  </div>
-                  <button
-                    onClick={closeResultModal}
-                    className="shrink-0 rounded-lg p-2 text-dark-400 transition-colors hover:bg-white/5 hover:text-dark-200"
-                  >
-                    <CloseIcon />
-                  </button>
-                </div>
+                {isSpinning ? t('wheel.spinning') : t('wheel.spin')}
+              </Button>
 
-                {/* Promocode if won */}
-                {spinResult.promocode && (
-                  <div className="mt-3 rounded-linear border border-accent-500/20 bg-accent-500/10 p-3 text-center">
-                    <p className="mb-1 text-xs text-accent-400">{t('wheel.yourPromoCode')}</p>
-                    <p className="select-all font-mono text-lg font-bold tracking-wider text-white">
-                      {spinResult.promocode}
-                    </p>
+              {/* Cost subtitle when no toggle */}
+              {costSubtitle && !bothMethodsAvailable && (
+                <p className="text-center text-sm text-dark-400">{costSubtitle}</p>
+              )}
+
+              {/* Cannot spin hint */}
+              {!config.can_spin && !isSpinning && (
+                <>
+                  {config.can_spin_reason === 'daily_limit_reached' ? (
+                    <div className="rounded-linear border border-dark-700/30 bg-dark-800/30 p-4 text-center">
+                      <p className="text-dark-400">{t('wheel.errors.dailyLimitReached')}</p>
+                    </div>
+                  ) : config.can_spin_reason === 'insufficient_balance' ? (
+                    <InsufficientBalancePrompt
+                      missingAmountKopeks={
+                        config.required_balance_kopeks - config.user_balance_kopeks
+                      }
+                    />
+                  ) : (
+                    <div className="rounded-linear border border-dark-700/30 bg-dark-800/30 p-4 text-center">
+                      <p className="text-dark-400">{t('wheel.errors.cannotSpin')}</p>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Inline Result Card */}
+              {spinResult && !isSpinning && (
+                <div
+                  className={`animate-fade-in rounded-linear border p-4 ${
+                    spinResult.success
+                      ? 'border-accent-500/30 bg-accent-500/10'
+                      : 'border-red-500/30 bg-red-500/10'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-linear bg-dark-700/50 text-2xl">
+                      {spinResult.success ? spinResult.emoji || '🎉' : '😔'}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-semibold text-dark-100">
+                        {spinResult.success && spinResult.prize_display_name
+                          ? spinResult.prize_display_name
+                          : spinResult.success
+                            ? spinResult.prize_type === 'nothing'
+                              ? t('wheel.noLuck')
+                              : t('wheel.congratulations')
+                            : t('wheel.oops')}
+                      </div>
+                      <div className="text-sm text-dark-400">{spinResult.message}</div>
+                    </div>
+                    <button
+                      onClick={closeResultModal}
+                      className="shrink-0 rounded-lg p-2 text-dark-400 transition-colors hover:bg-white/5 hover:text-dark-200"
+                    >
+                      <CloseIcon />
+                    </button>
                   </div>
-                )}
-              </div>
-            )}
+
+                  {/* Promocode if won */}
+                  {spinResult.promocode && (
+                    <div className="mt-3 rounded-linear border border-accent-500/20 bg-accent-500/10 p-3 text-center">
+                      <p className="mb-1 text-xs text-accent-400">{t('wheel.yourPromoCode')}</p>
+                      <p className="select-all font-mono text-lg font-bold tracking-wider text-white">
+                        {spinResult.promocode}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            {/* End of left column: wheel and controls */}
+          </div>
+
+          {/* Right column (desktop) / Bottom (mobile): Prize Legend */}
+          <div className="flex flex-col">
+            <h3 className="mb-3 text-sm font-semibold text-dark-300">
+              {t('wheel.prizes') || 'Призы'}
+            </h3>
+            <WheelLegend prizes={config.prizes} />
           </div>
         </div>
       </Card>

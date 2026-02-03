@@ -567,6 +567,7 @@
   "wheel": {
     "title": "幸运转盘",
     "disabled": "幸运转盘暂时不可用",
+    "prizes": "奖品",
     "spinsRemaining": "今日剩余次数",
     "choosePayment": "选择支付方式",
     "stars": "Stars",
@@ -756,6 +757,8 @@
         "noPrizes": "未配置奖品。添加奖品以启用转盘。",
         "deletePrize": "删除此奖品？",
         "dragToReorder": "拖动排序",
+        "unsavedOrder": "有未保存的顺序更改",
+        "unsavedOrderHint": "保存或放弃更改",
         "confirmDelete": "确定要删除这个奖品吗？",
         "types": {
           "subscription_days": "订阅天数",
