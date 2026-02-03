@@ -181,7 +181,10 @@ export default function Subscription() {
     if (selectedPeriod?.traffic.selectable && (selectedPeriod.traffic.options?.length ?? 0) > 0) {
       result.push('traffic');
     }
-    if (selectedPeriod && (selectedPeriod.servers.options?.length ?? 0) > 0) {
+    if (
+      selectedPeriod &&
+      (selectedPeriod.servers.options?.filter((s) => s.is_available).length ?? 0) > 0
+    ) {
       result.push('servers');
     }
     if (selectedPeriod && selectedPeriod.devices.max > selectedPeriod.devices.min) {
@@ -203,7 +206,12 @@ export default function Subscription() {
         classicOptions.periods[0];
       setSelectedPeriod(defaultPeriod);
       setSelectedTraffic(classicOptions.selection.traffic_value);
-      setSelectedServers(classicOptions.selection.servers);
+      const availableServerUuids = new Set(
+        defaultPeriod.servers.options?.filter((s) => s.is_available).map((s) => s.uuid) ?? [],
+      );
+      setSelectedServers(
+        classicOptions.selection.servers.filter((uuid) => availableServerUuids.has(uuid)),
+      );
       setSelectedDevices(classicOptions.selection.devices);
     }
   }, [classicOptions, selectedPeriod]);
@@ -1636,7 +1644,9 @@ export default function Subscription() {
                       )}
 
                       <div className="max-h-64 space-y-2 overflow-y-auto">
-                        {countriesData.countries.map((country) => {
+                        {countriesData.countries
+                        .filter((country) => country.is_available || country.is_connected)
+                        .map((country) => {
                           const isCurrentlyConnected = country.is_connected;
                           const isSelected = selectedServersToUpdate.includes(country.uuid);
                           const willBeAdded = !isCurrentlyConnected && isSelected;
@@ -3108,7 +3118,14 @@ export default function Subscription() {
                             setSelectedTraffic(period.traffic.current);
                           }
                           if (period.servers.selected) {
-                            setSelectedServers(period.servers.selected);
+                            const availUuids = new Set(
+                              period.servers.options
+                                ?.filter((s) => s.is_available)
+                                .map((s) => s.uuid) ?? [],
+                            );
+                            setSelectedServers(
+                              period.servers.selected.filter((uuid) => availUuids.has(uuid)),
+                            );
                           }
                           if (period.devices.current) {
                             setSelectedDevices(period.devices.current);
@@ -3193,8 +3210,9 @@ export default function Subscription() {
               {currentStep === 'servers' && selectedPeriod?.servers.options && (
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                   {selectedPeriod.servers.options
-                    // Hide Trial server for users who already have trial subscription
+                    // Hide unavailable (disabled) servers and trial servers for existing trial users
                     .filter((server) => {
+                      if (!server.is_available) return false;
                       if (subscription?.is_trial && server.name.toLowerCase().includes('trial')) {
                         return false;
                       }
