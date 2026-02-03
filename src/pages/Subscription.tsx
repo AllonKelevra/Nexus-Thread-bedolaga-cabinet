@@ -2001,10 +2001,10 @@ export default function Subscription() {
                   </div>
                   <div>
                     <div className="font-medium text-error-300">
-                      {t('subscription.expired.title')}
+                      {t('subscription.expiredBanner.title')}
                     </div>
                     <div className="mt-1 text-sm text-dark-400">
-                      {t('subscription.expired.selectTariff')}
+                      {t('subscription.expiredBanner.selectTariff')}
                     </div>
                   </div>
                 </div>
