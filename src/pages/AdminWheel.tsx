@@ -7,6 +7,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  closestCenter,
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { useTelegramDnd } from '../hooks/useTelegramDnd';
@@ -198,9 +199,13 @@ function SortablePrizeCard({
     <div
       ref={setNodeRef}
       style={style}
-      className={`card overflow-hidden transition-all duration-200 ${
-        !prize.is_active ? 'opacity-50' : ''
-      } ${isDragging ? 'shadow-xl shadow-accent-500/20 ring-2 ring-accent-500/50' : ''}`}
+      className={`group flex flex-col rounded-xl border ${
+        isDragging
+          ? 'border-accent-500/50 bg-dark-800 shadow-xl shadow-accent-500/20'
+          : prize.is_active
+            ? 'border-dark-700/50 bg-dark-800/50'
+            : 'border-dark-800/50 bg-dark-900/30 opacity-60'
+      }`}
     >
       {/* Prize header - always visible */}
       <div className="flex items-center gap-2 p-3 sm:gap-3 sm:p-4">
@@ -339,6 +344,7 @@ export default function AdminWheel() {
     mutationFn: adminWheelApi.updateConfig,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-wheel-config'] });
+      queryClient.invalidateQueries({ queryKey: ['wheel-config'] });
       setSettingsForm(null); // Reset form so it reloads from config
     },
   });
@@ -404,6 +410,12 @@ export default function AdminWheel() {
     onDragEnd: onTelegramDragEnd,
     onDragCancel: onTelegramDragCancel,
   } = useTelegramDnd();
+
+  const handleDragStart = useCallback(() => {
+    onTelegramDragStart();
+    // Collapse expanded card to avoid collision detection issues with varying heights
+    setExpandedPrizeId(null);
+  }, [onTelegramDragStart]);
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
@@ -767,7 +779,8 @@ export default function AdminWheel() {
             {/* Prize list with DnD */}
             <DndContext
               sensors={sensors}
-              onDragStart={onTelegramDragStart}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
               onDragCancel={onTelegramDragCancel}
             >

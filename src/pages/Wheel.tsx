@@ -6,6 +6,10 @@ import FortuneWheel from '../components/wheel/FortuneWheel';
 import InsufficientBalancePrompt from '../components/InsufficientBalancePrompt';
 import { useCurrency } from '../hooks/useCurrency';
 import { usePlatform, useHaptic } from '@/platform';
+import { Card } from '@/components/data-display/Card/Card';
+import { Button } from '@/components/primitives/Button/Button';
+import { motion, AnimatePresence } from 'framer-motion';
+import { staggerContainer, staggerItem } from '@/components/motion/transitions';
 
 // Icons
 const StarIcon = () => (
@@ -40,23 +44,15 @@ const CloseIcon = () => (
   </svg>
 );
 
-const SparklesIcon = () => (
-  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"
-    />
-  </svg>
-);
-
-const TrophyIcon = () => (
-  <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 002.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 012.916.52 6.003 6.003 0 01-5.395 4.972m0 0a6.726 6.726 0 01-2.749 1.35m0 0a6.772 6.772 0 01-3.044 0"
-    />
+const ChevronIcon = ({ expanded }: { expanded: boolean }) => (
+  <svg
+    className={`h-5 w-5 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={2}
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
   </svg>
 );
 
@@ -74,6 +70,7 @@ export default function Wheel() {
     'telegram_stars',
   );
   const [isPayingStars, setIsPayingStars] = useState(false);
+  const [historyExpanded, setHistoryExpanded] = useState(false);
 
   // Check if we're in Telegram Mini App environment
   const isTelegramMiniApp = platform === 'telegram';
@@ -102,8 +99,10 @@ export default function Wheel() {
     const canPayDays = daysEnabled && config.can_pay_days;
 
     if (isTelegramMiniApp) {
-      // In Mini App: prefer days if available, Stars payment is separate button
-      if (canPayDays) {
+      // In Mini App: prefer stars if available
+      if (starsEnabled) {
+        setPaymentType('telegram_stars');
+      } else if (canPayDays) {
         setPaymentType('subscription_days');
       }
     } else {
@@ -359,6 +358,14 @@ export default function Wheel() {
     spinMutation.mutate();
   };
 
+  const handleUnifiedSpin = () => {
+    if (isTelegramMiniApp && paymentType === 'telegram_stars') {
+      handleDirectStarsPay();
+    } else {
+      handleSpin();
+    }
+  };
+
   const handleSpinComplete = useCallback(() => {
     setIsSpinning(false);
 
@@ -414,12 +421,7 @@ export default function Wheel() {
   if (isLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="relative">
-          <div className="h-16 w-16 animate-spin rounded-full border-4 border-purple-500/30 border-t-purple-500" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <SparklesIcon />
-          </div>
-        </div>
+        <div className="h-12 w-12 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
       </div>
     );
   }
@@ -453,320 +455,253 @@ export default function Wheel() {
   const daysEnabled = config.spin_cost_days_enabled && config.spin_cost_days;
   const canPayBalance = starsEnabled && config.can_pay_stars; // For web: pay with internal balance
   const canPayDays = daysEnabled && config.can_pay_days;
+  const bothMethodsAvailable = isTelegramMiniApp
+    ? starsEnabled && daysEnabled && canPayDays
+    : starsEnabled && daysEnabled && canPayBalance && canPayDays;
+
+  const spinDisabled =
+    !config.can_spin ||
+    isSpinning ||
+    isPayingStars ||
+    (config.daily_limit > 0 && config.user_spins_today >= config.daily_limit);
+
+  // Build cost subtitle for the spin button
+  const getCostSubtitle = () => {
+    if (bothMethodsAvailable) return null; // toggle handles it
+    if (paymentType === 'telegram_stars' && starsEnabled) {
+      if (isTelegramMiniApp) {
+        return `${config.spin_cost_stars} ⭐`;
+      }
+      return `${formatAmount(config.required_balance_kopeks / 100)} ${currencySymbol} (${config.spin_cost_stars} ⭐)`;
+    }
+    if (paymentType === 'subscription_days' && daysEnabled) {
+      return t('wheel.days', { count: config.spin_cost_days ?? 0 });
+    }
+    return null;
+  };
+
+  const costSubtitle = getCostSubtitle();
 
   return (
-    <div className="animate-fade-in pb-8">
-      {/* Hero Header */}
-      <div className="relative mb-8 overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600/20 via-indigo-600/20 to-blue-600/20 p-6 sm:p-8">
-        {/* Background decorations */}
-        <div className="absolute right-0 top-0 h-64 w-64 -translate-y-1/2 translate-x-1/2 rounded-full bg-purple-500/10 blur-3xl" />
-        <div className="absolute bottom-0 left-0 h-48 w-48 -translate-x-1/2 translate-y-1/2 rounded-full bg-blue-500/10 blur-3xl" />
-
-        <div className="relative flex items-center justify-between">
-          <div>
-            <div className="mb-2 flex items-center gap-3">
-              <div className="rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 p-2 shadow-lg shadow-purple-500/25">
-                <TrophyIcon />
-              </div>
-              <h1 className="text-2xl font-bold text-white sm:text-3xl">{t('wheel.title')}</h1>
-            </div>
-            {config.daily_limit > 0 && (
-              <div className="flex items-center gap-2 text-dark-300">
-                <span>{t('wheel.spinsRemaining')}:</span>
-                <span className="rounded-full bg-white/10 px-3 py-1 font-bold text-purple-300">
-                  {Math.max(0, config.daily_limit - config.user_spins_today)} / {config.daily_limit}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
+    <div className="animate-fade-in space-y-6 pb-8">
+      {/* Simple Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-dark-50">{t('wheel.title')}</h1>
+        {config.daily_limit > 0 && (
+          <p className="mt-1 text-dark-400">
+            {t('wheel.spinsRemaining')}:{' '}
+            <span className="inline-flex items-center rounded-full bg-accent-500/15 px-2 py-0.5 text-sm font-medium text-accent-400">
+              {Math.max(0, config.daily_limit - config.user_spins_today)}/{config.daily_limit}
+            </span>
+          </p>
+        )}
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid gap-6 lg:grid-cols-[1fr,320px]">
-        {/* Wheel Section */}
-        <div className="relative">
-          {/* Wheel Container with glow background */}
-          <div className="relative rounded-2xl border border-dark-700/50 bg-gradient-to-b from-dark-800/80 to-dark-900/80 p-6 backdrop-blur-sm sm:p-8">
-            {/* Background glow */}
-            <div
-              className="pointer-events-none absolute inset-0 rounded-2xl opacity-50"
-              style={{
-                background:
-                  'radial-gradient(circle at center, rgba(139, 92, 246, 0.15) 0%, transparent 70%)',
-              }}
-            />
+      {/* Wheel Section */}
+      <Card>
+        <div className="p-6 sm:p-8">
+          {/* Wheel */}
+          <FortuneWheel
+            prizes={config.prizes}
+            isSpinning={isSpinning}
+            targetRotation={targetRotation}
+            onSpinComplete={handleSpinComplete}
+          />
 
-            {/* Wheel */}
-            <div className="relative">
-              <FortuneWheel
-                prizes={config.prizes}
-                isSpinning={isSpinning}
-                targetRotation={targetRotation}
-                onSpinComplete={handleSpinComplete}
-              />
-            </div>
-
-            {/* Spin Button */}
-            <div className="mt-8 space-y-4">
-              {/* Payment Options - Different for Web vs Mini App */}
-              {isTelegramMiniApp ? (
-                // Mini App: Show Stars button (direct Telegram payment) and Days button
-                <div className="space-y-3">
-                  {/* Direct Stars payment via Telegram */}
-                  {starsEnabled && (
-                    <button
-                      onClick={handleDirectStarsPay}
-                      disabled={
-                        isSpinning ||
-                        isPayingStars ||
-                        (config.daily_limit > 0 && config.user_spins_today >= config.daily_limit)
-                      }
-                      className="flex w-full items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 p-4 font-bold text-black shadow-lg shadow-yellow-500/25 transition-all hover:shadow-yellow-500/40 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <StarIcon />
-                      {isPayingStars
-                        ? t('wheel.processingPayment')
-                        : `${t('wheel.payWithStars')} (${config.spin_cost_stars} ⭐)`}
-                    </button>
-                  )}
-
-                  {/* Days payment option */}
-                  {daysEnabled && (
-                    <button
-                      onClick={() => canPayDays && setPaymentType('subscription_days')}
-                      disabled={isSpinning || !canPayDays}
-                      className={`flex w-full items-center justify-center gap-3 rounded-xl border-2 p-4 transition-all ${
-                        paymentType === 'subscription_days' && canPayDays
-                          ? 'border-blue-500/50 bg-gradient-to-br from-blue-500/20 to-cyan-500/10 text-blue-400'
-                          : !canPayDays
-                            ? 'cursor-not-allowed border-dark-700 text-dark-500 opacity-50'
-                            : 'border-dark-700 text-dark-300 hover:border-dark-600 hover:bg-dark-800'
-                      }`}
-                    >
-                      <CalendarIcon />
-                      <span className="font-semibold">
-                        {t('wheel.payWithDays')} (
-                        {t('wheel.days', { count: config.spin_cost_days ?? 0 })})
-                      </span>
-                    </button>
-                  )}
-                </div>
-              ) : (
-                // Web: Show Balance button (Stars converted to rubles) and Days button
-                (starsEnabled || daysEnabled) && (
-                  <div className="flex gap-3">
-                    {starsEnabled && (
-                      <button
-                        onClick={() => canPayBalance && setPaymentType('telegram_stars')}
-                        disabled={isSpinning || !canPayBalance}
-                        className={`flex flex-1 flex-col items-center justify-center gap-1 rounded-xl border-2 p-4 transition-all ${
-                          paymentType === 'telegram_stars' && canPayBalance
-                            ? 'border-accent-500/50 bg-gradient-to-br from-accent-500/20 to-blue-500/10 text-accent-400'
-                            : !canPayBalance
-                              ? 'cursor-not-allowed border-dark-700 text-dark-500 opacity-50'
-                              : 'border-dark-700 text-dark-300 hover:border-dark-600 hover:bg-dark-800'
-                        }`}
-                      >
-                        <span className="font-semibold">
-                          {formatAmount(config.required_balance_kopeks / 100)} {currencySymbol}
-                        </span>
-                        <span className="text-xs opacity-70">({config.spin_cost_stars} ⭐)</span>
-                      </button>
-                    )}
-
-                    {daysEnabled && (
-                      <button
-                        onClick={() => canPayDays && setPaymentType('subscription_days')}
-                        disabled={isSpinning || !canPayDays}
-                        className={`flex flex-1 items-center justify-center gap-3 rounded-xl border-2 p-4 transition-all ${
-                          paymentType === 'subscription_days' && canPayDays
-                            ? 'border-blue-500/50 bg-gradient-to-br from-blue-500/20 to-cyan-500/10 text-blue-400'
-                            : !canPayDays
-                              ? 'cursor-not-allowed border-dark-700 text-dark-500 opacity-50'
-                              : 'border-dark-700 text-dark-300 hover:border-dark-600 hover:bg-dark-800'
-                        }`}
-                      >
-                        <CalendarIcon />
-                        <span className="font-semibold">
-                          {t('wheel.days', { count: config.spin_cost_days ?? 0 })}
-                        </span>
-                      </button>
-                    )}
-                  </div>
-                )
-              )}
-
-              {/* Main Spin Button - Show for web always, for mini app only if days available */}
-              {(!isTelegramMiniApp || canPayDays) && (
-                <button
-                  onClick={handleSpin}
-                  disabled={
-                    !config.can_spin ||
-                    isSpinning ||
-                    isPayingStars ||
-                    (isTelegramMiniApp && !canPayDays)
-                  }
-                  className={`group relative w-full overflow-hidden rounded-2xl py-5 text-xl font-bold transition-all ${
-                    !config.can_spin ||
-                    isSpinning ||
-                    isPayingStars ||
-                    (isTelegramMiniApp && !canPayDays)
-                      ? 'cursor-not-allowed bg-dark-700 text-dark-500'
-                      : 'bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 text-white shadow-xl shadow-purple-500/30 hover:scale-[1.02] hover:shadow-purple-500/50 active:scale-[0.98]'
-                  }`}
-                  style={{
-                    backgroundSize: '200% 100%',
-                    animation:
-                      !isSpinning && config.can_spin ? 'wheel-shimmer 3s linear infinite' : 'none',
-                  }}
-                >
-                  {/* Button glow effect */}
-                  {!isSpinning && config.can_spin && (
-                    <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-1000 group-hover:translate-x-full" />
-                  )}
-
-                  {isSpinning ? (
-                    <span className="flex items-center justify-center gap-3">
-                      <div className="border-3 h-6 w-6 animate-spin rounded-full border-white/30 border-t-white" />
-                      {t('wheel.spinning')}
-                    </span>
-                  ) : (
-                    <span className="flex items-center justify-center gap-2">
-                      <SparklesIcon />
-                      {t('wheel.spin')}
-                    </span>
-                  )}
-                </button>
-              )}
-
-              {/* Cannot spin hint */}
-              {!config.can_spin && !isSpinning && (
-                <>
-                  {config.can_spin_reason === 'daily_limit_reached' ? (
-                    <div className="rounded-xl border border-dark-700 bg-dark-800/50 p-4 text-center">
-                      <p className="text-dark-400">{t('wheel.errors.dailyLimitReached')}</p>
-                    </div>
-                  ) : config.can_spin_reason === 'insufficient_balance' ? (
-                    <InsufficientBalancePrompt
-                      missingAmountKopeks={
-                        config.required_balance_kopeks - config.user_balance_kopeks
-                      }
-                    />
-                  ) : (
-                    <div className="rounded-xl border border-dark-700 bg-dark-800/50 p-4 text-center">
-                      <p className="text-dark-400">{t('wheel.errors.cannotSpin')}</p>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {/* Inline Result Card */}
-              {spinResult && !isSpinning && (
-                <div
-                  className={`animate-fade-in rounded-xl border p-4 ${
-                    spinResult.success
-                      ? 'border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-indigo-500/10'
-                      : 'border-red-500/30 bg-red-500/10'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl"
-                      style={{
-                        backgroundColor: spinResult.success
-                          ? `${spinResult.color || '#8B5CF6'}20`
-                          : 'rgba(239, 68, 68, 0.2)',
-                      }}
-                    >
-                      {spinResult.success ? spinResult.emoji || '🎉' : '😔'}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="font-semibold text-dark-100">
-                        {spinResult.success && spinResult.prize_display_name
-                          ? spinResult.prize_display_name
-                          : spinResult.success
-                            ? spinResult.prize_type === 'nothing'
-                              ? t('wheel.noLuck')
-                              : t('wheel.congratulations')
-                            : t('wheel.oops')}
-                      </div>
-                      <div className="text-sm text-dark-400">{spinResult.message}</div>
-                    </div>
-                    <button
-                      onClick={closeResultModal}
-                      className="shrink-0 rounded-lg p-2 text-dark-400 transition-colors hover:bg-white/5 hover:text-dark-200"
-                    >
-                      <CloseIcon />
-                    </button>
-                  </div>
-
-                  {/* Promocode if won */}
-                  {spinResult.promocode && (
-                    <div className="mt-3 rounded-lg border border-purple-500/20 bg-purple-500/10 p-3 text-center">
-                      <p className="mb-1 text-xs text-purple-300">{t('wheel.yourPromoCode')}</p>
-                      <p className="select-all font-mono text-lg font-bold tracking-wider text-white">
-                        {spinResult.promocode}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* History Sidebar - always visible on desktop */}
-        <div className="hidden h-fit lg:sticky lg:top-24 lg:block">
-          <div className="overflow-hidden rounded-2xl border border-dark-700/50 bg-dark-800/80 backdrop-blur-sm">
-            <div className="border-b border-dark-700 p-4">
-              <h3 className="flex items-center gap-2 font-semibold text-dark-100">
-                <HistoryIcon />
-                {t('wheel.recentSpins')}
-              </h3>
-            </div>
-
-            {history && history.items.length > 0 ? (
-              <div className="max-h-[300px] overflow-y-auto">
-                {history.items.map((item: SpinHistoryItem, index: number) => (
-                  <div
-                    key={item.id}
-                    className={`flex items-center gap-3 p-4 ${
-                      index !== history.items.length - 1 ? 'border-b border-dark-700/50' : ''
+          {/* Spin Controls */}
+          <div className="mt-8 space-y-4">
+            {/* Payment type toggle - only if both methods available */}
+            {bothMethodsAvailable && (
+              <div className="rounded-xl border border-dark-700/30 bg-dark-800/30 p-1">
+                <div className="grid grid-cols-2 gap-1">
+                  <button
+                    onClick={() => setPaymentType('telegram_stars')}
+                    disabled={isSpinning}
+                    className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                      paymentType === 'telegram_stars'
+                        ? 'bg-accent-500/15 text-accent-400'
+                        : 'text-dark-400 hover:text-dark-200'
                     }`}
                   >
-                    <div
-                      className="flex h-12 w-12 items-center justify-center rounded-xl text-2xl"
-                      style={{ backgroundColor: `${item.color}20` }}
-                    >
-                      {item.emoji}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate font-medium text-dark-100">
-                        {item.prize_display_name}
-                      </div>
-                      <div className="text-xs text-dark-500">
-                        {new Date(item.created_at).toLocaleDateString()}
-                      </div>
-                    </div>
-                    <div className="whitespace-nowrap text-xs text-dark-400">
-                      -
-                      {item.payment_type === 'telegram_stars'
-                        ? `${item.payment_amount} ⭐`
-                        : `${item.payment_amount}${t('wheel.days').charAt(0)}`}
-                    </div>
-                  </div>
-                ))}
+                    <StarIcon />
+                    {isTelegramMiniApp
+                      ? `${config.spin_cost_stars} ⭐`
+                      : `${formatAmount(config.required_balance_kopeks / 100)} ${currencySymbol}`}
+                  </button>
+                  <button
+                    onClick={() => setPaymentType('subscription_days')}
+                    disabled={isSpinning}
+                    className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                      paymentType === 'subscription_days'
+                        ? 'bg-accent-500/15 text-accent-400'
+                        : 'text-dark-400 hover:text-dark-200'
+                    }`}
+                  >
+                    <CalendarIcon />
+                    {t('wheel.days', { count: config.spin_cost_days ?? 0 })}
+                  </button>
+                </div>
               </div>
-            ) : (
-              <div className="p-8 text-center text-dark-500">
-                <div className="mb-2 text-4xl">🎰</div>
-                {t('wheel.noHistory')}
+            )}
+
+            {/* Single Spin Button */}
+            <Button
+              variant="primary"
+              size="lg"
+              fullWidth
+              onClick={handleUnifiedSpin}
+              disabled={spinDisabled}
+              loading={isSpinning || isPayingStars}
+            >
+              {isSpinning ? t('wheel.spinning') : t('wheel.spin')}
+            </Button>
+
+            {/* Cost subtitle when no toggle */}
+            {costSubtitle && !bothMethodsAvailable && (
+              <p className="text-center text-sm text-dark-400">{costSubtitle}</p>
+            )}
+
+            {/* Cannot spin hint */}
+            {!config.can_spin && !isSpinning && (
+              <>
+                {config.can_spin_reason === 'daily_limit_reached' ? (
+                  <div className="rounded-linear border border-dark-700/30 bg-dark-800/30 p-4 text-center">
+                    <p className="text-dark-400">{t('wheel.errors.dailyLimitReached')}</p>
+                  </div>
+                ) : config.can_spin_reason === 'insufficient_balance' ? (
+                  <InsufficientBalancePrompt
+                    missingAmountKopeks={
+                      config.required_balance_kopeks - config.user_balance_kopeks
+                    }
+                  />
+                ) : (
+                  <div className="rounded-linear border border-dark-700/30 bg-dark-800/30 p-4 text-center">
+                    <p className="text-dark-400">{t('wheel.errors.cannotSpin')}</p>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Inline Result Card */}
+            {spinResult && !isSpinning && (
+              <div
+                className={`animate-fade-in rounded-linear border p-4 ${
+                  spinResult.success
+                    ? 'border-accent-500/30 bg-accent-500/10'
+                    : 'border-red-500/30 bg-red-500/10'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-linear bg-dark-700/50 text-2xl">
+                    {spinResult.success ? spinResult.emoji || '🎉' : '😔'}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-dark-100">
+                      {spinResult.success && spinResult.prize_display_name
+                        ? spinResult.prize_display_name
+                        : spinResult.success
+                          ? spinResult.prize_type === 'nothing'
+                            ? t('wheel.noLuck')
+                            : t('wheel.congratulations')
+                          : t('wheel.oops')}
+                    </div>
+                    <div className="text-sm text-dark-400">{spinResult.message}</div>
+                  </div>
+                  <button
+                    onClick={closeResultModal}
+                    className="shrink-0 rounded-lg p-2 text-dark-400 transition-colors hover:bg-white/5 hover:text-dark-200"
+                  >
+                    <CloseIcon />
+                  </button>
+                </div>
+
+                {/* Promocode if won */}
+                {spinResult.promocode && (
+                  <div className="mt-3 rounded-linear border border-accent-500/20 bg-accent-500/10 p-3 text-center">
+                    <p className="mb-1 text-xs text-accent-400">{t('wheel.yourPromoCode')}</p>
+                    <p className="select-all font-mono text-lg font-bold tracking-wider text-white">
+                      {spinResult.promocode}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>
         </div>
-      </div>
+      </Card>
+
+      {/* History Section - full width, collapsible */}
+      <Card>
+        <button
+          onClick={() => setHistoryExpanded(!historyExpanded)}
+          className="flex w-full items-center justify-between p-4"
+        >
+          <h3 className="flex items-center gap-2 font-semibold text-dark-100">
+            <HistoryIcon />
+            {t('wheel.recentSpins')}
+            {history && history.items.length > 0 && (
+              <span className="text-sm font-normal text-dark-500">({history.items.length})</span>
+            )}
+          </h3>
+          <ChevronIcon expanded={historyExpanded} />
+        </button>
+
+        <AnimatePresence>
+          {historyExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="overflow-hidden"
+            >
+              <div className="border-t border-dark-700/30 px-4 pb-4 pt-2">
+                {history && history.items.length > 0 ? (
+                  <motion.div
+                    variants={staggerContainer}
+                    initial="hidden"
+                    animate="show"
+                    className="space-y-2"
+                  >
+                    {history.items.map((item: SpinHistoryItem) => (
+                      <motion.div
+                        key={item.id}
+                        variants={staggerItem}
+                        className="flex items-center justify-between rounded-linear border border-dark-700/30 bg-dark-800/30 p-3"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-linear bg-dark-700/50 text-xl">
+                            {item.emoji}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="truncate text-sm font-medium text-dark-100">
+                              {item.prize_display_name}
+                            </div>
+                            <div className="text-xs text-dark-500">
+                              {new Date(item.created_at).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="whitespace-nowrap text-sm text-dark-400">
+                          -
+                          {item.payment_type === 'telegram_stars'
+                            ? `${item.payment_amount} ⭐`
+                            : `${item.payment_amount}${t('wheel.days').charAt(0)}`}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                ) : (
+                  <div className="py-6 text-center text-dark-500">
+                    <div className="mb-2 text-3xl">🎰</div>
+                    {t('wheel.noHistory')}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Card>
     </div>
   );
 }

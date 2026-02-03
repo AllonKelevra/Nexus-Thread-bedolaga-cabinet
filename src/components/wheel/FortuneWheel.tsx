@@ -22,15 +22,16 @@ const FortuneWheel = memo(function FortuneWheel({
   onSpinComplete,
 }: FortuneWheelProps) {
   const wheelRef = useRef<SVGGElement>(null);
-  const [currentRotation, setCurrentRotation] = useState(0);
+  const accumulatedRotation = useRef(0);
+  const [displayRotation, setDisplayRotation] = useState(0);
   const [lightPhase, setLightPhase] = useState(0);
 
-  // Animated lights effect - use phase instead of random array (less re-renders)
+  // Animated lights effect - running lights when spinning
   useEffect(() => {
     if (isSpinning) {
       const interval = setInterval(() => {
-        setLightPhase((p) => (p + 1) % 3); // Just toggle phase 0-1-2
-      }, 600); // Slower interval = better performance
+        setLightPhase((p) => (p + 1) % 20); // Shift position around the wheel
+      }, 150); // Fast interval for running effect
       return () => clearInterval(interval);
     } else {
       setLightPhase(0);
@@ -39,7 +40,13 @@ const FortuneWheel = memo(function FortuneWheel({
 
   useEffect(() => {
     if (isSpinning && targetRotation !== null && wheelRef.current) {
-      setCurrentRotation(targetRotation);
+      const currentPos = accumulatedRotation.current % 360;
+      let delta = targetRotation - currentPos;
+      // Normalize delta to positive
+      while (delta < 0) delta += 360;
+      const newRotation = accumulatedRotation.current + 1800 + delta;
+      accumulatedRotation.current = newRotation;
+      setDisplayRotation(newRotation);
 
       const timeout = setTimeout(() => {
         onSpinComplete();
@@ -52,8 +59,12 @@ const FortuneWheel = memo(function FortuneWheel({
   // Memoize light pattern calculation
   const lightPattern = useMemo(() => {
     return Array.from({ length: 20 }, (_, i) => {
-      if (!isSpinning) return i % 2 === 0;
-      return (i + lightPhase) % 3 !== 0;
+      if (!isSpinning) {
+        return i % 2 === 0; // Static alternating pattern
+      }
+      // Running lights - 3 lit lights move around the wheel
+      const pos = (i - lightPhase + 20) % 20;
+      return pos < 3;
     });
   }, [isSpinning, lightPhase]);
 
@@ -265,11 +276,12 @@ const FortuneWheel = memo(function FortuneWheel({
             strokeWidth="2"
           />
 
-          {/* LED lights on outer ring */}
+          {/* LED lights on outer ring - positioned toward outer edge to avoid bleeding into sectors */}
           {Array.from({ length: 20 }).map((_, i) => {
             const angle = (i * 18 - 90) * (Math.PI / 180);
-            const dotX = center + outerRadius * Math.cos(angle);
-            const dotY = center + outerRadius * Math.sin(angle);
+            const ledRadius = outerRadius + 3;
+            const dotX = center + ledRadius * Math.cos(angle);
+            const dotY = center + ledRadius * Math.sin(angle);
             const isLit = lightPattern[i] ?? i % 2 === 0;
             return (
               <g key={`led-${i}`}>
@@ -277,16 +289,16 @@ const FortuneWheel = memo(function FortuneWheel({
                   <circle
                     cx={dotX}
                     cy={dotY}
-                    r={6}
+                    r={5}
                     fill="#FEF08A"
-                    opacity={0.5}
-                    style={{ filter: 'blur(3px)' }}
+                    opacity={0.4}
+                    style={{ filter: 'blur(2px)' }}
                   />
                 )}
                 <circle
                   cx={dotX}
                   cy={dotY}
-                  r={4}
+                  r={3.5}
                   fill={isLit ? '#FEF08A' : '#374151'}
                   stroke={isLit ? '#FDE047' : '#1F2937'}
                   strokeWidth="1"
@@ -300,7 +312,7 @@ const FortuneWheel = memo(function FortuneWheel({
             ref={wheelRef}
             style={{
               transformOrigin: `${center}px ${center}px`,
-              transform: `rotate(${currentRotation}deg)`,
+              transform: `rotate(${displayRotation}deg)`,
               transition: isSpinning ? 'transform 5s cubic-bezier(0.15, 0.6, 0.1, 1)' : 'none',
             }}
           >
