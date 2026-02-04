@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.6.1](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/compare/v1.6.0...v1.6.1) (2026-02-04)
+
+
+### Bug Fixes
+
+* add fallback recovery for Telegram popup callback not firing ([7ac7db4](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/7ac7db4ddb2950216334be01db37f185594bea6e))
+* add HMR guard to prevent ConcurrentCallError on SDK double-init ([bcbda17](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/bcbda17220357815ee2df269e293db0fecee7bd3))
+* get fresh Telegram WebApp reference on each popup call ([792fb1e](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/792fb1ed8a1cc4d4a5350556308e00e8cad5313a))
+* prevent duplicate Telegram popup opening ([71647eb](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/71647ebc8795fc57f958d4fdedfb2f9c0b23837e))
+* prevent popup cascade when Telegram callback doesn't fire ([2d00a5c](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/2d00a5c21fff339f229d8fe2001a898d15722cdd))
+* resolve SDK v3 mount errors, back button and fullscreen not working ([61e3910](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/61e3910981e401fbc0b968615307e5101f6f96e9))
+* use direct dialog.popup call instead of useDestructiveConfirm ([ef77276](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/ef77276246fdb60255f625289542584b83c93fcc))
+
 ## [1.6.0](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/compare/v1.5.0...v1.6.0) (2026-02-04)
 
 
