@@ -217,21 +217,22 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Light theme: swap dark palette to champagne equivalents via CSS variables.
-     This automatically handles ALL opacity variants, hover states, borders, etc. */
+  /* Light theme: swap dark palette → dynamic champagne palette from API.
+     Uses var() to reference values set by applyThemeColors().
+     !important overrides inline styles from applyThemeColors on :root. */
   .light {
-    --color-dark-50: 31, 26, 18; /* champagne-950 */
-    --color-dark-100: 61, 52, 36; /* champagne-900 */
-    --color-dark-200: 92, 79, 53; /* champagne-800 */
-    --color-dark-300: 125, 107, 72; /* champagne-700 */
-    --color-dark-400: 160, 139, 94; /* champagne-600 */
-    --color-dark-500: 191, 164, 119; /* champagne-500 */
-    --color-dark-600: 212, 188, 150; /* champagne-400 */
-    --color-dark-700: 232, 212, 181; /* champagne-300 */
-    --color-dark-800: 247, 231, 206; /* champagne-200 */
-    --color-dark-850: 250, 240, 223; /* between champagne-100/200 */
-    --color-dark-900: 254, 249, 240; /* champagne-100 */
-    --color-dark-950: 247, 231, 206; /* champagne-200 (body bg) */
+    --color-dark-50: var(--color-champagne-950) !important;
+    --color-dark-100: var(--color-champagne-900) !important;
+    --color-dark-200: var(--color-champagne-800) !important;
+    --color-dark-300: var(--color-champagne-700) !important;
+    --color-dark-400: var(--color-champagne-600) !important;
+    --color-dark-500: var(--color-champagne-500) !important;
+    --color-dark-600: var(--color-champagne-400) !important;
+    --color-dark-700: var(--color-champagne-300) !important;
+    --color-dark-800: var(--color-champagne-50) !important;
+    --color-dark-850: var(--color-champagne-100) !important;
+    --color-dark-900: var(--color-champagne-100) !important;
+    --color-dark-950: var(--color-champagne-200) !important;
   }
 
   /* Custom scrollbar - Dark */
@@ -369,19 +370,19 @@
   }
 
   .light .bento-card {
-    @apply border-champagne-300/50 bg-white/90 shadow-sm;
+    @apply border-champagne-300/50 bg-champagne-50/90 shadow-sm;
     /* Light Theme Glass Border */
     box-shadow: inset 0 1px 0 0 rgba(0, 0, 0, 0.03);
   }
 
   @media (min-width: 1024px) {
     .light .bento-card {
-      @apply bg-white/80 backdrop-blur-sm;
+      @apply bg-champagne-50/80 backdrop-blur-sm;
     }
   }
 
   .light .bento-card-hover:hover {
-    @apply border-champagne-400/50 bg-white shadow-md;
+    @apply border-champagne-400/50 bg-champagne-50 shadow-md;
     transform: translateY(-4px);
     /* Intensify Light Theme Glass Border */
     box-shadow:
@@ -614,7 +615,7 @@
 
   /* Cards - Light */
   .light .card {
-    @apply border-champagne-300/50 bg-white/90 p-5 shadow-sm sm:p-6;
+    @apply border-champagne-300/50 bg-champagne-50/90 p-5 shadow-sm sm:p-6;
     border-radius: var(--bento-radius);
     transform: translateZ(0);
     box-shadow: inset 0 1px 0 0 rgba(0, 0, 0, 0.03);
@@ -622,12 +623,12 @@
 
   @media (min-width: 1024px) {
     .light .card {
-      @apply bg-white/80 backdrop-blur-sm;
+      @apply bg-champagne-50/80 backdrop-blur-sm;
     }
   }
 
   .light .card-hover {
-    @apply hover:border-champagne-400/50 hover:bg-white hover:shadow-md;
+    @apply hover:border-champagne-400/50 hover:bg-champagne-50 hover:shadow-md;
   }
 
   .light .card-glow {
@@ -636,13 +637,13 @@
 
   /* Glass effect - Light (optimized for mobile) */
   .light .glass {
-    @apply border border-champagne-300/40 bg-white/90;
+    @apply border border-champagne-300/40 bg-champagne-50/90;
     transform: translateZ(0);
   }
 
   @media (min-width: 1024px) {
     .light .glass {
-      @apply bg-white/60 backdrop-blur-xl;
+      @apply bg-champagne-50/60 backdrop-blur-xl;
     }
   }
 
@@ -656,7 +657,7 @@
   }
 
   .light .btn-secondary {
-    @apply border border-champagne-300 bg-white text-champagne-800 hover:border-champagne-400 hover:bg-champagne-50 hover:text-champagne-900 focus-visible:ring-champagne-400 active:bg-champagne-100;
+    @apply border border-champagne-300 bg-champagne-50 text-champagne-800 hover:border-champagne-400 hover:bg-champagne-100 hover:text-champagne-900 focus-visible:ring-champagne-400 active:bg-champagne-200;
   }
 
   .light .btn-ghost {
@@ -673,7 +674,7 @@
 
   /* Inputs - Light */
   .light .input {
-    @apply rounded-xl border border-champagne-300 bg-white text-champagne-900 placeholder-champagne-400 focus:border-accent-400 focus:ring-accent-300/30;
+    @apply rounded-xl border border-champagne-300 bg-champagne-50 text-champagne-900 placeholder-champagne-400 focus:border-accent-400 focus:ring-accent-300/30;
   }
 
   .light .input-error {
