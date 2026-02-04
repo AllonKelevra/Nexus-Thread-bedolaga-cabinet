@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.7.0](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/compare/v1.6.2...v1.7.0) (2026-02-04)
+
+
+### Features
+
+* add Stars payment confirmation and admin validation ([e6f8ae6](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/e6f8ae6ab09c431d5322c851165f30469678ed72))
+* replace payment modals with page-based navigation ([576893f](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/576893f5c6b67c19bee0cd562cd0430a88350619))
+
+
+### Bug Fixes
+
+* dim accent color for background blobs ([bb32cd8](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/bb32cd8757b116728c0e7357fc40bcb842e7a476))
+* inline Stars confirmation and unified payment type display ([8068f84](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/8068f847247307aa3adae1f6965987882be8a785))
+* prevent payment type reset after wheel spin ([4499c9a](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/4499c9ad57dcdcd3126c8d4261bc9f32accd21d7))
+* unify wheel Stars payment across desktop and mobile ([02640d1](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/02640d1c38dde00d431058a399adcc85fd9bcaac))
+* update Aurora colors reactively without recreating WebGL context ([59a251c](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/59a251cb8c706b3029990e58fc6003ce620f80d3))
+
 ## [1.6.2](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/compare/v1.6.1...v1.6.2) (2026-02-04)
 
 
