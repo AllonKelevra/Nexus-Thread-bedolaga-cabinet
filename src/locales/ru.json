@@ -741,6 +741,9 @@
     "starsPaymentSuccessCheckHistory": "Оплата прошла! Проверьте историю или Telegram для результата.",
     "starsPaymentFailed": "Ошибка оплаты. Попробуйте еще раз.",
     "starsPaymentRedirected": "Откроется Telegram для оплаты. После оплаты обновите страницу.",
+    "starsNotAvailable": "Оплата звёздами сейчас недоступна. Обратитесь в поддержку.",
+    "confirmStarsPayment": "Вы будете перенаправлены в Telegram для оплаты одного вращения колеса.",
+    "payStars": "Оплатить {{count}} ⭐",
     "youWon": "Вы выиграли",
     "noPrize": "В этот раз не повезло...",
     "noHistory": "История вращений пуста",
@@ -1001,6 +1004,7 @@
         "promocodes": "Промокоды",
         "promoPrefix": "Префикс промокодов"
       },
+      "starsNotEnabledGlobally": "Оплата звёздами не включена в платёжных методах. Включите метод «Telegram Stars» в разделе «Платёжные методы».",
       "prizes": {
         "addPrize": "Добавить приз",
         "editPrize": "Редактировать приз",

@@ -5,8 +5,8 @@ import { wheelApi, type SpinResult, type SpinHistoryItem } from '../api/wheel';
 import FortuneWheel from '../components/wheel/FortuneWheel';
 import WheelLegend from '../components/wheel/WheelLegend';
 import InsufficientBalancePrompt from '../components/InsufficientBalancePrompt';
-import { useCurrency } from '../hooks/useCurrency';
 import { usePlatform, useHaptic } from '@/platform';
+import { useNotify } from '@/platform/hooks/useNotify';
 import { Card } from '@/components/data-display/Card/Card';
 import { Button } from '@/components/primitives/Button/Button';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -60,9 +60,9 @@ const ChevronIcon = ({ expanded }: { expanded: boolean }) => (
 export default function Wheel() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const { formatAmount, currencySymbol } = useCurrency();
-  const { platform, openInvoice, capabilities } = usePlatform();
+  const { openInvoice, capabilities } = usePlatform();
   const haptic = useHaptic();
+  const notify = useNotify();
 
   const [isSpinning, setIsSpinning] = useState(false);
   const [targetRotation, setTargetRotation] = useState<number | null>(null);
@@ -72,9 +72,8 @@ export default function Wheel() {
   );
   const [isPayingStars, setIsPayingStars] = useState(false);
   const [historyExpanded, setHistoryExpanded] = useState(false);
-
-  // Check if we're in Telegram Mini App environment
-  const isTelegramMiniApp = platform === 'telegram';
+  const [showStarsConfirm, setShowStarsConfirm] = useState(false);
+  const paymentTypeInitialized = useRef(false);
 
   const {
     data: config,
@@ -90,31 +89,20 @@ export default function Wheel() {
     queryFn: () => wheelApi.getHistory(1, 10),
   });
 
-  // Auto-select payment type based on availability
+  // Auto-select payment type based on availability (only on initial load)
   useEffect(() => {
-    if (!config) return;
+    if (!config || paymentTypeInitialized.current) return;
+    paymentTypeInitialized.current = true;
 
     const starsEnabled = config.spin_cost_stars_enabled && config.spin_cost_stars;
     const daysEnabled = config.spin_cost_days_enabled && config.spin_cost_days;
-    const canPayBalance = starsEnabled && config.can_pay_stars;
-    const canPayDays = daysEnabled && config.can_pay_days;
 
-    if (isTelegramMiniApp) {
-      // In Mini App: prefer stars if available
-      if (starsEnabled) {
-        setPaymentType('telegram_stars');
-      } else if (canPayDays) {
-        setPaymentType('subscription_days');
-      }
-    } else {
-      // In Web: prefer balance (Stars converted to rubles), fallback to days
-      if (canPayBalance) {
-        setPaymentType('telegram_stars');
-      } else if (canPayDays) {
-        setPaymentType('subscription_days');
-      }
+    if (starsEnabled) {
+      setPaymentType('telegram_stars');
+    } else if (daysEnabled) {
+      setPaymentType('subscription_days');
     }
-  }, [config, isTelegramMiniApp]);
+  }, [config]);
 
   // Function to poll for new spin result after Stars payment
   const pollForSpinResult = useCallback(
@@ -182,6 +170,7 @@ export default function Wheel() {
   const pendingStarsResultRef = useRef<SpinResult | null>(null);
   const isStarsSpinRef = useRef(false);
   const pollingAbortRef = useRef<AbortController | null>(null);
+  const preOpenedWindowRef = useRef<Window | null>(null);
 
   // Cleanup polling on unmount
   useEffect(() => {
@@ -283,9 +272,12 @@ export default function Wheel() {
           setIsPayingStars(false);
         }
       } else {
-        // Fallback: open invoice URL in browser (unsupported platform)
+        // Fallback: redirect pre-opened window to invoice URL
         setIsPayingStars(false);
-        window.open(data.invoice_url, '_blank', 'noopener,noreferrer');
+        if (preOpenedWindowRef.current) {
+          preOpenedWindowRef.current.location.href = data.invoice_url;
+          preOpenedWindowRef.current = null;
+        }
         setSpinResult({
           success: true,
           prize_id: null,
@@ -303,6 +295,10 @@ export default function Wheel() {
     },
     onError: () => {
       setIsPayingStars(false);
+      if (preOpenedWindowRef.current) {
+        preOpenedWindowRef.current.close();
+        preOpenedWindowRef.current = null;
+      }
       setSpinResult({
         success: false,
         prize_id: null,
@@ -320,7 +316,12 @@ export default function Wheel() {
   });
 
   const handleDirectStarsPay = () => {
+    setShowStarsConfirm(false);
     setIsPayingStars(true);
+    // In browser: pre-open window synchronously (direct user gesture) to avoid popup blocker
+    if (!capabilities.hasInvoice) {
+      preOpenedWindowRef.current = window.open('about:blank', '_blank') || null;
+    }
     starsInvoiceMutation.mutate();
   };
 
@@ -360,8 +361,12 @@ export default function Wheel() {
   };
 
   const handleUnifiedSpin = () => {
-    if (isTelegramMiniApp && paymentType === 'telegram_stars') {
-      handleDirectStarsPay();
+    if (paymentType === 'telegram_stars') {
+      if (!config?.spin_cost_stars_enabled || !config?.spin_cost_stars) {
+        notify.warning(t('wheel.starsNotAvailable'));
+        return;
+      }
+      setShowStarsConfirm(true);
     } else {
       handleSpin();
     }
@@ -454,34 +459,13 @@ export default function Wheel() {
 
   const starsEnabled = config.spin_cost_stars_enabled && config.spin_cost_stars;
   const daysEnabled = config.spin_cost_days_enabled && config.spin_cost_days;
-  const canPayBalance = starsEnabled && config.can_pay_stars; // For web: pay with internal balance
-  const canPayDays = daysEnabled && config.can_pay_days;
-  const bothMethodsAvailable = isTelegramMiniApp
-    ? starsEnabled && daysEnabled && canPayDays
-    : starsEnabled && daysEnabled && canPayBalance && canPayDays;
+  const bothMethodsAvailable = !!(starsEnabled && daysEnabled);
 
   const spinDisabled =
     !config.can_spin ||
     isSpinning ||
     isPayingStars ||
     (config.daily_limit > 0 && config.user_spins_today >= config.daily_limit);
-
-  // Build cost subtitle for the spin button
-  const getCostSubtitle = () => {
-    if (bothMethodsAvailable) return null; // toggle handles it
-    if (paymentType === 'telegram_stars' && starsEnabled) {
-      if (isTelegramMiniApp) {
-        return `${config.spin_cost_stars} ⭐`;
-      }
-      return `${formatAmount(config.required_balance_kopeks / 100)} ${currencySymbol} (${config.spin_cost_stars} ⭐)`;
-    }
-    if (paymentType === 'subscription_days' && daysEnabled) {
-      return t('wheel.days', { count: config.spin_cost_days ?? 0 });
-    }
-    return null;
-  };
-
-  const costSubtitle = getCostSubtitle();
 
   return (
     <div className="animate-fade-in space-y-6 pb-8">
@@ -513,55 +497,77 @@ export default function Wheel() {
 
             {/* Spin Controls */}
             <div className="mt-8 space-y-4">
-              {/* Payment type toggle - only if both methods available */}
-              {bothMethodsAvailable && (
+              {/* Payment type selector */}
+              {(starsEnabled || daysEnabled) && (
                 <div className="rounded-xl border border-dark-700/30 bg-dark-800/30 p-1">
-                  <div className="grid grid-cols-2 gap-1">
-                    <button
-                      onClick={() => setPaymentType('telegram_stars')}
-                      disabled={isSpinning}
-                      className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                        paymentType === 'telegram_stars'
-                          ? 'bg-accent-500/15 text-accent-400'
-                          : 'text-dark-400 hover:text-dark-200'
-                      }`}
-                    >
-                      <StarIcon />
-                      {isTelegramMiniApp
-                        ? `${config.spin_cost_stars} ⭐`
-                        : `${formatAmount(config.required_balance_kopeks / 100)} ${currencySymbol}`}
-                    </button>
-                    <button
-                      onClick={() => setPaymentType('subscription_days')}
-                      disabled={isSpinning}
-                      className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                        paymentType === 'subscription_days'
-                          ? 'bg-accent-500/15 text-accent-400'
-                          : 'text-dark-400 hover:text-dark-200'
-                      }`}
-                    >
-                      <CalendarIcon />
-                      {t('wheel.days', { count: config.spin_cost_days ?? 0 })}
-                    </button>
+                  <div
+                    className={`grid gap-1 ${bothMethodsAvailable ? 'grid-cols-2' : 'grid-cols-1'}`}
+                  >
+                    {starsEnabled && (
+                      <button
+                        onClick={() => setPaymentType('telegram_stars')}
+                        disabled={isSpinning}
+                        className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                          paymentType === 'telegram_stars'
+                            ? 'bg-accent-500/15 text-accent-400'
+                            : 'text-dark-400 hover:text-dark-200'
+                        }`}
+                      >
+                        <StarIcon />
+                        {`${config.spin_cost_stars} ⭐`}
+                      </button>
+                    )}
+                    {daysEnabled && (
+                      <button
+                        onClick={() => setPaymentType('subscription_days')}
+                        disabled={isSpinning}
+                        className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                          paymentType === 'subscription_days'
+                            ? 'bg-accent-500/15 text-accent-400'
+                            : 'text-dark-400 hover:text-dark-200'
+                        }`}
+                      >
+                        <CalendarIcon />
+                        {t('wheel.days', { count: config.spin_cost_days ?? 0 })}
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
 
-              {/* Single Spin Button */}
-              <Button
-                variant="primary"
-                size="lg"
-                fullWidth
-                onClick={handleUnifiedSpin}
-                disabled={spinDisabled}
-                loading={isSpinning || isPayingStars}
-              >
-                {isSpinning ? t('wheel.spinning') : t('wheel.spin')}
-              </Button>
-
-              {/* Cost subtitle when no toggle */}
-              {costSubtitle && !bothMethodsAvailable && (
-                <p className="text-center text-sm text-dark-400">{costSubtitle}</p>
+              {/* Stars confirmation panel */}
+              {showStarsConfirm && !isSpinning && !isPayingStars ? (
+                <div className="space-y-3 rounded-xl border border-accent-500/30 bg-accent-500/5 p-4">
+                  <p className="text-center text-sm text-dark-300">
+                    {t('wheel.confirmStarsPayment')}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => setShowStarsConfirm(false)}
+                      className="rounded-lg border border-dark-700 bg-dark-800 px-4 py-2.5 text-sm font-medium text-dark-300 transition-colors hover:bg-dark-700"
+                    >
+                      {t('common.cancel')}
+                    </button>
+                    <button
+                      onClick={handleDirectStarsPay}
+                      className="rounded-lg bg-accent-500 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-600"
+                    >
+                      {t('wheel.payStars', { count: config.spin_cost_stars ?? 0 })}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Single Spin Button */
+                <Button
+                  variant="primary"
+                  size="lg"
+                  fullWidth
+                  onClick={handleUnifiedSpin}
+                  disabled={spinDisabled}
+                  loading={isSpinning || isPayingStars}
+                >
+                  {isSpinning ? t('wheel.spinning') : t('wheel.spin')}
+                </Button>
               )}
 
               {/* Cannot spin hint */}

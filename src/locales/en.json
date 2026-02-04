@@ -713,6 +713,9 @@
     "starsPaymentSuccessCheckHistory": "Payment successful! Check history or Telegram for the result.",
     "starsPaymentFailed": "Payment failed. Please try again.",
     "starsPaymentRedirected": "Telegram will open for payment. Refresh the page after payment.",
+    "starsNotAvailable": "Star payments are currently unavailable. Contact support.",
+    "confirmStarsPayment": "You will be redirected to Telegram to pay for one wheel spin.",
+    "payStars": "Pay {{count}} ⭐",
     "youWon": "You won",
     "noPrize": "No luck this time...",
     "noHistory": "No spin history yet",
@@ -977,6 +980,7 @@
         "promocodes": "Promocodes",
         "promoPrefix": "Promo code prefix"
       },
+      "starsNotEnabledGlobally": "Star payments are not enabled in Payment Methods. Enable \"Telegram Stars\" in the Payment Methods section.",
       "prizes": {
         "addPrize": "Add Prize",
         "editPrize": "Edit Prize",

@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Renderer, Program, Mesh, Color, Triangle } from 'ogl';
 import { brandingApi } from '@/api/branding';
+import { themeColorsApi } from '@/api/themeColors';
 import { useTheme } from '@/hooks/useTheme';
-import { ThemeSettings, DEFAULT_THEME_COLORS } from '@/types/theme';
+import { DEFAULT_THEME_COLORS } from '@/types/theme';
 
 const VERT = /* glsl */ `#version 300 es
   in vec2 position;
@@ -107,8 +108,23 @@ function hexToRgb(hex: string): [number, number, number] {
   return [r, g, b];
 }
 
+// Reduce lightness of a hex color for subdued background blobs
+function dimAccent(hex: string, factor = 0.45): string {
+  hex = hex.replace('#', '');
+  if (hex.length === 3) {
+    hex = hex
+      .split('')
+      .map((c) => c + c)
+      .join('');
+  }
+  const r = Math.round(parseInt(hex.substring(0, 2), 16) * factor);
+  const g = Math.round(parseInt(hex.substring(2, 4), 16) * factor);
+  const b = Math.round(parseInt(hex.substring(4, 6), 16) * factor);
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
+
 function generateColorStops(background: string, surface: string, accent: string): string[] {
-  return [background, surface, accent];
+  return [background, surface, dimAccent(accent)];
 }
 
 export function Aurora() {
@@ -116,8 +132,6 @@ export function Aurora() {
   const animationFrameRef = useRef<number>(0);
   const rendererRef = useRef<Renderer | null>(null);
   const programRef = useRef<Program | null>(null);
-
-  const queryClient = useQueryClient();
 
   // Fetch animation setting
   const { data: animationSetting } = useQuery({
@@ -128,15 +142,19 @@ export function Aurora() {
 
   const isEnabled = animationSetting?.enabled ?? false;
 
-  // Get theme colors from cache (already fetched by ThemeColorsProvider)
-  const themeColors =
-    queryClient.getQueryData<ThemeSettings>(['theme-colors']) || DEFAULT_THEME_COLORS;
+  // Subscribe reactively to theme-colors cache so Aurora re-renders on setQueryData
+  const { data: themeColors = DEFAULT_THEME_COLORS } = useQuery({
+    queryKey: ['theme-colors'],
+    queryFn: themeColorsApi.getColors,
+    staleTime: 5 * 60 * 1000,
+  });
 
   // Pick background and surface based on current theme
   const { isDark } = useTheme();
   const background = isDark ? themeColors.darkBackground : themeColors.lightBackground;
   const surface = isDark ? themeColors.darkSurface : themeColors.lightSurface;
 
+  // Initialize WebGL context once (only depends on isEnabled)
   useEffect(() => {
     if (!isEnabled || !containerRef.current) return;
 
@@ -220,7 +238,20 @@ export function Aurora() {
       rendererRef.current = null;
       programRef.current = null;
     };
-  }, [isEnabled, themeColors.accent, background, surface]);
+  }, [isEnabled]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Update color uniforms reactively without recreating WebGL context
+  useEffect(() => {
+    if (!programRef.current) return;
+    const colorStops = generateColorStops(background, surface, themeColors.accent);
+    const colorStopsArray = colorStops
+      .map((hex) => {
+        const c = new Color(hex);
+        return [c.r, c.g, c.b];
+      })
+      .flat();
+    programRef.current.uniforms.uColorStops.value = colorStopsArray;
+  }, [themeColors.accent, background, surface]);
 
   if (!isEnabled) {
     return null;
