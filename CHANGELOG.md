@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.6.2](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/compare/v1.6.1...v1.6.2) (2026-02-04)
+
+
+### Bug Fixes
+
+* add theme toggle to desktop header and sync theme across components ([bf00d37](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/bf00d37b4af799130e3dd8cd2c083ec933833281))
+* Aurora animation ignoring light theme background color ([c1dc019](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/c1dc019c8b2819e13da42ad1c2648740a09279d1))
+* replace individual light theme overrides with CSS variable swap ([9ac00c9](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/9ac00c94a6805577d6ac71e83fae5032217a31c9))
+* use dynamic champagne variables for light theme palette swap ([ecd912b](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/ecd912b16a63b692b45361cfa53e7cacb0cb3e4f))
+* use theme surface and background colors for Aurora animation ([a91e055](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/a91e0555979540f50ca1afef5ee8c91b162c4a7f))
+
 ## [1.6.1](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/compare/v1.6.0...v1.6.1) (2026-02-04)
 
 
