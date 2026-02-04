@@ -23,6 +23,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { adminWheelApi, type WheelPrizeAdmin, type CreateWheelPrizeData } from '../api/wheel';
 import { useDestructiveConfirm } from '@/platform';
 import FortuneWheel from '../components/wheel/FortuneWheel';
+import { ColorPicker } from '@/components/ColorPicker';
 import { useBackButton } from '../platform/hooks/useBackButton';
 import { usePlatform } from '../platform/hooks/usePlatform';
 
@@ -1146,26 +1147,11 @@ function InlinePrizeForm({
         </div>
 
         {/* Color */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-dark-300">
-            {t('admin.wheel.prizes.fields.color')}
-          </label>
-          <div className="flex gap-2">
-            <input
-              type="color"
-              value={formData.color}
-              onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-              className="h-10 w-12 cursor-pointer rounded"
-            />
-            <input
-              type="text"
-              value={formData.color}
-              onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-              className="input flex-1"
-              pattern="^#[0-9A-Fa-f]{6}$"
-            />
-          </div>
-        </div>
+        <ColorPicker
+          label={t('admin.wheel.prizes.fields.color')}
+          value={formData.color}
+          onChange={(color) => setFormData({ ...formData, color })}
+        />
       </div>
 
       {/* Active toggle */}
