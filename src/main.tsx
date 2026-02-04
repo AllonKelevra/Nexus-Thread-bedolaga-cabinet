@@ -17,6 +17,8 @@ import {
   mountMainButton,
   bindThemeParamsCssVars,
   bindViewportCssVars,
+  requestFullscreen,
+  isFullscreen,
 } from '@telegram-apps/sdk-react';
 import { AppWithNavigator } from './AppWithNavigator';
 import { initLogoPreload } from './api/branding';
@@ -24,40 +26,52 @@ import { getCachedFullscreenEnabled, isTelegramMobile } from './hooks/useTelegra
 import './i18n';
 import './styles/globals.css';
 
+// Safe mount helper — ignores "already mounted/mounting" errors (HMR, StrictMode)
+function safeMountSync(fn: () => void) {
+  try {
+    fn();
+  } catch {
+    // Already mounted or not available
+  }
+}
+
 // Initialize Telegram SDK v3
 try {
   init();
   restoreInitData();
 
-  mountMiniApp();
-  mountThemeParams();
-  bindThemeParamsCssVars();
-  mountSwipeBehavior();
-  disableVerticalSwipes();
-  mountClosingBehavior();
-  disableClosingConfirmation();
-  mountBackButton();
-  mountMainButton();
+  safeMountSync(() => mountMiniApp());
+  safeMountSync(() => {
+    mountThemeParams();
+    bindThemeParamsCssVars();
+  });
+  safeMountSync(() => {
+    mountSwipeBehavior();
+    disableVerticalSwipes();
+  });
+  safeMountSync(() => {
+    mountClosingBehavior();
+    disableClosingConfirmation();
+  });
+  safeMountSync(() => mountBackButton());
+  safeMountSync(() => mountMainButton());
 
+  // Viewport — async, fullscreen зависит от смонтированного viewport
   mountViewport()
     .then(() => {
       bindViewportCssVars();
       expandViewport();
+
+      // Auto-enter fullscreen if enabled in settings (mobile only)
+      if (getCachedFullscreenEnabled() && isTelegramMobile()) {
+        if (!isFullscreen()) {
+          requestFullscreen();
+        }
+      }
     })
     .catch(() => {});
 
   miniAppReady();
-
-  // Auto-enter fullscreen if enabled in settings (mobile only)
-  if (getCachedFullscreenEnabled() && isTelegramMobile()) {
-    import('@telegram-apps/sdk-react').then(({ requestFullscreen, isFullscreen }) => {
-      setTimeout(() => {
-        if (!isFullscreen()) {
-          requestFullscreen();
-        }
-      }, 100);
-    });
-  }
 } catch {
   // Not in Telegram — ok
 }

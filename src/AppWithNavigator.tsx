@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { BrowserRouter, useLocation, useNavigate } from 'react-router-dom';
 import {
   showBackButton,
@@ -21,6 +21,8 @@ import { isInTelegramWebApp } from './hooks/useTelegramSDK';
 function TelegramBackButton() {
   const location = useLocation();
   const navigate = useNavigate();
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
 
   useEffect(() => {
     const isRoot = location.pathname === '/' || location.pathname === '';
@@ -31,25 +33,29 @@ function TelegramBackButton() {
         showBackButton();
       }
     } catch {
-      // Not in Telegram or back button not mounted
+      // Back button not mounted
     }
   }, [location]);
 
+  // Stable handler — ref prevents re-subscription on every render
+  const handler = useCallback(() => {
+    navigateRef.current(-1);
+  }, []);
+
   useEffect(() => {
-    const handler = () => navigate(-1);
     try {
       onBackButtonClick(handler);
     } catch {
-      // Not in Telegram
+      // Back button not mounted
     }
     return () => {
       try {
         offBackButtonClick(handler);
       } catch {
-        // Not in Telegram
+        // Back button not mounted
       }
     };
-  }, [navigate]);
+  }, [handler]);
 
   return null;
 }
