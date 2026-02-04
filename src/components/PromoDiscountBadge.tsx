@@ -221,12 +221,13 @@ export default function PromoDiscountBadge() {
   });
 
   const deactivateMutation = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       const source = activeDiscount?.source;
       if (source && source.startsWith('promocode:')) {
-        return promoApi.deactivateDiscount();
+        await promoApi.deactivateDiscount();
+      } else {
+        await promoApi.clearActiveDiscount();
       }
-      return promoApi.clearActiveDiscount();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['active-discount'] });
