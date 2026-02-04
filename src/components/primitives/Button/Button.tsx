@@ -100,5 +100,3 @@ function LoadingSpinner() {
     </svg>
   );
 }
-
-export { buttonVariants, type ButtonVariants };

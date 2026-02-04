@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { useWebSocketContext, WSMessage } from '../providers/WebSocketProvider';
+import { useWebSocketContext } from '../providers/useWebSocketContext';
+import { WSMessage } from '../providers/WebSocketProvider';
 
 // Re-export WSMessage type for convenience
 export type { WSMessage };

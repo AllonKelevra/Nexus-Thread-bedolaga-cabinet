@@ -1,57 +1,11 @@
-import { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useAuthStore } from '../store/auth';
+import { WebSocketContext, type MessageHandler, type WSMessage } from './WebSocketContext';
+
+// Re-export for backward compatibility
+export type { WSMessage } from './WebSocketContext';
 
 const isDev = import.meta.env.DEV;
-
-export interface WSMessage {
-  type: string;
-  // Ticket events
-  ticket_id?: number;
-  title?: string;
-  // Common
-  message?: string;
-  user_id?: number;
-  is_admin?: boolean;
-  // Balance events
-  amount_kopeks?: number;
-  amount_rubles?: number;
-  new_balance_kopeks?: number;
-  new_balance_rubles?: number;
-  description?: string;
-  // Subscription events
-  expires_at?: string;
-  new_expires_at?: string;
-  tariff_name?: string;
-  days_left?: number;
-  // Device purchase events
-  devices_added?: number;
-  new_device_limit?: number;
-  // Traffic purchase events
-  traffic_gb_added?: number;
-  new_traffic_limit_gb?: number;
-  // Autopay events
-  required_kopeks?: number;
-  required_rubles?: number;
-  balance_kopeks?: number;
-  balance_rubles?: number;
-  reason?: string;
-  // Account events (ban/warning)
-  // Referral events
-  bonus_kopeks?: number;
-  bonus_rubles?: number;
-  referral_name?: string;
-  // Payment events
-  payment_method?: string;
-}
-
-type MessageHandler = (message: WSMessage) => void;
-
-interface WebSocketContextValue {
-  isConnected: boolean;
-  subscribe: (handler: MessageHandler) => () => void;
-}
-
-const WebSocketContext = createContext<WebSocketContextValue | null>(null);
 
 export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   const { accessToken, isAuthenticated } = useAuthStore();
@@ -206,12 +160,4 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       {children}
     </WebSocketContext.Provider>
   );
-}
-
-export function useWebSocketContext() {
-  const context = useContext(WebSocketContext);
-  if (!context) {
-    throw new Error('useWebSocketContext must be used within a WebSocketProvider');
-  }
-  return context;
 }
