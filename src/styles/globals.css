@@ -217,168 +217,21 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Light theme text color overrides - convert dark-* text colors to readable colors */
-  .light .text-dark-50 {
-    color: #1f1a12 !important; /* champagne-950 */
-  }
-
-  .light .text-dark-100 {
-    color: #3d3424 !important; /* champagne-900 */
-  }
-
-  .light .text-dark-200 {
-    color: #5c4f35 !important; /* champagne-800 */
-  }
-
-  .light .text-dark-300 {
-    color: #7d6b48 !important; /* champagne-700 */
-  }
-
-  .light .text-dark-400 {
-    color: #a08b5e !important; /* champagne-600 */
-  }
-
-  .light .text-dark-500 {
-    color: #bfa477 !important; /* champagne-500 */
-  }
-
-  .light .text-dark-600 {
-    color: #d4bc96 !important; /* champagne-400 */
-  }
-
-  /* Light theme background color overrides */
-  .light .bg-dark-700 {
-    background-color: #e8d4b5 !important; /* champagne-300 */
-  }
-
-  .light .bg-dark-800 {
-    background-color: #f7e7ce !important; /* champagne-200 */
-  }
-
-  .light .bg-dark-800\/50 {
-    background-color: rgba(232, 212, 181, 0.5) !important; /* champagne-300/50 */
-  }
-
-  .light .bg-dark-800\/30 {
-    background-color: rgba(232, 212, 181, 0.4) !important; /* champagne-300/40 - more visible */
-  }
-
-  .light .bg-dark-700\/50 {
-    background-color: rgba(212, 188, 150, 0.5) !important; /* champagne-400/50 */
-  }
-
-  .light .bg-dark-900\/30 {
-    background-color: rgba(247, 231, 206, 0.6) !important; /* champagne-200/60 */
-  }
-
-  /* Light theme additional border overrides for semi-transparent borders */
-  .light .border-dark-800\/30 {
-    border-color: rgba(191, 164, 119, 0.4) !important; /* champagne-500/40 */
-  }
-
-  .light .border-dark-700\/30 {
-    border-color: rgba(191, 164, 119, 0.5) !important; /* champagne-500/50 - more visible */
-  }
-
-  .light .bg-dark-900 {
-    background-color: #fef9f0 !important; /* champagne-100 */
-  }
-
-  .light .bg-dark-900\/50 {
-    background-color: rgba(254, 249, 240, 0.5) !important; /* champagne-100/50 */
-  }
-
-  .light .bg-dark-900\/95 {
-    background-color: rgba(
-      254,
-      249,
-      240,
-      0.95
-    ) !important; /* champagne-100/95 - mobile menu sticky header */
-  }
-
-  .light .bg-dark-950 {
-    background-color: #f7e7ce !important; /* champagne-200 */
-  }
-
-  .light .bg-dark-950\/80 {
-    background-color: rgba(247, 231, 206, 0.85) !important; /* champagne-200/85 */
-  }
-
-  .light .bg-dark-600 {
-    background-color: #d4bc96 !important; /* champagne-400 */
-  }
-
-  /* Light theme border color overrides */
-  .light .border-dark-700 {
-    border-color: #e8d4b5 !important; /* champagne-300 */
-  }
-
-  .light .border-dark-700\/50 {
-    border-color: rgba(232, 212, 181, 0.5) !important;
-  }
-
-  .light .border-dark-800 {
-    border-color: #d4bc96 !important; /* champagne-400 */
-  }
-
-  .light .border-dark-800\/50 {
-    border-color: rgba(212, 188, 150, 0.5) !important;
-  }
-
-  /* Light theme hover state overrides */
-  .light .hover\:text-dark-100:hover {
-    color: #3d3424 !important; /* champagne-900 */
-  }
-
-  .light .hover\:text-dark-200:hover {
-    color: #5c4f35 !important; /* champagne-800 */
-  }
-
-  .light .hover\:bg-dark-800:hover {
-    background-color: #e8d4b5 !important; /* champagne-300 */
-  }
-
-  .light .hover\:bg-dark-800\/50:hover {
-    background-color: rgba(232, 212, 181, 0.5) !important;
-  }
-
-  .light .hover\:bg-dark-700\/50:hover {
-    background-color: rgba(212, 188, 150, 0.5) !important; /* champagne-400/50 */
-  }
-
-  .light .hover\:bg-dark-700:hover {
-    background-color: #d4bc96 !important; /* champagne-400 */
-  }
-
-  .light .hover\:bg-dark-600:hover {
-    background-color: #bfa477 !important; /* champagne-500 */
-  }
-
-  .light .hover\:border-dark-600:hover {
-    border-color: #bfa477 !important; /* champagne-500 */
-  }
-
-  .light .hover\:border-dark-700\/50:hover {
-    border-color: rgba(232, 212, 181, 0.5) !important;
-  }
-
-  /* Light theme gradient overrides for login page */
-  .light .from-dark-950 {
-    --tw-gradient-from: #f7e7ce !important;
-  }
-
-  .light .via-dark-900 {
-    --tw-gradient-stops: var(--tw-gradient-from), #fef9f0, var(--tw-gradient-to) !important;
-  }
-
-  .light .to-dark-950 {
-    --tw-gradient-to: #f7e7ce !important;
-  }
-
-  /* Light theme divider for desktop nav */
-  .light .bg-dark-700.w-px {
-    background-color: #d4bc96 !important;
+  /* Light theme: swap dark palette to champagne equivalents via CSS variables.
+     This automatically handles ALL opacity variants, hover states, borders, etc. */
+  .light {
+    --color-dark-50: 31, 26, 18; /* champagne-950 */
+    --color-dark-100: 61, 52, 36; /* champagne-900 */
+    --color-dark-200: 92, 79, 53; /* champagne-800 */
+    --color-dark-300: 125, 107, 72; /* champagne-700 */
+    --color-dark-400: 160, 139, 94; /* champagne-600 */
+    --color-dark-500: 191, 164, 119; /* champagne-500 */
+    --color-dark-600: 212, 188, 150; /* champagne-400 */
+    --color-dark-700: 232, 212, 181; /* champagne-300 */
+    --color-dark-800: 247, 231, 206; /* champagne-200 */
+    --color-dark-850: 250, 240, 223; /* between champagne-100/200 */
+    --color-dark-900: 254, 249, 240; /* champagne-100 */
+    --color-dark-950: 247, 231, 206; /* champagne-200 (body bg) */
   }
 
   /* Custom scrollbar - Dark */
