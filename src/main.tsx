@@ -1,13 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import App from './App';
-import { PlatformProvider } from './platform/PlatformProvider';
-import { ThemeColorsProvider } from './providers/ThemeColorsProvider';
-import { WebSocketProvider } from './providers/WebSocketProvider';
-import { ToastProvider } from './components/Toast';
-import { TooltipProvider } from './components/primitives/Tooltip';
+import { AppWithNavigator } from './AppWithNavigator';
 import { initLogoPreload } from './api/branding';
 import { initTelegramSDK } from './hooks/useTelegramSDK';
 import './i18n';
@@ -31,19 +25,7 @@ const queryClient = new QueryClient({
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <PlatformProvider>
-          <ThemeColorsProvider>
-            <TooltipProvider>
-              <ToastProvider>
-                <WebSocketProvider>
-                  <App />
-                </WebSocketProvider>
-              </ToastProvider>
-            </TooltipProvider>
-          </ThemeColorsProvider>
-        </PlatformProvider>
-      </BrowserRouter>
+      <AppWithNavigator />
     </QueryClientProvider>
   </React.StrictMode>,
 );

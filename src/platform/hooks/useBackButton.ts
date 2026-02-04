@@ -1,6 +1,3 @@
-import { useEffect, useRef, useCallback } from 'react';
-import { usePlatform } from '@/platform/hooks/usePlatform';
-
 interface UseBackButtonOptions {
   /**
    * Whether the back button should be visible
@@ -11,65 +8,46 @@ interface UseBackButtonOptions {
 
 /**
  * Hook to manage the Telegram BackButton
- * Automatically shows/hides based on component lifecycle
  *
- * @param onBack - Callback when back button is pressed
- * @param options - Configuration options
+ * NOTE: This hook is now a no-op for backward compatibility.
+ * The Telegram Navigator (@telegram-apps/react-router-integration) handles
+ * BackButton visibility and navigation automatically based on router history.
+ *
+ * The navigator:
+ * - Shows BackButton when there's navigation history
+ * - Hides BackButton on root page
+ * - Handles back button clicks automatically
+ *
+ * @param onBack - (Ignored) Callback when back button is pressed
+ * @param options - (Ignored) Configuration options
  *
  * @example
  * ```tsx
  * function MyPage() {
  *   const navigate = useNavigate();
- *   useBackButton(() => navigate(-1));
+ *   useBackButton(() => navigate('/admin')); // No-op: navigator handles this
  *   // ...
  * }
  * ```
  */
 export function useBackButton(
-  onBack: (() => void) | null | undefined,
-  options: UseBackButtonOptions = {},
+  _onBack: (() => void) | null | undefined,
+  _options: UseBackButtonOptions = {},
 ): void {
-  const { backButton, capabilities } = usePlatform();
-  const { visible = true } = options;
-
-  // Use ref to prevent callback recreation issues
-  const callbackRef = useRef(onBack);
-  callbackRef.current = onBack;
-
-  // Stable callback wrapper
-  const handleBack = useCallback(() => {
-    callbackRef.current?.();
-  }, []);
-
-  useEffect(() => {
-    // If no native back button support, do nothing
-    if (!capabilities.hasBackButton) {
-      return;
-    }
-
-    // If callback is null/undefined or visible is false, hide button
-    if (!onBack || !visible) {
-      backButton.hide();
-      return;
-    }
-
-    // Show the back button with our handler
-    backButton.show(handleBack);
-
-    // Cleanup: hide button when component unmounts
-    return () => {
-      backButton.hide();
-    };
-  }, [backButton, capabilities.hasBackButton, handleBack, onBack, visible]);
+  // No-op: Navigator handles BackButton automatically
+  return;
 }
 
 /**
  * Hook to conditionally show back button based on navigation depth
- * Useful for showing back button only when there's history to go back to
  *
- * @param canGoBack - Whether navigation back is possible
- * @param onBack - Callback when back button is pressed
+ * NOTE: This hook is now a no-op for backward compatibility.
+ * The navigator handles conditional visibility automatically.
+ *
+ * @param canGoBack - (Ignored) Whether navigation back is possible
+ * @param onBack - (Ignored) Callback when back button is pressed
  */
-export function useConditionalBackButton(canGoBack: boolean, onBack: () => void): void {
-  useBackButton(canGoBack ? onBack : null);
+export function useConditionalBackButton(_canGoBack: boolean, _onBack: () => void): void {
+  // No-op: Navigator handles BackButton automatically
+  return;
 }
