@@ -1,54 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { promoApi, PromoOffer } from '../api/promo';
-
-// Icons
-const GiftIcon = () => (
-  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"
-    />
-  </svg>
-);
-
-const ClockIcon = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
-    />
-  </svg>
-);
-
-const SparklesIcon = () => (
-  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"
-    />
-  </svg>
-);
-
-const CheckIcon = () => (
-  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-  </svg>
-);
-
-const ServerIcon = () => (
-  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M5.25 14.25h13.5m-13.5 0a3 3 0 01-3-3m3 3a3 3 0 100 6h13.5a3 3 0 100-6m-16.5-3a3 3 0 013-3h13.5a3 3 0 013 3m-19.5 0a4.5 4.5 0 01.9-2.7L5.737 5.1a3.375 3.375 0 012.7-1.35h7.126c1.062 0 2.062.5 2.7 1.35l2.587 3.45a4.5 4.5 0 01.9 2.7m0 0a3 3 0 01-3 3m0 3h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008zm-3 6h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008z"
-    />
-  </svg>
-);
+import { ClockIcon, CheckIcon } from './icons';
+import { useTelegramSDK } from '../hooks/useTelegramSDK';
 
 // Helper functions
 const formatTimeLeft = (
@@ -81,9 +38,10 @@ const formatTimeLeft = (
   return `${minutes}${t('promo.time.minutes')}`;
 };
 
-const getOfferIcon = (effectType: string) => {
-  if (effectType === 'test_access') return <ServerIcon />;
-  return <SparklesIcon />;
+const getOfferIcon = (effectType: string, discountPercent?: number | null) => {
+  if (effectType === 'test_access') return <span className="text-2xl">🚀</span>;
+  if (discountPercent) return <span className="text-2xl">🏷️</span>;
+  return <span className="text-2xl">🎁</span>;
 };
 
 const getOfferTitle = (
@@ -112,16 +70,166 @@ const getOfferDescription = (
   return t('promo.offers.activateDiscountHint');
 };
 
+// Icons for deactivation
+const XCircleIcon = () => (
+  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
+  </svg>
+);
+
+const WarningIcon = () => (
+  <svg
+    className="h-12 w-12"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.5}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+    />
+  </svg>
+);
+
+// ------- Confirmation Modal -------
+
+interface DeactivateConfirmModalProps {
+  isOpen: boolean;
+  discountPercent: number;
+  isDeactivating: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+function DeactivateConfirmModal({
+  isOpen,
+  discountPercent,
+  isDeactivating,
+  onConfirm,
+  onCancel,
+}: DeactivateConfirmModalProps) {
+  const { t } = useTranslation();
+
+  // Escape key to close
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isDeactivating) {
+        e.preventDefault();
+        onCancel();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, isDeactivating, onCancel]);
+
+  // Scroll lock
+  useEffect(() => {
+    if (!isOpen) return;
+
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  const modalContent = (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="deactivate-modal-title"
+    >
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        onClick={isDeactivating ? undefined : onCancel}
+      />
+
+      {/* Modal */}
+      <div
+        className="relative mx-4 w-full max-w-sm overflow-hidden rounded-2xl border border-dark-700/50 bg-dark-900 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Warning header */}
+        <div className="flex flex-col items-center bg-gradient-to-br from-warning-500/20 to-red-500/20 px-6 pb-6 pt-8">
+          <div className="mb-3 text-warning-400">
+            <WarningIcon />
+          </div>
+          <h2 id="deactivate-modal-title" className="text-center text-lg font-bold text-dark-100">
+            {t('promo.deactivate.confirmTitle')}
+          </h2>
+          <p className="mt-2 text-center text-sm text-dark-300">
+            {t('promo.deactivate.confirmDescription', { percent: discountPercent })}
+          </p>
+        </div>
+
+        {/* Warning text */}
+        <div className="px-6 py-4">
+          <div className="rounded-lg border border-warning-500/20 bg-warning-500/10 px-4 py-3">
+            <p className="text-center text-sm text-warning-400">{t('promo.deactivate.warning')}</p>
+          </div>
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex gap-3 px-6 pb-6">
+          <button
+            onClick={onCancel}
+            disabled={isDeactivating}
+            className="flex-1 rounded-xl bg-dark-800 py-3 font-semibold text-dark-300 transition-colors hover:bg-dark-700 hover:text-dark-100 disabled:opacity-50"
+          >
+            {t('common.cancel')}
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isDeactivating}
+            className="flex-1 rounded-xl bg-gradient-to-r from-red-500 to-red-600 py-3 font-semibold text-white shadow-lg shadow-red-500/25 transition-all hover:from-red-400 hover:to-red-500 active:from-red-600 active:to-red-700 disabled:opacity-50"
+          >
+            {isDeactivating ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                {t('promo.deactivate.deactivating')}
+              </span>
+            ) : (
+              t('promo.deactivate.confirm')
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (typeof document !== 'undefined') {
+    return createPortal(modalContent, document.body);
+  }
+  return modalContent;
+}
+
+// ------- Main Component -------
+
 interface PromoOffersSectionProps {
   className?: string;
 }
 
 export default function PromoOffersSection({ className = '' }: PromoOffersSectionProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { isTelegramWebApp } = useTelegramSDK();
   const [claimingId, setClaimingId] = useState<number | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   // Fetch available offers
   const { data: offers = [], isLoading: offersLoading } = useQuery({
@@ -156,11 +264,74 @@ export default function PromoOffersSection({ className = '' }: PromoOffersSectio
     },
   });
 
+  // Deactivate discount mutation
+  const deactivateMutation = useMutation({
+    mutationFn: promoApi.clearActiveDiscount,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['active-discount'] });
+      queryClient.invalidateQueries({ queryKey: ['promo-offers'] });
+      queryClient.invalidateQueries({ queryKey: ['subscription'] });
+      queryClient.invalidateQueries({ queryKey: ['purchase-options'] });
+      setShowConfirmModal(false);
+      setSuccessMessage(t('promo.deactivate.success'));
+      setTimeout(() => setSuccessMessage(null), 5000);
+    },
+    onError: (error: unknown) => {
+      const axiosErr = error as { response?: { data?: { detail?: string } } };
+      setErrorMessage(axiosErr.response?.data?.detail || t('promo.deactivate.error'));
+      setShowConfirmModal(false);
+      setTimeout(() => setErrorMessage(null), 5000);
+    },
+  });
+
   const handleClaim = (offerId: number) => {
     setClaimingId(offerId);
     setErrorMessage(null);
     setSuccessMessage(null);
     claimMutation.mutate(offerId);
+  };
+
+  const handleUseNow = () => {
+    navigate('/subscription', { state: { scrollToExtend: true } });
+  };
+
+  const handleDeactivateClick = () => {
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    // Use Telegram native popup in Mini App
+    if (isTelegramWebApp && window.Telegram?.WebApp?.showPopup) {
+      window.Telegram.WebApp.showPopup(
+        {
+          title: t('promo.deactivate.confirmTitle'),
+          message: t('promo.deactivate.confirmDescription', {
+            percent: activeDiscount?.discount_percent || 0,
+          }),
+          buttons: [
+            { id: 'cancel', type: 'cancel' },
+            { id: 'confirm', type: 'destructive', text: t('promo.deactivate.confirm') },
+          ],
+        },
+        (button_id: string) => {
+          if (button_id === 'confirm') {
+            deactivateMutation.mutate();
+          }
+        },
+      );
+    } else {
+      // Fallback to modal for web
+      setShowConfirmModal(true);
+    }
+  };
+
+  const handleConfirmDeactivate = () => {
+    deactivateMutation.mutate();
+  };
+
+  const handleCloseConfirmModal = () => {
+    if (!deactivateMutation.isPending) {
+      setShowConfirmModal(false);
+    }
   };
 
   // Filter unclaimed and active offers
@@ -177,36 +348,56 @@ export default function PromoOffersSection({ className = '' }: PromoOffersSectio
 
   return (
     <div className={`space-y-4 ${className}`}>
-      {/* Active Discount Banner */}
+      {/* Active Discount Banner with actions */}
       {activeDiscount && activeDiscount.is_active && activeDiscount.discount_percent > 0 && (
-        <div className="card border-accent-500/30 bg-gradient-to-br from-accent-500/10 to-transparent">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-accent-500/20 text-accent-400">
-              <CheckIcon />
+        <div className="card border-success-500/30 bg-gradient-to-br from-success-500/10 to-accent-500/5">
+          <div className="flex flex-col gap-4">
+            {/* Header */}
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-success-500/20 text-success-400">
+                <span className="text-2xl">🏷️</span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="mb-1 flex flex-wrap items-center gap-2">
+                  <h3 className="font-semibold text-dark-100">
+                    {t('promo.offers.discountActiveTitle', {
+                      percent: activeDiscount.discount_percent,
+                    })}
+                  </h3>
+                  <span className="rounded bg-success-500/20 px-2 py-0.5 text-xs font-bold text-success-400">
+                    -{activeDiscount.discount_percent}%
+                  </span>
+                </div>
+                <div className="flex items-center gap-4 text-sm text-dark-400">
+                  {activeDiscount.expires_at && (
+                    <div className="flex items-center gap-1">
+                      <ClockIcon />
+                      <span>
+                        {t('promo.offers.expires', {
+                          time: formatTimeLeft(activeDiscount.expires_at, t),
+                        })}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="flex-1">
-              <div className="mb-1 flex items-center gap-2">
-                <h3 className="font-semibold text-dark-100">
-                  {t('promo.offers.discountActiveTitle', {
-                    percent: activeDiscount.discount_percent,
-                  })}
-                </h3>
-                <span className="rounded bg-accent-500/20 px-2 py-0.5 text-xs text-accent-400">
-                  {t('promo.offers.statusActive')}
-                </span>
-              </div>
-              <div className="flex items-center gap-4 text-sm text-dark-400">
-                {activeDiscount.expires_at && (
-                  <div className="flex items-center gap-1">
-                    <ClockIcon />
-                    <span>
-                      {t('promo.offers.expires', {
-                        time: formatTimeLeft(activeDiscount.expires_at, t),
-                      })}
-                    </span>
-                  </div>
-                )}
-              </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <button
+                onClick={handleUseNow}
+                className="flex-1 rounded-xl bg-gradient-to-r from-success-500 to-success-600 px-4 py-2.5 font-semibold text-white shadow-lg shadow-success-500/25 transition-all hover:from-success-400 hover:to-success-500 active:from-success-600 active:to-success-700"
+              >
+                {t('promo.useNow')}
+              </button>
+              <button
+                onClick={handleDeactivateClick}
+                className="flex items-center justify-center gap-1.5 rounded-xl border border-dark-600/50 bg-dark-900/50 px-4 py-2.5 text-sm text-dark-400 transition-colors hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400"
+              >
+                <XCircleIcon />
+                <span>{t('promo.deactivate.button')}</span>
+              </button>
             </div>
           </div>
         </div>
@@ -235,8 +426,8 @@ export default function PromoOffersSection({ className = '' }: PromoOffersSectio
               className="card border-orange-500/30 bg-gradient-to-br from-orange-500/5 to-transparent transition-colors hover:border-orange-500/50"
             >
               <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-orange-500/20 text-orange-400">
-                  {getOfferIcon(offer.effect_type)}
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500/30 to-amber-500/20">
+                  {getOfferIcon(offer.effect_type, offer.discount_percent)}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 flex items-center gap-2">
@@ -248,7 +439,7 @@ export default function PromoOffersSection({ className = '' }: PromoOffersSectio
                     )}
                   </div>
                   <p className="mb-3 text-sm text-dark-400">{getOfferDescription(offer, t)}</p>
-                  <div className="flex items-center justify-between gap-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-1 text-xs text-dark-500">
                       <ClockIcon />
                       <span>
@@ -258,8 +449,10 @@ export default function PromoOffersSection({ className = '' }: PromoOffersSectio
                     <button
                       onClick={() => handleClaim(offer.id)}
                       disabled={claimingId === offer.id}
-                      className="flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-orange-500/25 transition-all hover:scale-105 hover:shadow-xl hover:shadow-orange-500/30 active:scale-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 sm:w-auto"
                     >
+                      {/* Shimmer effect */}
+                      <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-1000 group-hover:translate-x-full" />
                       {claimingId === offer.id ? (
                         <>
                           <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -267,7 +460,7 @@ export default function PromoOffersSection({ className = '' }: PromoOffersSectio
                         </>
                       ) : (
                         <>
-                          <GiftIcon />
+                          <span className="text-lg">🎁</span>
                           <span>{t('promo.offers.activate')}</span>
                         </>
                       )}
@@ -291,6 +484,17 @@ export default function PromoOffersSection({ className = '' }: PromoOffersSectio
             </div>
           </div>
         </div>
+      )}
+
+      {/* Deactivation Confirmation Modal */}
+      {activeDiscount && (
+        <DeactivateConfirmModal
+          isOpen={showConfirmModal}
+          discountPercent={activeDiscount.discount_percent || 0}
+          isDeactivating={deactivateMutation.isPending}
+          onConfirm={handleConfirmDeactivate}
+          onCancel={handleCloseConfirmModal}
+        />
       )}
     </div>
   );

@@ -7,7 +7,6 @@ import PageLoader from './components/common/PageLoader';
 import { MaintenanceScreen, ChannelSubscriptionScreen } from './components/blocking';
 import { saveReturnUrl } from './utils/token';
 import { useAnalyticsCounters } from './hooks/useAnalyticsCounters';
-
 // Auth pages - load immediately (small)
 import Login from './pages/Login';
 import TelegramCallback from './pages/TelegramCallback';
@@ -31,22 +30,40 @@ const Wheel = lazy(() => import('./pages/Wheel'));
 // Admin pages - lazy load (only for admins)
 const AdminPanel = lazy(() => import('./pages/AdminPanel'));
 const AdminTickets = lazy(() => import('./pages/AdminTickets'));
+const AdminTicketSettings = lazy(() => import('./pages/AdminTicketSettings'));
 const AdminSettings = lazy(() => import('./pages/AdminSettings'));
 const AdminApps = lazy(() => import('./pages/AdminApps'));
 const AdminWheel = lazy(() => import('./pages/AdminWheel'));
 const AdminTariffs = lazy(() => import('./pages/AdminTariffs'));
+const AdminTariffCreate = lazy(() => import('./pages/AdminTariffCreate'));
 const AdminServers = lazy(() => import('./pages/AdminServers'));
+const AdminServerEdit = lazy(() => import('./pages/AdminServerEdit'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const AdminBanSystem = lazy(() => import('./pages/AdminBanSystem'));
 const AdminBroadcasts = lazy(() => import('./pages/AdminBroadcasts'));
+const AdminBroadcastCreate = lazy(() => import('./pages/AdminBroadcastCreate'));
 const AdminPromocodes = lazy(() => import('./pages/AdminPromocodes'));
+const AdminPromocodeCreate = lazy(() => import('./pages/AdminPromocodeCreate'));
+const AdminPromocodeStats = lazy(() => import('./pages/AdminPromocodeStats'));
+const AdminPromoGroups = lazy(() => import('./pages/AdminPromoGroups'));
+const AdminPromoGroupCreate = lazy(() => import('./pages/AdminPromoGroupCreate'));
 const AdminCampaigns = lazy(() => import('./pages/AdminCampaigns'));
+const AdminCampaignCreate = lazy(() => import('./pages/AdminCampaignCreate'));
+const AdminCampaignStats = lazy(() => import('./pages/AdminCampaignStats'));
+const AdminCampaignEdit = lazy(() => import('./pages/AdminCampaignEdit'));
 const AdminUsers = lazy(() => import('./pages/AdminUsers'));
 const AdminPayments = lazy(() => import('./pages/AdminPayments'));
 const AdminPaymentMethods = lazy(() => import('./pages/AdminPaymentMethods'));
+const AdminPaymentMethodEdit = lazy(() => import('./pages/AdminPaymentMethodEdit'));
 const AdminPromoOffers = lazy(() => import('./pages/AdminPromoOffers'));
+const AdminPromoOfferTemplateEdit = lazy(() => import('./pages/AdminPromoOfferTemplateEdit'));
+const AdminPromoOfferSend = lazy(() => import('./pages/AdminPromoOfferSend'));
 const AdminRemnawave = lazy(() => import('./pages/AdminRemnawave'));
+const AdminRemnawaveSquadDetail = lazy(() => import('./pages/AdminRemnawaveSquadDetail'));
 const AdminEmailTemplates = lazy(() => import('./pages/AdminEmailTemplates'));
+const AdminUserDetail = lazy(() => import('./pages/AdminUserDetail'));
+const AdminBroadcastDetail = lazy(() => import('./pages/AdminBroadcastDetail'));
+const AdminEmailTemplatePreview = lazy(() => import('./pages/AdminEmailTemplatePreview'));
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuthStore();
@@ -246,6 +263,16 @@ function App() {
           }
         />
         <Route
+          path="/admin/tickets/settings"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminTicketSettings />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
           path="/admin/settings"
           element={
             <AdminRoute>
@@ -286,11 +313,41 @@ function App() {
           }
         />
         <Route
+          path="/admin/tariffs/create"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminTariffCreate />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/tariffs/:id/edit"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminTariffCreate />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
           path="/admin/servers"
           element={
             <AdminRoute>
               <LazyPage>
                 <AdminServers />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/servers/:id/edit"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminServerEdit />
               </LazyPage>
             </AdminRoute>
           }
@@ -326,6 +383,16 @@ function App() {
           }
         />
         <Route
+          path="/admin/broadcasts/create"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminBroadcastCreate />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
           path="/admin/promocodes"
           element={
             <AdminRoute>
@@ -336,11 +403,101 @@ function App() {
           }
         />
         <Route
+          path="/admin/promocodes/create"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminPromocodeCreate />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/promocodes/:id/edit"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminPromocodeCreate />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/promocodes/:id/stats"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminPromocodeStats />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/promo-groups"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminPromoGroups />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/promo-groups/create"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminPromoGroupCreate />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/promo-groups/:id/edit"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminPromoGroupCreate />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
           path="/admin/campaigns"
           element={
             <AdminRoute>
               <LazyPage>
                 <AdminCampaigns />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/campaigns/create"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminCampaignCreate />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/campaigns/:id/stats"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminCampaignStats />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/campaigns/:id/edit"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminCampaignEdit />
               </LazyPage>
             </AdminRoute>
           }
@@ -376,11 +533,41 @@ function App() {
           }
         />
         <Route
+          path="/admin/payment-methods/:methodId/edit"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminPaymentMethodEdit />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
           path="/admin/promo-offers"
           element={
             <AdminRoute>
               <LazyPage>
                 <AdminPromoOffers />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/promo-offers/templates/:id/edit"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminPromoOfferTemplateEdit />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/promo-offers/send"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminPromoOfferSend />
               </LazyPage>
             </AdminRoute>
           }
@@ -396,11 +583,51 @@ function App() {
           }
         />
         <Route
+          path="/admin/remnawave/squads/:uuid"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminRemnawaveSquadDetail />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
           path="/admin/email-templates"
           element={
             <AdminRoute>
               <LazyPage>
                 <AdminEmailTemplates />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/users/:id"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminUserDetail />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/broadcasts/:id"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminBroadcastDetail />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/email-templates/preview/:type/:lang"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminEmailTemplatePreview />
               </LazyPage>
             </AdminRoute>
           }

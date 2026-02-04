@@ -101,7 +101,9 @@ export const promoApi = {
 
   // Deactivate current active promo discount
   deactivateDiscount: async (): Promise<DeactivateDiscountResponse> => {
-    const response = await apiClient.post<DeactivateDiscountResponse>('/cabinet/promocode/deactivate-discount');
+    const response = await apiClient.post<DeactivateDiscountResponse>(
+      '/cabinet/promocode/deactivate-discount',
+    );
     return response.data;
   },
 };
