@@ -266,7 +266,7 @@ export default function PromoOffersSection({ className = '' }: PromoOffersSectio
 
   // Deactivate discount mutation
   const deactivateMutation = useMutation({
-    mutationFn: promoApi.deactivateDiscount,
+    mutationFn: promoApi.clearActiveDiscount,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['active-discount'] });
       queryClient.invalidateQueries({ queryKey: ['promo-offers'] });
