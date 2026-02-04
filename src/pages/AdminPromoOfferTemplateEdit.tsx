@@ -10,6 +10,7 @@ import {
 } from '../api/promoOffers';
 import { AdminBackButton } from '../components/admin';
 import { createNumberInputHandler, toNumber } from '../utils/inputHelpers';
+import { useBackButton } from '../platform/hooks/useBackButton';
 
 const getOfferTypeIcon = (offerType: string): string => {
   return OFFER_TYPE_CONFIG[offerType as OfferType]?.icon || '🎁';
@@ -20,6 +21,8 @@ export default function AdminPromoOfferTemplateEdit() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
+
+  useBackButton(() => navigate('/admin/promo-offers'));
 
   // Form state
   const [name, setName] = useState('');

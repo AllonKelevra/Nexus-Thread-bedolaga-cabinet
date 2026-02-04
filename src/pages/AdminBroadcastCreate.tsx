@@ -10,6 +10,7 @@ import {
   CombinedBroadcastCreateRequest,
 } from '../api/adminBroadcasts';
 import { AdminBackButton } from '../components/admin';
+import { useBackButton } from '../platform/hooks/useBackButton';
 
 // Icons
 const BroadcastIcon = () => (
@@ -117,6 +118,8 @@ export default function AdminBroadcastCreate() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useBackButton(() => navigate('/admin/broadcasts'));
 
   // Channel selection
   const [channel, setChannel] = useState<BroadcastChannel>('telegram');

@@ -12,6 +12,7 @@ import {
 import { AdminBackButton } from '../components/admin';
 import { CheckIcon, CampaignIcon } from '../components/icons';
 import { createNumberInputHandler, toNumber } from '../utils/inputHelpers';
+import { useBackButton } from '../platform/hooks/useBackButton';
 
 // Bonus type config
 const bonusTypeConfig: Record<
@@ -131,6 +132,8 @@ export default function AdminCampaignEdit() {
   const queryClient = useQueryClient();
 
   const campaignId = parseInt(id || '0');
+
+  useBackButton(() => navigate('/admin/campaigns'));
 
   // Fetch campaign
   const {

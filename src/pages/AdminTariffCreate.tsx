@@ -12,6 +12,7 @@ import {
 } from '../api/tariffs';
 import { AdminBackButton } from '../components/admin';
 import { createNumberInputHandler, toNumber } from '../utils/inputHelpers';
+import { useBackButton } from '../platform/hooks/useBackButton';
 
 // Icons
 const PlusIcon = () => (
@@ -90,6 +91,8 @@ export default function AdminTariffCreate() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   const isEdit = !!id;
+
+  useBackButton(() => navigate('/admin/tariffs'));
 
   // Step: null = type selection, 'period' or 'daily' = form
   const [tariffType, setTariffType] = useState<TariffType>(null);

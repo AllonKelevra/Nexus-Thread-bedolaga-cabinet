@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { campaignsApi, CampaignBonusType } from '../api/campaigns';
 import { AdminBackButton } from '../components/admin';
+import { useBackButton } from '../platform/hooks/useBackButton';
 
 // Icons
 const CopyIcon = () => (
@@ -96,6 +97,8 @@ export default function AdminCampaignStats() {
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [showUsers, setShowUsers] = useState(false);
+
+  useBackButton(() => navigate('/admin/campaigns'));
 
   // Fetch stats
   const {

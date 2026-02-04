@@ -9,6 +9,7 @@ import {
   PromoGroupUpdateRequest,
 } from '../api/promocodes';
 import { AdminBackButton } from '../components/admin';
+import { useBackButton } from '../platform/hooks/useBackButton';
 
 // Icons
 const PlusIcon = () => (
@@ -54,6 +55,8 @@ export default function AdminPromoGroupCreate() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   const isEdit = !!id;
+
+  useBackButton(() => navigate('/admin/promo-groups'));
 
   // Form state
   const [name, setName] = useState('');

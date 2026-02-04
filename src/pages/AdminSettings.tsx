@@ -1,10 +1,13 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { adminSettingsApi, SettingDefinition } from '../api/adminSettings';
 import { themeColorsApi } from '../api/themeColors';
 import { useFavoriteSettings } from '../hooks/useFavoriteSettings';
-import { MENU_SECTIONS, MenuItem, formatSettingKey, AdminBackButton } from '../components/admin';
+import { MENU_SECTIONS, MenuItem, formatSettingKey } from '../components/admin';
+import { useBackButton } from '../platform/hooks/useBackButton';
+import { usePlatform } from '../platform/hooks/usePlatform';
 import { AnalyticsTab } from '../components/admin/AnalyticsTab';
 import { BrandingTab } from '../components/admin/BrandingTab';
 import { ThemeTab } from '../components/admin/ThemeTab';
@@ -16,6 +19,19 @@ import {
   SettingsSearchMobile,
   SettingsSearchResults,
 } from '../components/admin/SettingsSearch';
+
+// BackIcon
+const BackIcon = () => (
+  <svg
+    className="h-5 w-5 text-dark-400"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={2}
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+  </svg>
+);
 
 // Find section ID by category key
 function findSectionByCategory(categoryKey: string): string | null {
@@ -31,6 +47,11 @@ function findSectionByCategory(categoryKey: string): string | null {
 
 export default function AdminSettings() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { capabilities } = usePlatform();
+
+  // Use native Telegram back button in Mini App
+  useBackButton(() => navigate('/admin'));
 
   // State
   const [activeSection, setActiveSection] = useState('branding');
@@ -216,7 +237,15 @@ export default function AdminSettings() {
         <div className="w-64 shrink-0 overflow-y-auto border-r border-dark-700/50">
           <div className="border-b border-dark-700/50 p-4">
             <div className="flex items-center gap-3">
-              <AdminBackButton />
+              {/* Show back button only on web, not in Telegram Mini App */}
+              {!capabilities.hasBackButton && (
+                <button
+                  onClick={() => navigate('/admin')}
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
+                >
+                  <BackIcon />
+                </button>
+              )}
               <h1 className="text-lg font-bold text-dark-100">{t('admin.settings.title')}</h1>
             </div>
           </div>

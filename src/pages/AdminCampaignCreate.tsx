@@ -11,6 +11,7 @@ import {
 } from '../api/campaigns';
 import { AdminBackButton } from '../components/admin';
 import { createNumberInputHandler, toNumber } from '../utils/inputHelpers';
+import { useBackButton } from '../platform/hooks/useBackButton';
 
 // Icons
 const CampaignIcon = () => (
@@ -154,6 +155,8 @@ export default function AdminCampaignCreate() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  useBackButton(() => navigate('/admin/campaigns'));
 
   // Form state
   const [name, setName] = useState('');

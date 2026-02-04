@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 import { promocodesApi, PromoCodeType } from '../api/promocodes';
 import { AdminBackButton } from '../components/admin';
+import { useBackButton } from '../platform/hooks/useBackButton';
 
 // Icons
 const EditIcon = () => (
@@ -87,6 +88,8 @@ export default function AdminPromocodeStats() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+
+  useBackButton(() => navigate('/admin/promocodes'));
 
   const {
     data: promocode,

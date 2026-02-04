@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { adminPaymentMethodsApi } from '../api/adminPaymentMethods';
 import type { PromoGroupSimple } from '../types';
+import { useBackButton } from '../platform/hooks/useBackButton';
+import { usePlatform } from '../platform/hooks/usePlatform';
 
 const BackIcon = () => (
   <svg
@@ -68,6 +70,10 @@ export default function AdminPaymentMethodEdit() {
   const { methodId } = useParams<{ methodId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { capabilities } = usePlatform();
+
+  // Use native Telegram back button in Mini App
+  useBackButton(() => navigate('/admin/payment-methods'));
 
   // Fetch payment methods
   const { data: methods, isLoading } = useQuery({
@@ -174,12 +180,15 @@ export default function AdminPaymentMethodEdit() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">
-          <Link
-            to="/admin/payment-methods"
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
-          >
-            <BackIcon />
-          </Link>
+          {/* Show back button only on web, not in Telegram Mini App */}
+          {!capabilities.hasBackButton && (
+            <button
+              onClick={() => navigate('/admin/payment-methods')}
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
+            >
+              <BackIcon />
+            </button>
+          )}
           <h1 className="text-2xl font-bold text-dark-50">
             {t('admin.paymentMethods.notFound', 'Payment method not found')}
           </h1>
@@ -195,12 +204,15 @@ export default function AdminPaymentMethodEdit() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Link
-          to="/admin/payment-methods"
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
-        >
-          <BackIcon />
-        </Link>
+        {/* Show back button only on web, not in Telegram Mini App */}
+        {!capabilities.hasBackButton && (
+          <button
+            onClick={() => navigate('/admin/payment-methods')}
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
+          >
+            <BackIcon />
+          </button>
+        )}
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-dark-700/50 text-xl">
           {icon}
         </div>
