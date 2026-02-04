@@ -6,7 +6,6 @@ import {
   safeRedirectToLogin,
 } from '../utils/token';
 import { useBlockingStore } from '../store/blocking';
-import { getTelegramInitData as getSDKInitData } from '../hooks/useTelegramSDK';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -42,8 +41,7 @@ function ensureCsrfToken(): string {
 const getTelegramInitData = (): string | null => {
   if (typeof window === 'undefined') return null;
 
-  // Use SDK helper to get initData
-  const initData = getSDKInitData();
+  const initData = window.Telegram?.WebApp?.initData;
   if (initData) {
     tokenStorage.setTelegramInitData(initData);
     return initData;
@@ -155,6 +153,20 @@ apiClient.interceptors.response.use(
 
     // Если получили 401 и ещё не пробовали refresh (на случай если проверка exp не сработала)
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // Не обрабатываем 401 для авторизационных endpoints - пусть ошибка дойдет до компонента
+      const authEndpoints = [
+        '/cabinet/auth/email/login',
+        '/cabinet/auth/telegram',
+        '/cabinet/auth/telegram/widget',
+      ];
+      const requestUrl = originalRequest.url || '';
+      const isAuthEndpoint = authEndpoints.some((endpoint) => requestUrl.includes(endpoint));
+
+      if (isAuthEndpoint) {
+        // Пробрасываем ошибку в компонент для показа сообщения пользователю
+        return Promise.reject(error);
+      }
+
       originalRequest._retry = true;
 
       const newToken = await tokenRefreshManager.refreshAccessToken();
