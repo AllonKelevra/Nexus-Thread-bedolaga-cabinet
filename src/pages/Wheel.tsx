@@ -5,8 +5,8 @@ import { wheelApi, type SpinResult, type SpinHistoryItem } from '../api/wheel';
 import FortuneWheel from '../components/wheel/FortuneWheel';
 import WheelLegend from '../components/wheel/WheelLegend';
 import InsufficientBalancePrompt from '../components/InsufficientBalancePrompt';
-import { useCurrency } from '../hooks/useCurrency';
 import { usePlatform, useHaptic } from '@/platform';
+import { useNotify } from '@/platform/hooks/useNotify';
 import { Card } from '@/components/data-display/Card/Card';
 import { Button } from '@/components/primitives/Button/Button';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -60,9 +60,9 @@ const ChevronIcon = ({ expanded }: { expanded: boolean }) => (
 export default function Wheel() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const { formatAmount, currencySymbol } = useCurrency();
-  const { platform, openInvoice, capabilities } = usePlatform();
+  const { openInvoice, capabilities } = usePlatform();
   const haptic = useHaptic();
+  const notify = useNotify();
 
   const [isSpinning, setIsSpinning] = useState(false);
   const [targetRotation, setTargetRotation] = useState<number | null>(null);
@@ -73,9 +73,6 @@ export default function Wheel() {
   const [isPayingStars, setIsPayingStars] = useState(false);
   const [historyExpanded, setHistoryExpanded] = useState(false);
   const paymentTypeInitialized = useRef(false);
-
-  // Check if we're in Telegram Mini App environment
-  const isTelegramMiniApp = platform === 'telegram';
 
   const {
     data: config,
@@ -98,25 +95,13 @@ export default function Wheel() {
 
     const starsEnabled = config.spin_cost_stars_enabled && config.spin_cost_stars;
     const daysEnabled = config.spin_cost_days_enabled && config.spin_cost_days;
-    const canPayBalance = starsEnabled && config.can_pay_stars;
-    const canPayDays = daysEnabled && config.can_pay_days;
 
-    if (isTelegramMiniApp) {
-      // In Mini App: prefer stars if available
-      if (starsEnabled) {
-        setPaymentType('telegram_stars');
-      } else if (canPayDays) {
-        setPaymentType('subscription_days');
-      }
-    } else {
-      // In Web: prefer balance (Stars converted to rubles), fallback to days
-      if (canPayBalance) {
-        setPaymentType('telegram_stars');
-      } else if (canPayDays) {
-        setPaymentType('subscription_days');
-      }
+    if (starsEnabled) {
+      setPaymentType('telegram_stars');
+    } else if (daysEnabled) {
+      setPaymentType('subscription_days');
     }
-  }, [config, isTelegramMiniApp]);
+  }, [config]);
 
   // Function to poll for new spin result after Stars payment
   const pollForSpinResult = useCallback(
@@ -362,7 +347,11 @@ export default function Wheel() {
   };
 
   const handleUnifiedSpin = () => {
-    if (isTelegramMiniApp && paymentType === 'telegram_stars') {
+    if (paymentType === 'telegram_stars') {
+      if (!config?.spin_cost_stars_enabled || !config?.spin_cost_stars) {
+        notify.warning(t('wheel.starsNotAvailable'));
+        return;
+      }
       handleDirectStarsPay();
     } else {
       handleSpin();
@@ -456,11 +445,7 @@ export default function Wheel() {
 
   const starsEnabled = config.spin_cost_stars_enabled && config.spin_cost_stars;
   const daysEnabled = config.spin_cost_days_enabled && config.spin_cost_days;
-  const canPayBalance = starsEnabled && config.can_pay_stars; // For web: pay with internal balance
-  const canPayDays = daysEnabled && config.can_pay_days;
-  const bothMethodsAvailable = isTelegramMiniApp
-    ? starsEnabled && daysEnabled && canPayDays
-    : starsEnabled && daysEnabled && canPayBalance && canPayDays;
+  const bothMethodsAvailable = !!(starsEnabled && daysEnabled);
 
   const spinDisabled =
     !config.can_spin ||
@@ -472,10 +457,7 @@ export default function Wheel() {
   const getCostSubtitle = () => {
     if (bothMethodsAvailable) return null; // toggle handles it
     if (paymentType === 'telegram_stars' && starsEnabled) {
-      if (isTelegramMiniApp) {
-        return `${config.spin_cost_stars} ⭐`;
-      }
-      return `${formatAmount(config.required_balance_kopeks / 100)} ${currencySymbol} (${config.spin_cost_stars} ⭐)`;
+      return `${config.spin_cost_stars} ⭐`;
     }
     if (paymentType === 'subscription_days' && daysEnabled) {
       return t('wheel.days', { count: config.spin_cost_days ?? 0 });
@@ -529,9 +511,7 @@ export default function Wheel() {
                       }`}
                     >
                       <StarIcon />
-                      {isTelegramMiniApp
-                        ? `${config.spin_cost_stars} ⭐`
-                        : `${formatAmount(config.required_balance_kopeks / 100)} ${currencySymbol}`}
+                      {`${config.spin_cost_stars} ⭐`}
                     </button>
                     <button
                       onClick={() => setPaymentType('subscription_days')}
