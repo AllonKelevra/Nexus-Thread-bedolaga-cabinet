@@ -217,168 +217,22 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Light theme text color overrides - convert dark-* text colors to readable colors */
-  .light .text-dark-50 {
-    color: #1f1a12 !important; /* champagne-950 */
-  }
-
-  .light .text-dark-100 {
-    color: #3d3424 !important; /* champagne-900 */
-  }
-
-  .light .text-dark-200 {
-    color: #5c4f35 !important; /* champagne-800 */
-  }
-
-  .light .text-dark-300 {
-    color: #7d6b48 !important; /* champagne-700 */
-  }
-
-  .light .text-dark-400 {
-    color: #a08b5e !important; /* champagne-600 */
-  }
-
-  .light .text-dark-500 {
-    color: #bfa477 !important; /* champagne-500 */
-  }
-
-  .light .text-dark-600 {
-    color: #d4bc96 !important; /* champagne-400 */
-  }
-
-  /* Light theme background color overrides */
-  .light .bg-dark-700 {
-    background-color: #e8d4b5 !important; /* champagne-300 */
-  }
-
-  .light .bg-dark-800 {
-    background-color: #f7e7ce !important; /* champagne-200 */
-  }
-
-  .light .bg-dark-800\/50 {
-    background-color: rgba(232, 212, 181, 0.5) !important; /* champagne-300/50 */
-  }
-
-  .light .bg-dark-800\/30 {
-    background-color: rgba(232, 212, 181, 0.4) !important; /* champagne-300/40 - more visible */
-  }
-
-  .light .bg-dark-700\/50 {
-    background-color: rgba(212, 188, 150, 0.5) !important; /* champagne-400/50 */
-  }
-
-  .light .bg-dark-900\/30 {
-    background-color: rgba(247, 231, 206, 0.6) !important; /* champagne-200/60 */
-  }
-
-  /* Light theme additional border overrides for semi-transparent borders */
-  .light .border-dark-800\/30 {
-    border-color: rgba(191, 164, 119, 0.4) !important; /* champagne-500/40 */
-  }
-
-  .light .border-dark-700\/30 {
-    border-color: rgba(191, 164, 119, 0.5) !important; /* champagne-500/50 - more visible */
-  }
-
-  .light .bg-dark-900 {
-    background-color: #fef9f0 !important; /* champagne-100 */
-  }
-
-  .light .bg-dark-900\/50 {
-    background-color: rgba(254, 249, 240, 0.5) !important; /* champagne-100/50 */
-  }
-
-  .light .bg-dark-900\/95 {
-    background-color: rgba(
-      254,
-      249,
-      240,
-      0.95
-    ) !important; /* champagne-100/95 - mobile menu sticky header */
-  }
-
-  .light .bg-dark-950 {
-    background-color: #f7e7ce !important; /* champagne-200 */
-  }
-
-  .light .bg-dark-950\/80 {
-    background-color: rgba(247, 231, 206, 0.85) !important; /* champagne-200/85 */
-  }
-
-  .light .bg-dark-600 {
-    background-color: #d4bc96 !important; /* champagne-400 */
-  }
-
-  /* Light theme border color overrides */
-  .light .border-dark-700 {
-    border-color: #e8d4b5 !important; /* champagne-300 */
-  }
-
-  .light .border-dark-700\/50 {
-    border-color: rgba(232, 212, 181, 0.5) !important;
-  }
-
-  .light .border-dark-800 {
-    border-color: #d4bc96 !important; /* champagne-400 */
-  }
-
-  .light .border-dark-800\/50 {
-    border-color: rgba(212, 188, 150, 0.5) !important;
-  }
-
-  /* Light theme hover state overrides */
-  .light .hover\:text-dark-100:hover {
-    color: #3d3424 !important; /* champagne-900 */
-  }
-
-  .light .hover\:text-dark-200:hover {
-    color: #5c4f35 !important; /* champagne-800 */
-  }
-
-  .light .hover\:bg-dark-800:hover {
-    background-color: #e8d4b5 !important; /* champagne-300 */
-  }
-
-  .light .hover\:bg-dark-800\/50:hover {
-    background-color: rgba(232, 212, 181, 0.5) !important;
-  }
-
-  .light .hover\:bg-dark-700\/50:hover {
-    background-color: rgba(212, 188, 150, 0.5) !important; /* champagne-400/50 */
-  }
-
-  .light .hover\:bg-dark-700:hover {
-    background-color: #d4bc96 !important; /* champagne-400 */
-  }
-
-  .light .hover\:bg-dark-600:hover {
-    background-color: #bfa477 !important; /* champagne-500 */
-  }
-
-  .light .hover\:border-dark-600:hover {
-    border-color: #bfa477 !important; /* champagne-500 */
-  }
-
-  .light .hover\:border-dark-700\/50:hover {
-    border-color: rgba(232, 212, 181, 0.5) !important;
-  }
-
-  /* Light theme gradient overrides for login page */
-  .light .from-dark-950 {
-    --tw-gradient-from: #f7e7ce !important;
-  }
-
-  .light .via-dark-900 {
-    --tw-gradient-stops: var(--tw-gradient-from), #fef9f0, var(--tw-gradient-to) !important;
-  }
-
-  .light .to-dark-950 {
-    --tw-gradient-to: #f7e7ce !important;
-  }
-
-  /* Light theme divider for desktop nav */
-  .light .bg-dark-700.w-px {
-    background-color: #d4bc96 !important;
+  /* Light theme: swap dark palette → dynamic champagne palette from API.
+     Uses var() to reference values set by applyThemeColors().
+     !important overrides inline styles from applyThemeColors on :root. */
+  .light {
+    --color-dark-50: var(--color-champagne-950) !important;
+    --color-dark-100: var(--color-champagne-900) !important;
+    --color-dark-200: var(--color-champagne-800) !important;
+    --color-dark-300: var(--color-champagne-700) !important;
+    --color-dark-400: var(--color-champagne-600) !important;
+    --color-dark-500: var(--color-champagne-500) !important;
+    --color-dark-600: var(--color-champagne-400) !important;
+    --color-dark-700: var(--color-champagne-300) !important;
+    --color-dark-800: var(--color-champagne-50) !important;
+    --color-dark-850: var(--color-champagne-100) !important;
+    --color-dark-900: var(--color-champagne-100) !important;
+    --color-dark-950: var(--color-champagne-200) !important;
   }
 
   /* Custom scrollbar - Dark */
@@ -516,19 +370,19 @@
   }
 
   .light .bento-card {
-    @apply border-champagne-300/50 bg-white/90 shadow-sm;
+    @apply border-champagne-300/50 bg-champagne-50/90 shadow-sm;
     /* Light Theme Glass Border */
     box-shadow: inset 0 1px 0 0 rgba(0, 0, 0, 0.03);
   }
 
   @media (min-width: 1024px) {
     .light .bento-card {
-      @apply bg-white/80 backdrop-blur-sm;
+      @apply bg-champagne-50/80 backdrop-blur-sm;
     }
   }
 
   .light .bento-card-hover:hover {
-    @apply border-champagne-400/50 bg-white shadow-md;
+    @apply border-champagne-400/50 bg-champagne-50 shadow-md;
     transform: translateY(-4px);
     /* Intensify Light Theme Glass Border */
     box-shadow:
@@ -761,7 +615,7 @@
 
   /* Cards - Light */
   .light .card {
-    @apply border-champagne-300/50 bg-white/90 p-5 shadow-sm sm:p-6;
+    @apply border-champagne-300/50 bg-champagne-50/90 p-5 shadow-sm sm:p-6;
     border-radius: var(--bento-radius);
     transform: translateZ(0);
     box-shadow: inset 0 1px 0 0 rgba(0, 0, 0, 0.03);
@@ -769,12 +623,12 @@
 
   @media (min-width: 1024px) {
     .light .card {
-      @apply bg-white/80 backdrop-blur-sm;
+      @apply bg-champagne-50/80 backdrop-blur-sm;
     }
   }
 
   .light .card-hover {
-    @apply hover:border-champagne-400/50 hover:bg-white hover:shadow-md;
+    @apply hover:border-champagne-400/50 hover:bg-champagne-50 hover:shadow-md;
   }
 
   .light .card-glow {
@@ -783,13 +637,13 @@
 
   /* Glass effect - Light (optimized for mobile) */
   .light .glass {
-    @apply border border-champagne-300/40 bg-white/90;
+    @apply border border-champagne-300/40 bg-champagne-50/90;
     transform: translateZ(0);
   }
 
   @media (min-width: 1024px) {
     .light .glass {
-      @apply bg-white/60 backdrop-blur-xl;
+      @apply bg-champagne-50/60 backdrop-blur-xl;
     }
   }
 
@@ -803,7 +657,7 @@
   }
 
   .light .btn-secondary {
-    @apply border border-champagne-300 bg-white text-champagne-800 hover:border-champagne-400 hover:bg-champagne-50 hover:text-champagne-900 focus-visible:ring-champagne-400 active:bg-champagne-100;
+    @apply border border-champagne-300 bg-champagne-50 text-champagne-800 hover:border-champagne-400 hover:bg-champagne-100 hover:text-champagne-900 focus-visible:ring-champagne-400 active:bg-champagne-200;
   }
 
   .light .btn-ghost {
@@ -820,7 +674,7 @@
 
   /* Inputs - Light */
   .light .input {
-    @apply rounded-xl border border-champagne-300 bg-white text-champagne-900 placeholder-champagne-400 focus:border-accent-400 focus:ring-accent-300/30;
+    @apply rounded-xl border border-champagne-300 bg-champagne-50 text-champagne-900 placeholder-champagne-400 focus:border-accent-400 focus:ring-accent-300/30;
   }
 
   .light .input-error {
