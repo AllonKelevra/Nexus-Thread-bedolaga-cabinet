@@ -184,6 +184,17 @@ function createDialogController(): DialogController {
   const inTelegram = isInTelegramWebApp();
   let popupOpen = false;
 
+  // Persistent listener: resets popupOpen whenever Telegram reports popup closed,
+  // even if our per-call listener was already removed.
+  if (inTelegram) {
+    const tg = getTelegram();
+    if (tg?.onEvent) {
+      tg.onEvent('popupClosed', (() => {
+        popupOpen = false;
+      }) as (...args: unknown[]) => void);
+    }
+  }
+
   function showPopupSafe<T>(
     params: Parameters<NonNullable<TelegramWebApp['showPopup']>>[0],
     mapResult: (buttonId: string) => T,
@@ -203,8 +214,6 @@ function createDialogController(): DialogController {
       popupOpen = true;
       let settled = false;
 
-      console.log('[popup] opening', JSON.stringify(params));
-
       const cleanup = () => {
         if (settled) return;
         settled = true;
@@ -214,7 +223,6 @@ function createDialogController(): DialogController {
       };
 
       const onPopupClosed = ((...args: unknown[]) => {
-        console.log('[popup] popupClosed event', JSON.stringify(args));
         if (settled) return;
         const event = args[0] as { button_id?: string } | undefined;
         const buttonId = event?.button_id ?? '';
@@ -223,24 +231,29 @@ function createDialogController(): DialogController {
       }) as (...args: unknown[]) => void;
 
       const timer = setTimeout(() => {
-        console.log('[popup] timeout — force reset');
         if (settled) return;
         cleanup();
         resolve(mapResult(''));
-      }, 5_000);
+      }, 30_000);
 
       tg.onEvent?.('popupClosed', onPopupClosed);
 
       try {
-        tg.showPopup(params, (buttonId) => {
-          console.log('[popup] callback fired, buttonId=', buttonId);
-          if (settled) return;
-          cleanup();
-          resolve(mapResult(buttonId));
-        });
-        console.log('[popup] showPopup called OK');
+        tg.showPopup(params);
       } catch (e) {
-        console.error('[popup] showPopup threw', e);
+        // Telegram SDK says a popup is already open — don't reset popupOpen,
+        // so subsequent calls are silently blocked until the popup actually closes.
+        const isAlreadyOpen = e instanceof Error && e.message?.includes('WebAppPopupOpened');
+
+        if (isAlreadyOpen) {
+          settled = true;
+          clearTimeout(timer);
+          tg.offEvent?.('popupClosed', onPopupClosed);
+          // popupOpen stays true — the persistent listener will reset it
+          resolve(mapResult(''));
+          return;
+        }
+
         cleanup();
         resolve(fallback());
       }
