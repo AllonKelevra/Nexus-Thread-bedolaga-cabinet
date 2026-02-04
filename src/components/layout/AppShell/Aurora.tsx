@@ -107,25 +107,8 @@ function hexToRgb(hex: string): [number, number, number] {
   return [r, g, b];
 }
 
-function generateColorStops(accent: string, background: string): string[] {
-  const [ar, ag, ab] = hexToRgb(accent);
-
-  // Color 1: Dark background
-  const color1 = background;
-
-  // Color 2: Accent at 40% intensity
-  const midR = Math.round(ar * 255 * 0.4);
-  const midG = Math.round(ag * 255 * 0.4);
-  const midB = Math.round(ab * 255 * 0.4);
-  const color2 = `#${midR.toString(16).padStart(2, '0')}${midG.toString(16).padStart(2, '0')}${midB.toString(16).padStart(2, '0')}`;
-
-  // Color 3: Accent at 70% intensity
-  const brightR = Math.round(ar * 255 * 0.7);
-  const brightG = Math.round(ag * 255 * 0.7);
-  const brightB = Math.round(ab * 255 * 0.7);
-  const color3 = `#${brightR.toString(16).padStart(2, '0')}${brightG.toString(16).padStart(2, '0')}${brightB.toString(16).padStart(2, '0')}`;
-
-  return [color1, color2, color3];
+function generateColorStops(background: string, surface: string, accent: string): string[] {
+  return [background, surface, accent];
 }
 
 export function Aurora() {
@@ -149,9 +132,10 @@ export function Aurora() {
   const themeColors =
     queryClient.getQueryData<ThemeSettings>(['theme-colors']) || DEFAULT_THEME_COLORS;
 
-  // Pick background based on current theme
+  // Pick background and surface based on current theme
   const { isDark } = useTheme();
   const background = isDark ? themeColors.darkBackground : themeColors.lightBackground;
+  const surface = isDark ? themeColors.darkSurface : themeColors.lightSurface;
 
   useEffect(() => {
     if (!isEnabled || !containerRef.current) return;
@@ -173,7 +157,7 @@ export function Aurora() {
 
     const geometry = new Triangle(gl);
 
-    const colorStops = generateColorStops(themeColors.accent, background);
+    const colorStops = generateColorStops(background, surface, themeColors.accent);
     const colorStopsArray = colorStops
       .map((hex) => {
         const c = new Color(hex);
@@ -236,7 +220,7 @@ export function Aurora() {
       rendererRef.current = null;
       programRef.current = null;
     };
-  }, [isEnabled, themeColors.accent, background]);
+  }, [isEnabled, themeColors.accent, background, surface]);
 
   if (!isEnabled) {
     return null;
