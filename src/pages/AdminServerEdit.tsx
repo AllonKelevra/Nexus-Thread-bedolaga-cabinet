@@ -49,7 +49,7 @@ export default function AdminServerEdit() {
 
   const serverId = parseInt(id || '0');
 
-  useBackButton(() => navigate('/admin/servers'));
+  useBackButton(() => navigate('/admin/servers', { replace: true }));
 
   const {
     data: server,

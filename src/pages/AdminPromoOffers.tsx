@@ -109,7 +109,7 @@ export default function AdminPromoOffers() {
   const { capabilities } = usePlatform();
 
   // Use native Telegram back button in Mini App
-  useBackButton(() => navigate('/admin'));
+  useBackButton(() => navigate('/admin', { replace: true }));
 
   const [activeTab, setActiveTab] = useState<'templates' | 'logs'>('templates');
 

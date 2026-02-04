@@ -133,7 +133,7 @@ export default function AdminCampaignEdit() {
 
   const campaignId = parseInt(id || '0');
 
-  useBackButton(() => navigate('/admin/campaigns'));
+  useBackButton(() => navigate('/admin/campaigns', { replace: true }));
 
   // Fetch campaign
   const {

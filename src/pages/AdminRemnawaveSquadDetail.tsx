@@ -55,7 +55,7 @@ export default function AdminRemnawaveSquadDetail() {
   const { uuid } = useParams<{ uuid: string }>();
   const navigate = useNavigate();
 
-  useBackButton(() => navigate('/admin/remnawave'));
+  useBackButton(() => navigate('/admin/remnawave', { replace: true }));
 
   // Fetch all squads and find the one we need
   const {

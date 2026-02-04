@@ -114,7 +114,7 @@ export default function AdminPromocodes() {
   const { capabilities } = usePlatform();
 
   // Use native Telegram back button in Mini App
-  useBackButton(() => navigate('/admin'));
+  useBackButton(() => navigate('/admin', { replace: true }));
 
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);

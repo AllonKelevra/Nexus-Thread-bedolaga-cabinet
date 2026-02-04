@@ -156,7 +156,7 @@ export default function AdminCampaignCreate() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  useBackButton(() => navigate('/admin/campaigns'));
+  useBackButton(() => navigate('/admin/campaigns', { replace: true }));
 
   // Form state
   const [name, setName] = useState('');

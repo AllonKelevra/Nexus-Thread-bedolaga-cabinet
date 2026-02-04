@@ -77,7 +77,7 @@ export default function AdminTariffs() {
   const { capabilities } = usePlatform();
 
   // Use native Telegram back button in Mini App
-  useBackButton(() => navigate('/admin'));
+  useBackButton(() => navigate('/admin', { replace: true }));
 
   // Queries
   const { data: tariffsData, isLoading } = useQuery({

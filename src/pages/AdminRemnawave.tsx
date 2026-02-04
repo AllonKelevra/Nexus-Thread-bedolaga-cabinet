@@ -879,7 +879,7 @@ export default function AdminRemnawave() {
   const { capabilities } = usePlatform();
 
   // Use native Telegram back button in Mini App
-  useBackButton(() => navigate('/admin'));
+  useBackButton(() => navigate('/admin', { replace: true }));
 
   // State
   const [activeTab, setActiveTab] = useState<TabType>('overview');

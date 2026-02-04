@@ -92,7 +92,7 @@ export default function AdminTariffCreate() {
   const queryClient = useQueryClient();
   const isEdit = !!id;
 
-  useBackButton(() => navigate('/admin/tariffs'));
+  useBackButton(() => navigate('/admin/tariffs', { replace: true }));
 
   // Step: null = type selection, 'period' or 'daily' = form
   const [tariffType, setTariffType] = useState<TariffType>(null);
