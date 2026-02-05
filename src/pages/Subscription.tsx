@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { AxiosError } from 'axios';
 import { subscriptionApi } from '../api/subscription';
 import { promoApi } from '../api/promo';
@@ -12,7 +12,6 @@ import type {
   TariffPeriod,
   ClassicPurchaseOptions,
 } from '../types';
-import ConnectionModal from '../components/ConnectionModal';
 import InsufficientBalancePrompt from '../components/InsufficientBalancePrompt';
 import { useCurrency } from '../hooks/useCurrency';
 import { useCloseOnSuccessNotification } from '../store/successNotification';
@@ -83,9 +82,9 @@ export default function Subscription() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const location = useLocation();
+  const navigate = useNavigate();
   const { formatAmount, currencySymbol } = useCurrency();
   const [copied, setCopied] = useState(false);
-  const [showConnectionModal, setShowConnectionModal] = useState(false);
 
   // Helper to format price from kopeks
   const formatPrice = (kopeks: number) => `${formatAmount(kopeks / 100)} ${currencySymbol}`;
@@ -309,7 +308,6 @@ export default function Subscription() {
 
   // Auto-close all modals/forms when success notification appears (e.g., subscription purchased via WebSocket)
   const handleCloseAllModals = useCallback(() => {
-    setShowConnectionModal(false);
     setShowPurchaseForm(false);
     setShowTariffPurchase(false);
     setShowDeviceTopup(false);
@@ -737,7 +735,7 @@ export default function Subscription() {
 
               {/* Get Config Button */}
               <button
-                onClick={() => setShowConnectionModal(true)}
+                onClick={() => navigate('/connection')}
                 className="btn-primary mb-3 flex w-full items-center justify-center gap-2 py-3"
               >
                 <svg
@@ -1135,7 +1133,7 @@ export default function Subscription() {
           {!showDeviceTopup ? (
             <button
               onClick={() => setShowDeviceTopup(true)}
-              className="w-full rounded-xl border border-dark-700/50 bg-dark-800/30 p-4 text-left transition-colors hover:border-dark-600"
+              className="w-full rounded-xl border border-dark-700/50 bg-dark-800/50 p-4 text-left transition-colors hover:border-dark-600"
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -1160,7 +1158,7 @@ export default function Subscription() {
               </div>
             </button>
           ) : (
-            <div className="rounded-xl border border-dark-700/50 bg-dark-800/30 p-5">
+            <div className="rounded-xl border border-dark-700/50 bg-dark-800/50 p-5">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="font-medium text-dark-100">{t('subscription.buyDevices')}</h3>
                 <button
@@ -1327,7 +1325,7 @@ export default function Subscription() {
             {!showDeviceReduction ? (
               <button
                 onClick={() => setShowDeviceReduction(true)}
-                className="w-full rounded-xl border border-dark-700/50 bg-dark-800/30 p-4 text-left transition-colors hover:border-dark-600"
+                className="w-full rounded-xl border border-dark-700/50 bg-dark-800/50 p-4 text-left transition-colors hover:border-dark-600"
               >
                 <div className="flex items-center justify-between">
                   <div>
@@ -1350,7 +1348,7 @@ export default function Subscription() {
                 </div>
               </button>
             ) : (
-              <div className="rounded-xl border border-dark-700/50 bg-dark-800/30 p-5">
+              <div className="rounded-xl border border-dark-700/50 bg-dark-800/50 p-5">
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="font-medium text-dark-100">
                     {t('subscription.additionalOptions.reduceDevicesTitle')}
@@ -1496,7 +1494,7 @@ export default function Subscription() {
               {!showTrafficTopup ? (
                 <button
                   onClick={() => setShowTrafficTopup(true)}
-                  className="w-full rounded-xl border border-dark-700/50 bg-dark-800/30 p-4 text-left transition-colors hover:border-dark-600"
+                  className="w-full rounded-xl border border-dark-700/50 bg-dark-800/50 p-4 text-left transition-colors hover:border-dark-600"
                 >
                   <div className="flex items-center justify-between">
                     <div>
@@ -1522,7 +1520,7 @@ export default function Subscription() {
                   </div>
                 </button>
               ) : (
-                <div className="rounded-xl border border-dark-700/50 bg-dark-800/30 p-5">
+                <div className="rounded-xl border border-dark-700/50 bg-dark-800/50 p-5">
                   <div className="mb-4 flex items-center justify-between">
                     <h3 className="font-medium text-dark-100">
                       {t('subscription.additionalOptions.buyTrafficTitle')}
@@ -1556,7 +1554,7 @@ export default function Subscription() {
                             className={`rounded-xl border p-4 text-center transition-all ${
                               selectedTrafficPackage === pkg.gb
                                 ? 'border-accent-500 bg-accent-500/10'
-                                : 'border-dark-700/50 bg-dark-800/30 hover:border-dark-600'
+                                : 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600'
                             }`}
                           >
                             <div className="text-lg font-semibold text-dark-100">
@@ -1656,7 +1654,7 @@ export default function Subscription() {
               {!showServerManagement ? (
                 <button
                   onClick={() => setShowServerManagement(true)}
-                  className="w-full rounded-xl border border-dark-700/50 bg-dark-800/30 p-4 text-left transition-colors hover:border-dark-600"
+                  className="w-full rounded-xl border border-dark-700/50 bg-dark-800/50 p-4 text-left transition-colors hover:border-dark-600"
                 >
                   <div className="flex items-center justify-between">
                     <div>
@@ -1679,7 +1677,7 @@ export default function Subscription() {
                   </div>
                 </button>
               ) : (
-                <div className="rounded-xl border border-dark-700/50 bg-dark-800/30 p-5">
+                <div className="rounded-xl border border-dark-700/50 bg-dark-800/50 p-5">
                   <div className="mb-4 flex items-center justify-between">
                     <h3 className="font-medium text-dark-100">
                       {t('subscription.additionalOptions.manageServersTitle')}
@@ -1743,7 +1741,7 @@ export default function Subscription() {
                                       : 'border-accent-500 bg-accent-500/10'
                                     : willBeRemoved
                                       ? 'border-error-500/50 bg-error-500/5'
-                                      : 'border-dark-700/50 bg-dark-800/30 hover:border-dark-600'
+                                      : 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600'
                                 } ${!country.is_available && !isCurrentlyConnected ? 'cursor-not-allowed opacity-50' : ''}`}
                               >
                                 <div className="flex items-center gap-3">
@@ -1956,7 +1954,7 @@ export default function Subscription() {
               {devicesData.devices.map((device) => (
                 <div
                   key={device.hwid}
-                  className="flex items-center justify-between rounded-xl border border-dark-700/50 bg-dark-800/30 p-4"
+                  className="flex items-center justify-between rounded-xl border border-dark-700/50 bg-dark-800/50 p-4"
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-dark-700">
@@ -2577,7 +2575,7 @@ export default function Subscription() {
                 </div>
 
                 {/* Tariff Info */}
-                <div className="rounded-xl bg-dark-800/30 p-4">
+                <div className="rounded-xl bg-dark-800/50 p-4">
                   <div className="flex flex-wrap gap-4 text-sm">
                     <div>
                       <span className="text-dark-500">{t('subscription.traffic')}:</span>
@@ -2741,7 +2739,7 @@ export default function Subscription() {
                                 className={`relative rounded-xl border p-4 text-left transition-all ${
                                   selectedTariffPeriod?.days === period.days && !useCustomDays
                                     ? 'border-accent-500 bg-accent-500/10'
-                                    : 'border-dark-700/50 bg-dark-800/30 hover:border-dark-600'
+                                    : 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600'
                                 }`}
                               >
                                 {displayDiscount && displayDiscount > 0 && (
@@ -2778,7 +2776,7 @@ export default function Subscription() {
                       {/* Custom days option */}
                       {selectedTariff.custom_days_enabled &&
                         (selectedTariff.price_per_day_kopeks ?? 0) > 0 && (
-                          <div className="rounded-xl border border-dark-700/50 bg-dark-800/30 p-4">
+                          <div className="rounded-xl border border-dark-700/50 bg-dark-800/50 p-4">
                             <div className="mb-3 flex items-center justify-between">
                               <span className="font-medium text-dark-200">
                                 {t('subscription.customDays.title')}
@@ -2878,7 +2876,7 @@ export default function Subscription() {
                           <div className="mb-3 text-sm text-dark-400">
                             {t('subscription.customTraffic.label')}
                           </div>
-                          <div className="rounded-xl border border-dark-700/50 bg-dark-800/30 p-4">
+                          <div className="rounded-xl border border-dark-700/50 bg-dark-800/50 p-4">
                             <div className="mb-3 flex items-center justify-between">
                               <span className="font-medium text-dark-200">
                                 {t('subscription.customTraffic.selectVolume')}
@@ -3349,7 +3347,7 @@ export default function Subscription() {
                             selectedServers.includes(server.uuid)
                               ? 'border-accent-500 bg-accent-500/10'
                               : server.is_available
-                                ? 'border-dark-700/50 bg-dark-800/30 hover:border-dark-600'
+                                ? 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600'
                                 : 'cursor-not-allowed border-dark-800/30 bg-dark-900/30 opacity-50'
                           }`}
                         >
@@ -3592,9 +3590,6 @@ export default function Subscription() {
           )}
         </div>
       )}
-
-      {/* Connection Modal */}
-      {showConnectionModal && <ConnectionModal onClose={() => setShowConnectionModal(false)} />}
     </div>
   );
 }

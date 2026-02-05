@@ -486,32 +486,39 @@ export interface LocalizedText {
   [key: string]: string;
 }
 
-export interface AppButton {
-  id?: string; // Unique identifier for React key (client-side only)
-  buttonLink: string;
-  buttonText: LocalizedText;
+// RemnaWave format types
+export interface RemnawaveButtonClient {
+  url?: string;
+  link?: string;
+  text: LocalizedText;
+  type?: 'external' | 'subscriptionLink' | 'copyButton';
+  svgIconKey?: string;
+  resolvedUrl?: string;
 }
 
-export interface AppStep {
+export interface RemnawaveBlockClient {
+  title: LocalizedText;
   description: LocalizedText;
-  buttons?: AppButton[];
-  title?: LocalizedText;
+  buttons?: RemnawaveButtonClient[];
+  svgIconKey?: string;
+  svgIconColor?: string;
 }
 
-export interface AppInfo {
-  id: string;
+export interface RemnawaveAppClient {
   name: string;
-  isFeatured: boolean;
+  featured?: boolean;
   deepLink?: string | null;
-  installationStep?: AppStep;
-  addSubscriptionStep?: AppStep;
-  connectAndUseStep?: AppStep;
-  additionalBeforeAddSubscriptionStep?: AppStep;
-  additionalAfterAddSubscriptionStep?: AppStep;
+  svgIconKey?: string;
+  blocks: RemnawaveBlockClient[];
+}
+
+export interface RemnawavePlatformData {
+  svgIconKey?: string;
+  displayName?: LocalizedText;
+  apps: RemnawaveAppClient[];
 }
 
 export interface AppConfig {
-  platforms: Record<string, AppInfo[]>;
   platformNames: Record<string, LocalizedText>;
   hasSubscription: boolean;
   subscriptionUrl: string | null;
@@ -521,6 +528,17 @@ export interface AppConfig {
     logoUrl?: string;
     supportUrl?: string;
   };
+
+  // RemnaWave
+  isRemnawave?: boolean;
+  svgLibrary?: Record<string, string | { svgString: string }>;
+  baseTranslations?: Record<string, LocalizedText>;
+  baseSettings?: { isShowTutorialButton: boolean; tutorialUrl: string };
+  uiConfig?: {
+    installationGuidesBlockType?: 'cards' | 'timeline' | 'accordion' | 'minimal';
+  };
+
+  platforms: Record<string, RemnawavePlatformData>;
 }
 
 // Pending payment types
