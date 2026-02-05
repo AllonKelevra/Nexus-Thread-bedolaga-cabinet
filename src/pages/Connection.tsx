@@ -334,16 +334,10 @@ export default function Connection() {
         resolved = resolveUrl(resolved);
       }
 
-      const isMobilePlatform = detectedPlatform === 'ios' || detectedPlatform === 'android';
+      // Always use redirect page — opens in external browser where custom URL schemes work.
+      // Solves Telegram Mini App WebView limitation with custom schemes (happ://, clash://, etc.)
+      const finalUrl = `${window.location.origin}/miniapp/redirect.html?url=${encodeURIComponent(resolved)}&lang=${i18n.language || 'en'}`;
 
-      // Desktop: deep links need redirect page (browser can't handle custom schemes directly)
-      // Mobile: system browser handles custom schemes natively
-      const finalUrl = isMobilePlatform
-        ? resolved
-        : `${window.location.origin}/miniapp/redirect.html?url=${encodeURIComponent(resolved)}&lang=${i18n.language || 'en'}`;
-
-      // In Telegram Mini App — sdkOpenLink opens URL in system browser,
-      // where custom URL schemes work (WebView itself can't handle them)
       if (isTelegramWebApp) {
         try {
           sdkOpenLink(finalUrl, { tryInstantView: false });
@@ -355,7 +349,7 @@ export default function Connection() {
 
       window.location.href = finalUrl;
     },
-    [detectedPlatform, isTelegramWebApp, i18n.language, resolveUrl],
+    [isTelegramWebApp, i18n.language, resolveUrl],
   );
 
   const handleConnect = (app: AppInfo) => {
@@ -652,8 +646,8 @@ export default function Connection() {
                               getBaseTranslation('openApp', 'subscription.connection.openLink');
 
                             if (btn.type === 'subscriptionLink') {
-                              // Use app deepLink first, fallback to resolved button URL
-                              const deepLink = currentApp?.deepLink || btn.resolvedUrl;
+                              // Use app deepLink first, fallback to regular subscription URL
+                              const deepLink = currentApp?.deepLink || appConfig.subscriptionUrl;
                               if (!deepLink || !isValidDeepLink(deepLink)) return null;
                               const subBtnSvg = getSvgHtml(btn.svgIconKey);
                               return (
