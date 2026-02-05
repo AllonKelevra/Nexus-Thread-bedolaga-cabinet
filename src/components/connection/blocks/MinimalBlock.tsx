@@ -10,7 +10,7 @@ export function MinimalBlock({
   renderBlockButtons,
 }: BlockRendererProps) {
   return (
-    <div className="space-y-0">
+    <div>
       {blocks.map((block, index) => {
         const gradientStyle = getColorGradient(block.svgIconColor || 'cyan');
         const isLast = index === blocks.length - 1;
