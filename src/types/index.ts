@@ -545,7 +545,7 @@ export interface AppConfig {
 
   // RemnaWave format (isRemnawave: true)
   isRemnawave?: boolean;
-  svgLibrary?: Record<string, { svgString: string }>;
+  svgLibrary?: Record<string, string | { svgString: string }>;
   baseTranslations?: Record<string, LocalizedText>;
   baseSettings?: { isShowTutorialButton: boolean; tutorialUrl: string };
 

@@ -364,30 +364,14 @@ export default function Connection() {
 
   // Get sanitized SVG HTML
   const getSvgHtml = (svgKey: string | undefined): string => {
-    if (!svgKey || !appConfig?.svgLibrary?.[svgKey]?.svgString) return '';
-    return DOMPurify.sanitize(appConfig.svgLibrary[svgKey].svgString, {
+    if (!svgKey || !appConfig?.svgLibrary?.[svgKey]) return '';
+    const entry = appConfig.svgLibrary[svgKey];
+    const raw = typeof entry === 'string' ? entry : entry.svgString;
+    if (!raw) return '';
+    return DOMPurify.sanitize(raw, {
       USE_PROFILES: { svg: true, svgFilters: true },
     });
   };
-
-  // DEBUG: log app data to check svgIconKey presence
-  if (isRemnawave && appConfig?.platforms) {
-    const firstPlatformKey = Object.keys(appConfig.platforms)[0];
-    if (firstPlatformKey) {
-      const pd = appConfig.platforms[firstPlatformKey];
-      if (pd && !Array.isArray(pd) && 'apps' in pd) {
-        console.log(
-          '[DEBUG] RemnaWave apps:',
-          pd.apps.map((a: RemnawaveAppClient) => ({
-            name: a.name,
-            svgIconKey: a.svgIconKey,
-            keys: Object.keys(a),
-          })),
-        );
-        console.log('[DEBUG] svgLibrary keys:', Object.keys(appConfig.svgLibrary || {}));
-      }
-    }
-  }
 
   // Loading
   if (isLoading) {
@@ -556,7 +540,21 @@ export default function Connection() {
           <div className="space-y-4">
             {currentApp.blocks.map((block, blockIdx) => {
               const svgHtml = getSvgHtml(block.svgIconKey);
-              const iconColor = block.svgIconColor || '#8B5CF6';
+              const colorMap: Record<string, string> = {
+                violet: '#8B5CF6',
+                cyan: '#06B6D4',
+                teal: '#14B8A6',
+                red: '#EF4444',
+                blue: '#3B82F6',
+                green: '#22C55E',
+                yellow: '#EAB308',
+                orange: '#F97316',
+                pink: '#EC4899',
+                indigo: '#6366F1',
+                amber: '#F59E0B',
+              };
+              const rawColor = block.svgIconColor || 'violet';
+              const iconColor = colorMap[rawColor] || rawColor;
 
               // Fallback block title from baseTranslations by block index
               const blockTitleFallbackKeys = ['installApp', 'addSubscription', 'connectAndUse'];
