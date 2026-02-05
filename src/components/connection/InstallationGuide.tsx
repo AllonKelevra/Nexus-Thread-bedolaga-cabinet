@@ -310,7 +310,7 @@ export default function InstallationGuide({
   const Renderer = RENDERERS[blockType] || CardsBlock;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-6">
       {/* Header + platform dropdown */}
       <div className="flex items-center gap-3">
         {!isTelegramWebApp && (

@@ -16,7 +16,7 @@ export function MinimalBlock({
         const isLast = index === blocks.length - 1;
 
         return (
-          <div key={index} className={isLast ? 'pb-2' : 'mb-4 border-b border-dark-700/50 pb-4'}>
+          <div key={index} className={isLast ? 'pb-4' : 'mb-4 border-b border-dark-700/50 pb-4'}>
             <div className="mb-2 flex items-center gap-3">
               <ThemeIcon
                 getSvgHtml={getSvgHtml}
