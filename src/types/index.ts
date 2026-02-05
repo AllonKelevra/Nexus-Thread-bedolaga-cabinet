@@ -502,8 +502,36 @@ export interface AppInfo {
   additionalAfterAddSubscriptionStep?: AppStep;
 }
 
+// RemnaWave original format types
+export interface RemnawaveButtonClient {
+  url?: string;
+  link?: string;
+  text: LocalizedText;
+  type?: 'external' | 'subscriptionLink' | 'copyButton';
+  svgIconKey?: string;
+  resolvedUrl?: string;
+}
+
+export interface RemnawaveBlockClient {
+  title: LocalizedText;
+  description: LocalizedText;
+  buttons?: RemnawaveButtonClient[];
+  svgIconKey?: string;
+  svgIconColor?: string;
+}
+
+export interface RemnawaveAppClient {
+  name: string;
+  featured?: boolean;
+  deepLink?: string | null;
+  blocks: RemnawaveBlockClient[];
+}
+
+export interface RemnawavePlatformData {
+  apps: RemnawaveAppClient[];
+}
+
 export interface AppConfig {
-  platforms: Record<string, AppInfo[]>;
   platformNames: Record<string, LocalizedText>;
   hasSubscription: boolean;
   subscriptionUrl: string | null;
@@ -513,6 +541,15 @@ export interface AppConfig {
     logoUrl?: string;
     supportUrl?: string;
   };
+
+  // RemnaWave format (isRemnawave: true)
+  isRemnawave?: boolean;
+  svgLibrary?: Record<string, { svgString: string }>;
+  baseTranslations?: Record<string, LocalizedText>;
+  baseSettings?: { isShowTutorialButton: boolean; tutorialUrl: string };
+
+  // Platform data — either classic AppInfo[] or RemnaWave { apps: RemnawaveAppClient[] }
+  platforms: Record<string, AppInfo[] | RemnawavePlatformData>;
 }
 
 // Pending payment types

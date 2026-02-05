@@ -3,12 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { openLink as sdkOpenLink } from '@telegram-apps/sdk-react';
+import DOMPurify from 'dompurify';
 import { subscriptionApi } from '../api/subscription';
 import { useTelegramWebApp } from '../hooks/useTelegramWebApp';
 import { useBackButton, useHaptic } from '@/platform';
 import { resolveTemplate, hasTemplates } from '../utils/templateEngine';
 import { useAuthStore } from '../store/auth';
-import type { AppInfo, AppConfig, LocalizedText } from '../types';
+import type {
+  AppInfo,
+  AppConfig,
+  LocalizedText,
+  RemnawaveAppClient,
+  RemnawavePlatformData,
+} from '../types';
 
 // Icons
 const CopyIcon = () => (
@@ -130,14 +137,38 @@ function detectPlatform(): string | null {
   return null;
 }
 
+// Type guards for platform data
+function isRemnawavePlatform(
+  data: AppInfo[] | RemnawavePlatformData,
+): data is RemnawavePlatformData {
+  return data && !Array.isArray(data) && 'apps' in data;
+}
+
+function getPlatformAppsCount(data: AppInfo[] | RemnawavePlatformData): number {
+  if (isRemnawavePlatform(data)) return data.apps.length;
+  return Array.isArray(data) ? data.length : 0;
+}
+
+function getRemnawaveApps(data: AppInfo[] | RemnawavePlatformData): RemnawaveAppClient[] {
+  if (isRemnawavePlatform(data)) return data.apps;
+  return [];
+}
+
+function getClassicApps(data: AppInfo[] | RemnawavePlatformData): AppInfo[] {
+  if (Array.isArray(data)) return data;
+  return [];
+}
+
 export default function Connection() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const [selectedApp, setSelectedApp] = useState<AppInfo | null>(null);
+  const [selectedRemnawaveApp, setSelectedRemnawaveApp] = useState<RemnawaveAppClient | null>(null);
   const [copied, setCopied] = useState(false);
   const [showAppSelector, setShowAppSelector] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
+  const [activePlatformKey, setActivePlatformKey] = useState<string | null>(null);
 
   const { isTelegramWebApp } = useTelegramWebApp();
   const { impact: hapticImpact } = useHaptic();
@@ -158,19 +189,41 @@ export default function Connection() {
     queryFn: () => subscriptionApi.getAppConfig(),
   });
 
+  const isRemnawave = appConfig?.isRemnawave === true;
   const detectedPlatform = useMemo(() => detectPlatform(), []);
 
+  // Auto-select app on load (classic format)
   useEffect(() => {
-    if (!appConfig?.platforms || selectedApp) return;
+    if (!appConfig?.platforms || isRemnawave || selectedApp) return;
     let platform = detectedPlatform;
-    if (!platform || !appConfig.platforms[platform]?.length) {
-      platform = platformOrder.find((p) => appConfig.platforms[p]?.length > 0) || null;
+    if (!platform || !getPlatformAppsCount(appConfig.platforms[platform] ?? [])) {
+      platform =
+        platformOrder.find((p) => getPlatformAppsCount(appConfig.platforms[p] ?? []) > 0) || null;
     }
-    if (!platform || !appConfig.platforms[platform]?.length) return;
-    const apps = appConfig.platforms[platform];
+    if (!platform) return;
+    const apps = getClassicApps(appConfig.platforms[platform] ?? []);
+    if (!apps.length) return;
     const app = apps.find((a) => a.isFeatured) || apps[0];
     if (app) setSelectedApp(app);
-  }, [appConfig, detectedPlatform, selectedApp]);
+  }, [appConfig, detectedPlatform, selectedApp, isRemnawave]);
+
+  // Auto-select app on load (RemnaWave format)
+  useEffect(() => {
+    if (!appConfig?.platforms || !isRemnawave || selectedRemnawaveApp) return;
+    let platform = detectedPlatform;
+    if (!platform || !getPlatformAppsCount(appConfig.platforms[platform] ?? [])) {
+      platform =
+        platformOrder.find((p) => getPlatformAppsCount(appConfig.platforms[p] ?? []) > 0) || null;
+    }
+    if (!platform) return;
+    const apps = getRemnawaveApps(appConfig.platforms[platform] ?? []);
+    if (!apps.length) return;
+    const app = apps.find((a) => a.featured) || apps[0];
+    if (app) {
+      setSelectedRemnawaveApp(app);
+      setActivePlatformKey(platform);
+    }
+  }, [appConfig, detectedPlatform, selectedRemnawaveApp, isRemnawave]);
 
   const handleGoBack = useCallback(() => {
     navigate(-1);
@@ -217,7 +270,9 @@ export default function Connection() {
 
   const availablePlatforms = useMemo(() => {
     if (!appConfig?.platforms) return [];
-    const available = platformOrder.filter((key) => appConfig.platforms[key]?.length > 0);
+    const available = platformOrder.filter(
+      (key) => getPlatformAppsCount(appConfig.platforms[key] ?? []) > 0,
+    );
     if (detectedPlatform && available.includes(detectedPlatform)) {
       return [detectedPlatform, ...available.filter((p) => p !== detectedPlatform)];
     }
@@ -254,41 +309,52 @@ export default function Connection() {
     }
   };
 
+  const openDeepLink = useCallback(
+    (deepLink: string) => {
+      let resolved = deepLink;
+      if (hasTemplates(resolved)) {
+        resolved = resolveUrl(resolved);
+      }
+
+      const isMobilePlatform = detectedPlatform === 'ios' || detectedPlatform === 'android';
+      if (isMobilePlatform) {
+        window.location.href = resolved;
+        return;
+      }
+
+      const redirectUrl = `${window.location.origin}/miniapp/redirect.html?url=${encodeURIComponent(resolved)}&lang=${i18n.language || 'en'}`;
+      try {
+        sdkOpenLink(redirectUrl, { tryInstantView: false });
+        return;
+      } catch {
+        // SDK not available, fallback
+      }
+      window.location.href = redirectUrl;
+    },
+    [detectedPlatform, i18n.language, resolveUrl],
+  );
+
   const handleConnect = (app: AppInfo) => {
     if (!app.deepLink || !isValidDeepLink(app.deepLink)) return;
-    let deepLink = app.deepLink;
+    openDeepLink(app.deepLink);
+  };
 
-    // Resolve templates if present
-    if (hasTemplates(deepLink)) {
-      deepLink = resolveUrl(deepLink);
-    }
-
-    // On mobile (iOS/Android) apps handle URL schemes natively —
-    // open the deep link directly without the redirect.html intermediary.
-    const isMobilePlatform = detectedPlatform === 'ios' || detectedPlatform === 'android';
-    if (isMobilePlatform) {
-      window.location.href = deepLink;
-      return;
-    }
-
-    // Desktop platforms (macOS, Windows, Linux) and others go through
-    // redirect.html. Telegram's openLink opens the redirect page in an
-    // external browser, which then performs window.location.href to the
-    // actual deep link URL.
-    const redirectUrl = `${window.location.origin}/miniapp/redirect.html?url=${encodeURIComponent(deepLink)}&lang=${i18n.language || 'en'}`;
-
-    try {
-      sdkOpenLink(redirectUrl, { tryInstantView: false });
-      return;
-    } catch {
-      // SDK not available, fallback
-    }
-    window.location.href = redirectUrl;
+  const handleConnectRemnawave = (app: RemnawaveAppClient) => {
+    if (!app.deepLink || !isValidDeepLink(app.deepLink)) return;
+    openDeepLink(app.deepLink);
   };
 
   // Resolve button links for step buttons
   const resolveButtonLink = (link: string): string => {
     return resolveUrl(link);
+  };
+
+  // Get sanitized SVG HTML
+  const getSvgHtml = (svgKey: string | undefined): string => {
+    if (!svgKey || !appConfig?.svgLibrary?.[svgKey]?.svgString) return '';
+    return DOMPurify.sanitize(appConfig.svgLibrary[svgKey].svgString, {
+      USE_PROFILES: { svg: true, svgFilters: true },
+    });
   };
 
   // Loading
@@ -327,7 +393,403 @@ export default function Connection() {
     );
   }
 
-  // App selector
+  // =============================================
+  // RemnaWave format rendering
+  // =============================================
+  if (isRemnawave) {
+    const currentApp = selectedRemnawaveApp;
+
+    // Get platform display name from config or fallback
+    const getPlatformDisplayName = (key: string): string => {
+      if (appConfig.platformNames?.[key]) {
+        return getLocalizedText(appConfig.platformNames[key]);
+      }
+      const fallback: Record<string, string> = {
+        ios: 'iOS',
+        android: 'Android',
+        windows: 'Windows',
+        macos: 'macOS',
+        linux: 'Linux',
+        androidTV: 'Android TV',
+        appleTV: 'Apple TV',
+      };
+      return fallback[key] || key;
+    };
+
+    // App selector for RemnaWave
+    if (showAppSelector) {
+      if (!selectedPlatform) {
+        // Platform selection
+        const platformIcons: Record<string, React.ReactNode> = {
+          ios: (
+            <svg className="h-7 w-7" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
+            </svg>
+          ),
+          android: (
+            <svg className="h-7 w-7" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17.6 9.48l1.84-3.18c.16-.31.04-.69-.26-.85-.29-.15-.65-.06-.83.22l-1.88 3.24c-1.39-.59-2.94-.92-4.58-.92s-3.19.33-4.58.92L5.5 5.67c-.16-.28-.54-.37-.83-.22-.31.16-.43.54-.26.85l1.84 3.18C3.38 11.11 1.5 14.12 1.5 17.5h21c0-3.38-1.88-6.39-4.9-8.02zM7 15.25c-.69 0-1.25-.56-1.25-1.25s.56-1.25 1.25-1.25 1.25.56 1.25 1.25-.56 1.25-1.25 1.25zm10 0c-.69 0-1.25-.56-1.25-1.25s.56-1.25 1.25-1.25 1.25.56 1.25 1.25-.56 1.25-1.25 1.25z" />
+            </svg>
+          ),
+          windows: (
+            <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M3 12V6.75l6-1.32v6.48L3 12zm17-9v8.75l-10 .15V5.21L20 3zM3 13l6 .09v6.81l-6-1.15V13zm17 .25V22l-10-1.91V13.1l10 .15z" />
+            </svg>
+          ),
+          macos: (
+            <svg className="h-7 w-7" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
+            </svg>
+          ),
+          linux: (
+            <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12.504 0c-.155 0-.315.008-.48.021-4.226.333-3.105 4.807-3.17 6.298-.076 1.092-.3 1.953-1.05 3.02-.885 1.051-2.127 2.75-2.716 4.521-.278.832-.41 1.684-.287 2.489.117.779.456 1.462 1.047 1.993.545.487 1.183.805 1.894.983.718.178 1.463.201 2.215.201.752 0 1.498-.023 2.215-.201.711-.178 1.349-.496 1.894-.983.591-.531.93-1.214 1.047-1.993.123-.805-.009-1.657-.287-2.489-.589-1.77-1.831-3.47-2.716-4.521-.75-1.067-.974-1.928-1.05-3.02-.065-1.491 1.056-5.965-3.17-6.298-.165-.013-.325-.021-.48-.021zm-.126 1.09c.99.063 1.783.569 2.172 1.443.376.844.413 1.903.199 2.999-.215 1.096-.687 2.23-1.357 3.18-.669.95-1.405 1.705-2.017 2.379-.611.674-1.074 1.252-1.316 1.857-.242.605-.262 1.233-.006 1.873.256.64.755 1.198 1.36 1.547.606.35 1.247.536 1.88.536.634 0 1.275-.186 1.88-.536.606-.349 1.105-.907 1.36-1.547.256-.64.236-1.268-.006-1.873-.242-.605-.705-1.183-1.316-1.857-.612-.674-1.348-1.429-2.017-2.379-.67-.95-1.142-2.084-1.357-3.18-.214-1.096-.177-2.155.199-2.999.389-.874 1.182-1.38 2.172-1.443z" />
+            </svg>
+          ),
+          androidTV: (
+            <svg className="h-7 w-7" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z" />
+            </svg>
+          ),
+          appleTV: (
+            <svg className="h-7 w-7" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z" />
+            </svg>
+          ),
+        };
+
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              {!isTelegramWebApp && (
+                <button
+                  onClick={handleBack}
+                  className="-ml-2 rounded-xl p-2 text-dark-300 hover:bg-dark-800"
+                >
+                  <BackIcon />
+                </button>
+              )}
+              <h2 className="text-lg font-bold text-dark-100">
+                {t('subscription.connection.selectPlatform')}
+              </h2>
+            </div>
+            <div className="space-y-2">
+              {availablePlatforms.map((platform) => {
+                const platformData = appConfig.platforms[platform];
+                if (!platformData) return null;
+                const appCount = getPlatformAppsCount(platformData);
+                if (!appCount) return null;
+                const isCurrentPlatform = platform === detectedPlatform;
+
+                return (
+                  <button
+                    key={platform}
+                    onClick={() => setSelectedPlatform(platform)}
+                    className={`flex w-full items-center gap-4 rounded-xl p-4 transition-all active:scale-[0.98] ${
+                      isCurrentPlatform
+                        ? 'bg-accent-500/10 ring-1 ring-accent-500/30'
+                        : 'bg-dark-800/50 hover:bg-dark-800'
+                    }`}
+                  >
+                    <div
+                      className={`flex h-12 w-12 items-center justify-center rounded-xl ${
+                        isCurrentPlatform
+                          ? 'bg-accent-500/20 text-accent-400'
+                          : 'bg-dark-700 text-dark-300'
+                      }`}
+                    >
+                      {platformIcons[platform] || <span className="text-xl">📱</span>}
+                    </div>
+                    <div className="flex-1 text-left">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`font-medium ${isCurrentPlatform ? 'text-accent-400' : 'text-dark-100'}`}
+                        >
+                          {getPlatformDisplayName(platform)}
+                        </span>
+                        {isCurrentPlatform && (
+                          <span className="rounded-full bg-accent-500/10 px-2 py-0.5 text-xs text-accent-500">
+                            {t('subscription.connection.yourDevice')}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-sm text-dark-400">
+                        {appCount}{' '}
+                        {appCount === 1
+                          ? t('subscription.connection.app')
+                          : t('subscription.connection.apps')}
+                      </span>
+                    </div>
+                    <ChevronIcon />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      }
+
+      // App selection for chosen platform (RemnaWave)
+      const platformData = appConfig.platforms[selectedPlatform];
+      const apps = platformData ? getRemnawaveApps(platformData) : [];
+      const isCurrentPlatform = selectedPlatform === detectedPlatform;
+
+      return (
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            {!isTelegramWebApp && (
+              <button
+                onClick={handleBack}
+                className="-ml-2 rounded-xl p-2 text-dark-300 hover:bg-dark-800"
+              >
+                <BackIcon />
+              </button>
+            )}
+            <div className="flex-1">
+              <h2 className="text-lg font-bold text-dark-100">
+                {getPlatformDisplayName(selectedPlatform)}
+              </h2>
+              {isCurrentPlatform && (
+                <span className="text-xs text-accent-500">
+                  {t('subscription.connection.yourDevice')}
+                </span>
+              )}
+            </div>
+          </div>
+          <div ref={scrollContainerRef}>
+            <div className="grid grid-cols-3 gap-3">
+              {apps.map((app, idx) => {
+                const isSelected = selectedRemnawaveApp?.name === app.name;
+                return (
+                  <button
+                    key={app.name + idx}
+                    onClick={() => {
+                      setSelectedRemnawaveApp(app);
+                      setActivePlatformKey(selectedPlatform);
+                      setShowAppSelector(false);
+                      setSelectedPlatform(null);
+                    }}
+                    className={`relative flex flex-col items-center rounded-xl p-4 transition-all active:scale-95 ${
+                      isSelected
+                        ? 'bg-accent-500/15 ring-2 ring-accent-500/50'
+                        : 'bg-dark-800/50 hover:bg-dark-800'
+                    }`}
+                  >
+                    {app.featured && (
+                      <div className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-accent-500 shadow-lg">
+                        <svg
+                          className="h-3.5 w-3.5 text-white"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                      </div>
+                    )}
+                    <div
+                      className={`mb-3 flex h-14 w-14 items-center justify-center rounded-2xl transition-colors ${
+                        isSelected
+                          ? 'bg-accent-500/20 text-accent-400'
+                          : 'bg-dark-700/80 text-dark-300'
+                      }`}
+                    >
+                      {getAppIcon(app.name)}
+                    </div>
+                    <span
+                      className={`line-clamp-2 text-center text-sm font-medium leading-tight ${
+                        isSelected ? 'text-accent-400' : 'text-dark-200'
+                      }`}
+                    >
+                      {app.name}
+                    </span>
+                    {isSelected && (
+                      <div className="absolute bottom-2 left-1/2 h-2 w-2 -translate-x-1/2 rounded-full bg-accent-500" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Main RemnaWave view — blocks rendering
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <div className="mb-3 flex items-center gap-3">
+            {!isTelegramWebApp && (
+              <button
+                onClick={handleGoBack}
+                className="-ml-2 rounded-xl p-2 text-dark-300 hover:bg-dark-800"
+              >
+                <BackIcon />
+              </button>
+            )}
+            <h2 className="flex-1 text-lg font-bold text-dark-100">
+              {t('subscription.connection.title')}
+            </h2>
+            {/* Platform dropdown */}
+            {availablePlatforms.length > 1 && (
+              <select
+                value={activePlatformKey || ''}
+                onChange={(e) => {
+                  const newPlatform = e.target.value;
+                  setActivePlatformKey(newPlatform);
+                  const platformData = appConfig.platforms[newPlatform];
+                  if (platformData) {
+                    const apps = getRemnawaveApps(platformData);
+                    const app = apps.find((a) => a.featured) || apps[0];
+                    if (app) setSelectedRemnawaveApp(app);
+                  }
+                }}
+                className="rounded-lg border border-dark-600 bg-dark-800 px-3 py-1.5 text-sm text-dark-200 outline-none"
+              >
+                {availablePlatforms.map((p) => (
+                  <option key={p} value={p}>
+                    {getPlatformDisplayName(p)}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          {/* App selector button */}
+          <button
+            onClick={() => setShowAppSelector(true)}
+            className="flex w-full items-center gap-3 rounded-xl bg-dark-800/50 p-3 transition-colors hover:bg-dark-800"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-500/10 text-accent-400">
+              {currentApp && getAppIcon(currentApp.name)}
+            </div>
+            <div className="flex-1 text-left">
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-dark-100">{currentApp?.name}</span>
+                {currentApp?.featured && (
+                  <span className="rounded-full bg-accent-500/10 px-2 py-0.5 text-xs text-accent-500">
+                    featured
+                  </span>
+                )}
+              </div>
+              <div className="text-sm text-dark-400">{t('subscription.connection.changeApp')}</div>
+            </div>
+            <ChevronIcon />
+          </button>
+        </div>
+
+        {/* Blocks */}
+        {currentApp && (
+          <div className="space-y-4">
+            {currentApp.blocks.map((block, blockIdx) => {
+              const svgHtml = getSvgHtml(block.svgIconKey);
+              const iconColor = block.svgIconColor || '#8B5CF6';
+
+              return (
+                <div key={blockIdx} className="rounded-xl border border-dark-700 p-4">
+                  <div className="flex items-start gap-4">
+                    {/* SVG icon */}
+                    {svgHtml && (
+                      <div
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+                        style={{
+                          backgroundColor: iconColor + '20',
+                          color: iconColor,
+                        }}
+                      >
+                        <div
+                          className="h-5 w-5 [&>svg]:h-full [&>svg]:w-full"
+                          dangerouslySetInnerHTML={{ __html: svgHtml }}
+                        />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-bold text-dark-100">{getLocalizedText(block.title)}</h3>
+                      <p className="mt-1 text-sm text-dark-400">
+                        {getLocalizedText(block.description)}
+                      </p>
+                      {/* Buttons */}
+                      {block.buttons && block.buttons.length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {block.buttons.map((btn, btnIdx) => {
+                            const btnText = getLocalizedText(btn.text);
+
+                            if (btn.type === 'subscriptionLink') {
+                              return (
+                                <button
+                                  key={btnIdx}
+                                  onClick={() => {
+                                    if (currentApp) handleConnectRemnawave(currentApp);
+                                  }}
+                                  className="btn-primary flex items-center gap-2 px-4 py-2 text-sm font-semibold"
+                                >
+                                  <LinkIcon />
+                                  {btnText}
+                                </button>
+                              );
+                            }
+
+                            if (btn.type === 'copyButton') {
+                              return (
+                                <button
+                                  key={btnIdx}
+                                  onClick={copySubscriptionLink}
+                                  className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all ${
+                                    copied
+                                      ? 'border-success-500 bg-success-500/10 text-success-400'
+                                      : 'border-dark-600 text-dark-300 hover:bg-dark-800'
+                                  }`}
+                                >
+                                  {copied ? <CheckIcon /> : <CopyIcon />}
+                                  {copied ? t('subscription.connection.copied') : btnText}
+                                </button>
+                              );
+                            }
+
+                            // external link
+                            const href = btn.resolvedUrl || btn.url || btn.link || '';
+                            if (!isValidExternalUrl(href)) return null;
+
+                            // Render SVG icon for button if available
+                            const btnSvgHtml = getSvgHtml(btn.svgIconKey);
+
+                            return (
+                              <a
+                                key={btnIdx}
+                                href={href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-dark-800 px-3 py-1.5 text-sm text-dark-200 hover:bg-dark-700"
+                              >
+                                {btnSvgHtml ? (
+                                  <div
+                                    className="h-4 w-4 [&>svg]:h-full [&>svg]:w-full"
+                                    dangerouslySetInnerHTML={{ __html: btnSvgHtml }}
+                                  />
+                                ) : null}
+                                {btnText}
+                              </a>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // =============================================
+  // Classic format rendering (fallback)
+  // =============================================
+
+  // App selector (classic)
   if (showAppSelector) {
     const platformNames: Record<string, string> = {
       ios: 'iOS',
@@ -396,8 +858,10 @@ export default function Connection() {
           </div>
           <div className="space-y-2">
             {availablePlatforms.map((platform) => {
-              const apps = appConfig.platforms[platform];
-              if (!apps?.length) return null;
+              const platformData = appConfig.platforms[platform];
+              if (!platformData) return null;
+              const apps = getClassicApps(platformData);
+              if (!apps.length) return null;
               const isCurrentPlatform = platform === detectedPlatform;
               const appCount = apps.length;
 
@@ -450,7 +914,8 @@ export default function Connection() {
     }
 
     // Step 2: App selection for chosen platform
-    const apps = appConfig.platforms[selectedPlatform] || [];
+    const platformData = appConfig.platforms[selectedPlatform];
+    const apps = platformData ? getClassicApps(platformData) : [];
     const isCurrentPlatform = selectedPlatform === detectedPlatform;
 
     return (
@@ -536,7 +1001,7 @@ export default function Connection() {
     );
   }
 
-  // Main view
+  // Main view (classic)
   return (
     <div className="space-y-6">
       <div>
