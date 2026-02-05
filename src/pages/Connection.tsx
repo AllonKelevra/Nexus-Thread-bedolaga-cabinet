@@ -445,10 +445,17 @@ export default function Connection() {
       : undefined;
     const currentPlatformApps = currentPlatformData ? getRemnawaveApps(currentPlatformData) : [];
 
+    // Current platform SVG icon for dropdown
+    const currentPlatformSvgKey =
+      currentPlatformData && isRemnawavePlatform(currentPlatformData)
+        ? currentPlatformData.svgIconKey
+        : undefined;
+    const currentPlatformSvg = getSvgHtml(currentPlatformSvgKey);
+
     // Main RemnaWave view — inline app chips + blocks
     return (
       <div className="space-y-6">
-        {/* Header */}
+        {/* Header + platform dropdown */}
         <div className="flex items-center gap-3">
           {!isTelegramWebApp && (
             <button
@@ -461,50 +468,57 @@ export default function Connection() {
           <h2 className="flex-1 text-lg font-bold text-dark-100">
             {t('subscription.connection.title')}
           </h2>
-        </div>
-
-        {/* Platform tabs */}
-        {availablePlatforms.length > 1 && (
-          <div className="-mt-3 flex gap-2 overflow-x-auto pb-1">
-            {availablePlatforms.map((p) => {
-              const isActive = p === currentPlatformKey;
-              const pData = appConfig.platforms[p];
-              const svgIconKey = pData && isRemnawavePlatform(pData) ? pData.svgIconKey : undefined;
-              const platformSvg = getSvgHtml(svgIconKey);
-              return (
-                <button
-                  key={p}
-                  onClick={() => {
-                    setActivePlatformKey(p);
-                    const platformData = appConfig.platforms[p];
-                    if (platformData) {
-                      const apps = getRemnawaveApps(platformData);
-                      const app = apps.find((a) => a.featured) || apps[0];
-                      if (app) setSelectedRemnawaveApp(app);
-                    }
-                  }}
-                  className={`flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
-                    isActive
-                      ? 'bg-accent-500/15 text-accent-400 ring-1 ring-accent-500/40'
-                      : 'border border-dark-700/50 bg-dark-800/80 text-dark-200 hover:border-dark-600/50 hover:bg-dark-700/80'
-                  }`}
+          {/* Platform dropdown with icon */}
+          {availablePlatforms.length > 1 && (
+            <div className="relative flex items-center">
+              {currentPlatformSvg && (
+                <div
+                  className="pointer-events-none absolute left-3 z-10 h-5 w-5 text-dark-400 [&>svg]:h-full [&>svg]:w-full"
+                  dangerouslySetInnerHTML={{ __html: currentPlatformSvg }}
+                />
+              )}
+              <select
+                value={currentPlatformKey || ''}
+                onChange={(e) => {
+                  const newPlatform = e.target.value;
+                  setActivePlatformKey(newPlatform);
+                  const platformData = appConfig.platforms[newPlatform];
+                  if (platformData) {
+                    const apps = getRemnawaveApps(platformData);
+                    const app = apps.find((a) => a.featured) || apps[0];
+                    if (app) setSelectedRemnawaveApp(app);
+                  }
+                }}
+                className={`appearance-none rounded-xl border border-dark-700 bg-dark-800 py-2 pr-8 text-sm font-medium text-dark-200 outline-none transition-colors hover:border-dark-600 ${currentPlatformSvg ? 'pl-10' : 'pl-4'}`}
+              >
+                {availablePlatforms.map((p) => (
+                  <option key={p} value={p}>
+                    {getPlatformDisplayName(p)}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute right-2.5 text-dark-400">
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
                 >
-                  {platformSvg && (
-                    <div
-                      className="h-4 w-4 flex-shrink-0 [&>svg]:h-full [&>svg]:w-full"
-                      dangerouslySetInnerHTML={{ __html: platformSvg }}
-                    />
-                  )}
-                  {getPlatformDisplayName(p)}
-                </button>
-              );
-            })}
-          </div>
-        )}
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M8 9l4-4 4 4M8 15l4 4 4-4"
+                  />
+                </svg>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* App cards row */}
         {currentPlatformApps.length > 0 && (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex gap-2">
             {currentPlatformApps.map((app, idx) => {
               const isSelected = currentApp?.name === app.name;
               const appIconSvg = getSvgHtml(app.svgIconKey);
@@ -512,17 +526,17 @@ export default function Connection() {
                 <button
                   key={app.name + idx}
                   onClick={() => setSelectedRemnawaveApp(app)}
-                  className={`relative flex items-center gap-2 overflow-hidden rounded-xl px-3 py-2.5 text-sm font-medium transition-all active:scale-[0.97] ${
+                  className={`relative flex min-w-0 flex-1 items-center gap-2 overflow-hidden rounded-xl px-4 py-3 text-sm font-medium transition-all active:scale-[0.97] ${
                     isSelected
                       ? 'bg-accent-500/15 text-accent-400 ring-1 ring-accent-500/40'
                       : 'border border-dark-700/50 bg-dark-800/80 text-dark-200 hover:border-dark-600/50 hover:bg-dark-700/80'
                   }`}
                 >
                   {app.featured && <span className="h-2 w-2 shrink-0 rounded-full bg-amber-400" />}
-                  <span className="relative z-10">{app.name}</span>
+                  <span className="relative z-10 truncate">{app.name}</span>
                   {appIconSvg && (
                     <div
-                      className="h-8 w-8 shrink-0 opacity-40 [&>svg]:h-full [&>svg]:w-full"
+                      className="ml-auto h-10 w-10 shrink-0 opacity-30 [&>svg]:h-full [&>svg]:w-full"
                       dangerouslySetInnerHTML={{ __html: appIconSvg }}
                     />
                   )}
