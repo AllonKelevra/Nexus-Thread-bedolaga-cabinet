@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   banSystemApi,
@@ -206,6 +206,8 @@ export default function AdminBanSystem() {
   const [report, setReport] = useState<BanReportResponse | null>(null);
   const [health, setHealth] = useState<BanHealthResponse | null>(null);
   const [reportHours, setReportHours] = useState(24);
+  const reportHoursRef = useRef(reportHours);
+  reportHoursRef.current = reportHours;
   const [settingLoading, setSettingLoading] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -240,19 +242,7 @@ export default function AdminBanSystem() {
   const [searchQuery, setSearchQuery] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadStatus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (status?.enabled && status?.configured) {
-      loadTabData(activeTab);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, status]);
-
-  const loadStatus = async () => {
+  const loadStatus = useCallback(async () => {
     try {
       setLoading(true);
       const data = await banSystemApi.getStatus();
@@ -265,71 +255,84 @@ export default function AdminBanSystem() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
-  const loadTabData = async (tab: TabType) => {
-    try {
-      setLoading(true);
-      setError(null);
+  const loadTabData = useCallback(
+    async (tab: TabType) => {
+      try {
+        setLoading(true);
+        setError(null);
 
-      switch (tab) {
-        case 'dashboard': {
-          const statsData = await banSystemApi.getStats();
-          setStats(statsData);
-          break;
+        switch (tab) {
+          case 'dashboard': {
+            const statsData = await banSystemApi.getStats();
+            setStats(statsData);
+            break;
+          }
+          case 'users': {
+            const usersData = await banSystemApi.getUsers({ limit: 50 });
+            setUsers(usersData);
+            break;
+          }
+          case 'punishments': {
+            const punishmentsData = await banSystemApi.getPunishments();
+            setPunishments(punishmentsData);
+            break;
+          }
+          case 'nodes': {
+            const nodesData = await banSystemApi.getNodes();
+            setNodes(nodesData);
+            break;
+          }
+          case 'agents': {
+            const agentsData = await banSystemApi.getAgents();
+            setAgents(agentsData);
+            break;
+          }
+          case 'violations': {
+            const violationsData = await banSystemApi.getTrafficViolations();
+            setViolations(violationsData);
+            break;
+          }
+          case 'settings': {
+            const settingsData = await banSystemApi.getSettings();
+            setSettings(settingsData);
+            break;
+          }
+          case 'traffic': {
+            const trafficData = await banSystemApi.getTraffic();
+            setTraffic(trafficData);
+            break;
+          }
+          case 'reports': {
+            const reportData = await banSystemApi.getReport(reportHoursRef.current);
+            setReport(reportData);
+            break;
+          }
+          case 'health': {
+            const healthData = await banSystemApi.getHealth();
+            setHealth(healthData);
+            break;
+          }
         }
-        case 'users': {
-          const usersData = await banSystemApi.getUsers({ limit: 50 });
-          setUsers(usersData);
-          break;
-        }
-        case 'punishments': {
-          const punishmentsData = await banSystemApi.getPunishments();
-          setPunishments(punishmentsData);
-          break;
-        }
-        case 'nodes': {
-          const nodesData = await banSystemApi.getNodes();
-          setNodes(nodesData);
-          break;
-        }
-        case 'agents': {
-          const agentsData = await banSystemApi.getAgents();
-          setAgents(agentsData);
-          break;
-        }
-        case 'violations': {
-          const violationsData = await banSystemApi.getTrafficViolations();
-          setViolations(violationsData);
-          break;
-        }
-        case 'settings': {
-          const settingsData = await banSystemApi.getSettings();
-          setSettings(settingsData);
-          break;
-        }
-        case 'traffic': {
-          const trafficData = await banSystemApi.getTraffic();
-          setTraffic(trafficData);
-          break;
-        }
-        case 'reports': {
-          const reportData = await banSystemApi.getReport(reportHours);
-          setReport(reportData);
-          break;
-        }
-        case 'health': {
-          const healthData = await banSystemApi.getHealth();
-          setHealth(healthData);
-          break;
-        }
+      } catch {
+        setError(t('banSystem.loadError'));
+      } finally {
+        setLoading(false);
       }
-    } catch {
-      setError(t('banSystem.loadError'));
-    } finally {
-      setLoading(false);
+    },
+    [t],
+  );
+
+  useEffect(() => {
+    loadStatus();
+  }, [loadStatus]);
+
+  useEffect(() => {
+    if (status?.enabled && status?.configured) {
+      loadTabData(activeTab);
     }
-  };
+  }, [activeTab, status, loadTabData]);
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
@@ -403,8 +406,7 @@ export default function AdminBanSystem() {
     if (activeTab === 'reports' && status?.enabled) {
       loadTabData('reports');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reportHours]);
+  }, [reportHours, activeTab, status, loadTabData]);
 
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return '0 B';

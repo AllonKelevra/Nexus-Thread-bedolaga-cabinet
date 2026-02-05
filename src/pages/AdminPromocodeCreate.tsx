@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
@@ -10,7 +10,6 @@ import {
   PromoCodeUpdateRequest,
   PromoGroup,
 } from '../api/promocodes';
-import { useBackButton } from '../platform/hooks/useBackButton';
 import { usePlatform } from '../platform/hooks/usePlatform';
 
 // Icons
@@ -49,9 +48,6 @@ export default function AdminPromocodeCreate() {
   const queryClient = useQueryClient();
   const { capabilities } = usePlatform();
   const isEdit = !!id;
-
-  // Use native Telegram back button in Mini App
-  useBackButton(() => navigate('/admin/promocodes'));
 
   // Form state
   const [code, setCode] = useState('');

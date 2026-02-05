@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../store/auth';
 import { authApi } from '../api/auth';
+import { isValidEmail } from '../utils/validation';
 import {
   brandingApi,
   getCachedBranding,
@@ -139,8 +140,7 @@ export default function Login() {
     setError('');
 
     // Валидация email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email.trim() || !emailRegex.test(email.trim())) {
+    if (!email.trim() || !isValidEmail(email.trim())) {
       setError(t('auth.invalidEmail', 'Please enter a valid email address'));
       return;
     }
@@ -200,8 +200,7 @@ export default function Login() {
     e.preventDefault();
     setForgotPasswordError('');
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!forgotPasswordEmail.trim() || !emailRegex.test(forgotPasswordEmail.trim())) {
+    if (!forgotPasswordEmail.trim() || !isValidEmail(forgotPasswordEmail.trim())) {
       setForgotPasswordError(t('auth.invalidEmail', 'Please enter a valid email address'));
       return;
     }

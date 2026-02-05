@@ -240,7 +240,7 @@ export const useAuthStore = create<AuthState>()(
           user: response.user,
           isAuthenticated: true,
         });
-        get().checkAdminStatus();
+        await get().checkAdminStatus();
       },
 
       loginWithTelegramWidget: async (data) => {
@@ -252,7 +252,7 @@ export const useAuthStore = create<AuthState>()(
           user: response.user,
           isAuthenticated: true,
         });
-        get().checkAdminStatus();
+        await get().checkAdminStatus();
       },
 
       loginWithEmail: async (email, password) => {
@@ -264,7 +264,7 @@ export const useAuthStore = create<AuthState>()(
           user: response.user,
           isAuthenticated: true,
         });
-        get().checkAdminStatus();
+        await get().checkAdminStatus();
       },
 
       registerWithEmail: async (email, password, firstName, referralCode) => {

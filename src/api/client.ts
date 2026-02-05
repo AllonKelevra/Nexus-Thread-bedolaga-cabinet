@@ -7,6 +7,7 @@ import {
   safeRedirectToLogin,
 } from '../utils/token';
 import { useBlockingStore } from '../store/blocking';
+import { API } from '../config/constants';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -57,6 +58,7 @@ const getTelegramInitData = (): string | null => {
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
+  timeout: API.TIMEOUT_MS,
   headers: {
     'Content-Type': 'application/json',
   },

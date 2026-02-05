@@ -1,8 +1,7 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { adminAppsApi } from '../api/adminApps';
-import { useBackButton } from '../platform/hooks/useBackButton';
 import { usePlatform } from '../platform/hooks/usePlatform';
 
 export default function AdminApps() {
@@ -10,8 +9,6 @@ export default function AdminApps() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { capabilities } = usePlatform();
-
-  useBackButton(() => navigate('/admin'));
 
   // RemnaWave status
   const { data: status } = useQuery({

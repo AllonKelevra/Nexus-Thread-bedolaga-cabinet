@@ -1,26 +1,19 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useLocation, Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
 import { useAuthStore } from '@/store/auth';
-import { useBackButton, useHaptic } from '@/platform';
+import { useHaptic } from '@/platform';
 import { useTelegramSDK } from '@/hooks/useTelegramSDK';
 import { useTheme } from '@/hooks/useTheme';
+import { useBranding } from '@/hooks/useBranding';
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
+import { useScrollRestoration } from '@/hooks/useScrollRestoration';
 import { themeColorsApi } from '@/api/themeColors';
-import { referralApi } from '@/api/referral';
-import { wheelApi } from '@/api/wheel';
-import { contestsApi } from '@/api/contests';
-import { pollsApi } from '@/api/polls';
-import {
-  brandingApi,
-  getCachedBranding,
-  setCachedBranding,
-  preloadLogo,
-  isLogoPreloaded,
-} from '@/api/branding';
-import { setCachedFullscreenEnabled } from '@/hooks/useTelegramSDK';
+import { isLogoPreloaded } from '@/api/branding';
 import { cn } from '@/lib/utils';
+import { UI } from '@/config/constants';
 
 import WebSocketNotifications from '@/components/WebSocketNotifications';
 import SuccessNotificationModal from '@/components/SuccessNotificationModal';
@@ -176,9 +169,6 @@ const MoonIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const FALLBACK_NAME = import.meta.env.VITE_APP_NAME || 'Cabinet';
-const FALLBACK_LOGO = import.meta.env.VITE_APP_LOGO || 'V';
-
 interface AppShellProps {
   children: React.ReactNode;
 }
@@ -186,19 +176,16 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   const { t } = useTranslation();
   const location = useLocation();
-  const navigate = useNavigate();
-  const { isAdmin, isAuthenticated, logout } = useAuthStore();
-  const {
-    isFullscreen,
-    safeAreaInset,
-    contentSafeAreaInset,
-    requestFullscreen,
-    isTelegramWebApp,
-    platform,
-    isMobile,
-  } = useTelegramSDK();
+  const { isAdmin, logout } = useAuthStore();
+  const { isFullscreen, safeAreaInset, contentSafeAreaInset, platform, isMobile } =
+    useTelegramSDK();
   const haptic = useHaptic();
   const { toggleTheme, isDark } = useTheme();
+
+  // Extracted hooks
+  const { appName, logoLetter, hasCustomLogo, logoUrl } = useBranding();
+  const { referralEnabled, wheelEnabled, hasContests, hasPolls } = useFeatureFlags();
+  useScrollRestoration();
 
   // Theme toggle visibility
   const { data: enabledThemes } = useQuery({
@@ -213,147 +200,6 @@ export function AppShell({ children }: AppShellProps) {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
-
-  // Scroll position restoration for admin pages
-  const scrollPositions = useRef<Record<string, number>>({});
-
-  // Disable browser's automatic scroll restoration
-  useEffect(() => {
-    if ('scrollRestoration' in history) {
-      history.scrollRestoration = 'manual';
-    }
-  }, []);
-
-  // Continuously save scroll position for current path
-  useEffect(() => {
-    const currentPath = location.pathname;
-
-    // Only track scroll for admin pages
-    if (!currentPath.startsWith('/admin')) return;
-
-    const handleScroll = () => {
-      scrollPositions.current[currentPath] = window.scrollY;
-    };
-
-    // Save on scroll
-    window.addEventListener('scroll', handleScroll, { passive: true });
-
-    // Restore scroll position immediately (synchronous)
-    const savedPosition = scrollPositions.current[currentPath];
-    if (savedPosition !== undefined && savedPosition > 0) {
-      // Immediate restore
-      window.scrollTo({ top: savedPosition, behavior: 'instant' });
-    }
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [location.pathname]);
-
-  // Branding
-  const { data: branding } = useQuery({
-    queryKey: ['branding'],
-    queryFn: async () => {
-      const data = await brandingApi.getBranding();
-      setCachedBranding(data);
-      preloadLogo(data);
-      return data;
-    },
-    initialData: getCachedBranding() ?? undefined,
-    staleTime: 60000,
-    enabled: isAuthenticated,
-  });
-
-  const appName = branding ? branding.name : FALLBACK_NAME;
-  const logoLetter = branding?.logo_letter || FALLBACK_LOGO;
-  const hasCustomLogo = branding?.has_custom_logo || false;
-  const logoUrl = branding ? brandingApi.getLogoUrl(branding) : null;
-
-  // Set document title
-  useEffect(() => {
-    document.title = appName || 'VPN';
-  }, [appName]);
-
-  // Update favicon
-  useEffect(() => {
-    if (!logoUrl) return;
-
-    const link =
-      document.querySelector<HTMLLinkElement>("link[rel*='icon']") ||
-      document.createElement('link');
-    link.type = 'image/x-icon';
-    link.rel = 'shortcut icon';
-    link.href = logoUrl;
-    document.head.appendChild(link);
-  }, [logoUrl]);
-
-  // Fullscreen setting from server
-  const { data: fullscreenSetting } = useQuery({
-    queryKey: ['fullscreen-enabled'],
-    queryFn: brandingApi.getFullscreenEnabled,
-    staleTime: 60000,
-  });
-
-  // Apply fullscreen setting when loaded from server
-  // Only apply on mobile Telegram (iOS/Android) - desktop doesn't need fullscreen
-  useEffect(() => {
-    if (!fullscreenSetting || !isTelegramWebApp) return;
-
-    // Update cache for future app starts
-    setCachedFullscreenEnabled(fullscreenSetting.enabled);
-
-    // Request fullscreen if enabled, not already fullscreen, and on mobile Telegram
-    if (fullscreenSetting.enabled && !isFullscreen && isMobile) {
-      requestFullscreen();
-    }
-  }, [fullscreenSetting, isTelegramWebApp, isFullscreen, requestFullscreen, isMobile]);
-
-  // Feature flags
-  const { data: referralTerms } = useQuery({
-    queryKey: ['referral-terms'],
-    queryFn: referralApi.getReferralTerms,
-    enabled: isAuthenticated,
-    staleTime: 60000,
-    retry: false,
-  });
-
-  const { data: wheelConfig } = useQuery({
-    queryKey: ['wheel-config'],
-    queryFn: wheelApi.getConfig,
-    enabled: isAuthenticated,
-    staleTime: 60000,
-    retry: false,
-  });
-
-  const { data: contestsCount } = useQuery({
-    queryKey: ['contests-count'],
-    queryFn: contestsApi.getCount,
-    enabled: isAuthenticated,
-    staleTime: 60000,
-    retry: false,
-  });
-
-  const { data: pollsCount } = useQuery({
-    queryKey: ['polls-count'],
-    queryFn: pollsApi.getCount,
-    enabled: isAuthenticated,
-    staleTime: 60000,
-    retry: false,
-  });
-
-  // BackButton for Telegram Mini App
-  // Don't show back button on main tab pages (bottom nav) - users navigate via tabs
-  const mainTabPaths = ['/', '/subscription', '/balance', '/referral', '/support', '/wheel'];
-  const isMainTabPage = mainTabPaths.includes(location.pathname);
-  const handleBack = useCallback(() => {
-    if (mobileMenuOpen) {
-      setMobileMenuOpen(false);
-      return;
-    }
-    navigate(-1);
-  }, [mobileMenuOpen, navigate]);
-
-  useBackButton(isMainTabPage ? null : handleBack);
 
   // Keyboard detection for hiding bottom nav
   useEffect(() => {
@@ -405,7 +251,8 @@ export function AppShell({ children }: AppShellProps) {
   // Calculate header height based on fullscreen mode (only on mobile Telegram)
   // On iOS: contentSafeAreaInset.top includes status bar + dynamic island + Telegram header
   // On Android: safeAreaInset.top only includes status bar, need to add Telegram header height (~48px)
-  const telegramHeaderHeight = platform === 'android' ? 48 : 45;
+  const telegramHeaderHeight =
+    platform === 'android' ? UI.TELEGRAM_HEADER_ANDROID_PX : UI.TELEGRAM_HEADER_IOS_PX;
   const headerHeight = isMobileFullscreen
     ? 64 + Math.max(safeAreaInset.top, contentSafeAreaInset.top) + telegramHeaderHeight
     : 64;
@@ -465,7 +312,7 @@ export function AppShell({ children }: AppShellProps) {
                 <span>{item.label}</span>
               </Link>
             ))}
-            {referralTerms?.is_enabled && (
+            {referralEnabled && (
               <Link
                 to="/referral"
                 onClick={handleNavClick}
@@ -541,10 +388,10 @@ export function AppShell({ children }: AppShellProps) {
         safeAreaInset={safeAreaInset}
         contentSafeAreaInset={contentSafeAreaInset}
         telegramPlatform={platform}
-        wheelEnabled={wheelConfig?.is_enabled}
-        referralEnabled={referralTerms?.is_enabled}
-        hasContests={(contestsCount?.count ?? 0) > 0}
-        hasPolls={(pollsCount?.count ?? 0) > 0}
+        wheelEnabled={wheelEnabled}
+        referralEnabled={referralEnabled}
+        hasContests={hasContests}
+        hasPolls={hasPolls}
       />
 
       {/* Desktop spacer */}
@@ -559,8 +406,8 @@ export function AppShell({ children }: AppShellProps) {
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav
         isKeyboardOpen={isKeyboardOpen}
-        referralEnabled={referralTerms?.is_enabled}
-        wheelEnabled={wheelConfig?.is_enabled}
+        referralEnabled={referralEnabled}
+        wheelEnabled={wheelEnabled}
       />
     </div>
   );

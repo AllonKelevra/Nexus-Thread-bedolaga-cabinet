@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router';
 import { useAuthStore } from './store/auth';
 import { useBlockingStore } from './store/blocking';
 import Layout from './components/layout/Layout';

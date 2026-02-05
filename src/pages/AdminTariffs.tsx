@@ -1,9 +1,8 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { tariffsApi, TariffListItem } from '../api/tariffs';
 import { useDestructiveConfirm, useNotify } from '@/platform';
-import { useBackButton } from '../platform/hooks/useBackButton';
 import { usePlatform } from '../platform/hooks/usePlatform';
 
 // Icons
@@ -75,9 +74,6 @@ export default function AdminTariffs() {
   const confirmDelete = useDestructiveConfirm();
   const notify = useNotify();
   const { capabilities } = usePlatform();
-
-  // Use native Telegram back button in Mini App
-  useBackButton(() => navigate('/admin'));
 
   // Queries
   const { data: tariffsData, isLoading } = useQuery({

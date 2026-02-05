@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
@@ -9,7 +9,6 @@ import {
   PromoGroupUpdateRequest,
 } from '../api/promocodes';
 import { AdminBackButton } from '../components/admin';
-import { useBackButton } from '../platform/hooks/useBackButton';
 
 // Icons
 const PlusIcon = () => (
@@ -55,8 +54,6 @@ export default function AdminPromoGroupCreate() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   const isEdit = !!id;
-
-  useBackButton(() => navigate('/admin/promo-groups'));
 
   // Form state
   const [name, setName] = useState('');

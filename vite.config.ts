@@ -31,36 +31,31 @@ export default defineConfig({
     chunkSizeWarningLimit: 550,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-query': ['@tanstack/react-query'],
-          'vendor-i18n': ['i18next', 'react-i18next', 'i18next-browser-languagedetector'],
-          'vendor-motion': ['framer-motion'],
-          'vendor-radix': [
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-tooltip',
-            '@radix-ui/react-select',
-            '@radix-ui/react-popover',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-tabs',
-            '@radix-ui/react-switch',
-            '@radix-ui/react-alert-dialog',
-            '@radix-ui/react-slot',
-            '@radix-ui/react-visually-hidden',
-          ],
-          'vendor-dnd': ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
-          'vendor-telegram': ['@telegram-apps/sdk-react'],
-          'vendor-utils': [
-            'axios',
-            'zustand',
-            'clsx',
-            'tailwind-merge',
-            'class-variance-authority',
-            'dompurify',
-          ],
-          'vendor-lottie': ['@lottiefiles/dotlottie-react'],
-          'vendor-webgl': ['ogl'],
-          'vendor-cmdk': ['cmdk'],
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return;
+          if (
+            id.includes('react-dom') ||
+            id.includes('react-router') ||
+            id.includes('node_modules/react/')
+          )
+            return 'vendor-react';
+          if (id.includes('@tanstack/react-query')) return 'vendor-query';
+          if (id.includes('i18next') || id.includes('react-i18next')) return 'vendor-i18n';
+          if (id.includes('framer-motion')) return 'vendor-motion';
+          if (id.includes('@radix-ui/')) return 'vendor-radix';
+          if (id.includes('@dnd-kit/')) return 'vendor-dnd';
+          if (id.includes('@telegram-apps/')) return 'vendor-telegram';
+          if (id.includes('/ogl/')) return 'vendor-webgl';
+          if (id.includes('/cmdk/')) return 'vendor-cmdk';
+          if (
+            id.includes('/axios/') ||
+            id.includes('/zustand/') ||
+            id.includes('/clsx/') ||
+            id.includes('/tailwind-merge/') ||
+            id.includes('class-variance-authority') ||
+            id.includes('/dompurify/')
+          )
+            return 'vendor-utils';
         },
       },
     },

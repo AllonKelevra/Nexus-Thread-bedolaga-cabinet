@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
@@ -11,8 +11,6 @@ import {
 } from '../api/campaigns';
 import { AdminBackButton } from '../components/admin';
 import { createNumberInputHandler, toNumber } from '../utils/inputHelpers';
-import { useBackButton } from '../platform/hooks/useBackButton';
-
 // Icons
 const CampaignIcon = () => (
   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -155,8 +153,6 @@ export default function AdminCampaignCreate() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-
-  useBackButton(() => navigate('/admin/campaigns'));
 
   // Form state
   const [name, setName] = useState('');

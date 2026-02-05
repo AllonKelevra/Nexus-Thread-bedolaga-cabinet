@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { serversApi, ServerUpdateRequest } from '../api/servers';
 import { AdminBackButton } from '../components/admin';
 import { ServerIcon } from '../components/icons';
 import { createNumberInputHandler, toNumber } from '../utils/inputHelpers';
-import { useBackButton } from '../platform/hooks/useBackButton';
 
 // Country flags (simple emoji mapping)
 const getCountryFlag = (code: string | null): string => {
@@ -48,8 +47,6 @@ export default function AdminServerEdit() {
   const queryClient = useQueryClient();
 
   const serverId = parseInt(id || '0');
-
-  useBackButton(() => navigate('/admin/servers'));
 
   const {
     data: server,

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 import { useCurrency } from '../hooks/useCurrency';
@@ -11,7 +11,6 @@ import {
   type UpdateSubscriptionRequest,
 } from '../api/adminUsers';
 import { AdminBackButton } from '../components/admin';
-import { useBackButton } from '../platform/hooks/useBackButton';
 
 // ============ Icons ============
 
@@ -81,8 +80,6 @@ export default function AdminUserDetail() {
   const { formatWithCurrency } = useCurrency();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-
-  useBackButton(() => navigate('/admin/users'));
 
   const localeMap: Record<string, string> = { ru: 'ru-RU', en: 'en-US', zh: 'zh-CN', fa: 'fa-IR' };
   const locale = localeMap[i18n.language] || 'ru-RU';

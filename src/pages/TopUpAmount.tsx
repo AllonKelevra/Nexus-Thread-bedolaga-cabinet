@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 
@@ -8,7 +8,7 @@ import { balanceApi } from '../api/balance';
 import { useCurrency } from '../hooks/useCurrency';
 import { checkRateLimit, getRateLimitResetTime, RATE_LIMIT_KEYS } from '../utils/rateLimit';
 import { useCloseOnSuccessNotification } from '../store/successNotification';
-import { useBackButton, useHaptic, usePlatform } from '@/platform';
+import { useHaptic, usePlatform } from '@/platform';
 import { staggerContainer, staggerItem } from '@/components/motion/transitions';
 import type { PaymentMethod } from '../types';
 import BentoCard from '../components/ui/BentoCard';
@@ -107,9 +107,6 @@ export default function TopUpAmount() {
   const handleSuccess = useCallback(() => {
     navigate(returnTo || '/balance', { replace: true });
   }, [navigate, returnTo]);
-
-  // Telegram back button
-  useBackButton(handleNavigateBack);
 
   // Keyboard: Escape to go back
   useEffect(() => {

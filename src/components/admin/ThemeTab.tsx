@@ -59,6 +59,8 @@ export function ThemeTab() {
   // Local draft state
   const [draftColors, setDraftColors] = useState<ThemeColors>(DEFAULT_THEME_COLORS);
   const savedColorsRef = useRef<ThemeColors>(DEFAULT_THEME_COLORS);
+  const draftColorsRef = useRef(draftColors);
+  draftColorsRef.current = draftColors;
 
   // Sync server data into draft and saved snapshot when it arrives
   useEffect(() => {
@@ -79,14 +81,14 @@ export function ThemeTab() {
       };
       // Only sync if saved snapshot matches current draft (no unsaved changes)
       if (
-        colorsEqual(savedColorsRef.current, draftColors) ||
+        colorsEqual(savedColorsRef.current, draftColorsRef.current) ||
         colorsEqual(savedColorsRef.current, DEFAULT_THEME_COLORS)
       ) {
         setDraftColors(colors);
       }
       savedColorsRef.current = colors;
     }
-  }, [serverColors]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [serverColors]);
 
   const hasUnsavedChanges = !colorsEqual(draftColors, savedColorsRef.current);
 

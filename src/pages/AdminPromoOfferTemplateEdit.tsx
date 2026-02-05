@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
@@ -10,7 +10,6 @@ import {
 } from '../api/promoOffers';
 import { AdminBackButton } from '../components/admin';
 import { createNumberInputHandler, toNumber } from '../utils/inputHelpers';
-import { useBackButton } from '../platform/hooks/useBackButton';
 
 const getOfferTypeIcon = (offerType: string): string => {
   return OFFER_TYPE_CONFIG[offerType as OfferType]?.icon || '🎁';
@@ -21,8 +20,6 @@ export default function AdminPromoOfferTemplateEdit() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
-
-  useBackButton(() => navigate('/admin/promo-offers'));
 
   // Form state
   const [name, setName] = useState('');
