@@ -175,16 +175,28 @@ export default function Subscription() {
   const tariffs =
     isTariffsMode && purchaseOptions && 'tariffs' in purchaseOptions ? purchaseOptions.tariffs : [];
 
+  // Get truly available servers for a given period (same filter as rendering)
+  const getAvailableServers = useCallback(
+    (period: PeriodOption | null) => {
+      if (!period?.servers.options) return [];
+      return period.servers.options.filter((server) => {
+        if (!server.is_available) return false;
+        if (subscription?.is_trial && server.name.toLowerCase().includes('trial')) return false;
+        return true;
+      });
+    },
+    [subscription?.is_trial],
+  );
+
   // Determine which steps are needed
   const steps = useMemo<PurchaseStep[]>(() => {
     const result: PurchaseStep[] = ['period'];
     if (selectedPeriod?.traffic.selectable && (selectedPeriod.traffic.options?.length ?? 0) > 0) {
       result.push('traffic');
     }
-    if (
-      selectedPeriod &&
-      (selectedPeriod.servers.options?.filter((s) => s.is_available).length ?? 0) > 0
-    ) {
+    const availableServers = getAvailableServers(selectedPeriod);
+    // Skip server selection step if only 1 server available (auto-select it)
+    if (availableServers.length > 1) {
       result.push('servers');
     }
     if (selectedPeriod && selectedPeriod.devices.max > selectedPeriod.devices.min) {
@@ -192,7 +204,7 @@ export default function Subscription() {
     }
     result.push('confirm');
     return result;
-  }, [selectedPeriod]);
+  }, [selectedPeriod, getAvailableServers]);
 
   const currentStepIndex = steps.indexOf(currentStep);
   const isFirstStep = currentStepIndex === 0;
@@ -206,15 +218,19 @@ export default function Subscription() {
         classicOptions.periods[0];
       setSelectedPeriod(defaultPeriod);
       setSelectedTraffic(classicOptions.selection.traffic_value);
-      const availableServerUuids = new Set(
-        defaultPeriod.servers.options?.filter((s) => s.is_available).map((s) => s.uuid) ?? [],
-      );
-      setSelectedServers(
-        classicOptions.selection.servers.filter((uuid) => availableServerUuids.has(uuid)),
-      );
+      const availableServers = getAvailableServers(defaultPeriod);
+      const availableServerUuids = new Set(availableServers.map((s) => s.uuid));
+      // If only 1 server available, auto-select it (step will be skipped)
+      if (availableServers.length === 1) {
+        setSelectedServers([availableServers[0].uuid]);
+      } else {
+        setSelectedServers(
+          classicOptions.selection.servers.filter((uuid) => availableServerUuids.has(uuid)),
+        );
+      }
       setSelectedDevices(classicOptions.selection.devices);
     }
-  }, [classicOptions, selectedPeriod]);
+  }, [classicOptions, selectedPeriod, getAvailableServers]);
 
   // Build selection object
   const currentSelection: PurchaseSelection = useMemo(
@@ -3193,12 +3209,12 @@ export default function Subscription() {
                           if (period.traffic.current !== undefined) {
                             setSelectedTraffic(period.traffic.current);
                           }
-                          if (period.servers.selected) {
-                            const availUuids = new Set(
-                              period.servers.options
-                                ?.filter((s) => s.is_available)
-                                .map((s) => s.uuid) ?? [],
-                            );
+                          const availableServers = getAvailableServers(period);
+                          // If only 1 server available, auto-select it (step will be skipped)
+                          if (availableServers.length === 1) {
+                            setSelectedServers([availableServers[0].uuid]);
+                          } else if (period.servers.selected) {
+                            const availUuids = new Set(availableServers.map((s) => s.uuid));
                             setSelectedServers(
                               period.servers.selected.filter((uuid) => availUuids.has(uuid)),
                             );
