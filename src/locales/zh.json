@@ -153,6 +153,8 @@
     "or": "或",
     "registerHint": "要通过邮箱注册，请先通过Telegram登录，然后在设置中绑定邮箱。",
     "telegramRequired": "需要Telegram授权",
+    "telegramRetryFailed": "授权失败。请关闭应用后重新打开。",
+    "telegramReopenHint": "如果问题持续存在，请关闭并重新打开应用",
     "telegramNotConfigured": "Telegram机器人未配置",
     "authenticating": "正在验证...",
     "orOpenInApp": "或在应用中打开机器人",

@@ -161,6 +161,8 @@
     "or": "or",
     "registerHint": "To register with email, first log in via Telegram, then link your email in settings.",
     "telegramRequired": "Telegram authorization required",
+    "telegramRetryFailed": "Authorization failed. Close the app and try again.",
+    "telegramReopenHint": "If the problem persists, close and reopen the app",
     "telegramNotConfigured": "Telegram bot is not configured",
     "authenticating": "Authenticating...",
     "orOpenInApp": "Or open the bot in the app",

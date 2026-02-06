@@ -110,30 +110,61 @@ export default function Login() {
     }
   }, [isAuthenticated, navigate, getReturnUrl]);
 
-  // Try Telegram WebApp authentication on mount
+  // Try Telegram WebApp authentication on mount (with auto-retry on 401)
   useEffect(() => {
     const tryTelegramAuth = async () => {
       const initData = getTelegramInitData();
-      if (isInTelegramWebApp() && initData) {
-        setIsTelegramWebApp(true);
-        // Note: ready() and expand() are already called by SDK init in main.tsx
-        setIsLoading(true);
+      if (!isInTelegramWebApp() || !initData) return;
+
+      setIsTelegramWebApp(true);
+      setIsLoading(true);
+
+      const MAX_RETRIES = 1;
+      for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
         try {
           await loginWithTelegram(initData);
           navigate(getReturnUrl(), { replace: true });
+          return;
         } catch (err) {
-          // Log only status code to avoid leaking sensitive data
           const status = (err as { response?: { status?: number } })?.response?.status;
-          console.warn('Telegram auth failed with status:', status);
+          console.warn(`Telegram auth attempt ${attempt + 1} failed with status:`, status);
+
+          if (status === 401 && attempt < MAX_RETRIES) {
+            await new Promise((r) => setTimeout(r, 1500));
+            continue;
+          }
+
           setError(t('auth.telegramRequired'));
-        } finally {
-          setIsLoading(false);
         }
       }
+
+      setIsLoading(false);
     };
 
     tryTelegramAuth();
   }, [loginWithTelegram, navigate, t, getReturnUrl]);
+
+  // Manual retry for Telegram Mini App auth
+  const handleRetryTelegramAuth = async () => {
+    const initData = getTelegramInitData();
+    if (!initData) {
+      setError(t('auth.telegramRequired'));
+      return;
+    }
+
+    setError('');
+    setIsLoading(true);
+    try {
+      await loginWithTelegram(initData);
+      navigate(getReturnUrl(), { replace: true });
+    } catch (err) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      console.warn('Telegram auth retry failed with status:', status);
+      setError(t('auth.telegramRetryFailed', 'Authorization failed. Close the app and try again.'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -340,6 +371,34 @@ export default function Login() {
                 <div className="py-8 text-center">
                   <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
                   <p className="text-sm text-dark-400">{t('auth.authenticating')}</p>
+                </div>
+              ) : isTelegramWebApp && error ? (
+                <div className="space-y-4 text-center">
+                  <button
+                    onClick={handleRetryTelegramAuth}
+                    className="btn-primary mx-auto flex items-center gap-2 px-6 py-3"
+                  >
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
+                      />
+                    </svg>
+                    {t('auth.tryAgain')}
+                  </button>
+                  <p className="text-xs text-dark-500">
+                    {t(
+                      'auth.telegramReopenHint',
+                      'If the problem persists, close and reopen the app',
+                    )}
+                  </p>
                 </div>
               ) : (
                 <TelegramLoginButton botUsername={botUsername} />

@@ -164,6 +164,8 @@
     "or": "или",
     "registerHint": "Для регистрации по email сначала авторизуйтесь через Telegram, затем привяжите email в настройках.",
     "telegramRequired": "Требуется авторизация через Telegram",
+    "telegramRetryFailed": "Авторизация не удалась. Закройте приложение и откройте заново.",
+    "telegramReopenHint": "Если проблема повторяется — закройте и откройте приложение заново",
     "telegramNotConfigured": "Telegram бот не настроен",
     "authenticating": "Авторизация...",
     "orOpenInApp": "Или откройте бота в приложении",
