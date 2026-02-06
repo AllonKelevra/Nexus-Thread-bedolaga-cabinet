@@ -6,6 +6,7 @@ import {
   onBackButtonClick,
   offBackButtonClick,
 } from '@telegram-apps/sdk-react';
+import Twemoji from 'react-twemoji';
 import App from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { PlatformProvider } from './platform/PlatformProvider';
@@ -73,7 +74,9 @@ export function AppWithNavigator() {
             <TooltipProvider>
               <ToastProvider>
                 <WebSocketProvider>
-                  <App />
+                  <Twemoji options={{ className: 'twemoji', folder: 'svg', ext: '.svg' }}>
+                    <App />
+                  </Twemoji>
                 </WebSocketProvider>
               </ToastProvider>
             </TooltipProvider>
