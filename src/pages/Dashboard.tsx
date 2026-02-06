@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/auth';
 import { subscriptionApi } from '../api/subscription';
@@ -10,6 +10,7 @@ import { wheelApi } from '../api/wheel';
 import Onboarding, { useOnboarding } from '../components/Onboarding';
 import PromoOffersSection from '../components/PromoOffersSection';
 import { useCurrency } from '../hooks/useCurrency';
+import { API } from '../config/constants';
 
 // Icons
 const ArrowRightIcon = () => (
@@ -57,14 +58,13 @@ export default function Dashboard() {
   // Refresh user data on mount
   useEffect(() => {
     refreshUser();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [refreshUser]);
 
-  // Fetch balance from API with no caching
+  // Fetch balance from API
   const { data: balanceData } = useQuery({
     queryKey: ['balance'],
     queryFn: balanceApi.getBalance,
-    staleTime: 0,
+    staleTime: API.BALANCE_STALE_TIME_MS,
     refetchOnMount: 'always',
   });
 
@@ -72,7 +72,7 @@ export default function Dashboard() {
     queryKey: ['subscription'],
     queryFn: subscriptionApi.getSubscription,
     retry: false,
-    staleTime: 0,
+    staleTime: API.BALANCE_STALE_TIME_MS,
     refetchOnMount: 'always',
   });
 
@@ -167,7 +167,7 @@ export default function Dashboard() {
 
     const lastRefresh = localStorage.getItem('traffic_refresh_ts');
     const now = Date.now();
-    const cacheMs = 30 * 1000;
+    const cacheMs = API.TRAFFIC_CACHE_MS;
 
     if (lastRefresh && now - parseInt(lastRefresh, 10) < cacheMs) {
       const elapsed = now - parseInt(lastRefresh, 10);
@@ -179,8 +179,7 @@ export default function Dashboard() {
     }
 
     refreshTrafficMutation.mutate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subscription]);
+  }, [subscription, refreshTrafficMutation]);
 
   // User has no subscription if API returns has_subscription: false
   const hasNoSubscription = subscriptionResponse?.has_subscription === false && !subLoading;
@@ -243,8 +242,8 @@ export default function Dashboard() {
 
   // Calculate traffic percentage color
   const getTrafficColor = (percent: number) => {
-    if (percent > 90) return 'bg-error-500';
-    if (percent > 70) return 'bg-warning-500';
+    if (percent > API.TRAFFIC_CRITICAL_PERCENT) return 'bg-error-500';
+    if (percent > API.TRAFFIC_WARN_PERCENT) return 'bg-warning-500';
     return 'bg-success-500';
   };
 

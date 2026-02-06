@@ -3,9 +3,10 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { authApi } from '../api/auth';
+import { isValidEmail } from '../utils/validation';
+import { UI } from '../config/constants';
 import { useAuthStore } from '../store/auth';
-import { useTelegramWebApp } from '../hooks/useTelegramWebApp';
-import { useBackButton } from '@/platform';
+import { useTelegramSDK } from '../hooks/useTelegramSDK';
 
 // Icons
 const CloseIcon = () => (
@@ -50,13 +51,13 @@ function useIsMobile() {
   return isMobile;
 }
 
-const RESEND_COOLDOWN = 60; // seconds
+const RESEND_COOLDOWN = UI.RESEND_COOLDOWN_SEC;
 
 export default function ChangeEmailModal({ onClose, currentEmail }: ChangeEmailModalProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { setUser } = useAuthStore();
-  const { isTelegramWebApp, safeAreaInset, contentSafeAreaInset } = useTelegramWebApp();
+  const { isTelegramWebApp, safeAreaInset, contentSafeAreaInset } = useTelegramSDK();
   const isMobileScreen = useIsMobile();
 
   const emailInputRef = useRef<HTMLInputElement>(null);
@@ -87,9 +88,6 @@ export default function ChangeEmailModal({ onClose, currentEmail }: ChangeEmailM
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleClose]);
-
-  // Telegram back button - using platform hook
-  useBackButton(handleClose);
 
   // Scroll lock
   useEffect(() => {
@@ -181,18 +179,13 @@ export default function ChangeEmailModal({ onClose, currentEmail }: ChangeEmailM
     },
   });
 
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email.trim());
-  };
-
   const handleSendCode = () => {
     setError(null);
     if (!newEmail.trim()) {
       setError(t('profile.emailRequired'));
       return;
     }
-    if (!validateEmail(newEmail)) {
+    if (!isValidEmail(newEmail.trim())) {
       setError(t('profile.invalidEmail'));
       return;
     }

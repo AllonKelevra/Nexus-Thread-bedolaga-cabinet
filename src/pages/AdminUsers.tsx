@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useCurrency } from '../hooks/useCurrency';
 import { useToast } from '../components/Toast';
 import { adminUsersApi, type UserListItem, type UsersStatsResponse } from '../api/adminUsers';
-import { useBackButton } from '../platform/hooks/useBackButton';
 import { usePlatform } from '../platform/hooks/usePlatform';
 
 // ============ Icons ============
@@ -397,9 +396,6 @@ export default function AdminUsers() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { capabilities } = usePlatform();
-
-  // Use native Telegram back button in Mini App
-  useBackButton(() => navigate('/admin'));
 
   const [users, setUsers] = useState<UserListItem[]>([]);
   const [stats, setStats] = useState<UsersStatsResponse | null>(null);

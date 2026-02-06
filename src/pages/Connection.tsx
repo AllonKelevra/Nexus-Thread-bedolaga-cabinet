@@ -1,11 +1,11 @@
 import { useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { openLink as sdkOpenLink } from '@telegram-apps/sdk-react';
 import { subscriptionApi } from '../api/subscription';
-import { useTelegramWebApp } from '../hooks/useTelegramWebApp';
-import { useBackButton, useHaptic } from '@/platform';
+import { useTelegramSDK } from '../hooks/useTelegramSDK';
+import { useHaptic } from '@/platform';
 import { resolveTemplate, hasTemplates } from '../utils/templateEngine';
 import { useAuthStore } from '../store/auth';
 import type { AppConfig, LocalizedText } from '../types';
@@ -15,7 +15,7 @@ export default function Connection() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { isTelegramWebApp } = useTelegramWebApp();
+  const { isTelegramWebApp } = useTelegramSDK();
   const { impact: hapticImpact } = useHaptic();
 
   const hapticRef = useRef(hapticImpact);
@@ -44,13 +44,6 @@ export default function Connection() {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleGoBack]);
-
-  const handleBackButton = useCallback(() => {
-    hapticRef.current('light');
-    handleGoBack();
-  }, [handleGoBack]);
-
-  useBackButton(handleBackButton);
 
   const resolveUrl = useCallback(
     (url: string): string => {

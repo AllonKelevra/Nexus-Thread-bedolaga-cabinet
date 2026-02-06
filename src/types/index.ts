@@ -335,25 +335,6 @@ export interface ClassicPurchaseOptions {
 
 export type PurchaseOptions = TariffsPurchaseOptions | ClassicPurchaseOptions;
 
-// Legacy type for backward compatibility
-export interface LegacyPurchaseOptions {
-  currency: string;
-  balance_kopeks: number;
-  balance_label: string;
-  subscription_id: number | null;
-  periods: PeriodOption[];
-  traffic: TrafficConfig;
-  servers: ServersConfig;
-  devices: DevicesConfig;
-  selection: {
-    period_id: string;
-    period_days: number;
-    traffic_value: number;
-    servers: string[];
-    devices: number;
-  };
-}
-
 export interface PurchaseSelection {
   period_id?: string;
   period_days?: number;

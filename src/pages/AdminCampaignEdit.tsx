@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
@@ -12,7 +12,6 @@ import {
 import { AdminBackButton } from '../components/admin';
 import { CheckIcon, CampaignIcon } from '../components/icons';
 import { createNumberInputHandler, toNumber } from '../utils/inputHelpers';
-import { useBackButton } from '../platform/hooks/useBackButton';
 
 // Bonus type config
 const bonusTypeConfig: Record<
@@ -132,8 +131,6 @@ export default function AdminCampaignEdit() {
   const queryClient = useQueryClient();
 
   const campaignId = parseInt(id || '0');
-
-  useBackButton(() => navigate('/admin/campaigns'));
 
   // Fetch campaign
   const {

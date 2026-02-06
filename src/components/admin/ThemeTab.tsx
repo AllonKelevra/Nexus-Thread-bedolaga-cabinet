@@ -59,6 +59,8 @@ export function ThemeTab() {
   // Local draft state
   const [draftColors, setDraftColors] = useState<ThemeColors>(DEFAULT_THEME_COLORS);
   const savedColorsRef = useRef<ThemeColors>(DEFAULT_THEME_COLORS);
+  const draftColorsRef = useRef(draftColors);
+  draftColorsRef.current = draftColors;
 
   // Sync server data into draft and saved snapshot when it arrives
   useEffect(() => {
@@ -79,50 +81,16 @@ export function ThemeTab() {
       };
       // Only sync if saved snapshot matches current draft (no unsaved changes)
       if (
-        colorsEqual(savedColorsRef.current, draftColors) ||
+        colorsEqual(savedColorsRef.current, draftColorsRef.current) ||
         colorsEqual(savedColorsRef.current, DEFAULT_THEME_COLORS)
       ) {
         setDraftColors(colors);
       }
       savedColorsRef.current = colors;
     }
-  }, [serverColors]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [serverColors]);
 
   const hasUnsavedChanges = !colorsEqual(draftColors, savedColorsRef.current);
-
-  // Update a single color in the draft and apply preview instantly
-  const updateDraftColor = useCallback(
-    (key: keyof ThemeColors, value: string) => {
-      setDraftColors((prev) => {
-        const next = { ...prev, [key]: value };
-        applyThemeColors(next);
-        queryClient.setQueryData(['theme-colors'], next);
-        return next;
-      });
-    },
-    [queryClient],
-  );
-
-  // Apply a full preset to draft
-  const applyPreset = useCallback(
-    (colors: Partial<ThemeColors>) => {
-      setDraftColors((prev) => {
-        const next = { ...prev, ...colors };
-        applyThemeColors(next);
-        queryClient.setQueryData(['theme-colors'], next);
-        return next;
-      });
-    },
-    [queryClient],
-  );
-
-  // Cancel: revert draft to saved
-  const handleCancel = useCallback(() => {
-    const saved = savedColorsRef.current;
-    setDraftColors(saved);
-    applyThemeColors(saved);
-    queryClient.setQueryData(['theme-colors'], saved);
-  }, [queryClient]);
 
   // Mutations
   const updateColorsMutation = useMutation({
@@ -180,6 +148,42 @@ export function ThemeTab() {
       queryClient.invalidateQueries({ queryKey: ['enabled-themes'] });
     },
   });
+
+  // Update a single color in the draft and apply preview instantly
+  const updateDraftColor = useCallback(
+    (key: keyof ThemeColors, value: string) => {
+      setDraftColors((prev) => {
+        const next = { ...prev, [key]: value };
+        applyThemeColors(next);
+        queryClient.setQueryData(['theme-colors'], next);
+        return next;
+      });
+    },
+    [queryClient],
+  );
+
+  // Apply a full preset and auto-save to server
+  const applyPreset = useCallback(
+    (colors: Partial<ThemeColors>) => {
+      setDraftColors((prev) => {
+        const next = { ...prev, ...colors };
+        applyThemeColors(next);
+        queryClient.setQueryData(['theme-colors'], next);
+        // Auto-save preset to server so it persists across navigation
+        updateColorsMutation.mutate(next);
+        return next;
+      });
+    },
+    [queryClient, updateColorsMutation],
+  );
+
+  // Cancel: revert draft to saved
+  const handleCancel = useCallback(() => {
+    const saved = savedColorsRef.current;
+    setDraftColors(saved);
+    applyThemeColors(saved);
+    queryClient.setQueryData(['theme-colors'], saved);
+  }, [queryClient]);
 
   return (
     <div className="space-y-6">
@@ -414,16 +418,20 @@ export function ThemeTab() {
                   </button>
                 </>
               )}
-              <button
-                onClick={() => resetColorsMutation.mutate()}
-                disabled={resetColorsMutation.isPending}
-                className="rounded-xl bg-dark-700 px-4 py-2 text-sm text-dark-300 transition-colors hover:bg-dark-600 disabled:opacity-50"
-              >
-                {t('admin.settings.resetAllColors')}
-              </button>
             </div>
           </div>
         )}
+      </div>
+
+      {/* Reset all colors */}
+      <div className="flex justify-end">
+        <button
+          onClick={() => resetColorsMutation.mutate()}
+          disabled={resetColorsMutation.isPending}
+          className="rounded-xl bg-dark-700 px-4 py-2 text-sm text-dark-300 transition-colors hover:bg-dark-600 disabled:opacity-50"
+        >
+          {t('admin.settings.resetAllColors')}
+        </button>
       </div>
     </div>
   );

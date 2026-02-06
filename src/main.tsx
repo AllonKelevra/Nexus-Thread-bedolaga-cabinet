@@ -20,6 +20,7 @@ import {
   isFullscreen,
 } from '@telegram-apps/sdk-react';
 import { AppWithNavigator } from './AppWithNavigator';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { initLogoPreload } from './api/branding';
 import { getCachedFullscreenEnabled, isTelegramMobile } from './hooks/useTelegramSDK';
 import './i18n';
@@ -100,8 +101,10 @@ const queryClient = new QueryClient({
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <AppWithNavigator />
-    </QueryClientProvider>
+    <ErrorBoundary level="app">
+      <QueryClientProvider client={queryClient}>
+        <AppWithNavigator />
+      </QueryClientProvider>
+    </ErrorBoundary>
   </React.StrictMode>,
 );

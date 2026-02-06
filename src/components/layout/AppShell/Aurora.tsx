@@ -154,6 +154,14 @@ export function Aurora() {
   const background = isDark ? themeColors.darkBackground : themeColors.lightBackground;
   const surface = isDark ? themeColors.darkSurface : themeColors.lightSurface;
 
+  // Refs for initial color values (WebGL context shouldn't recreate on color change)
+  const backgroundRef = useRef(background);
+  backgroundRef.current = background;
+  const surfaceRef = useRef(surface);
+  surfaceRef.current = surface;
+  const accentRef = useRef(themeColors.accent);
+  accentRef.current = themeColors.accent;
+
   // Initialize WebGL context once (only depends on isEnabled)
   useEffect(() => {
     if (!isEnabled || !containerRef.current) return;
@@ -175,7 +183,11 @@ export function Aurora() {
 
     const geometry = new Triangle(gl);
 
-    const colorStops = generateColorStops(background, surface, themeColors.accent);
+    const colorStops = generateColorStops(
+      backgroundRef.current,
+      surfaceRef.current,
+      accentRef.current,
+    );
     const colorStopsArray = colorStops
       .map((hex) => {
         const c = new Color(hex);
@@ -238,7 +250,7 @@ export function Aurora() {
       rendererRef.current = null;
       programRef.current = null;
     };
-  }, [isEnabled]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isEnabled]);
 
   // Update color uniforms reactively without recreating WebGL context
   useEffect(() => {

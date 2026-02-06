@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import {
   statsApi,
@@ -10,7 +10,6 @@ import {
   type RecentPaymentsResponse,
 } from '../api/admin';
 import { useCurrency } from '../hooks/useCurrency';
-import { useBackButton } from '../platform/hooks/useBackButton';
 import { usePlatform } from '../platform/hooks/usePlatform';
 
 // Icons - styled like main navigation
@@ -365,9 +364,6 @@ export default function AdminDashboard() {
   const { formatAmount, currencySymbol } = useCurrency();
   const { capabilities } = usePlatform();
 
-  // Use native Telegram back button in Mini App
-  useBackButton(() => navigate('/admin'));
-
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -380,7 +376,7 @@ export default function AdminDashboard() {
   const [payments, setPayments] = useState<RecentPaymentsResponse | null>(null);
   const [referrersTab, setReferrersTab] = useState<'earnings' | 'invited'>('earnings');
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -392,9 +388,9 @@ export default function AdminDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
-  const fetchExtendedStats = async () => {
+  const fetchExtendedStats = useCallback(async () => {
     try {
       const [referrersData, campaignsData, paymentsData] = await Promise.all([
         statsApi.getTopReferrers(10),
@@ -407,7 +403,7 @@ export default function AdminDashboard() {
     } catch (err) {
       console.error('Failed to load extended stats:', err);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchStats();
@@ -418,8 +414,7 @@ export default function AdminDashboard() {
       fetchExtendedStats();
     }, 30000);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchStats, fetchExtendedStats]);
 
   const handleRestartNode = async (uuid: string) => {
     try {

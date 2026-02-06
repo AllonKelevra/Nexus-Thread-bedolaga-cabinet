@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
@@ -11,7 +11,7 @@ import {
   closestCenter,
   type DragEndEvent,
 } from '@dnd-kit/core';
-import { useTelegramDnd } from '../hooks/useTelegramDnd';
+
 import {
   arrayMove,
   SortableContext,
@@ -26,7 +26,6 @@ import { useDestructiveConfirm } from '@/platform';
 import { useNotify } from '@/platform/hooks/useNotify';
 import FortuneWheel from '../components/wheel/FortuneWheel';
 import { ColorPicker } from '@/components/ColorPicker';
-import { useBackButton } from '../platform/hooks/useBackButton';
 import { usePlatform } from '../platform/hooks/usePlatform';
 
 // Icons
@@ -295,9 +294,6 @@ export default function AdminWheel() {
   const { capabilities } = usePlatform();
   const notify = useNotify();
 
-  // Use native Telegram back button in Mini App
-  useBackButton(() => navigate('/admin'));
-
   const [activeTab, setActiveTab] = useState<Tab>('settings');
   const [expandedPrizeId, setExpandedPrizeId] = useState<number | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -433,22 +429,13 @@ export default function AdminWheel() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  // Telegram DnD support
-  const {
-    onDragStart: onTelegramDragStart,
-    onDragEnd: onTelegramDragEnd,
-    onDragCancel: onTelegramDragCancel,
-  } = useTelegramDnd();
-
   const handleDragStart = useCallback(() => {
-    onTelegramDragStart();
     // Collapse expanded card to avoid collision detection issues with varying heights
     setExpandedPrizeId(null);
-  }, [onTelegramDragStart]);
+  }, []);
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
-      onTelegramDragEnd();
       const { active, over } = event;
       if (over && active.id !== over.id && config) {
         // Use current displayed order (either local or from config)
@@ -468,7 +455,7 @@ export default function AdminWheel() {
         }
       }
     },
-    [config, localPrizeOrder, onTelegramDragEnd],
+    [config, localPrizeOrder],
   );
 
   // Save prize order
@@ -894,7 +881,6 @@ export default function AdminWheel() {
               collisionDetection={closestCenter}
               onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
-              onDragCancel={onTelegramDragCancel}
             >
               <SortableContext
                 items={displayedPrizes.map((p) => p.id)}

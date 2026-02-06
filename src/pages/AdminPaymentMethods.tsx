@@ -1,8 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { useBackButton } from '../platform/hooks/useBackButton';
 import { usePlatform } from '../platform/hooks/usePlatform';
 import {
   DndContext,
@@ -11,9 +10,8 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
-  type DragStartEvent,
 } from '@dnd-kit/core';
-import { useTelegramDnd } from '../hooks/useTelegramDnd';
+
 import {
   arrayMove,
   SortableContext,
@@ -239,9 +237,6 @@ export default function AdminPaymentMethods() {
   const queryClient = useQueryClient();
   const { capabilities } = usePlatform();
 
-  // Use native Telegram back button in Mini App
-  useBackButton(() => navigate('/admin'));
-
   const [methods, setMethods] = useState<PaymentMethodConfig[]>([]);
   const [orderChanged, setOrderChanged] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -278,40 +273,18 @@ export default function AdminPaymentMethods() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  // Telegram swipe behavior for drag-and-drop
-  const {
-    onDragStart: onTelegramDragStart,
-    onDragEnd: onTelegramDragEnd,
-    onDragCancel: onTelegramDragCancel,
-  } = useTelegramDnd();
-
-  const handleDragStart = useCallback(
-    (_event: DragStartEvent) => {
-      onTelegramDragStart();
-    },
-    [onTelegramDragStart],
-  );
-
-  const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
-      onTelegramDragEnd();
-      const { active, over } = event;
-      if (over && active.id !== over.id) {
-        setMethods((prev) => {
-          const oldIndex = prev.findIndex((m) => m.method_id === active.id);
-          const newIndex = prev.findIndex((m) => m.method_id === over.id);
-          if (oldIndex === -1 || newIndex === -1) return prev;
-          return arrayMove(prev, oldIndex, newIndex);
-        });
-        setOrderChanged(true);
-      }
-    },
-    [onTelegramDragEnd],
-  );
-
-  const handleDragCancel = useCallback(() => {
-    onTelegramDragCancel();
-  }, [onTelegramDragCancel]);
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setMethods((prev) => {
+        const oldIndex = prev.findIndex((m) => m.method_id === active.id);
+        const newIndex = prev.findIndex((m) => m.method_id === over.id);
+        if (oldIndex === -1 || newIndex === -1) return prev;
+        return arrayMove(prev, oldIndex, newIndex);
+      });
+      setOrderChanged(true);
+    }
+  }, []);
 
   const handleSaveOrder = () => {
     saveOrderMutation.mutate(methods.map((m) => m.method_id));
@@ -367,12 +340,7 @@ export default function AdminPaymentMethods() {
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
           </div>
         ) : methods.length > 0 ? (
-          <DndContext
-            sensors={sensors}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDragCancel={handleDragCancel}
-          >
+          <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
             <SortableContext
               items={methods.map((m) => m.method_id)}
               strategy={verticalListSortingStrategy}
