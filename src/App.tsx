@@ -1,10 +1,14 @@
 import { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router';
 import { useAuthStore } from './store/auth';
 import { useBlockingStore } from './store/blocking';
 import Layout from './components/layout/Layout';
 import PageLoader from './components/common/PageLoader';
-import { MaintenanceScreen, ChannelSubscriptionScreen } from './components/blocking';
+import {
+  MaintenanceScreen,
+  ChannelSubscriptionScreen,
+  BlacklistedScreen,
+} from './components/blocking';
 import { saveReturnUrl } from './utils/token';
 import { useAnalyticsCounters } from './hooks/useAnalyticsCounters';
 // Auth pages - load immediately (small)
@@ -26,6 +30,7 @@ const Contests = lazy(() => import('./pages/Contests'));
 const Polls = lazy(() => import('./pages/Polls'));
 const Info = lazy(() => import('./pages/Info'));
 const Wheel = lazy(() => import('./pages/Wheel'));
+const Connection = lazy(() => import('./pages/Connection'));
 const TopUpMethodSelect = lazy(() => import('./pages/TopUpMethodSelect'));
 const TopUpAmount = lazy(() => import('./pages/TopUpAmount'));
 
@@ -119,6 +124,10 @@ function BlockingOverlay() {
 
   if (blockingType === 'channel_subscription') {
     return <ChannelSubscriptionScreen />;
+  }
+
+  if (blockingType === 'blacklisted') {
+    return <BlacklistedScreen />;
   }
 
   return null;
@@ -258,6 +267,16 @@ function App() {
             <ProtectedRoute>
               <LazyPage>
                 <Wheel />
+              </LazyPage>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/connection"
+          element={
+            <ProtectedRoute>
+              <LazyPage>
+                <Connection />
               </LazyPage>
             </ProtectedRoute>
           }

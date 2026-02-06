@@ -1,11 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 
 import { balanceApi } from '../api/balance';
 import { useCurrency } from '../hooks/useCurrency';
-import { useBackButton } from '@/platform';
 import { Card } from '@/components/data-display/Card';
 import { staggerContainer, staggerItem } from '@/components/motion/transitions';
 
@@ -14,8 +13,6 @@ export default function TopUpMethodSelect() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { formatAmount, currencySymbol } = useCurrency();
-
-  useBackButton(() => navigate('/balance'));
 
   const { data: paymentMethods, isLoading } = useQuery({
     queryKey: ['payment-methods'],

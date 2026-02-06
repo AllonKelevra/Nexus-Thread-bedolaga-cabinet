@@ -161,6 +161,8 @@
     "or": "or",
     "registerHint": "To register with email, first log in via Telegram, then link your email in settings.",
     "telegramRequired": "Telegram authorization required",
+    "telegramRetryFailed": "Authorization failed. Close the app and try again.",
+    "telegramReopenHint": "If the problem persists, close and reopen the app",
     "telegramNotConfigured": "Telegram bot is not configured",
     "authenticating": "Authenticating...",
     "orOpenInApp": "Or open the bot in the app",
@@ -346,7 +348,8 @@
       "changeApp": "Change app",
       "selectPlatform": "Select platform",
       "app": "app",
-      "apps": "apps"
+      "apps": "apps",
+      "tutorial": "Tutorial"
     },
     "myDevices": "My Devices",
     "noDevices": "No connected devices",
@@ -1305,6 +1308,9 @@
       "confirmDeleteText": "This action cannot be undone. The tariff will be permanently deleted.",
       "confirmDeleteWithSubscriptions": "This tariff has {{count}} active subscriptions. After deletion, users will need to select a new tariff when renewing.",
       "deleteSuccess": "Tariff deleted successfully",
+      "saveOrder": "Save order",
+      "orderSaved": "Order saved",
+      "dragToReorder": "Drag to reorder",
       "days": "days",
       "days_one": "{{count}} day",
       "days_other": "{{count}} days",
@@ -2626,6 +2632,12 @@
       "hint": "Click check button after subscribing",
       "notSubscribed": "You haven't subscribed to the channel yet",
       "checkError": "Check failed. Please try again later."
+    },
+    "blacklisted": {
+      "title": "Access Denied",
+      "defaultMessage": "Your account has been blocked.",
+      "reason": "Reason",
+      "contactSupport": "If you believe this is an error, please contact support."
     }
   }
 }

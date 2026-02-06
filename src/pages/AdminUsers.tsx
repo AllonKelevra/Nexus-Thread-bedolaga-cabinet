@@ -1,11 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useCurrency } from '../hooks/useCurrency';
-import { useToast } from '../components/Toast';
 import { adminUsersApi, type UserListItem, type UsersStatsResponse } from '../api/adminUsers';
-import { useBackButton } from '../platform/hooks/useBackButton';
 import { usePlatform } from '../platform/hooks/usePlatform';
+import { useNotify } from '../platform/hooks/useNotify';
 
 // ============ Icons ============
 
@@ -395,11 +394,8 @@ export default function AdminUsers() {
   const { t } = useTranslation();
   const { formatWithCurrency } = useCurrency();
   const navigate = useNavigate();
-  const { showToast } = useToast();
+  const notify = useNotify();
   const { capabilities } = usePlatform();
-
-  // Use native Telegram back button in Mini App
-  useBackButton(() => navigate('/admin'));
 
   const [users, setUsers] = useState<UserListItem[]>([]);
   const [stats, setStats] = useState<UsersStatsResponse | null>(null);
@@ -496,27 +492,15 @@ export default function AdminUsers() {
       }
 
       if (result.success) {
-        showToast({
-          type: 'success',
-          title: t('common.success'),
-          message: t(`admin.users.userActions.success.${action}`),
-        });
+        notify.success(t(`admin.users.userActions.success.${action}`), t('common.success'));
         loadUsers();
         loadStats();
       } else {
-        showToast({
-          type: 'error',
-          title: t('common.error'),
-          message: result.message || t('admin.users.userActions.error'),
-        });
+        notify.error(result.message || t('admin.users.userActions.error'), t('common.error'));
       }
     } catch (error) {
       console.error('Action failed:', error);
-      showToast({
-        type: 'error',
-        title: t('common.error'),
-        message: t('admin.users.userActions.error'),
-      });
+      notify.error(t('admin.users.userActions.error'), t('common.error'));
     } finally {
       setActionLoading(false);
       closeConfirmModal();

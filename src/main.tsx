@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   init,
   restoreInitData,
+  retrieveRawInitData,
   mountMiniApp,
   miniAppReady,
   mountThemeParams,
@@ -19,7 +20,9 @@ import {
   requestFullscreen,
   isFullscreen,
 } from '@telegram-apps/sdk-react';
+import { clearStaleSessionIfNeeded } from './utils/token';
 import { AppWithNavigator } from './AppWithNavigator';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { initLogoPreload } from './api/branding';
 import { getCachedFullscreenEnabled, isTelegramMobile } from './hooks/useTelegramSDK';
 import './i18n';
@@ -35,6 +38,9 @@ if (!alreadyInitialized) {
   try {
     init();
     restoreInitData();
+
+    // Сбрасываем старые токены если init data изменился (новая сессия Telegram)
+    clearStaleSessionIfNeeded(retrieveRawInitData() || null);
 
     // Mount components — each in its own try/catch so one failure doesn't block others
     try {
@@ -100,8 +106,10 @@ const queryClient = new QueryClient({
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <AppWithNavigator />
-    </QueryClientProvider>
+    <ErrorBoundary level="app">
+      <QueryClientProvider client={queryClient}>
+        <AppWithNavigator />
+      </QueryClientProvider>
+    </ErrorBoundary>
   </React.StrictMode>,
 );

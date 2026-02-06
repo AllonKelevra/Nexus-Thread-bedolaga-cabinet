@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { BrowserRouter, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter, useLocation, useNavigate } from 'react-router';
 import {
   showBackButton,
   hideBackButton,
@@ -7,6 +7,7 @@ import {
   offBackButtonClick,
 } from '@telegram-apps/sdk-react';
 import App from './App';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { PlatformProvider } from './platform/PlatformProvider';
 import { ThemeColorsProvider } from './providers/ThemeColorsProvider';
 import { WebSocketProvider } from './providers/WebSocketProvider';
@@ -66,17 +67,19 @@ export function AppWithNavigator() {
   return (
     <BrowserRouter>
       {isTelegram && <TelegramBackButton />}
-      <PlatformProvider>
-        <ThemeColorsProvider>
-          <TooltipProvider>
-            <ToastProvider>
-              <WebSocketProvider>
-                <App />
-              </WebSocketProvider>
-            </ToastProvider>
-          </TooltipProvider>
-        </ThemeColorsProvider>
-      </PlatformProvider>
+      <ErrorBoundary level="page">
+        <PlatformProvider>
+          <ThemeColorsProvider>
+            <TooltipProvider>
+              <ToastProvider>
+                <WebSocketProvider>
+                  <App />
+                </WebSocketProvider>
+              </ToastProvider>
+            </TooltipProvider>
+          </ThemeColorsProvider>
+        </PlatformProvider>
+      </ErrorBoundary>
     </BrowserRouter>
   );
 }

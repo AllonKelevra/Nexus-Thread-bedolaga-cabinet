@@ -1512,8 +1512,8 @@ input[type='checkbox']:hover:not(:checked) {
 
 /* Light theme adjustments */
 .light .wave-blob {
-  opacity: 0.6;
-  filter: blur(70px);
+  opacity: 0.35;
+  filter: blur(80px);
 }
 
 .light .wave-blob-1 {

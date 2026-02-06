@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
@@ -10,7 +10,6 @@ import {
   CombinedBroadcastCreateRequest,
 } from '../api/adminBroadcasts';
 import { AdminBackButton } from '../components/admin';
-import { useBackButton } from '../platform/hooks/useBackButton';
 
 // Icons
 const BroadcastIcon = () => (
@@ -118,8 +117,6 @@ export default function AdminBroadcastCreate() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useBackButton(() => navigate('/admin/broadcasts'));
 
   // Channel selection
   const [channel, setChannel] = useState<BroadcastChannel>('telegram');

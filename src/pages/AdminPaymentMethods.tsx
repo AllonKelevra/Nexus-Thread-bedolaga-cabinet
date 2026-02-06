@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { useBackButton } from '../platform/hooks/useBackButton';
 import { usePlatform } from '../platform/hooks/usePlatform';
+import { useNotify } from '../platform/hooks/useNotify';
 import {
   DndContext,
   KeyboardSensor,
@@ -11,9 +11,8 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
-  type DragStartEvent,
 } from '@dnd-kit/core';
-import { useTelegramDnd } from '../hooks/useTelegramDnd';
+
 import {
   arrayMove,
   SortableContext,
@@ -52,12 +51,6 @@ const GripIcon = () => (
 const ChevronRightIcon = () => (
   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-  </svg>
-);
-
-const CheckIcon = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
   </svg>
 );
 
@@ -217,20 +210,6 @@ function SortablePaymentCard({ config, onClick }: SortableCardProps) {
 
 // ============ Toast ============
 
-function Toast({ message, onClose }: { message: string; onClose: () => void }) {
-  useEffect(() => {
-    const timer = setTimeout(onClose, 3000);
-    return () => clearTimeout(timer);
-  }, [onClose]);
-
-  return (
-    <div className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 animate-fade-in items-center gap-2 rounded-xl bg-success-500/90 px-5 py-3 text-sm font-medium text-white shadow-lg backdrop-blur-sm">
-      <CheckIcon />
-      {message}
-    </div>
-  );
-}
-
 // ============ Main Page ============
 
 export default function AdminPaymentMethods() {
@@ -239,12 +218,9 @@ export default function AdminPaymentMethods() {
   const queryClient = useQueryClient();
   const { capabilities } = usePlatform();
 
-  // Use native Telegram back button in Mini App
-  useBackButton(() => navigate('/admin'));
-
+  const notify = useNotify();
   const [methods, setMethods] = useState<PaymentMethodConfig[]>([]);
   const [orderChanged, setOrderChanged] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Fetch payment methods
   const { data: fetchedMethods, isLoading } = useQuery({
@@ -265,10 +241,10 @@ export default function AdminPaymentMethods() {
     onSuccess: () => {
       setOrderChanged(false);
       queryClient.invalidateQueries({ queryKey: ['admin-payment-methods'] });
-      setToastMessage(t('admin.paymentMethods.orderSaved'));
+      notify.success(t('admin.paymentMethods.orderSaved'));
     },
     onError: () => {
-      setToastMessage(t('common.error'));
+      notify.error(t('common.error'));
     },
   });
 
@@ -278,46 +254,22 @@ export default function AdminPaymentMethods() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  // Telegram swipe behavior for drag-and-drop
-  const {
-    onDragStart: onTelegramDragStart,
-    onDragEnd: onTelegramDragEnd,
-    onDragCancel: onTelegramDragCancel,
-  } = useTelegramDnd();
-
-  const handleDragStart = useCallback(
-    (_event: DragStartEvent) => {
-      onTelegramDragStart();
-    },
-    [onTelegramDragStart],
-  );
-
-  const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
-      onTelegramDragEnd();
-      const { active, over } = event;
-      if (over && active.id !== over.id) {
-        setMethods((prev) => {
-          const oldIndex = prev.findIndex((m) => m.method_id === active.id);
-          const newIndex = prev.findIndex((m) => m.method_id === over.id);
-          if (oldIndex === -1 || newIndex === -1) return prev;
-          return arrayMove(prev, oldIndex, newIndex);
-        });
-        setOrderChanged(true);
-      }
-    },
-    [onTelegramDragEnd],
-  );
-
-  const handleDragCancel = useCallback(() => {
-    onTelegramDragCancel();
-  }, [onTelegramDragCancel]);
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setMethods((prev) => {
+        const oldIndex = prev.findIndex((m) => m.method_id === active.id);
+        const newIndex = prev.findIndex((m) => m.method_id === over.id);
+        if (oldIndex === -1 || newIndex === -1) return prev;
+        return arrayMove(prev, oldIndex, newIndex);
+      });
+      setOrderChanged(true);
+    }
+  }, []);
 
   const handleSaveOrder = () => {
     saveOrderMutation.mutate(methods.map((m) => m.method_id));
   };
-
-  const handleCloseToast = useCallback(() => setToastMessage(null), []);
 
   return (
     <div className="space-y-6">
@@ -367,12 +319,7 @@ export default function AdminPaymentMethods() {
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
           </div>
         ) : methods.length > 0 ? (
-          <DndContext
-            sensors={sensors}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDragCancel={handleDragCancel}
-          >
+          <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
             <SortableContext
               items={methods.map((m) => m.method_id)}
               strategy={verticalListSortingStrategy}
@@ -397,9 +344,6 @@ export default function AdminPaymentMethods() {
           </div>
         )}
       </div>
-
-      {/* Toast */}
-      {toastMessage && <Toast message={toastMessage} onClose={handleCloseToast} />}
     </div>
   );
 }

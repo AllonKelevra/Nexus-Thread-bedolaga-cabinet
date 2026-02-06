@@ -153,6 +153,8 @@
     "or": "或",
     "registerHint": "要通过邮箱注册，请先通过Telegram登录，然后在设置中绑定邮箱。",
     "telegramRequired": "需要Telegram授权",
+    "telegramRetryFailed": "授权失败。请关闭应用后重新打开。",
+    "telegramReopenHint": "如果问题持续存在，请关闭并重新打开应用",
     "telegramNotConfigured": "Telegram机器人未配置",
     "authenticating": "正在验证...",
     "orOpenInApp": "或在应用中打开机器人",
@@ -298,7 +300,8 @@
       "changeApp": "更换应用",
       "selectPlatform": "选择平台",
       "app": "个应用",
-      "apps": "个应用"
+      "apps": "个应用",
+      "tutorial": "教程"
     },
     "additionalOptions": {
       "title": "附加选项",
@@ -1049,6 +1052,9 @@
       "confirmDeleteText": "此操作不可撤销。套餐将被永久删除。",
       "confirmDeleteWithSubscriptions": "此套餐有 {{count}} 个活跃订阅。删除后，用户续订时需要选择新套餐。",
       "deleteSuccess": "套餐删除成功",
+      "saveOrder": "保存排序",
+      "orderSaved": "排序已保存",
+      "dragToReorder": "拖动以重新排序",
       "days": "天",
       "days_other": "{{count}} 天",
       "tabs": {
@@ -2151,6 +2157,12 @@
       "hint": "订阅后点击检查按钮",
       "notSubscribed": "您还没有订阅该频道",
       "checkError": "检查失败。请稍后重试。"
+    },
+    "blacklisted": {
+      "title": "访问被拒绝",
+      "defaultMessage": "您的帐户已被封锁。",
+      "reason": "原因",
+      "contactSupport": "如果您认为这是错误，请联系客服。"
     }
   },
   "banSystem": {
