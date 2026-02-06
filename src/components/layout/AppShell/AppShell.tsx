@@ -359,7 +359,7 @@ export function AppShell({ children }: AppShellProps) {
                 className="rounded-xl border border-dark-700/50 bg-dark-800/50 p-2 text-dark-400 transition-all duration-200 hover:bg-dark-700 hover:text-accent-400"
                 title={isDark ? t('theme.light') || 'Light mode' : t('theme.dark') || 'Dark mode'}
               >
-                {isDark ? <MoonIcon className="h-4 w-4" /> : <SunIcon className="h-4 w-4" />}
+                {isDark ? <MoonIcon className="h-5 w-5" /> : <SunIcon className="h-5 w-5" />}
               </button>
             )}
             <TicketNotificationBell isAdmin={location.pathname.startsWith('/admin')} />
@@ -372,7 +372,7 @@ export function AppShell({ children }: AppShellProps) {
               className="rounded-xl border border-dark-700/50 bg-dark-800/50 p-2 text-dark-400 transition-all duration-200 hover:bg-dark-700 hover:text-accent-400"
               title={t('nav.logout')}
             >
-              <LogoutIcon className="h-4 w-4" />
+              <LogoutIcon className="h-5 w-5" />
             </button>
           </div>
         </div>
