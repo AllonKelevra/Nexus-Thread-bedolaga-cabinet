@@ -669,7 +669,7 @@ export default function AdminTariffCreate() {
                 {t('admin.tariffs.noServersAvailable')}
               </p>
             ) : (
-              <div className="max-h-48 space-y-2 overflow-y-auto">
+              <div className="space-y-2">
                 {servers.map((server: ServerInfo) => {
                   const isSelected = selectedSquads.includes(server.squad_uuid);
                   return (
@@ -972,7 +972,7 @@ export default function AdminTariffCreate() {
             {promoGroups.length === 0 ? (
               <p className="py-4 text-center text-dark-500">{t('admin.tariffs.noPromoGroups')}</p>
             ) : (
-              <div className="max-h-48 space-y-2 overflow-y-auto">
+              <div className="space-y-2">
                 {promoGroups.map((group) => {
                   const isSelected = selectedPromoGroups.includes(group.id);
                   return (
