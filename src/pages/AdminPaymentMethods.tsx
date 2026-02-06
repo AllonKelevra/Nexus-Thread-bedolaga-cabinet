@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { usePlatform } from '../platform/hooks/usePlatform';
+import { useNotify } from '../platform/hooks/useNotify';
 import {
   DndContext,
   KeyboardSensor,
@@ -50,12 +51,6 @@ const GripIcon = () => (
 const ChevronRightIcon = () => (
   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-  </svg>
-);
-
-const CheckIcon = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
   </svg>
 );
 
@@ -215,20 +210,6 @@ function SortablePaymentCard({ config, onClick }: SortableCardProps) {
 
 // ============ Toast ============
 
-function Toast({ message, onClose }: { message: string; onClose: () => void }) {
-  useEffect(() => {
-    const timer = setTimeout(onClose, 3000);
-    return () => clearTimeout(timer);
-  }, [onClose]);
-
-  return (
-    <div className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 animate-fade-in items-center gap-2 rounded-xl bg-success-500/90 px-5 py-3 text-sm font-medium text-white shadow-lg backdrop-blur-sm">
-      <CheckIcon />
-      {message}
-    </div>
-  );
-}
-
 // ============ Main Page ============
 
 export default function AdminPaymentMethods() {
@@ -237,9 +218,9 @@ export default function AdminPaymentMethods() {
   const queryClient = useQueryClient();
   const { capabilities } = usePlatform();
 
+  const notify = useNotify();
   const [methods, setMethods] = useState<PaymentMethodConfig[]>([]);
   const [orderChanged, setOrderChanged] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Fetch payment methods
   const { data: fetchedMethods, isLoading } = useQuery({
@@ -260,10 +241,10 @@ export default function AdminPaymentMethods() {
     onSuccess: () => {
       setOrderChanged(false);
       queryClient.invalidateQueries({ queryKey: ['admin-payment-methods'] });
-      setToastMessage(t('admin.paymentMethods.orderSaved'));
+      notify.success(t('admin.paymentMethods.orderSaved'));
     },
     onError: () => {
-      setToastMessage(t('common.error'));
+      notify.error(t('common.error'));
     },
   });
 
@@ -289,8 +270,6 @@ export default function AdminPaymentMethods() {
   const handleSaveOrder = () => {
     saveOrderMutation.mutate(methods.map((m) => m.method_id));
   };
-
-  const handleCloseToast = useCallback(() => setToastMessage(null), []);
 
   return (
     <div className="space-y-6">
@@ -365,9 +344,6 @@ export default function AdminPaymentMethods() {
           </div>
         )}
       </div>
-
-      {/* Toast */}
-      {toastMessage && <Toast message={toastMessage} onClose={handleCloseToast} />}
     </div>
   );
 }
