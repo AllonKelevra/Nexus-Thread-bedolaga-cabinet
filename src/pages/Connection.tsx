@@ -8,7 +8,7 @@ import { useTelegramSDK } from '../hooks/useTelegramSDK';
 import { useHaptic } from '@/platform';
 import { resolveTemplate, hasTemplates } from '../utils/templateEngine';
 import { useAuthStore } from '../store/auth';
-import type { AppConfig, LocalizedText } from '../types';
+import type { AppConfig } from '../types';
 import InstallationGuide from '../components/connection/InstallationGuide';
 
 export default function Connection() {
@@ -79,21 +79,6 @@ export default function Connection() {
     [isTelegramWebApp, i18n.language, resolveUrl],
   );
 
-  const getLocalizedText = (text: LocalizedText | undefined): string => {
-    if (!text) return '';
-    const lang = i18n.language || 'en';
-    return text[lang] || text['en'] || text['ru'] || Object.values(text)[0] || '';
-  };
-
-  const getBaseTranslation = (key: string, i18nKey: string): string => {
-    const bt = appConfig?.baseTranslations;
-    if (bt && key in bt) {
-      const text = getLocalizedText(bt[key as keyof typeof bt] as LocalizedText);
-      if (text) return text;
-    }
-    return t(i18nKey);
-  };
-
   // Loading
   if (isLoading) {
     return (
@@ -109,7 +94,7 @@ export default function Connection() {
       <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
         <p className="mb-4 text-lg text-dark-300">{t('common.error')}</p>
         <button onClick={handleGoBack} className="btn-primary px-6 py-2">
-          {getBaseTranslation('close', 'common.close')}
+          {t('common.close')}
         </button>
       </div>
     );
@@ -124,7 +109,7 @@ export default function Connection() {
         </h3>
         <p className="mb-4 text-dark-400">{t('subscription.connection.noSubscription')}</p>
         <button onClick={handleGoBack} className="btn-primary px-6 py-2">
-          {getBaseTranslation('close', 'common.close')}
+          {t('common.close')}
         </button>
       </div>
     );

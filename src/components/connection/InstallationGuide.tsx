@@ -8,27 +8,10 @@ import type {
   RemnawavePlatformData,
   RemnawaveButtonClient,
 } from '@/types';
-import { CardsBlock, TimelineBlock, AccordionBlock, MinimalBlock } from './blocks';
+import { CardsBlock, TimelineBlock, AccordionBlock, MinimalBlock, BlockButtons } from './blocks';
 import type { BlockRendererProps } from './blocks';
 
 const platformOrder = ['ios', 'android', 'windows', 'macos', 'linux', 'androidTV', 'appleTV'];
-
-// eslint-disable-next-line no-script-url
-const dangerousSchemes = ['javascript:', 'data:', 'vbscript:', 'file:'];
-
-function isValidDeepLink(url: string | undefined): boolean {
-  if (!url) return false;
-  const lowerUrl = url.toLowerCase().trim();
-  if (dangerousSchemes.some((s) => lowerUrl.startsWith(s))) return false;
-  return lowerUrl.includes('://');
-}
-
-function isValidExternalUrl(url: string | undefined): boolean {
-  if (!url) return false;
-  const lowerUrl = url.toLowerCase().trim();
-  if (dangerousSchemes.some((s) => lowerUrl.startsWith(s))) return false;
-  return lowerUrl.startsWith('http://') || lowerUrl.startsWith('https://');
-}
 
 function detectPlatform(): string | null {
   if (typeof window === 'undefined' || !navigator?.userAgent) return null;
@@ -47,23 +30,6 @@ const RENDERERS: Record<string, React.ComponentType<BlockRendererProps>> = {
   accordion: AccordionBlock,
   minimal: MinimalBlock,
 };
-
-// Icons
-const CopyIcon = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-    />
-  </svg>
-);
-
-const CheckIcon = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-  </svg>
-);
 
 const BackIcon = () => (
   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -91,7 +57,6 @@ export default function InstallationGuide({
 
   const [activePlatformKey, setActivePlatformKey] = useState<string | null>(null);
   const [selectedApp, setSelectedApp] = useState<RemnawaveAppClient | null>(null);
-  const [copied, setCopied] = useState(false);
 
   // --- Helpers ---
 
@@ -155,117 +120,30 @@ export default function InstallationGuide({
     }
   }, [appConfig.platforms, availablePlatforms, selectedApp]);
 
-  // --- Copy ---
-
-  const handleCopy = useCallback(async (url: string) => {
-    try {
-      await navigator.clipboard.writeText(url);
-    } catch {
-      const textarea = document.createElement('textarea');
-      textarea.value = url;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-    }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }, []);
-
-  // --- Button renderer (passed to block renderers) ---
+  // --- Button renderer (delegates to BlockButtons component) ---
 
   const renderBlockButtons = useCallback(
-    (buttons: RemnawaveButtonClient[] | undefined, variant: 'light' | 'subtle') => {
-      if (!buttons || buttons.length === 0) return null;
-
-      const baseClass =
-        variant === 'light'
-          ? 'rounded-xl border border-accent-500/40 px-4 py-2 text-sm font-medium text-accent-400 transition-all hover:bg-accent-500/10'
-          : 'rounded-xl px-3 py-1.5 text-sm font-medium text-dark-300 transition-all hover:bg-dark-700/50';
-
-      return (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {buttons.map((btn, idx) => {
-            const btnText = getLocalizedText(btn.text);
-            const btnSvg = getSvgHtml(btn.svgIconKey);
-            const btnIcon = btnSvg ? (
-              <div
-                className="h-4 w-4 [&>svg]:h-full [&>svg]:w-full"
-                dangerouslySetInnerHTML={{ __html: btnSvg }}
-              />
-            ) : null;
-
-            if (btn.type === 'subscriptionLink') {
-              const url =
-                btn.resolvedUrl ||
-                btn.url ||
-                btn.link ||
-                selectedApp?.deepLink ||
-                appConfig.subscriptionUrl;
-              if (!url || !isValidDeepLink(url)) return null;
-              return (
-                <button
-                  key={idx}
-                  onClick={() => onOpenDeepLink(url)}
-                  className={`flex items-center gap-2 ${baseClass}`}
-                >
-                  {btnIcon}
-                  {btnText || getBaseTranslation('openApp', 'subscription.connection.openLink')}
-                </button>
-              );
-            }
-
-            if (btn.type === 'copyButton') {
-              if (appConfig.hideLink) return null;
-              const url = btn.resolvedUrl || appConfig.subscriptionUrl;
-              if (!url) return null;
-              return (
-                <button
-                  key={idx}
-                  onClick={() => handleCopy(url)}
-                  className={`flex items-center gap-2 ${
-                    copied
-                      ? 'rounded-xl border border-success-500 bg-success-500/10 px-4 py-2 text-sm font-medium text-success-400'
-                      : baseClass
-                  }`}
-                >
-                  {copied ? <CheckIcon /> : btnIcon || <CopyIcon />}
-                  {copied
-                    ? t('subscription.connection.copied')
-                    : btnText || getBaseTranslation('copyLink', 'subscription.connection.copyLink')}
-                </button>
-              );
-            }
-
-            // external
-            const href = btn.link || btn.url || '';
-            if (!isValidExternalUrl(href)) return null;
-            return (
-              <a
-                key={idx}
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`inline-flex items-center gap-2 ${baseClass}`}
-              >
-                {btnIcon}
-                {btnText}
-              </a>
-            );
-          })}
-        </div>
-      );
-    },
+    (buttons: RemnawaveButtonClient[] | undefined, variant: 'light' | 'subtle') => (
+      <BlockButtons
+        buttons={buttons}
+        variant={variant}
+        subscriptionUrl={appConfig.subscriptionUrl}
+        hideLink={appConfig.hideLink}
+        deepLink={selectedApp?.deepLink}
+        getLocalizedText={getLocalizedText}
+        getBaseTranslation={getBaseTranslation}
+        getSvgHtml={getSvgHtml}
+        onOpenDeepLink={onOpenDeepLink}
+      />
+    ),
     [
-      selectedApp,
-      appConfig,
-      copied,
-      getSvgHtml,
+      appConfig.subscriptionUrl,
+      appConfig.hideLink,
+      selectedApp?.deepLink,
       getLocalizedText,
       getBaseTranslation,
-      handleCopy,
+      getSvgHtml,
       onOpenDeepLink,
-      t,
     ],
   );
 
