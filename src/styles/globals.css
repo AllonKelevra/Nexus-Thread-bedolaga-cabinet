@@ -270,6 +270,14 @@
   }
 }
 
+/* Twemoji — cross-platform emoji rendering */
+img.twemoji {
+  display: inline-block;
+  width: 1.2em;
+  height: 1.2em;
+  vertical-align: -0.2em;
+}
+
 @layer components {
   /* ========== BENTO DESIGN SYSTEM ========== */
 
