@@ -169,10 +169,6 @@ function TemplateEditor({
   const [editSubject, setEditSubject] = useState('');
   const [editBody, setEditBody] = useState('');
   const [isDirty, setIsDirty] = useState(false);
-  const [toast, setToast] = useState<{
-    type: 'success' | 'error' | 'info';
-    message: string;
-  } | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const langData: EmailTemplateLanguageData | undefined = detail.languages[activeLang];
@@ -185,11 +181,6 @@ function TemplateEditor({
       setIsDirty(false);
     }
   }, [activeLang, langData]);
-
-  const showToast = useCallback((type: 'success' | 'error' | 'info', message: string) => {
-    setToast({ type, message });
-    setTimeout(() => setToast(null), 3000);
-  }, []);
 
   // Extract body content from full HTML (strip base template wrapper)
   const extractBodyContent = useCallback((html: string): string => {
@@ -230,10 +221,10 @@ function TemplateEditor({
         queryKey: ['admin', 'email-template', detail.notification_type],
       });
       setIsDirty(false);
-      showToast('success', t('admin.emailTemplates.saved'));
+      notify.success(t('admin.emailTemplates.saved'));
     },
     onError: () => {
-      showToast('error', t('common.error'));
+      notify.error(t('common.error'));
     },
   });
 
@@ -246,10 +237,10 @@ function TemplateEditor({
         queryKey: ['admin', 'email-template', detail.notification_type],
       });
       setIsDirty(false);
-      showToast('success', t('admin.emailTemplates.resetted'));
+      notify.success(t('admin.emailTemplates.resetted'));
     },
     onError: () => {
-      showToast('error', t('common.error'));
+      notify.error(t('common.error'));
     },
   });
 
@@ -260,10 +251,10 @@ function TemplateEditor({
         language: activeLang,
       }),
     onSuccess: (data) => {
-      showToast('success', `${t('admin.emailTemplates.testSent')} → ${data.sent_to}`);
+      notify.success(`${t('admin.emailTemplates.testSent')} → ${data.sent_to}`);
     },
     onError: () => {
-      showToast('error', t('common.error'));
+      notify.error(t('common.error'));
     },
   });
 
@@ -360,7 +351,7 @@ function TemplateEditor({
                 title={t('admin.emailTemplates.clickToCopy')}
                 onClick={() => {
                   navigator.clipboard.writeText(`{${v}}`);
-                  showToast('success', `Copied {${v}}`);
+                  notify.success(`Copied {${v}}`);
                 }}
               >
                 {`{${v}}`}
@@ -448,21 +439,6 @@ function TemplateEditor({
           )}
         </div>
       </div>
-
-      {/* Toast */}
-      {toast && (
-        <div
-          className={`fixed left-4 right-4 top-32 z-[100] mx-auto max-w-sm animate-fade-in rounded-xl px-4 py-3 text-center text-sm font-medium shadow-lg sm:left-1/2 sm:right-auto sm:-translate-x-1/2 ${
-            toast.type === 'success'
-              ? 'bg-success-500 text-white'
-              : toast.type === 'info'
-                ? 'bg-dark-700 text-dark-100 ring-1 ring-dark-600'
-                : 'bg-error-500 text-white'
-          }`}
-        >
-          {toast.message}
-        </div>
-      )}
     </div>
   );
 }
