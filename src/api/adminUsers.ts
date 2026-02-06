@@ -415,7 +415,7 @@ export const adminUsersApi = {
     return response.data;
   },
 
-  // Delete user
+  // Delete user (soft delete, does NOT remove from Remnawave)
   deleteUser: async (
     userId: number,
     softDelete = true,
@@ -424,6 +424,20 @@ export const adminUsersApi = {
     const response = await apiClient.delete(`/cabinet/admin/users/${userId}`, {
       data: { soft_delete: softDelete, reason },
     });
+    return response.data;
+  },
+
+  // Full delete user (removes from bot DB + Remnawave panel)
+  fullDeleteUser: async (
+    userId: number,
+  ): Promise<{
+    success: boolean;
+    message: string;
+    deleted_from_bot: boolean;
+    deleted_from_panel: boolean;
+    panel_error: string | null;
+  }> => {
+    const response = await apiClient.delete(`/cabinet/admin/users/${userId}/full`);
     return response.data;
   },
 

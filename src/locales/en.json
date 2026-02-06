@@ -1808,7 +1808,7 @@
         },
         "confirmDelete": {
           "title": "Delete user?",
-          "message": "Are you sure? This action is irreversible. All user data will be deleted."
+          "message": "Are you sure? This action is irreversible. The user will be fully deleted from the bot and from the Remnawave panel."
         },
         "confirmResetTrial": {
           "title": "Reset trial?",
@@ -1847,6 +1847,10 @@
           "topup": "• Top-up prohibited",
           "subscription": "• Subscription purchase prohibited",
           "reason": "Reason"
+        },
+        "actions": {
+          "title": "Actions",
+          "areYouSure": "Are you sure?"
         },
         "subscription": {
           "current": "Current subscription",

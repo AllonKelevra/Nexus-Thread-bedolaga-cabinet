@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 import { useCurrency } from '../hooks/useCurrency';
+import { useNotify } from '../platform/hooks/useNotify';
 import {
   adminUsersApi,
   type UserDetailResponse,
@@ -80,6 +81,7 @@ export default function AdminUserDetail() {
   const { t } = useTranslation();
   const { formatWithCurrency } = useCurrency();
   const navigate = useNavigate();
+  const notify = useNotify();
   const { id } = useParams<{ id: string }>();
 
   const localeMap: Record<string, string> = { ru: 'ru-RU', en: 'en-US', zh: 'zh-CN', fa: 'fa-IR' };
@@ -91,6 +93,10 @@ export default function AdminUserDetail() {
   const [syncStatus, setSyncStatus] = useState<PanelSyncStatusResponse | null>(null);
   const [tariffs, setTariffs] = useState<UserAvailableTariff[]>([]);
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Inline confirm state
+  const [confirmingAction, setConfirmingAction] = useState<string | null>(null);
+  const confirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Balance form
   const [balanceAmount, setBalanceAmount] = useState<number | ''>('');
@@ -251,6 +257,90 @@ export default function AdminUserDetail() {
       await loadSyncStatus();
     } catch (error) {
       console.error('Failed to sync to panel:', error);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleInlineConfirm = (actionKey: string, executeFn: () => Promise<void>) => {
+    if (confirmingAction === actionKey) {
+      if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
+      setConfirmingAction(null);
+      executeFn();
+    } else {
+      if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
+      setConfirmingAction(actionKey);
+      confirmTimerRef.current = setTimeout(() => setConfirmingAction(null), 3000);
+    }
+  };
+
+  const handleResetTrial = async () => {
+    if (!userId) return;
+    setActionLoading(true);
+    try {
+      const result = await adminUsersApi.resetTrial(userId);
+      if (result.success) {
+        notify.success(t('admin.users.userActions.success.resetTrial'), t('common.success'));
+        await loadUser();
+      } else {
+        notify.error(result.message || t('admin.users.userActions.error'), t('common.error'));
+      }
+    } catch {
+      notify.error(t('admin.users.userActions.error'), t('common.error'));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleResetSubscription = async () => {
+    if (!userId) return;
+    setActionLoading(true);
+    try {
+      const result = await adminUsersApi.resetSubscription(userId);
+      if (result.success) {
+        notify.success(t('admin.users.userActions.success.resetSubscription'), t('common.success'));
+        await loadUser();
+      } else {
+        notify.error(result.message || t('admin.users.userActions.error'), t('common.error'));
+      }
+    } catch {
+      notify.error(t('admin.users.userActions.error'), t('common.error'));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDisableUser = async () => {
+    if (!userId) return;
+    setActionLoading(true);
+    try {
+      const result = await adminUsersApi.disableUser(userId);
+      if (result.success) {
+        notify.success(t('admin.users.userActions.success.disable'), t('common.success'));
+        await loadUser();
+      } else {
+        notify.error(result.message || t('admin.users.userActions.error'), t('common.error'));
+      }
+    } catch {
+      notify.error(t('admin.users.userActions.error'), t('common.error'));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleFullDeleteUser = async () => {
+    if (!userId) return;
+    setActionLoading(true);
+    try {
+      const result = await adminUsersApi.fullDeleteUser(userId);
+      if (result.success) {
+        notify.success(t('admin.users.userActions.success.delete'), t('common.success'));
+        navigate('/admin/users');
+      } else {
+        notify.error(result.message || t('admin.users.userActions.error'), t('common.error'));
+      }
+    } catch {
+      notify.error(t('admin.users.userActions.error'), t('common.error'));
     } finally {
       setActionLoading(false);
     }
@@ -459,6 +549,67 @@ export default function AdminUserDetail() {
                 )}
               </div>
             )}
+
+            {/* Actions */}
+            <div className="rounded-xl bg-dark-800/50 p-4">
+              <div className="mb-3 text-sm font-medium text-dark-200">
+                {t('admin.users.detail.actions.title')}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => handleInlineConfirm('resetTrial', handleResetTrial)}
+                  disabled={actionLoading}
+                  className={`rounded-lg px-3 py-2 text-sm font-medium transition-all disabled:opacity-50 ${
+                    confirmingAction === 'resetTrial'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-blue-500/15 text-blue-400 hover:bg-blue-500/25'
+                  }`}
+                >
+                  {confirmingAction === 'resetTrial'
+                    ? t('admin.users.detail.actions.areYouSure')
+                    : t('admin.users.userActions.resetTrial')}
+                </button>
+                <button
+                  onClick={() => handleInlineConfirm('resetSubscription', handleResetSubscription)}
+                  disabled={actionLoading}
+                  className={`rounded-lg px-3 py-2 text-sm font-medium transition-all disabled:opacity-50 ${
+                    confirmingAction === 'resetSubscription'
+                      ? 'bg-amber-500 text-white'
+                      : 'bg-amber-500/15 text-amber-400 hover:bg-amber-500/25'
+                  }`}
+                >
+                  {confirmingAction === 'resetSubscription'
+                    ? t('admin.users.detail.actions.areYouSure')
+                    : t('admin.users.userActions.resetSubscription')}
+                </button>
+                <button
+                  onClick={() => handleInlineConfirm('disable', handleDisableUser)}
+                  disabled={actionLoading}
+                  className={`rounded-lg px-3 py-2 text-sm font-medium transition-all disabled:opacity-50 ${
+                    confirmingAction === 'disable'
+                      ? 'bg-dark-500 text-white'
+                      : 'bg-dark-700 text-dark-300 hover:bg-dark-600'
+                  }`}
+                >
+                  {confirmingAction === 'disable'
+                    ? t('admin.users.detail.actions.areYouSure')
+                    : t('admin.users.userActions.disable')}
+                </button>
+                <button
+                  onClick={() => handleInlineConfirm('fullDelete', handleFullDeleteUser)}
+                  disabled={actionLoading}
+                  className={`rounded-lg px-3 py-2 text-sm font-medium transition-all disabled:opacity-50 ${
+                    confirmingAction === 'fullDelete'
+                      ? 'bg-rose-500 text-white'
+                      : 'bg-rose-500/15 text-rose-400 hover:bg-rose-500/25'
+                  }`}
+                >
+                  {confirmingAction === 'fullDelete'
+                    ? t('admin.users.detail.actions.areYouSure')
+                    : t('admin.users.userActions.delete')}
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
