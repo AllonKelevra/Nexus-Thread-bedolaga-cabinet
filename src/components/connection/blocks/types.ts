@@ -3,6 +3,7 @@ import type { RemnawaveBlockClient, RemnawaveButtonClient, LocalizedText } from 
 export interface BlockRendererProps {
   blocks: RemnawaveBlockClient[];
   isMobile: boolean;
+  isLight: boolean;
   getLocalizedText: (text: LocalizedText | undefined) => string;
   getSvgHtml: (key: string | undefined) => string;
   renderBlockButtons: (

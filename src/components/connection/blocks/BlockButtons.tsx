@@ -38,6 +38,7 @@ const CheckIcon = () => (
 interface BlockButtonsProps {
   buttons: RemnawaveButtonClient[] | undefined;
   variant: 'light' | 'subtle';
+  isLight?: boolean;
   subscriptionUrl: string | null;
   hideLink?: boolean;
   deepLink?: string | null;
@@ -50,6 +51,7 @@ interface BlockButtonsProps {
 export function BlockButtons({
   buttons,
   variant,
+  isLight,
   subscriptionUrl,
   hideLink,
   deepLink,
@@ -80,8 +82,12 @@ export function BlockButtons({
 
   const baseClass =
     variant === 'light'
-      ? 'rounded-xl border border-accent-500/40 px-4 py-2 text-sm font-medium text-accent-400 transition-all hover:bg-accent-500/10'
-      : 'rounded-xl px-3 py-1.5 text-sm font-medium text-dark-300 transition-all hover:bg-dark-700/50';
+      ? isLight
+        ? 'rounded-xl border border-accent-500/50 px-4 py-2 text-sm font-medium text-accent-600 shadow-sm transition-all hover:bg-accent-500/10'
+        : 'rounded-xl border border-accent-500/40 px-4 py-2 text-sm font-medium text-accent-400 transition-all hover:bg-accent-500/10'
+      : isLight
+        ? 'rounded-xl px-3 py-1.5 text-sm font-medium text-dark-300 transition-all hover:bg-dark-700/30'
+        : 'rounded-xl px-3 py-1.5 text-sm font-medium text-dark-300 transition-all hover:bg-dark-700/50';
 
   return (
     <div className="mt-3 flex flex-wrap gap-2">
@@ -120,7 +126,7 @@ export function BlockButtons({
               onClick={() => handleCopy(url)}
               className={`flex items-center gap-2 ${
                 copied
-                  ? 'rounded-xl border border-success-500 bg-success-500/10 px-4 py-2 text-sm font-medium text-success-400'
+                  ? `rounded-xl border border-success-500 bg-success-500/10 px-4 py-2 text-sm font-medium ${isLight ? 'text-success-600' : 'text-success-400'}`
                   : baseClass
               }`}
             >

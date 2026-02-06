@@ -8,6 +8,7 @@ import type {
   RemnawavePlatformData,
   RemnawaveButtonClient,
 } from '@/types';
+import { useTheme } from '@/hooks/useTheme';
 import { CardsBlock, TimelineBlock, AccordionBlock, MinimalBlock, BlockButtons } from './blocks';
 import type { BlockRendererProps } from './blocks';
 
@@ -51,6 +52,7 @@ export default function InstallationGuide({
   onGoBack,
 }: Props) {
   const { t, i18n } = useTranslation();
+  const { isLight } = useTheme();
 
   const detectedPlatform = useMemo(() => detectPlatform(), []);
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
@@ -127,6 +129,7 @@ export default function InstallationGuide({
       <BlockButtons
         buttons={buttons}
         variant={variant}
+        isLight={isLight}
         subscriptionUrl={appConfig.subscriptionUrl}
         hideLink={appConfig.hideLink}
         deepLink={selectedApp?.deepLink}
@@ -140,6 +143,7 @@ export default function InstallationGuide({
       appConfig.subscriptionUrl,
       appConfig.hideLink,
       selectedApp?.deepLink,
+      isLight,
       getLocalizedText,
       getBaseTranslation,
       getSvgHtml,
@@ -221,9 +225,11 @@ export default function InstallationGuide({
                   if (app) setSelectedApp(app);
                 }
               }}
-              className={`appearance-none rounded-xl border border-dark-700 bg-dark-800 py-2 pr-8 text-sm font-medium text-dark-200 outline-none transition-colors hover:border-dark-600 ${
-                currentPlatformSvg ? 'pl-10' : 'pl-4'
-              }`}
+              className={`appearance-none rounded-xl border py-2 pr-8 text-sm font-medium outline-none transition-colors ${
+                isLight
+                  ? 'border-dark-700/60 bg-white/80 text-dark-200 shadow-sm hover:border-dark-600'
+                  : 'border-dark-700 bg-dark-800 text-dark-200 hover:border-dark-600'
+              } ${currentPlatformSvg ? 'pl-10' : 'pl-4'}`}
             >
               {availablePlatforms.map((p) => (
                 <option key={p} value={p}>
@@ -258,8 +264,12 @@ export default function InstallationGuide({
                 onClick={() => setSelectedApp(app)}
                 className={`relative flex min-w-[calc(50%-0.25rem)] items-center gap-2 overflow-hidden rounded-xl px-4 py-2 text-sm font-medium transition-all active:scale-[0.97] ${
                   isSelected
-                    ? 'bg-accent-500/15 text-accent-400 ring-1 ring-accent-500/40'
-                    : 'border border-dark-700/50 bg-dark-800/80 text-dark-200 hover:border-dark-600/50 hover:bg-dark-700/80'
+                    ? isLight
+                      ? 'bg-accent-500/15 text-accent-600 ring-1 ring-accent-500/40'
+                      : 'bg-accent-500/15 text-accent-400 ring-1 ring-accent-500/40'
+                    : isLight
+                      ? 'border border-dark-700/60 bg-white/80 text-dark-200 shadow-sm hover:border-dark-600/50 hover:bg-white'
+                      : 'border border-dark-700/50 bg-dark-800/80 text-dark-200 hover:border-dark-600/50 hover:bg-dark-700/80'
                 }`}
               >
                 {app.featured && <span className="h-2 w-2 shrink-0 rounded-full bg-amber-400" />}
@@ -306,6 +316,7 @@ export default function InstallationGuide({
         <Renderer
           blocks={selectedApp.blocks}
           isMobile={isMobile}
+          isLight={isLight}
           getLocalizedText={getLocalizedText}
           getSvgHtml={getSvgHtml}
           renderBlockButtons={renderBlockButtons}
