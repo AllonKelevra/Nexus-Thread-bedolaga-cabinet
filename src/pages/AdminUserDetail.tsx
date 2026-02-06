@@ -11,6 +11,7 @@ import {
   type UpdateSubscriptionRequest,
 } from '../api/adminUsers';
 import { AdminBackButton } from '../components/admin';
+import { createNumberInputHandler, toNumber } from '../utils/inputHelpers';
 
 // ============ Icons ============
 
@@ -92,12 +93,12 @@ export default function AdminUserDetail() {
   const [actionLoading, setActionLoading] = useState(false);
 
   // Balance form
-  const [balanceAmount, setBalanceAmount] = useState('');
+  const [balanceAmount, setBalanceAmount] = useState<number | ''>('');
   const [balanceDescription, setBalanceDescription] = useState('');
 
   // Subscription form
   const [subAction, setSubAction] = useState<string>('extend');
-  const [subDays, setSubDays] = useState('30');
+  const [subDays, setSubDays] = useState<number | ''>(30);
   const [selectedTariffId, setSelectedTariffId] = useState<number | null>(null);
 
   const userId = id ? parseInt(id, 10) : null;
@@ -150,10 +151,10 @@ export default function AdminUserDetail() {
   }, [activeTab, loadSyncStatus, loadTariffs]);
 
   const handleUpdateBalance = async (isAdd: boolean) => {
-    if (!balanceAmount || !userId) return;
+    if (balanceAmount === '' || !userId) return;
     setActionLoading(true);
     try {
-      const amount = Math.abs(parseFloat(balanceAmount) * 100);
+      const amount = Math.abs(toNumber(balanceAmount) * 100);
       await adminUsersApi.updateBalance(userId, {
         amount_kopeks: isAdd ? amount : -amount,
         description:
@@ -178,13 +179,13 @@ export default function AdminUserDetail() {
     try {
       const data: UpdateSubscriptionRequest = {
         action: subAction as UpdateSubscriptionRequest['action'],
-        ...(subAction === 'extend' ? { days: parseInt(subDays) } : {}),
+        ...(subAction === 'extend' ? { days: toNumber(subDays, 30) } : {}),
         ...(subAction === 'change_tariff' && selectedTariffId
           ? { tariff_id: selectedTariffId }
           : {}),
         ...(subAction === 'create'
           ? {
-              days: parseInt(subDays),
+              days: toNumber(subDays, 30),
               ...(selectedTariffId ? { tariff_id: selectedTariffId } : {}),
             }
           : {}),
@@ -517,7 +518,7 @@ export default function AdminUserDetail() {
                     <select
                       value={subAction}
                       onChange={(e) => setSubAction(e.target.value)}
-                      className="w-full rounded-lg border border-dark-600 bg-dark-700 px-3 py-2 text-dark-100"
+                      className="input"
                     >
                       <option value="extend">{t('admin.users.detail.subscription.extend')}</option>
                       <option value="change_tariff">
@@ -533,9 +534,11 @@ export default function AdminUserDetail() {
                       <input
                         type="number"
                         value={subDays}
-                        onChange={(e) => setSubDays(e.target.value)}
+                        onChange={createNumberInputHandler(setSubDays, 1)}
                         placeholder={t('admin.users.detail.subscription.days')}
-                        className="w-full rounded-lg border border-dark-600 bg-dark-700 px-3 py-2 text-dark-100"
+                        className="input"
+                        min={1}
+                        max={3650}
                       />
                     )}
 
@@ -545,7 +548,7 @@ export default function AdminUserDetail() {
                         onChange={(e) =>
                           setSelectedTariffId(e.target.value ? parseInt(e.target.value) : null)
                         }
-                        className="w-full rounded-lg border border-dark-600 bg-dark-700 px-3 py-2 text-dark-100"
+                        className="input"
                       >
                         <option value="">
                           {t('admin.users.detail.subscription.selectTariff')}
@@ -563,7 +566,7 @@ export default function AdminUserDetail() {
                     <button
                       onClick={handleUpdateSubscription}
                       disabled={actionLoading}
-                      className="w-full rounded-lg bg-accent-500 py-2 text-white transition-colors hover:bg-accent-600 disabled:opacity-50"
+                      className="btn-primary w-full"
                     >
                       {actionLoading
                         ? t('admin.users.actions.applying')
@@ -583,7 +586,7 @@ export default function AdminUserDetail() {
                     onChange={(e) =>
                       setSelectedTariffId(e.target.value ? parseInt(e.target.value) : null)
                     }
-                    className="w-full rounded-lg border border-dark-600 bg-dark-700 px-3 py-2 text-dark-100"
+                    className="input"
                   >
                     <option value="">{t('admin.users.detail.subscription.selectTariff')}</option>
                     {tariffs.map((tariffItem) => (
@@ -595,9 +598,11 @@ export default function AdminUserDetail() {
                   <input
                     type="number"
                     value={subDays}
-                    onChange={(e) => setSubDays(e.target.value)}
+                    onChange={createNumberInputHandler(setSubDays, 1)}
                     placeholder={t('admin.users.detail.subscription.days')}
-                    className="w-full rounded-lg border border-dark-600 bg-dark-700 px-3 py-2 text-dark-100"
+                    className="input"
+                    min={1}
+                    max={3650}
                   />
                   <button
                     onClick={() => {
@@ -605,7 +610,7 @@ export default function AdminUserDetail() {
                       handleUpdateSubscription();
                     }}
                     disabled={actionLoading}
-                    className="w-full rounded-lg bg-success-500 py-2 text-white transition-colors hover:bg-success-600 disabled:opacity-50"
+                    className="btn-primary w-full"
                   >
                     {actionLoading
                       ? t('admin.users.detail.subscription.creating')
@@ -635,28 +640,29 @@ export default function AdminUserDetail() {
               <input
                 type="number"
                 value={balanceAmount}
-                onChange={(e) => setBalanceAmount(e.target.value)}
+                onChange={createNumberInputHandler(setBalanceAmount)}
                 placeholder={t('admin.users.detail.balance.amountPlaceholder')}
-                className="w-full rounded-lg border border-dark-600 bg-dark-700 px-3 py-2 text-dark-100"
+                className="input"
               />
               <input
                 type="text"
                 value={balanceDescription}
                 onChange={(e) => setBalanceDescription(e.target.value)}
                 placeholder={t('admin.users.detail.balance.descriptionPlaceholder')}
-                className="w-full rounded-lg border border-dark-600 bg-dark-700 px-3 py-2 text-dark-100"
+                className="input"
+                maxLength={500}
               />
               <div className="flex gap-2">
                 <button
                   onClick={() => handleUpdateBalance(true)}
-                  disabled={actionLoading || !balanceAmount}
+                  disabled={actionLoading || balanceAmount === ''}
                   className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-success-500 py-2 text-white transition-colors hover:bg-success-600 disabled:opacity-50"
                 >
                   <PlusIcon /> {t('admin.users.detail.balance.add')}
                 </button>
                 <button
                   onClick={() => handleUpdateBalance(false)}
-                  disabled={actionLoading || !balanceAmount}
+                  disabled={actionLoading || balanceAmount === ''}
                   className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-error-500 py-2 text-white transition-colors hover:bg-error-600 disabled:opacity-50"
                 >
                   <MinusIcon /> {t('admin.users.detail.balance.subtract')}

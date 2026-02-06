@@ -224,7 +224,10 @@ export default function AdminCampaignCreate() {
     createMutation.mutate(data);
   };
 
-  const isValid = name.trim() && startParameter.trim() && /^[a-zA-Z0-9_-]+$/.test(startParameter);
+  const isNameValid = name.trim().length > 0;
+  const isStartParamValid =
+    startParameter.trim().length > 0 && /^[a-zA-Z0-9_-]+$/.test(startParameter);
+  const isValid = isNameValid && isStartParamValid;
 
   return (
     <div className="space-y-6">
@@ -250,27 +253,36 @@ export default function AdminCampaignCreate() {
         <div>
           <label className="mb-2 block text-sm font-medium text-dark-300">
             {t('admin.campaigns.form.name')}
+            <span className="text-error-400">*</span>
           </label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="input"
+            className={`input ${name.length > 0 && !isNameValid ? 'border-error-500/50' : ''}`}
             placeholder={t('admin.campaigns.form.namePlaceholder')}
+            maxLength={255}
           />
+          {name.length > 0 && !isNameValid && (
+            <p className="mt-1 text-xs text-error-400">
+              {t('admin.campaigns.validation.nameRequired')}
+            </p>
+          )}
         </div>
 
         {/* Start Parameter */}
         <div>
           <label className="mb-2 block text-sm font-medium text-dark-300">
             {t('admin.campaigns.form.startParameter')}
+            <span className="text-error-400">*</span>
           </label>
           <input
             type="text"
             value={startParameter}
             onChange={(e) => setStartParameter(e.target.value.replace(/[^a-zA-Z0-9_-]/g, ''))}
-            className="input font-mono"
+            className={`input font-mono ${startParameter.length > 0 && !isStartParamValid ? 'border-error-500/50' : ''}`}
             placeholder="instagram_jan2024"
+            maxLength={100}
           />
           <p className="mt-1 text-xs text-dark-500">
             {t('admin.campaigns.form.startParameterHint')}
@@ -354,7 +366,7 @@ export default function AdminCampaignCreate() {
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="mb-2 block text-sm text-dark-400">
+              <label className="mb-2 block text-sm font-medium text-dark-300">
                 {t('admin.campaigns.form.days')}
               </label>
               <input
@@ -366,7 +378,7 @@ export default function AdminCampaignCreate() {
               />
             </div>
             <div>
-              <label className="mb-2 block text-sm text-dark-400">
+              <label className="mb-2 block text-sm font-medium text-dark-300">
                 {t('admin.campaigns.form.trafficGb')}
               </label>
               <input
@@ -378,7 +390,7 @@ export default function AdminCampaignCreate() {
               />
             </div>
             <div>
-              <label className="mb-2 block text-sm text-dark-400">
+              <label className="mb-2 block text-sm font-medium text-dark-300">
                 {t('admin.campaigns.form.devices')}
               </label>
               <input

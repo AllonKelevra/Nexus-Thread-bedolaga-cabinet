@@ -27,6 +27,7 @@ import { useNotify } from '@/platform/hooks/useNotify';
 import FortuneWheel from '../components/wheel/FortuneWheel';
 import { ColorPicker } from '@/components/ColorPicker';
 import { usePlatform } from '../platform/hooks/usePlatform';
+import { toNumber } from '../utils/inputHelpers';
 
 // Icons
 
@@ -303,13 +304,13 @@ export default function AdminWheel() {
   // Settings form state
   const [settingsForm, setSettingsForm] = useState<{
     is_enabled: boolean;
-    spin_cost_stars: number;
+    spin_cost_stars: number | '';
     spin_cost_stars_enabled: boolean;
-    spin_cost_days: number;
+    spin_cost_days: number | '';
     spin_cost_days_enabled: boolean;
     rtp_percent: number;
-    daily_spin_limit: number;
-    min_subscription_days_for_day_payment: number;
+    daily_spin_limit: number | '';
+    min_subscription_days_for_day_payment: number | '';
     promo_prefix: string;
   } | null>(null);
 
@@ -601,18 +602,25 @@ export default function AdminWheel() {
             </h3>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-1 block text-sm font-medium text-dark-300">
+                <label className="mb-2 block text-sm font-medium text-dark-300">
                   {t('admin.wheel.settings.costInStars')}
                 </label>
                 <div className="flex gap-2">
                   <input
                     type="number"
                     value={settingsForm?.spin_cost_stars ?? config.spin_cost_stars}
-                    onChange={(e) =>
-                      setSettingsForm((prev) =>
-                        prev ? { ...prev, spin_cost_stars: parseInt(e.target.value) || 1 } : null,
-                      )
-                    }
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '')
+                        return setSettingsForm((prev) =>
+                          prev ? { ...prev, spin_cost_stars: '' } : null,
+                        );
+                      const num = parseInt(val);
+                      if (!isNaN(num))
+                        setSettingsForm((prev) =>
+                          prev ? { ...prev, spin_cost_stars: num } : null,
+                        );
+                    }}
                     min={1}
                     max={1000}
                     className="input flex-1"
@@ -636,18 +644,23 @@ export default function AdminWheel() {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-dark-300">
+                <label className="mb-2 block text-sm font-medium text-dark-300">
                   {t('admin.wheel.settings.costInDays')}
                 </label>
                 <div className="flex gap-2">
                   <input
                     type="number"
                     value={settingsForm?.spin_cost_days ?? config.spin_cost_days}
-                    onChange={(e) =>
-                      setSettingsForm((prev) =>
-                        prev ? { ...prev, spin_cost_days: parseInt(e.target.value) || 1 } : null,
-                      )
-                    }
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '')
+                        return setSettingsForm((prev) =>
+                          prev ? { ...prev, spin_cost_days: '' } : null,
+                        );
+                      const num = parseInt(val);
+                      if (!isNaN(num))
+                        setSettingsForm((prev) => (prev ? { ...prev, spin_cost_days: num } : null));
+                    }}
                     min={1}
                     max={30}
                     className="input flex-1"
@@ -682,7 +695,7 @@ export default function AdminWheel() {
             </h3>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-1 block text-sm font-medium text-dark-300">
+                <label className="mb-2 block text-sm font-medium text-dark-300">
                   {t('admin.wheel.settings.rtpPercent')}
                 </label>
                 <input
@@ -707,17 +720,22 @@ export default function AdminWheel() {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-dark-300">
+                <label className="mb-2 block text-sm font-medium text-dark-300">
                   {t('admin.wheel.settings.dailyLimit')}
                 </label>
                 <input
                   type="number"
                   value={settingsForm?.daily_spin_limit ?? config.daily_spin_limit}
-                  onChange={(e) =>
-                    setSettingsForm((prev) =>
-                      prev ? { ...prev, daily_spin_limit: parseInt(e.target.value) || 0 } : null,
-                    )
-                  }
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '')
+                      return setSettingsForm((prev) =>
+                        prev ? { ...prev, daily_spin_limit: '' } : null,
+                      );
+                    const num = parseInt(val);
+                    if (!isNaN(num))
+                      setSettingsForm((prev) => (prev ? { ...prev, daily_spin_limit: num } : null));
+                  }}
                   min={0}
                   max={100}
                   className="input w-full"
@@ -725,7 +743,7 @@ export default function AdminWheel() {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-dark-300">
+                <label className="mb-2 block text-sm font-medium text-dark-300">
                   {t('admin.wheel.settings.minSubDays')}
                 </label>
                 <input
@@ -734,16 +752,18 @@ export default function AdminWheel() {
                     settingsForm?.min_subscription_days_for_day_payment ??
                     config.min_subscription_days_for_day_payment
                   }
-                  onChange={(e) =>
-                    setSettingsForm((prev) =>
-                      prev
-                        ? {
-                            ...prev,
-                            min_subscription_days_for_day_payment: parseInt(e.target.value) || 1,
-                          }
-                        : null,
-                    )
-                  }
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '')
+                      return setSettingsForm((prev) =>
+                        prev ? { ...prev, min_subscription_days_for_day_payment: '' } : null,
+                      );
+                    const num = parseInt(val);
+                    if (!isNaN(num))
+                      setSettingsForm((prev) =>
+                        prev ? { ...prev, min_subscription_days_for_day_payment: num } : null,
+                      );
+                  }}
                   min={1}
                   max={30}
                   className="input w-full"
@@ -762,7 +782,7 @@ export default function AdminWheel() {
             </h3>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-1 block text-sm font-medium text-dark-300">
+                <label className="mb-2 block text-sm font-medium text-dark-300">
                   {t('admin.wheel.settings.promoPrefix')}
                 </label>
                 <input
@@ -798,7 +818,19 @@ export default function AdminWheel() {
                       // If we can't check, allow saving
                     }
                   }
-                  updateConfigMutation.mutate(settingsForm);
+                  updateConfigMutation.mutate({
+                    ...settingsForm,
+                    spin_cost_stars: toNumber(settingsForm.spin_cost_stars, config.spin_cost_stars),
+                    spin_cost_days: toNumber(settingsForm.spin_cost_days, config.spin_cost_days),
+                    daily_spin_limit: toNumber(
+                      settingsForm.daily_spin_limit,
+                      config.daily_spin_limit,
+                    ),
+                    min_subscription_days_for_day_payment: toNumber(
+                      settingsForm.min_subscription_days_for_day_payment,
+                      config.min_subscription_days_for_day_payment,
+                    ),
+                  });
                 }}
                 disabled={updateConfigMutation.isPending}
                 className="btn-primary flex items-center gap-2"
@@ -1022,7 +1054,19 @@ function InlinePrizeForm({
   isLoading?: boolean;
 }) {
   const { t } = useTranslation();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    prize_type: string;
+    prize_value: number | '';
+    display_name: string;
+    emoji: string;
+    color: string;
+    prize_value_kopeks: number | '';
+    is_active: boolean;
+    manual_probability: number | null;
+    promo_balance_bonus_kopeks: number | '';
+    promo_subscription_days: number | '';
+    promo_traffic_gb: number | '';
+  }>({
     prize_type: prize?.prize_type || 'balance_bonus',
     prize_value: prize?.prize_value || 0,
     display_name: prize?.display_name || '',
@@ -1038,7 +1082,14 @@ function InlinePrizeForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    onSave({
+      ...formData,
+      prize_value: toNumber(formData.prize_value),
+      prize_value_kopeks: toNumber(formData.prize_value_kopeks),
+      promo_balance_bonus_kopeks: toNumber(formData.promo_balance_bonus_kopeks),
+      promo_subscription_days: toNumber(formData.promo_subscription_days),
+      promo_traffic_gb: toNumber(formData.promo_traffic_gb),
+    });
   };
 
   return (
@@ -1057,7 +1108,7 @@ function InlinePrizeForm({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {/* Prize type */}
         <div>
-          <label className="mb-1 block text-sm font-medium text-dark-300">
+          <label className="mb-2 block text-sm font-medium text-dark-300">
             {t('admin.wheel.prizes.fields.type')}
           </label>
           <select
@@ -1075,7 +1126,7 @@ function InlinePrizeForm({
 
         {/* Display name */}
         <div>
-          <label className="mb-1 block text-sm font-medium text-dark-300">
+          <label className="mb-2 block text-sm font-medium text-dark-300">
             {t('admin.wheel.prizes.fields.displayName')}
           </label>
           <input
@@ -1092,7 +1143,7 @@ function InlinePrizeForm({
         {/* Prize value */}
         {formData.prize_type !== 'nothing' && (
           <div>
-            <label className="mb-1 block text-sm font-medium text-dark-300">
+            <label className="mb-2 block text-sm font-medium text-dark-300">
               {t('admin.wheel.prizes.fields.value')} (
               {formData.prize_type === 'balance_bonus'
                 ? 'kopeks'
@@ -1104,9 +1155,12 @@ function InlinePrizeForm({
             <input
               type="number"
               value={formData.prize_value}
-              onChange={(e) =>
-                setFormData({ ...formData, prize_value: parseInt(e.target.value) || 0 })
-              }
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === '') return setFormData({ ...formData, prize_value: '' });
+                const num = parseInt(val);
+                if (!isNaN(num)) setFormData({ ...formData, prize_value: num });
+              }}
               min={0}
               className="input w-full"
             />
@@ -1115,26 +1169,29 @@ function InlinePrizeForm({
 
         {/* Prize value in kopeks (for RTP calculation) */}
         <div>
-          <label className="mb-1 block text-sm font-medium text-dark-300">
+          <label className="mb-2 block text-sm font-medium text-dark-300">
             {t('admin.wheel.prizes.fields.valueKopeks')}
           </label>
           <input
             type="number"
             value={formData.prize_value_kopeks}
-            onChange={(e) =>
-              setFormData({ ...formData, prize_value_kopeks: parseInt(e.target.value) || 0 })
-            }
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === '') return setFormData({ ...formData, prize_value_kopeks: '' });
+              const num = parseInt(val);
+              if (!isNaN(num)) setFormData({ ...formData, prize_value_kopeks: num });
+            }}
             min={0}
             className="input w-full"
           />
           <p className="mt-1 text-xs text-dark-500">
-            = {(formData.prize_value_kopeks / 100).toFixed(2)} RUB
+            = {(toNumber(formData.prize_value_kopeks) / 100).toFixed(2)} RUB
           </p>
         </div>
 
         {/* Emoji */}
         <div>
-          <label className="mb-1 block text-sm font-medium text-dark-300">
+          <label className="mb-2 block text-sm font-medium text-dark-300">
             {t('admin.wheel.prizes.fields.emoji')}
           </label>
           <input
@@ -1174,7 +1231,7 @@ function InlinePrizeForm({
           <h4 className="font-medium text-dark-200">{t('admin.wheel.prizes.promo.title')}</h4>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm text-dark-400">
+              <label className="mb-2 block text-sm font-medium text-dark-300">
                 {t('admin.wheel.prizes.promo.balanceBonus')}
               </label>
               <input
@@ -1183,7 +1240,8 @@ function InlinePrizeForm({
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    promo_balance_bonus_kopeks: parseInt(e.target.value) || 0,
+                    promo_balance_bonus_kopeks:
+                      e.target.value === '' ? '' : parseInt(e.target.value) || 0,
                   })
                 }
                 min={0}
@@ -1191,7 +1249,7 @@ function InlinePrizeForm({
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm text-dark-400">
+              <label className="mb-2 block text-sm font-medium text-dark-300">
                 {t('admin.wheel.prizes.promo.subscriptionDays')}
               </label>
               <input
@@ -1200,7 +1258,8 @@ function InlinePrizeForm({
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    promo_subscription_days: parseInt(e.target.value) || 0,
+                    promo_subscription_days:
+                      e.target.value === '' ? '' : parseInt(e.target.value) || 0,
                   })
                 }
                 min={0}

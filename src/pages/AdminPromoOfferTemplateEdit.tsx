@@ -126,51 +126,54 @@ export default function AdminPromoOfferTemplateEdit() {
         <div className="rounded-xl border border-dark-700 bg-dark-800 p-6">
           <div className="space-y-4">
             <div>
-              <label className="mb-1 block text-sm text-dark-300">
+              <label className="mb-2 block text-sm font-medium text-dark-300">
                 {t('admin.promoOffers.form.templateName')}
+                <span className="text-error-400">*</span>
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-lg border border-dark-600 bg-dark-700 px-3 py-2 text-dark-100 focus:border-accent-500 focus:outline-none"
+                className={`input ${name.length > 0 && !name.trim() ? 'border-error-500/50' : ''}`}
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-sm text-dark-300">
+              <label className="mb-2 block text-sm font-medium text-dark-300">
                 {t('admin.promoOffers.form.messageText')}
+                <span className="text-error-400">*</span>
               </label>
               <textarea
                 value={messageText}
                 onChange={(e) => setMessageText(e.target.value)}
                 rows={4}
-                className="w-full resize-none rounded-lg border border-dark-600 bg-dark-700 px-3 py-2 text-dark-100 focus:border-accent-500 focus:outline-none"
+                className={`input resize-none ${messageText.length > 0 && !messageText.trim() ? 'border-error-500/50' : ''}`}
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-sm text-dark-300">
+              <label className="mb-2 block text-sm font-medium text-dark-300">
                 {t('admin.promoOffers.form.buttonText')}
+                <span className="text-error-400">*</span>
               </label>
               <input
                 type="text"
                 value={buttonText}
                 onChange={(e) => setButtonText(e.target.value)}
-                className="w-full rounded-lg border border-dark-600 bg-dark-700 px-3 py-2 text-dark-100 focus:border-accent-500 focus:outline-none"
+                className={`input ${buttonText.length > 0 && !buttonText.trim() ? 'border-error-500/50' : ''}`}
               />
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-sm text-dark-300">
+                <label className="mb-2 block text-sm font-medium text-dark-300">
                   {t('admin.promoOffers.form.validHours')}
                 </label>
                 <input
                   type="number"
                   value={validHours}
                   onChange={createNumberInputHandler(setValidHours, 1)}
-                  className="w-full rounded-lg border border-dark-600 bg-dark-700 px-3 py-2 text-dark-100 focus:border-accent-500 focus:outline-none"
+                  className="input"
                   min={1}
                   placeholder="0"
                 />
@@ -181,14 +184,14 @@ export default function AdminPromoOfferTemplateEdit() {
 
               {!isTestAccess && (
                 <div>
-                  <label className="mb-1 block text-sm text-dark-300">
+                  <label className="mb-2 block text-sm font-medium text-dark-300">
                     {t('admin.promoOffers.form.discountPercent')}
                   </label>
                   <input
                     type="number"
                     value={discountPercent}
                     onChange={createNumberInputHandler(setDiscountPercent, 0, 100)}
-                    className="w-full rounded-lg border border-dark-600 bg-dark-700 px-3 py-2 text-dark-100 focus:border-accent-500 focus:outline-none"
+                    className="input"
                     min={0}
                     max={100}
                     placeholder="0"
@@ -199,14 +202,14 @@ export default function AdminPromoOfferTemplateEdit() {
 
             {isTestAccess ? (
               <div>
-                <label className="mb-1 block text-sm text-dark-300">
+                <label className="mb-2 block text-sm font-medium text-dark-300">
                   {t('admin.promoOffers.form.testDurationHours')}
                 </label>
                 <input
                   type="number"
                   value={testDurationHours}
                   onChange={createNumberInputHandler(setTestDurationHours, 0)}
-                  className="w-full rounded-lg border border-dark-600 bg-dark-700 px-3 py-2 text-dark-100 focus:border-accent-500 focus:outline-none"
+                  className="input"
                   min={0}
                   placeholder="0"
                 />
@@ -216,14 +219,14 @@ export default function AdminPromoOfferTemplateEdit() {
               </div>
             ) : (
               <div>
-                <label className="mb-1 block text-sm text-dark-300">
+                <label className="mb-2 block text-sm font-medium text-dark-300">
                   {t('admin.promoOffers.form.activeDiscountHours')}
                 </label>
                 <input
                   type="number"
                   value={activeDiscountHours}
                   onChange={createNumberInputHandler(setActiveDiscountHours, 0)}
-                  className="w-full rounded-lg border border-dark-600 bg-dark-700 px-3 py-2 text-dark-100 focus:border-accent-500 focus:outline-none"
+                  className="input"
                   min={0}
                   placeholder="0"
                 />
@@ -237,13 +240,13 @@ export default function AdminPromoOfferTemplateEdit() {
               <button
                 type="button"
                 onClick={() => setIsActive(!isActive)}
-                className={`relative h-6 w-10 rounded-full transition-colors ${
+                className={`relative h-6 w-11 rounded-full transition-colors ${
                   isActive ? 'bg-accent-500' : 'bg-dark-600'
                 }`}
               >
                 <span
                   className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-transform ${
-                    isActive ? 'left-5' : 'left-1'
+                    isActive ? 'left-6' : 'left-1'
                   }`}
                 />
               </button>
@@ -256,16 +259,13 @@ export default function AdminPromoOfferTemplateEdit() {
 
         {/* Actions */}
         <div className="flex justify-end gap-3">
-          <button
-            onClick={() => navigate('/admin/promo-offers')}
-            className="px-4 py-2 text-dark-300 transition-colors hover:text-dark-100"
-          >
+          <button onClick={() => navigate('/admin/promo-offers')} className="btn-secondary">
             {t('common.cancel')}
           </button>
           <button
             onClick={handleSubmit}
             disabled={!name.trim() || updateMutation.isPending}
-            className="rounded-lg bg-accent-500 px-6 py-2 text-white transition-colors hover:bg-accent-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="btn-primary"
           >
             {updateMutation.isPending ? t('admin.promoOffers.form.saving') : t('common.save')}
           </button>

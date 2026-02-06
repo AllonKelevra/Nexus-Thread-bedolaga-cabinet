@@ -334,14 +334,14 @@ function TemplateEditor({
 
       {/* Subject */}
       <div>
-        <label className="mb-1.5 block text-xs font-medium text-dark-300">
+        <label className="mb-2 block text-sm font-medium text-dark-300">
           {t('admin.emailTemplates.subject')}
         </label>
         <input
           type="text"
           value={editSubject}
           onChange={(e) => handleSubjectChange(e.target.value)}
-          className="w-full rounded-lg border border-dark-600 bg-dark-900 px-3 py-2.5 text-sm text-dark-100 placeholder-dark-500 transition-colors focus:border-accent-500 focus:outline-none focus:ring-1 focus:ring-accent-500"
+          className="input"
           placeholder={t('admin.emailTemplates.subjectPlaceholder')}
         />
       </div>
@@ -372,7 +372,7 @@ function TemplateEditor({
 
       {/* Body HTML editor */}
       <div>
-        <label className="mb-1.5 block text-xs font-medium text-dark-300">
+        <label className="mb-2 block text-sm font-medium text-dark-300">
           {t('admin.emailTemplates.body')}
         </label>
         <textarea
@@ -380,7 +380,7 @@ function TemplateEditor({
           value={editBody}
           onChange={(e) => handleBodyChange(e.target.value)}
           rows={12}
-          className="min-h-[200px] w-full resize-y rounded-lg border border-dark-600 bg-dark-900 px-3 py-2.5 font-mono text-xs leading-relaxed text-dark-100 placeholder-dark-500 transition-colors focus:border-accent-500 focus:outline-none focus:ring-1 focus:ring-accent-500 sm:min-h-[300px] sm:text-sm"
+          className="input min-h-[200px] resize-y font-mono text-xs leading-relaxed sm:min-h-[300px] sm:text-sm"
           placeholder="<h2>Title</h2><p>Content...</p>"
           spellCheck={false}
         />

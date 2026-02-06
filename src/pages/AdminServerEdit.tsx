@@ -152,7 +152,7 @@ export default function AdminServerEdit() {
 
           {/* Original Name (readonly) */}
           <div className="mb-4">
-            <label className="mb-2 block text-sm font-medium text-dark-100">
+            <label className="mb-2 block text-sm font-medium text-dark-300">
               {t('admin.servers.originalName')}
             </label>
             <div className="rounded-lg border border-dark-600 bg-dark-700/50 px-3 py-2 text-dark-400">
@@ -162,21 +162,23 @@ export default function AdminServerEdit() {
 
           {/* Display Name */}
           <div className="mb-4">
-            <label className="mb-2 block text-sm font-medium text-dark-100">
+            <label className="mb-2 block text-sm font-medium text-dark-300">
               {t('admin.servers.displayName')}
+              <span className="text-error-400">*</span>
             </label>
             <input
               type="text"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              className="input"
+              className={`input ${displayName.length > 0 && !displayName.trim() ? 'border-error-500/50' : ''}`}
               placeholder={t('admin.servers.displayNamePlaceholder')}
+              maxLength={255}
             />
           </div>
 
           {/* Description */}
           <div className="mb-4">
-            <label className="mb-2 block text-sm font-medium text-dark-100">
+            <label className="mb-2 block text-sm font-medium text-dark-300">
               {t('admin.servers.description')}
             </label>
             <textarea
@@ -190,7 +192,7 @@ export default function AdminServerEdit() {
 
           {/* Country Code */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-dark-100">
+            <label className="mb-2 block text-sm font-medium text-dark-300">
               {t('admin.servers.countryCode')}
             </label>
             <div className="flex items-center gap-2">
@@ -215,7 +217,7 @@ export default function AdminServerEdit() {
 
           {/* Price */}
           <div className="mb-4">
-            <label className="mb-2 block text-sm font-medium text-dark-100">
+            <label className="mb-2 block text-sm font-medium text-dark-300">
               {t('admin.servers.price')}
             </label>
             <div className="flex items-center gap-2">
@@ -241,7 +243,7 @@ export default function AdminServerEdit() {
 
           {/* Max Users */}
           <div className="mb-4">
-            <label className="mb-2 block text-sm font-medium text-dark-100">
+            <label className="mb-2 block text-sm font-medium text-dark-300">
               {t('admin.servers.maxUsers')}
             </label>
             <div className="flex items-center gap-2">
@@ -263,7 +265,7 @@ export default function AdminServerEdit() {
 
           {/* Sort Order */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-dark-100">
+            <label className="mb-2 block text-sm font-medium text-dark-300">
               {t('admin.servers.sortOrder')}
             </label>
             <input

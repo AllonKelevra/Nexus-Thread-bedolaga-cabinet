@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { createNumberInputHandler } from '../utils/inputHelpers';
 import {
   promocodesApi,
   PromoCodeDetail,
@@ -232,6 +233,7 @@ export default function AdminPromocodeCreate() {
             onChange={(e) => setCode(e.target.value.toUpperCase())}
             className={`input uppercase ${!isCodeValid && code.length > 0 ? 'border-error-500/50' : ''}`}
             placeholder="SUMMER2025"
+            maxLength={50}
           />
         </div>
 
@@ -268,14 +270,7 @@ export default function AdminPromocodeCreate() {
               <input
                 type="number"
                 value={balanceBonusRubles}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val === '') {
-                    setBalanceBonusRubles('');
-                  } else {
-                    setBalanceBonusRubles(Math.max(0, parseFloat(val) || 0));
-                  }
-                }}
+                onChange={createNumberInputHandler(setBalanceBonusRubles, 0)}
                 className="input w-32"
                 min={0}
                 step={1}
@@ -296,14 +291,7 @@ export default function AdminPromocodeCreate() {
               <input
                 type="number"
                 value={subscriptionDays}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val === '') {
-                    setSubscriptionDays('');
-                  } else {
-                    setSubscriptionDays(Math.max(0, parseInt(val) || 0));
-                  }
-                }}
+                onChange={createNumberInputHandler(setSubscriptionDays, 0)}
                 className="input w-32"
                 min={1}
                 placeholder="0"
@@ -403,14 +391,7 @@ export default function AdminPromocodeCreate() {
             <input
               type="number"
               value={maxUses}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val === '') {
-                  setMaxUses('');
-                } else {
-                  setMaxUses(Math.max(0, parseInt(val) || 0));
-                }
-              }}
+              onChange={createNumberInputHandler(setMaxUses, 0)}
               className="input w-32"
               min={0}
               placeholder="0"
