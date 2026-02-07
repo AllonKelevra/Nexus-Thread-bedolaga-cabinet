@@ -13,6 +13,7 @@ import {
   adminTrafficApi,
   type UserTrafficItem,
   type TrafficNodeInfo,
+  type TrafficUsageResponse,
   type TrafficParams,
 } from '../api/adminTraffic';
 import { usePlatform } from '../platform/hooks/usePlatform';
@@ -134,6 +135,42 @@ const ChevronDownIcon = () => (
   </svg>
 );
 
+const ServerIcon = () => (
+  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M21.75 17.25v-.228a4.5 4.5 0 00-.12-1.03l-2.268-9.64a3.375 3.375 0 00-3.285-2.602H7.923a3.375 3.375 0 00-3.285 2.602l-2.268 9.64a4.5 4.5 0 00-.12 1.03v.228m19.5 0a3 3 0 01-3 3H5.25a3 3 0 01-3-3m19.5 0a3 3 0 00-3-3H5.25a3 3 0 00-3 3m16.5 0h.008v.008h-.008v-.008zm-3 0h.008v.008h-.008v-.008z"
+    />
+  </svg>
+);
+
+const CalendarIcon = () => (
+  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"
+    />
+  </svg>
+);
+
+const XIcon = () => (
+  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+  </svg>
+);
+
+const StatusIcon = () => (
+  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
+  </svg>
+);
+
 // ============ Progress Bar ============
 
 function ProgressBar({ loading }: { loading: boolean }) {
@@ -189,12 +226,62 @@ function PeriodSelector({
   value,
   onChange,
   label,
+  dateMode,
+  customStart,
+  customEnd,
+  onToggleDateMode,
+  onCustomStartChange,
+  onCustomEndChange,
 }: {
   value: number;
   onChange: (v: number) => void;
   label: string;
+  dateMode: boolean;
+  customStart: string;
+  customEnd: string;
+  onToggleDateMode: () => void;
+  onCustomStartChange: (v: string) => void;
+  onCustomEndChange: (v: string) => void;
 }) {
   const { t } = useTranslation();
+
+  // Limit: last 31 days
+  const today = new Date().toISOString().split('T')[0];
+  const minDate = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+  if (dateMode) {
+    return (
+      <div className="flex items-center gap-2">
+        <CalendarIcon />
+        <span className="text-xs text-dark-400">{t('admin.trafficUsage.dateFrom')}</span>
+        <input
+          type="date"
+          value={customStart}
+          min={minDate}
+          max={customEnd || today}
+          onChange={(e) => onCustomStartChange(e.target.value)}
+          className="rounded-lg border border-dark-700 bg-dark-800 px-2 py-1 text-xs text-dark-200 focus:border-dark-600 focus:outline-none"
+        />
+        <span className="text-xs text-dark-400">{t('admin.trafficUsage.dateTo')}</span>
+        <input
+          type="date"
+          value={customEnd}
+          min={customStart || minDate}
+          max={today}
+          onChange={(e) => onCustomEndChange(e.target.value)}
+          className="rounded-lg border border-dark-700 bg-dark-800 px-2 py-1 text-xs text-dark-200 focus:border-dark-600 focus:outline-none"
+        />
+        <button
+          onClick={onToggleDateMode}
+          className="rounded-lg p-1 text-dark-400 transition-colors hover:bg-dark-700 hover:text-dark-200"
+          title={t('admin.trafficUsage.period')}
+        >
+          <XIcon />
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center gap-2">
       <span className="text-xs text-dark-400">{label}</span>
@@ -214,6 +301,13 @@ function PeriodSelector({
           </button>
         ))}
       </div>
+      <button
+        onClick={onToggleDateMode}
+        className="rounded-lg border border-dark-700 bg-dark-800 p-1.5 text-dark-400 transition-colors hover:border-dark-600 hover:bg-dark-700 hover:text-dark-200"
+        title={t('admin.trafficUsage.customDates')}
+      >
+        <CalendarIcon />
+      </button>
     </div>
   );
 }
@@ -347,6 +441,277 @@ function TariffFilter({
   );
 }
 
+const STATUS_COLORS: Record<string, string> = {
+  active: 'bg-success-500',
+  trial: 'bg-warning-500',
+  expired: 'bg-error-500',
+  disabled: 'bg-dark-500',
+};
+
+function StatusFilter({
+  available,
+  selected,
+  onChange,
+}: {
+  available: string[];
+  selected: Set<string>;
+  onChange: (next: Set<string>) => void;
+}) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  if (available.length === 0) return null;
+
+  const allSelected = selected.size === 0;
+  const activeCount = selected.size;
+
+  const toggle = (status: string) => {
+    const next = new Set(selected);
+    if (next.has(status)) {
+      next.delete(status);
+    } else {
+      next.add(status);
+    }
+    onChange(next);
+  };
+
+  const selectAll = () => onChange(new Set());
+
+  const statusLabel = (s: string) => {
+    const key = `admin.trafficUsage.status${s.charAt(0).toUpperCase() + s.slice(1)}`;
+    return t(key, s);
+  };
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen(!open)}
+        className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+          activeCount > 0
+            ? 'border-accent-500/50 bg-accent-500/10 text-accent-400'
+            : 'border-dark-700 bg-dark-800 text-dark-200 hover:border-dark-600 hover:bg-dark-700'
+        }`}
+      >
+        <StatusIcon />
+        {t('admin.trafficUsage.status')}
+        {activeCount > 0 && (
+          <span className="rounded-full bg-accent-500 px-1.5 text-[10px] text-white">
+            {activeCount}
+          </span>
+        )}
+        <ChevronDownIcon />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 top-full z-30 mt-1 w-56 rounded-xl border border-dark-700 bg-dark-800 py-1 shadow-xl">
+          <button
+            onClick={selectAll}
+            className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-dark-700 ${
+              allSelected ? 'text-accent-400' : 'text-dark-300'
+            }`}
+          >
+            <span
+              className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+                allSelected ? 'border-accent-500 bg-accent-500' : 'border-dark-600'
+              }`}
+            >
+              {allSelected && (
+                <svg
+                  className="h-3 w-3 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={3}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              )}
+            </span>
+            {t('admin.trafficUsage.allStatuses')}
+          </button>
+
+          <div className="mx-2 border-t border-dark-700" />
+
+          <div className="max-h-48 overflow-y-auto">
+            {available.map((s) => {
+              const checked = selected.has(s);
+              return (
+                <button
+                  key={s}
+                  onClick={() => toggle(s)}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-dark-300 transition-colors hover:bg-dark-700"
+                >
+                  <span
+                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+                      checked ? 'border-accent-500 bg-accent-500' : 'border-dark-600'
+                    }`}
+                  >
+                    {checked && (
+                      <svg
+                        className="h-3 w-3 text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={3}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M4.5 12.75l6 6 9-13.5"
+                        />
+                      </svg>
+                    )}
+                  </span>
+                  <span className={`h-2 w-2 rounded-full ${STATUS_COLORS[s] || 'bg-dark-500'}`} />
+                  {statusLabel(s)}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function NodeFilter({
+  available,
+  selected,
+  onChange,
+}: {
+  available: TrafficNodeInfo[];
+  selected: Set<string>;
+  onChange: (next: Set<string>) => void;
+}) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  if (available.length === 0) return null;
+
+  const allSelected = selected.size === 0;
+  const activeCount = selected.size;
+
+  const toggle = (uuid: string) => {
+    const next = new Set(selected);
+    if (next.has(uuid)) {
+      next.delete(uuid);
+    } else {
+      next.add(uuid);
+    }
+    onChange(next);
+  };
+
+  const selectAll = () => onChange(new Set());
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen(!open)}
+        className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+          activeCount > 0
+            ? 'border-accent-500/50 bg-accent-500/10 text-accent-400'
+            : 'border-dark-700 bg-dark-800 text-dark-200 hover:border-dark-600 hover:bg-dark-700'
+        }`}
+      >
+        <ServerIcon />
+        {t('admin.trafficUsage.nodes')}
+        {activeCount > 0 && (
+          <span className="rounded-full bg-accent-500 px-1.5 text-[10px] text-white">
+            {activeCount}
+          </span>
+        )}
+        <ChevronDownIcon />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 top-full z-30 mt-1 w-64 rounded-xl border border-dark-700 bg-dark-800 py-1 shadow-xl">
+          <button
+            onClick={selectAll}
+            className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-dark-700 ${
+              allSelected ? 'text-accent-400' : 'text-dark-300'
+            }`}
+          >
+            <span
+              className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+                allSelected ? 'border-accent-500 bg-accent-500' : 'border-dark-600'
+              }`}
+            >
+              {allSelected && (
+                <svg
+                  className="h-3 w-3 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={3}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              )}
+            </span>
+            {t('admin.trafficUsage.allNodes')}
+          </button>
+
+          <div className="mx-2 border-t border-dark-700" />
+
+          <div className="max-h-48 overflow-y-auto">
+            {available.map((node) => {
+              const checked = selected.has(node.node_uuid);
+              return (
+                <button
+                  key={node.node_uuid}
+                  onClick={() => toggle(node.node_uuid)}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-dark-300 transition-colors hover:bg-dark-700"
+                >
+                  <span
+                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+                      checked ? 'border-accent-500 bg-accent-500' : 'border-dark-600'
+                    }`}
+                  >
+                    {checked && (
+                      <svg
+                        className="h-3 w-3 text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={3}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M4.5 12.75l6 6 9-13.5"
+                        />
+                      </svg>
+                    )}
+                  </span>
+                  {getFlagEmoji(node.country_code)} {node.node_name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ============ Main Page ============
 
 export default function AdminTrafficUsage() {
@@ -357,12 +722,18 @@ export default function AdminTrafficUsage() {
   const [items, setItems] = useState<UserTrafficItem[]>([]);
   const [nodes, setNodes] = useState<TrafficNodeInfo[]>([]);
   const [availableTariffs, setAvailableTariffs] = useState<string[]>([]);
+  const [availableStatuses, setAvailableStatuses] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [period, setPeriod] = useState(30);
+  const [dateMode, setDateMode] = useState(false);
+  const [customStart, setCustomStart] = useState('');
+  const [customEnd, setCustomEnd] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [committedSearch, setCommittedSearch] = useState('');
   const [selectedTariffs, setSelectedTariffs] = useState<Set<string>>(new Set());
+  const [selectedStatuses, setSelectedStatuses] = useState<Set<string>>(new Set());
+  const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
   const [offset, setOffset] = useState(0);
   const [total, setTotal] = useState(0);
   const [exporting, setExporting] = useState(false);
@@ -376,34 +747,48 @@ export default function AdminTrafficUsage() {
   const sortBy = sorting[0] ? toBackendSortField(sorting[0].id) : 'total_bytes';
   const sortDesc = sorting[0]?.desc ?? true;
   const tariffsParam = selectedTariffs.size > 0 ? [...selectedTariffs].join(',') : undefined;
+  const statusesParam = selectedStatuses.size > 0 ? [...selectedStatuses].join(',') : undefined;
+  const nodesParam = selectedNodes.size > 0 ? [...selectedNodes].join(',') : undefined;
 
-  const buildParams = useCallback(
-    (): TrafficParams => ({
-      period,
+  const buildParams = useCallback((): TrafficParams => {
+    const params: TrafficParams = {
       limit,
       offset,
       search: committedSearch || undefined,
       sort_by: sortBy,
       sort_desc: sortDesc,
       tariffs: tariffsParam,
-    }),
-    [period, offset, committedSearch, sortBy, sortDesc, tariffsParam],
-  );
+      statuses: statusesParam,
+      nodes: nodesParam,
+    };
+    if (dateMode && customStart && customEnd) {
+      params.start_date = customStart;
+      params.end_date = customEnd;
+    } else {
+      params.period = period;
+    }
+    return params;
+  }, [
+    period,
+    offset,
+    committedSearch,
+    sortBy,
+    sortDesc,
+    tariffsParam,
+    statusesParam,
+    nodesParam,
+    dateMode,
+    customStart,
+    customEnd,
+  ]);
 
-  const applyData = useCallback(
-    (data: {
-      items: UserTrafficItem[];
-      nodes: TrafficNodeInfo[];
-      total: number;
-      available_tariffs: string[];
-    }) => {
-      setItems(data.items);
-      setNodes(data.nodes);
-      setTotal(data.total);
-      setAvailableTariffs(data.available_tariffs);
-    },
-    [],
-  );
+  const applyData = useCallback((data: TrafficUsageResponse) => {
+    setItems(data.items);
+    setNodes(data.nodes);
+    setTotal(data.total);
+    setAvailableTariffs(data.available_tariffs);
+    setAvailableStatuses(data.available_statuses);
+  }, []);
 
   const loadData = useCallback(
     async (skipCache = false) => {
@@ -438,8 +823,9 @@ export default function AdminTrafficUsage() {
     loadData();
   }, [loadData]);
 
-  // Prefetch adjacent periods in background
+  // Prefetch adjacent periods in background (only in period mode)
   useEffect(() => {
+    if (dateMode) return;
     const prefetchPeriods = PERIODS.filter((p) => p !== period);
     const timer = setTimeout(() => {
       prefetchPeriods.forEach((p) => {
@@ -456,8 +842,7 @@ export default function AdminTrafficUsage() {
       });
     }, 500);
     return () => clearTimeout(timer);
-    // Only prefetch once on mount + when period changes
-  }, [period]);
+  }, [period, dateMode]);
 
   useEffect(() => {
     if (toast) {
@@ -475,7 +860,22 @@ export default function AdminTrafficUsage() {
   const handleExport = async () => {
     try {
       setExporting(true);
-      await adminTrafficApi.exportCsv({ period });
+      const exportData: {
+        period: number;
+        start_date?: string;
+        end_date?: string;
+        tariffs?: string;
+        statuses?: string;
+        nodes?: string;
+      } = { period };
+      if (dateMode && customStart && customEnd) {
+        exportData.start_date = customStart;
+        exportData.end_date = customEnd;
+      }
+      if (tariffsParam) exportData.tariffs = tariffsParam;
+      if (statusesParam) exportData.statuses = statusesParam;
+      if (nodesParam) exportData.nodes = nodesParam;
+      await adminTrafficApi.exportCsv(exportData);
       setToast({ message: t('admin.trafficUsage.exportSuccess'), type: 'success' });
     } catch {
       setToast({ message: t('admin.trafficUsage.exportError'), type: 'error' });
@@ -486,6 +886,34 @@ export default function AdminTrafficUsage() {
 
   const handlePeriodChange = (p: number) => {
     setPeriod(p);
+    setOffset(0);
+  };
+
+  const handleToggleDateMode = () => {
+    if (dateMode) {
+      // Switch back to period mode
+      setDateMode(false);
+      setCustomStart('');
+      setCustomEnd('');
+      setOffset(0);
+    } else {
+      // Switch to date mode — pre-fill with last N days
+      const end = new Date();
+      const start = new Date(end.getTime() - period * 24 * 60 * 60 * 1000);
+      setCustomStart(start.toISOString().split('T')[0]);
+      setCustomEnd(end.toISOString().split('T')[0]);
+      setDateMode(true);
+      setOffset(0);
+    }
+  };
+
+  const handleCustomStartChange = (v: string) => {
+    setCustomStart(v);
+    setOffset(0);
+  };
+
+  const handleCustomEndChange = (v: string) => {
+    setCustomEnd(v);
     setOffset(0);
   };
 
@@ -500,9 +928,25 @@ export default function AdminTrafficUsage() {
     setOffset(0);
   };
 
+  const handleStatusChange = (next: Set<string>) => {
+    setSelectedStatuses(next);
+    setOffset(0);
+  };
+
+  const handleNodeChange = (next: Set<string>) => {
+    setSelectedNodes(next);
+    setOffset(0);
+  };
+
   const handleRefresh = () => {
     loadData(true);
   };
+
+  // When node filter is active, show only selected node columns
+  const displayNodes = useMemo(
+    () => (selectedNodes.size > 0 ? nodes.filter((n) => selectedNodes.has(n.node_uuid)) : nodes),
+    [nodes, selectedNodes],
+  );
 
   const columns = useMemo<ColumnDef<UserTrafficItem>[]>(() => {
     const cols: ColumnDef<UserTrafficItem>[] = [
@@ -566,7 +1010,7 @@ export default function AdminTrafficUsage() {
           return <span className="text-xs text-dark-300">{gb > 0 ? `${gb} GB` : '\u221E'}</span>;
         },
       },
-      ...nodes.map(
+      ...displayNodes.map(
         (node): ColumnDef<UserTrafficItem> => ({
           id: `node_${node.node_uuid}`,
           accessorFn: (row) => row.node_traffic[node.node_uuid] || 0,
@@ -603,7 +1047,7 @@ export default function AdminTrafficUsage() {
       },
     ];
     return cols;
-  }, [nodes, t]);
+  }, [displayNodes, t]);
 
   const table = useReactTable({
     data: items,
@@ -671,11 +1115,23 @@ export default function AdminTrafficUsage() {
             value={period}
             onChange={handlePeriodChange}
             label={t('admin.trafficUsage.period')}
+            dateMode={dateMode}
+            customStart={customStart}
+            customEnd={customEnd}
+            onToggleDateMode={handleToggleDateMode}
+            onCustomStartChange={handleCustomStartChange}
+            onCustomEndChange={handleCustomEndChange}
           />
           <TariffFilter
             available={availableTariffs}
             selected={selectedTariffs}
             onChange={handleTariffChange}
+          />
+          <NodeFilter available={nodes} selected={selectedNodes} onChange={handleNodeChange} />
+          <StatusFilter
+            available={availableStatuses}
+            selected={selectedStatuses}
+            onChange={handleStatusChange}
           />
           <button
             onClick={handleExport}
