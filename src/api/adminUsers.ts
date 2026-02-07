@@ -101,6 +101,8 @@ export interface UserDetailResponse {
   used_promocodes: number;
   has_had_paid_subscription: boolean;
   lifetime_used_traffic_bytes: number;
+  campaign_name: string | null;
+  campaign_id: number | null;
   restriction_topup: boolean;
   restriction_subscription: boolean;
   restriction_reason: string | null;
@@ -109,6 +111,36 @@ export interface UserDetailResponse {
   promo_offer_discount_expires_at: string | null;
   recent_transactions: UserTransactionItem[];
   remnawave_uuid: string | null;
+}
+
+export interface UserPanelInfo {
+  found: boolean;
+  trojan_password: string | null;
+  vless_uuid: string | null;
+  ss_password: string | null;
+  subscription_url: string | null;
+  happ_link: string | null;
+  used_traffic_bytes: number;
+  lifetime_used_traffic_bytes: number;
+  traffic_limit_bytes: number;
+  first_connected_at: string | null;
+  online_at: string | null;
+  last_connected_node_uuid: string | null;
+  last_connected_node_name: string | null;
+}
+
+export interface UserNodeUsageItem {
+  node_uuid: string;
+  node_name: string;
+  country_code: string;
+  total_bytes: number;
+  daily_bytes: number[];
+}
+
+export interface UserNodeUsageResponse {
+  items: UserNodeUsageItem[];
+  categories: string[];
+  period_days: number;
 }
 
 export interface UsersStatsResponse {
@@ -415,7 +447,7 @@ export const adminUsersApi = {
     return response.data;
   },
 
-  // Delete user
+  // Delete user (soft delete, does NOT remove from Remnawave)
   deleteUser: async (
     userId: number,
     softDelete = true,
@@ -424,6 +456,20 @@ export const adminUsersApi = {
     const response = await apiClient.delete(`/cabinet/admin/users/${userId}`, {
       data: { soft_delete: softDelete, reason },
     });
+    return response.data;
+  },
+
+  // Full delete user (removes from bot DB + Remnawave panel)
+  fullDeleteUser: async (
+    userId: number,
+  ): Promise<{
+    success: boolean;
+    message: string;
+    deleted_from_bot: boolean;
+    deleted_from_panel: boolean;
+    panel_error: string | null;
+  }> => {
+    const response = await apiClient.delete(`/cabinet/admin/users/${userId}/full`);
     return response.data;
   },
 
@@ -492,6 +538,18 @@ export const adminUsersApi = {
   // Disable user
   disableUser: async (userId: number): Promise<{ success: boolean; message: string }> => {
     const response = await apiClient.post(`/cabinet/admin/users/${userId}/disable`);
+    return response.data;
+  },
+
+  // Get panel info
+  getPanelInfo: async (userId: number): Promise<UserPanelInfo> => {
+    const response = await apiClient.get(`/cabinet/admin/users/${userId}/panel-info`);
+    return response.data;
+  },
+
+  // Get node usage (always 30 days with daily breakdown)
+  getNodeUsage: async (userId: number): Promise<UserNodeUsageResponse> => {
+    const response = await apiClient.get(`/cabinet/admin/users/${userId}/node-usage`);
     return response.data;
   },
 };

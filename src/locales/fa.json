@@ -181,7 +181,13 @@
     "passwordTooShort": "رمز عبور باید حداقل ۸ کاراکتر باشد",
     "sendResetLink": "ارسال لینک بازنشانی",
     "tooManyAttempts": "تلاش‌های زیاد. لطفاً بعداً امتحان کنید",
-    "verificationEmailNotice": "پس از ثبت نام، ایمیل تأیید به آدرس شما ارسال خواهد شد"
+    "verificationEmailNotice": "پس از ثبت نام، ایمیل تأیید به آدرس شما ارسال خواهد شد",
+    "continueWithGoogle": "ادامه با Google",
+    "continueWithYandex": "ادامه با Yandex",
+    "continueWithDiscord": "ادامه با Discord",
+    "continueWithVk": "ادامه با VK",
+    "oauthError": "مجوز رد شد یا ناموفق بود",
+    "oauthExpired": "نشست OAuth منقضی شده است. لطفاً دوباره امتحان کنید."
   },
   "emailVerification": {
     "title": "تایید ایمیل",
@@ -797,7 +803,12 @@
         "activity": "بر اساس فعالیت",
         "source": "بر اساس منبع",
         "tariff": "بر اساس تعرفه"
-      }
+      },
+      "enableTelegram": "Telegram",
+      "enableEmail": "Email",
+      "sendingBoth": "۲ پیام‌رسانی ایجاد خواهد شد",
+      "bothCreated": "پیام‌رسانی‌ها ایجاد شدند",
+      "atLeastOneChannel": "حداقل یک کانال را انتخاب کنید"
     },
     "payments": {
       "title": "تأیید پرداخت",
@@ -979,6 +990,7 @@
       "adminNotificationsEnabledDesc": "ارسال اعلان به مدیران درباره تیکت‌ها و پاسخ‌های جدید",
       "cabinetNotifications": "اعلان‌های پنل",
       "copyTelegramId": "برای کپی شناسه تلگرام کلیک کنید",
+      "viewUser": "کاربر",
       "userNotificationsEnabled": "اعلان‌های کاربر",
       "userNotificationsEnabledDesc": "ارسال اعلان به کاربران درباره پاسخ‌های مدیر"
     },
@@ -1531,14 +1543,36 @@
           "info": "اطلاعات",
           "subscription": "اشتراک",
           "balance": "موجودی",
-          "sync": "همگام‌سازی"
+          "sync": "همگام‌سازی",
+          "tickets": "تیکت‌ها"
         },
+        "noTickets": "این کاربر تیکتی ندارد",
+        "ticketsCount": "تیکت",
+        "messagesCount": "پیام",
         "status": "وضعیت",
         "language": "زبان",
         "registration": "ثبت‌نام",
         "lastActivity": "آخرین فعالیت",
         "totalSpent": "کل هزینه",
         "purchases": "خریدها",
+        "campaign": "کمپین تبلیغاتی",
+        "referralsList": "لیست ارجاعات",
+        "referralEarnings": "درآمد ارجاع",
+        "noReferrals": "بدون ارجاع",
+        "panelConfig": "پیکربندی پنل",
+        "trojanPassword": "رمز Trojan",
+        "vlessUuid": "VLESS UUID",
+        "ssPassword": "رمز SS",
+        "subscriptionUrl": "لینک اشتراک",
+        "happLink": "لینک HAPP",
+        "firstConnected": "اولین اتصال",
+        "lastOnline": "آخرین آنلاین",
+        "lastNode": "آخرین نود",
+        "liveTraffic": "ترافیک فعلی",
+        "lifetime": "کل",
+        "nodeUsage": "مصرف نودها",
+        "copied": "کپی شد",
+        "panelNotFound": "کاربر در پنل یافت نشد",
         "referral": {
           "title": "برنامه ارجاع",
           "referrals": "ارجاعات",

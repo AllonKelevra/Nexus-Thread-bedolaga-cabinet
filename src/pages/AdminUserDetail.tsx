@@ -1,17 +1,68 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 import { useCurrency } from '../hooks/useCurrency';
+import { useNotify } from '../platform/hooks/useNotify';
 import {
   adminUsersApi,
   type UserDetailResponse,
   type UserAvailableTariff,
+  type UserListItem,
+  type UserPanelInfo,
+  type UserNodeUsageResponse,
   type PanelSyncStatusResponse,
   type UpdateSubscriptionRequest,
 } from '../api/adminUsers';
+import { adminApi, type AdminTicket, type AdminTicketDetail } from '../api/admin';
+import { ticketsApi } from '../api/tickets';
 import { AdminBackButton } from '../components/admin';
 import { createNumberInputHandler, toNumber } from '../utils/inputHelpers';
+
+// ============ Helpers ============
+
+const getCountryFlag = (code: string | null | undefined): string => {
+  if (!code) return '';
+  const codeMap: Record<string, string> = {
+    RU: '\u{1F1F7}\u{1F1FA}',
+    US: '\u{1F1FA}\u{1F1F8}',
+    DE: '\u{1F1E9}\u{1F1EA}',
+    NL: '\u{1F1F3}\u{1F1F1}',
+    GB: '\u{1F1EC}\u{1F1E7}',
+    UK: '\u{1F1EC}\u{1F1E7}',
+    FR: '\u{1F1EB}\u{1F1F7}',
+    FI: '\u{1F1EB}\u{1F1EE}',
+    SE: '\u{1F1F8}\u{1F1EA}',
+    NO: '\u{1F1F3}\u{1F1F4}',
+    PL: '\u{1F1F5}\u{1F1F1}',
+    TR: '\u{1F1F9}\u{1F1F7}',
+    JP: '\u{1F1EF}\u{1F1F5}',
+    SG: '\u{1F1F8}\u{1F1EC}',
+    HK: '\u{1F1ED}\u{1F1F0}',
+    KR: '\u{1F1F0}\u{1F1F7}',
+    AU: '\u{1F1E6}\u{1F1FA}',
+    CA: '\u{1F1E8}\u{1F1E6}',
+    CH: '\u{1F1E8}\u{1F1ED}',
+    AT: '\u{1F1E6}\u{1F1F9}',
+    IT: '\u{1F1EE}\u{1F1F9}',
+    ES: '\u{1F1EA}\u{1F1F8}',
+    BR: '\u{1F1E7}\u{1F1F7}',
+    IN: '\u{1F1EE}\u{1F1F3}',
+    AE: '\u{1F1E6}\u{1F1EA}',
+    IL: '\u{1F1EE}\u{1F1F1}',
+    KZ: '\u{1F1F0}\u{1F1FF}',
+    UA: '\u{1F1FA}\u{1F1E6}',
+    CZ: '\u{1F1E8}\u{1F1FF}',
+    RO: '\u{1F1F7}\u{1F1F4}',
+    LV: '\u{1F1F1}\u{1F1FB}',
+    LT: '\u{1F1F1}\u{1F1F9}',
+    EE: '\u{1F1EA}\u{1F1EA}',
+    BG: '\u{1F1E7}\u{1F1EC}',
+    HU: '\u{1F1ED}\u{1F1FA}',
+    MD: '\u{1F1F2}\u{1F1E9}',
+  };
+  return codeMap[code.toUpperCase()] || code;
+};
 
 // ============ Icons ============
 
@@ -80,6 +131,7 @@ export default function AdminUserDetail() {
   const { t } = useTranslation();
   const { formatWithCurrency } = useCurrency();
   const navigate = useNavigate();
+  const notify = useNotify();
   const { id } = useParams<{ id: string }>();
 
   const localeMap: Record<string, string> = { ru: 'ru-RU', en: 'en-US', zh: 'zh-CN', fa: 'fa-IR' };
@@ -87,14 +139,41 @@ export default function AdminUserDetail() {
 
   const [user, setUser] = useState<UserDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'info' | 'subscription' | 'balance' | 'sync'>('info');
+  const [activeTab, setActiveTab] = useState<
+    'info' | 'subscription' | 'balance' | 'sync' | 'tickets'
+  >('info');
   const [syncStatus, setSyncStatus] = useState<PanelSyncStatusResponse | null>(null);
   const [tariffs, setTariffs] = useState<UserAvailableTariff[]>([]);
   const [actionLoading, setActionLoading] = useState(false);
 
+  // Referrals
+  const [referrals, setReferrals] = useState<UserListItem[]>([]);
+  const [referralsLoading, setReferralsLoading] = useState(false);
+
+  // Panel info & node usage
+  const [panelInfo, setPanelInfo] = useState<UserPanelInfo | null>(null);
+  const [panelInfoLoading, setPanelInfoLoading] = useState(false);
+  const [nodeUsage, setNodeUsage] = useState<UserNodeUsageResponse | null>(null);
+  const [nodeUsageDays, setNodeUsageDays] = useState(7);
+
+  // Inline confirm state
+  const [confirmingAction, setConfirmingAction] = useState<string | null>(null);
+  const confirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Balance form
   const [balanceAmount, setBalanceAmount] = useState<number | ''>('');
   const [balanceDescription, setBalanceDescription] = useState('');
+
+  // Tickets
+  const [tickets, setTickets] = useState<AdminTicket[]>([]);
+  const [ticketsLoading, setTicketsLoading] = useState(false);
+  const [ticketsTotal, setTicketsTotal] = useState(0);
+  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<AdminTicketDetail | null>(null);
+  const [ticketDetailLoading, setTicketDetailLoading] = useState(false);
+  const [replyText, setReplyText] = useState('');
+  const [replySending, setReplySending] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   // Subscription form
   const [subAction, setSubAction] = useState<string>('extend');
@@ -137,6 +216,113 @@ export default function AdminUserDetail() {
     }
   }, [userId]);
 
+  const loadTickets = useCallback(async () => {
+    if (!userId) return;
+    try {
+      setTicketsLoading(true);
+      const data = await adminApi.getTickets({ user_id: userId, per_page: 50 });
+      setTickets(data.items);
+      setTicketsTotal(data.total);
+    } catch (error) {
+      console.error('Failed to load tickets:', error);
+    } finally {
+      setTicketsLoading(false);
+    }
+  }, [userId]);
+
+  const loadTicketDetail = useCallback(async (ticketId: number) => {
+    try {
+      setTicketDetailLoading(true);
+      const data = await adminApi.getTicket(ticketId);
+      setSelectedTicket(data);
+    } catch (error) {
+      console.error('Failed to load ticket detail:', error);
+    } finally {
+      setTicketDetailLoading(false);
+    }
+  }, []);
+
+  const loadReferrals = useCallback(async () => {
+    if (!userId) return;
+    try {
+      setReferralsLoading(true);
+      const data = await adminUsersApi.getReferrals(userId, 0, 50);
+      setReferrals(data.users);
+    } catch {
+      // ignore
+    } finally {
+      setReferralsLoading(false);
+    }
+  }, [userId]);
+
+  const loadPanelInfo = useCallback(async () => {
+    if (!userId) return;
+    try {
+      setPanelInfoLoading(true);
+      const data = await adminUsersApi.getPanelInfo(userId);
+      setPanelInfo(data);
+    } catch {
+      // ignore
+    } finally {
+      setPanelInfoLoading(false);
+    }
+  }, [userId]);
+
+  const loadNodeUsage = useCallback(async () => {
+    if (!userId) return;
+    try {
+      const data = await adminUsersApi.getNodeUsage(userId);
+      setNodeUsage(data);
+    } catch {
+      // ignore
+    }
+  }, [userId]);
+
+  const loadSubscriptionData = useCallback(async () => {
+    await Promise.all([loadPanelInfo(), loadNodeUsage()]);
+  }, [loadPanelInfo, loadNodeUsage]);
+
+  const handleTicketReply = async () => {
+    if (!selectedTicketId || !replyText.trim()) return;
+    setReplySending(true);
+    try {
+      await adminApi.replyToTicket(selectedTicketId, replyText);
+      setReplyText('');
+      await loadTicketDetail(selectedTicketId);
+      await loadTickets();
+    } catch (error) {
+      console.error('Failed to reply:', error);
+    } finally {
+      setReplySending(false);
+    }
+  };
+
+  const handleTicketStatusChange = async (newStatus: string) => {
+    if (!selectedTicketId) return;
+    setActionLoading(true);
+    try {
+      await adminApi.updateTicketStatus(selectedTicketId, newStatus);
+      await loadTicketDetail(selectedTicketId);
+      await loadTickets();
+    } catch (error) {
+      console.error('Failed to update ticket status:', error);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedTicketId) {
+      loadTicketDetail(selectedTicketId);
+    }
+  }, [selectedTicketId, loadTicketDetail]);
+
+  useEffect(() => {
+    if (selectedTicket && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [selectedTicket]);
+
   useEffect(() => {
     if (!userId || isNaN(userId)) {
       navigate('/admin/users');
@@ -146,9 +332,14 @@ export default function AdminUserDetail() {
   }, [userId, loadUser, navigate]);
 
   useEffect(() => {
+    if (activeTab === 'info') loadReferrals();
     if (activeTab === 'sync') loadSyncStatus();
-    if (activeTab === 'subscription') loadTariffs();
-  }, [activeTab, loadSyncStatus, loadTariffs]);
+    if (activeTab === 'subscription') {
+      loadTariffs();
+      loadSubscriptionData();
+    }
+    if (activeTab === 'tickets') loadTickets();
+  }, [activeTab, loadSyncStatus, loadTariffs, loadTickets, loadReferrals, loadSubscriptionData]);
 
   const handleUpdateBalance = async (isAdd: boolean) => {
     if (balanceAmount === '' || !userId) return;
@@ -256,6 +447,90 @@ export default function AdminUserDetail() {
     }
   };
 
+  const handleInlineConfirm = (actionKey: string, executeFn: () => Promise<void>) => {
+    if (confirmingAction === actionKey) {
+      if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
+      setConfirmingAction(null);
+      executeFn();
+    } else {
+      if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
+      setConfirmingAction(actionKey);
+      confirmTimerRef.current = setTimeout(() => setConfirmingAction(null), 3000);
+    }
+  };
+
+  const handleResetTrial = async () => {
+    if (!userId) return;
+    setActionLoading(true);
+    try {
+      const result = await adminUsersApi.resetTrial(userId);
+      if (result.success) {
+        notify.success(t('admin.users.userActions.success.resetTrial'), t('common.success'));
+        await loadUser();
+      } else {
+        notify.error(result.message || t('admin.users.userActions.error'), t('common.error'));
+      }
+    } catch {
+      notify.error(t('admin.users.userActions.error'), t('common.error'));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleResetSubscription = async () => {
+    if (!userId) return;
+    setActionLoading(true);
+    try {
+      const result = await adminUsersApi.resetSubscription(userId);
+      if (result.success) {
+        notify.success(t('admin.users.userActions.success.resetSubscription'), t('common.success'));
+        await loadUser();
+      } else {
+        notify.error(result.message || t('admin.users.userActions.error'), t('common.error'));
+      }
+    } catch {
+      notify.error(t('admin.users.userActions.error'), t('common.error'));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDisableUser = async () => {
+    if (!userId) return;
+    setActionLoading(true);
+    try {
+      const result = await adminUsersApi.disableUser(userId);
+      if (result.success) {
+        notify.success(t('admin.users.userActions.success.disable'), t('common.success'));
+        await loadUser();
+      } else {
+        notify.error(result.message || t('admin.users.userActions.error'), t('common.error'));
+      }
+    } catch {
+      notify.error(t('admin.users.userActions.error'), t('common.error'));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleFullDeleteUser = async () => {
+    if (!userId) return;
+    setActionLoading(true);
+    try {
+      const result = await adminUsersApi.fullDeleteUser(userId);
+      if (result.success) {
+        notify.success(t('admin.users.userActions.success.delete'), t('common.success'));
+        navigate('/admin/users');
+      } else {
+        notify.error(result.message || t('admin.users.userActions.error'), t('common.error'));
+      }
+    } catch {
+      notify.error(t('admin.users.userActions.error'), t('common.error'));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const formatDate = (date: string | null) => {
     if (!date) return '-';
     return new Date(date).toLocaleDateString(locale, {
@@ -265,6 +540,36 @@ export default function AdminUserDetail() {
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  // Compute node usage for selected period from cached 30-day data
+  const nodeUsageForPeriod = (() => {
+    if (!nodeUsage || nodeUsage.items.length === 0) return [];
+    return nodeUsage.items
+      .map((item) => {
+        const daily = item.daily_bytes || [];
+        const sliced = daily.slice(-nodeUsageDays);
+        const total = sliced.reduce((sum, v) => sum + v, 0);
+        return { ...item, total_bytes: total };
+      })
+      .sort((a, b) => b.total_bytes - a.total_bytes);
+  })();
+
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return '0 B';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      notify.success(t('admin.users.detail.copied'));
+    } catch {
+      // ignore
+    }
   };
 
   if (loading) {
@@ -317,7 +622,7 @@ export default function AdminUserDetail() {
         className="scrollbar-hide -mx-4 mb-6 flex gap-2 overflow-x-auto px-4 py-1"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
-        {(['info', 'subscription', 'balance', 'sync'] as const).map((tab) => (
+        {(['info', 'subscription', 'balance', 'sync', 'tickets'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -331,6 +636,7 @@ export default function AdminUserDetail() {
             {tab === 'subscription' && t('admin.users.detail.tabs.subscription')}
             {tab === 'balance' && t('admin.users.detail.tabs.balance')}
             {tab === 'sync' && t('admin.users.detail.tabs.sync')}
+            {tab === 'tickets' && t('admin.users.detail.tabs.tickets')}
           </button>
         ))}
       </div>
@@ -403,6 +709,14 @@ export default function AdminUserDetail() {
               </div>
             </div>
 
+            {/* Campaign */}
+            {user.campaign_name && (
+              <div className="rounded-xl border border-accent-500/20 bg-accent-500/5 p-3">
+                <div className="mb-1 text-xs text-dark-500">{t('admin.users.detail.campaign')}</div>
+                <div className="text-sm font-medium text-accent-400">{user.campaign_name}</div>
+              </div>
+            )}
+
             {/* Referral */}
             <div className="rounded-xl bg-dark-800/50 p-3">
               <div className="mb-2 text-sm font-medium text-dark-200">
@@ -436,6 +750,49 @@ export default function AdminUserDetail() {
               </div>
             </div>
 
+            {/* Referrals list */}
+            {user.referral.referrals_count > 0 && (
+              <div className="rounded-xl bg-dark-800/50 p-3">
+                <div className="mb-2 text-sm font-medium text-dark-200">
+                  {t('admin.users.detail.referralsList')}
+                </div>
+                {referralsLoading ? (
+                  <div className="flex justify-center py-4">
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+                  </div>
+                ) : referrals.length === 0 ? (
+                  <div className="py-2 text-center text-xs text-dark-500">
+                    {t('admin.users.detail.noReferrals')}
+                  </div>
+                ) : (
+                  <div className="max-h-48 space-y-2 overflow-y-auto">
+                    {referrals.map((ref) => (
+                      <button
+                        key={ref.id}
+                        onClick={() => navigate(`/admin/users/${ref.id}`)}
+                        className="flex w-full items-center justify-between rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-dark-600 text-xs font-bold text-dark-300">
+                            {ref.first_name?.[0] || ref.username?.[0] || '?'}
+                          </div>
+                          <div>
+                            <div className="text-sm text-dark-100">{ref.full_name}</div>
+                            <div className="text-xs text-dark-500">
+                              {formatDate(ref.created_at)}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-xs text-dark-400">
+                          {formatWithCurrency(ref.total_spent_kopeks / 100)}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Restrictions */}
             {(user.restriction_topup || user.restriction_subscription) && (
               <div className="rounded-xl border border-error-500/30 bg-error-500/10 p-3">
@@ -459,6 +816,67 @@ export default function AdminUserDetail() {
                 )}
               </div>
             )}
+
+            {/* Actions */}
+            <div className="rounded-xl bg-dark-800/50 p-4">
+              <div className="mb-3 text-sm font-medium text-dark-200">
+                {t('admin.users.detail.actions.title')}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => handleInlineConfirm('resetTrial', handleResetTrial)}
+                  disabled={actionLoading}
+                  className={`rounded-lg px-3 py-2 text-sm font-medium transition-all disabled:opacity-50 ${
+                    confirmingAction === 'resetTrial'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-blue-500/15 text-blue-400 hover:bg-blue-500/25'
+                  }`}
+                >
+                  {confirmingAction === 'resetTrial'
+                    ? t('admin.users.detail.actions.areYouSure')
+                    : t('admin.users.userActions.resetTrial')}
+                </button>
+                <button
+                  onClick={() => handleInlineConfirm('resetSubscription', handleResetSubscription)}
+                  disabled={actionLoading}
+                  className={`rounded-lg px-3 py-2 text-sm font-medium transition-all disabled:opacity-50 ${
+                    confirmingAction === 'resetSubscription'
+                      ? 'bg-amber-500 text-white'
+                      : 'bg-amber-500/15 text-amber-400 hover:bg-amber-500/25'
+                  }`}
+                >
+                  {confirmingAction === 'resetSubscription'
+                    ? t('admin.users.detail.actions.areYouSure')
+                    : t('admin.users.userActions.resetSubscription')}
+                </button>
+                <button
+                  onClick={() => handleInlineConfirm('disable', handleDisableUser)}
+                  disabled={actionLoading}
+                  className={`rounded-lg px-3 py-2 text-sm font-medium transition-all disabled:opacity-50 ${
+                    confirmingAction === 'disable'
+                      ? 'bg-dark-500 text-white'
+                      : 'bg-dark-700 text-dark-300 hover:bg-dark-600'
+                  }`}
+                >
+                  {confirmingAction === 'disable'
+                    ? t('admin.users.detail.actions.areYouSure')
+                    : t('admin.users.userActions.disable')}
+                </button>
+                <button
+                  onClick={() => handleInlineConfirm('fullDelete', handleFullDeleteUser)}
+                  disabled={actionLoading}
+                  className={`rounded-lg px-3 py-2 text-sm font-medium transition-all disabled:opacity-50 ${
+                    confirmingAction === 'fullDelete'
+                      ? 'bg-rose-500 text-white'
+                      : 'bg-rose-500/15 text-rose-400 hover:bg-rose-500/25'
+                  }`}
+                >
+                  {confirmingAction === 'fullDelete'
+                    ? t('admin.users.detail.actions.areYouSure')
+                    : t('admin.users.userActions.delete')}
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
@@ -619,6 +1037,232 @@ export default function AdminUserDetail() {
                 </div>
               </div>
             )}
+
+            {/* Panel Info */}
+            {panelInfoLoading ? (
+              <div className="flex justify-center rounded-xl bg-dark-800/50 py-8">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+              </div>
+            ) : panelInfo && !panelInfo.found ? (
+              <div className="rounded-xl border border-dark-700 bg-dark-800/50 p-4 text-center text-sm text-dark-400">
+                {t('admin.users.detail.panelNotFound')}
+              </div>
+            ) : panelInfo && panelInfo.found ? (
+              <>
+                {/* Links */}
+                {(panelInfo.subscription_url || panelInfo.happ_link) && (
+                  <div className="rounded-xl bg-dark-800/50 p-4">
+                    <div className="mb-3 text-sm font-medium text-dark-200">
+                      {t('admin.users.detail.subscriptionUrl')} / {t('admin.users.detail.happLink')}
+                    </div>
+                    <div className="space-y-2">
+                      {panelInfo.subscription_url && (
+                        <button
+                          onClick={() => copyToClipboard(panelInfo.subscription_url!)}
+                          className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
+                        >
+                          <div className="mb-0.5 text-xs text-dark-500">
+                            {t('admin.users.detail.subscriptionUrl')}
+                          </div>
+                          <div className="truncate font-mono text-xs text-dark-200">
+                            {panelInfo.subscription_url}
+                          </div>
+                        </button>
+                      )}
+                      {panelInfo.happ_link && (
+                        <button
+                          onClick={() => copyToClipboard(panelInfo.happ_link!)}
+                          className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
+                        >
+                          <div className="mb-0.5 text-xs text-dark-500">
+                            {t('admin.users.detail.happLink')}
+                          </div>
+                          <div className="truncate font-mono text-xs text-dark-200">
+                            {panelInfo.happ_link}
+                          </div>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Config */}
+                {(panelInfo.trojan_password || panelInfo.vless_uuid || panelInfo.ss_password) && (
+                  <div className="rounded-xl bg-dark-800/50 p-4">
+                    <div className="mb-3 text-sm font-medium text-dark-200">
+                      {t('admin.users.detail.panelConfig')}
+                    </div>
+                    <div className="space-y-2">
+                      {panelInfo.trojan_password && (
+                        <button
+                          onClick={() => copyToClipboard(panelInfo.trojan_password!)}
+                          className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
+                        >
+                          <div className="mb-0.5 text-xs text-dark-500">
+                            {t('admin.users.detail.trojanPassword')}
+                          </div>
+                          <div className="truncate font-mono text-xs text-dark-200">
+                            {panelInfo.trojan_password}
+                          </div>
+                        </button>
+                      )}
+                      {panelInfo.vless_uuid && (
+                        <button
+                          onClick={() => copyToClipboard(panelInfo.vless_uuid!)}
+                          className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
+                        >
+                          <div className="mb-0.5 text-xs text-dark-500">
+                            {t('admin.users.detail.vlessUuid')}
+                          </div>
+                          <div className="truncate font-mono text-xs text-dark-200">
+                            {panelInfo.vless_uuid}
+                          </div>
+                        </button>
+                      )}
+                      {panelInfo.ss_password && (
+                        <button
+                          onClick={() => copyToClipboard(panelInfo.ss_password!)}
+                          className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
+                        >
+                          <div className="mb-0.5 text-xs text-dark-500">
+                            {t('admin.users.detail.ssPassword')}
+                          </div>
+                          <div className="truncate font-mono text-xs text-dark-200">
+                            {panelInfo.ss_password}
+                          </div>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Connection info */}
+                <div className="rounded-xl bg-dark-800/50 p-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <div className="text-xs text-dark-500">
+                        {t('admin.users.detail.firstConnected')}
+                      </div>
+                      <div className="text-sm text-dark-100">
+                        {formatDate(panelInfo.first_connected_at)}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-dark-500">
+                        {t('admin.users.detail.lastOnline')}
+                      </div>
+                      <div className="text-sm text-dark-100">{formatDate(panelInfo.online_at)}</div>
+                    </div>
+                    {panelInfo.last_connected_node_name && (
+                      <div className="col-span-2">
+                        <div className="text-xs text-dark-500">
+                          {t('admin.users.detail.lastNode')}
+                        </div>
+                        <div className="text-sm text-dark-100">
+                          {panelInfo.last_connected_node_name}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Live traffic */}
+                <div className="rounded-xl bg-dark-800/50 p-4">
+                  <div className="mb-3 text-sm font-medium text-dark-200">
+                    {t('admin.users.detail.liveTraffic')}
+                  </div>
+                  <div className="mb-2">
+                    <div className="mb-1 flex justify-between text-xs">
+                      <span className="text-dark-400">
+                        {formatBytes(panelInfo.used_traffic_bytes)}
+                      </span>
+                      <span className="text-dark-500">
+                        {panelInfo.traffic_limit_bytes > 0
+                          ? formatBytes(panelInfo.traffic_limit_bytes)
+                          : '∞'}
+                      </span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-dark-700">
+                      <div
+                        className="h-full rounded-full bg-accent-500 transition-all"
+                        style={{
+                          width:
+                            panelInfo.traffic_limit_bytes > 0
+                              ? `${Math.min(100, (panelInfo.used_traffic_bytes / panelInfo.traffic_limit_bytes) * 100)}%`
+                              : '0%',
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div className="text-xs text-dark-500">
+                    {t('admin.users.detail.lifetime')}:{' '}
+                    {formatBytes(panelInfo.lifetime_used_traffic_bytes)}
+                  </div>
+                </div>
+
+                {/* Node usage */}
+                <div className="rounded-xl bg-dark-800/50 p-4">
+                  <div className="mb-3 flex items-center justify-between">
+                    <span className="text-sm font-medium text-dark-200">
+                      {t('admin.users.detail.nodeUsage')}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-1">
+                        {[1, 3, 7, 14, 30].map((d) => (
+                          <button
+                            key={d}
+                            onClick={() => setNodeUsageDays(d)}
+                            className={`rounded-lg px-2 py-1 text-xs transition-colors ${
+                              nodeUsageDays === d
+                                ? 'bg-accent-500/20 text-accent-400'
+                                : 'text-dark-500 hover:text-dark-300'
+                            }`}
+                          >
+                            {d}d
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        onClick={() => loadSubscriptionData()}
+                        className="rounded-lg p-1 text-dark-500 transition-colors hover:text-dark-300"
+                        title={t('common.refresh')}
+                      >
+                        <RefreshIcon className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                  {nodeUsageForPeriod.length > 0 ? (
+                    <div className="space-y-2">
+                      {nodeUsageForPeriod.map((item) => {
+                        const maxBytes = nodeUsageForPeriod[0].total_bytes;
+                        const pct = maxBytes > 0 ? (item.total_bytes / maxBytes) * 100 : 0;
+                        return (
+                          <div key={item.node_uuid}>
+                            <div className="mb-1 flex justify-between text-xs">
+                              <span className="text-dark-300">
+                                {item.country_code && (
+                                  <span className="mr-1">{getCountryFlag(item.country_code)}</span>
+                                )}
+                                {item.node_name}
+                              </span>
+                              <span className="text-dark-400">{formatBytes(item.total_bytes)}</span>
+                            </div>
+                            <div className="h-1.5 overflow-hidden rounded-full bg-dark-700">
+                              <div
+                                className="h-full rounded-full bg-accent-500/60"
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="py-2 text-center text-xs text-dark-500">-</div>
+                  )}
+                </div>
+              </>
+            ) : null}
           </div>
         )}
 
@@ -856,6 +1500,248 @@ export default function AdminUserDetail() {
                 </span>
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Tickets Tab */}
+        {activeTab === 'tickets' && (
+          <div className="space-y-4">
+            {selectedTicketId ? (
+              /* Ticket Chat View */
+              ticketDetailLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+                </div>
+              ) : selectedTicket ? (
+                <div className="space-y-4">
+                  {/* Chat header */}
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => {
+                        setSelectedTicketId(null);
+                        setSelectedTicket(null);
+                      }}
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-dark-800 transition-colors hover:bg-dark-700"
+                    >
+                      <svg
+                        className="h-4 w-4 text-dark-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M15.75 19.5L8.25 12l7.5-7.5"
+                        />
+                      </svg>
+                    </button>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-medium text-dark-100">
+                        #{selectedTicket.id} {selectedTicket.title}
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-dark-500">
+                        <span
+                          className={`rounded-full border px-1.5 py-0.5 ${
+                            {
+                              open: 'border-blue-500/30 bg-blue-500/20 text-blue-400',
+                              pending: 'border-warning-500/30 bg-warning-500/20 text-warning-400',
+                              answered: 'border-success-500/30 bg-success-500/20 text-success-400',
+                              closed: 'border-dark-500 bg-dark-600 text-dark-400',
+                            }[selectedTicket.status] || 'border-dark-500 bg-dark-600 text-dark-400'
+                          }`}
+                        >
+                          {selectedTicket.status}
+                        </span>
+                        <span>{formatDate(selectedTicket.created_at)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Status buttons */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {(['open', 'pending', 'answered', 'closed'] as const).map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => handleTicketStatusChange(s)}
+                        disabled={selectedTicket.status === s || actionLoading}
+                        className={`rounded-lg border px-2.5 py-1 text-xs transition-all ${
+                          selectedTicket.status === s
+                            ? 'border-accent-500/50 bg-accent-500/20 text-accent-400'
+                            : 'border-dark-700/50 text-dark-400 hover:border-dark-600 hover:text-dark-200'
+                        } disabled:opacity-50`}
+                      >
+                        {t(`admin.tickets.status${s.charAt(0).toUpperCase() + s.slice(1)}`)}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Messages */}
+                  <div className="scrollbar-hide max-h-[60vh] space-y-3 overflow-y-auto rounded-xl bg-dark-800/30 p-3">
+                    {selectedTicket.messages.map((msg) => (
+                      <div
+                        key={msg.id}
+                        className={`rounded-xl p-3 ${
+                          msg.is_from_admin
+                            ? 'ml-6 border border-accent-500/20 bg-accent-500/10'
+                            : 'mr-6 border border-dark-700/30 bg-dark-800/50'
+                        }`}
+                      >
+                        <div className="mb-1 flex items-center justify-between">
+                          <span
+                            className={`text-xs font-medium ${msg.is_from_admin ? 'text-accent-400' : 'text-dark-400'}`}
+                          >
+                            {msg.is_from_admin
+                              ? t('admin.tickets.adminLabel')
+                              : t('admin.tickets.userLabel')}
+                          </span>
+                          <span className="text-xs text-dark-500">
+                            {formatDate(msg.created_at)}
+                          </span>
+                        </div>
+                        <p className="whitespace-pre-wrap text-sm text-dark-200">
+                          {msg.message_text}
+                        </p>
+                        {msg.has_media && msg.media_file_id && (
+                          <div className="mt-2">
+                            {msg.media_type === 'photo' ? (
+                              <img
+                                src={ticketsApi.getMediaUrl(msg.media_file_id)}
+                                alt={msg.media_caption || ''}
+                                className="max-h-48 max-w-full rounded-lg"
+                              />
+                            ) : (
+                              <a
+                                href={ticketsApi.getMediaUrl(msg.media_file_id)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 rounded-lg bg-dark-700 px-2 py-1 text-xs text-dark-200 hover:bg-dark-600"
+                              >
+                                {msg.media_caption || msg.media_type}
+                              </a>
+                            )}
+                            {msg.media_caption && msg.media_type === 'photo' && (
+                              <p className="mt-1 text-xs text-dark-400">{msg.media_caption}</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    <div ref={messagesEndRef} />
+                  </div>
+
+                  {/* Reply form */}
+                  {selectedTicket.status !== 'closed' && (
+                    <div className="flex gap-2">
+                      <textarea
+                        value={replyText}
+                        onChange={(e) => setReplyText(e.target.value)}
+                        placeholder={t('admin.tickets.replyPlaceholder')}
+                        rows={2}
+                        className="input flex-1 resize-none"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleTicketReply();
+                          }
+                        }}
+                      />
+                      <button
+                        onClick={handleTicketReply}
+                        disabled={!replyText.trim() || replySending}
+                        className="shrink-0 self-end rounded-lg bg-accent-500 px-4 py-2 text-sm text-white transition-colors hover:bg-accent-600 disabled:opacity-50"
+                      >
+                        {replySending ? (
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                        ) : (
+                          <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"
+                            />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : null
+            ) : ticketsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+              </div>
+            ) : tickets.length === 0 ? (
+              <div className="flex flex-col items-center justify-center rounded-xl bg-dark-800/50 py-12">
+                <svg
+                  className="mb-3 h-12 w-12 text-dark-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155"
+                  />
+                </svg>
+                <p className="text-dark-400">{t('admin.users.detail.noTickets')}</p>
+              </div>
+            ) : (
+              <>
+                <div className="text-sm text-dark-400">
+                  {ticketsTotal} {t('admin.users.detail.ticketsCount')}
+                </div>
+                <div className="space-y-2">
+                  {tickets.map((ticket) => {
+                    const statusStyles: Record<string, string> = {
+                      open: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+                      pending: 'bg-warning-500/20 text-warning-400 border-warning-500/30',
+                      answered: 'bg-success-500/20 text-success-400 border-success-500/30',
+                      closed: 'bg-dark-600 text-dark-400 border-dark-500',
+                    };
+                    return (
+                      <button
+                        key={ticket.id}
+                        onClick={() => setSelectedTicketId(ticket.id)}
+                        className="w-full rounded-xl bg-dark-800/50 p-4 text-left transition-colors hover:bg-dark-700/50"
+                      >
+                        <div className="mb-2 flex items-center justify-between">
+                          <span className="font-medium text-dark-100">
+                            #{ticket.id} {ticket.title}
+                          </span>
+                          <span
+                            className={`rounded-full border px-2 py-0.5 text-xs ${statusStyles[ticket.status] || statusStyles.closed}`}
+                          >
+                            {ticket.status}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-dark-500">
+                          <span>{formatDate(ticket.created_at)}</span>
+                          <span>
+                            {ticket.messages_count} {t('admin.users.detail.messagesCount')}
+                          </span>
+                        </div>
+                        {ticket.last_message && (
+                          <div className="mt-2 truncate text-sm text-dark-400">
+                            {ticket.last_message.is_from_admin ? '> ' : ''}
+                            {ticket.last_message.message_text}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

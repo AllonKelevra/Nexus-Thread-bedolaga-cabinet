@@ -187,7 +187,13 @@
     "forgotPasswordHint": "Enter your email to receive a reset link",
     "loginSuccess": "Login successful",
     "passwordResetSent": "Password reset link sent to your email",
-    "sendResetLink": "Send reset link"
+    "sendResetLink": "Send reset link",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithYandex": "Continue with Yandex",
+    "continueWithDiscord": "Continue with Discord",
+    "continueWithVk": "Continue with VK",
+    "oauthError": "Authorization was denied or failed",
+    "oauthExpired": "OAuth session expired. Please try again."
   },
   "emailVerification": {
     "title": "Email Verification",
@@ -1093,7 +1099,12 @@
       "emailContent": "Email content",
       "emailContentHint": "HTML supported",
       "emailContentPlaceholder": "<p>Hello, {{user_name}}!</p>\n<p>Your message here...</p>",
-      "emailVariables": "Available variables"
+      "emailVariables": "Available variables",
+      "enableTelegram": "Telegram",
+      "enableEmail": "Email",
+      "sendingBoth": "2 broadcasts will be created",
+      "bothCreated": "Broadcasts created",
+      "atLeastOneChannel": "Select at least one channel"
     },
     "settings": {
       "title": "System Settings",
@@ -1267,6 +1278,7 @@
       "reminderCooldownDesc": "Minimum time between reminders (1-120 minutes)",
       "settingsUpdateError": "Error saving settings",
       "copyTelegramId": "Click to copy Telegram ID",
+      "viewUser": "Profile",
       "cabinetNotifications": "Cabinet Notifications",
       "userNotificationsEnabled": "User Notifications",
       "userNotificationsEnabledDesc": "Send notifications to users about admin replies",
@@ -1808,7 +1820,7 @@
         },
         "confirmDelete": {
           "title": "Delete user?",
-          "message": "Are you sure? This action is irreversible. All user data will be deleted."
+          "message": "Are you sure? This action is irreversible. The user will be fully deleted from the bot and from the Remnawave panel."
         },
         "confirmResetTrial": {
           "title": "Reset trial?",
@@ -1828,14 +1840,36 @@
           "info": "Information",
           "subscription": "Subscription",
           "balance": "Balance",
-          "sync": "Synchronization"
+          "sync": "Synchronization",
+          "tickets": "Tickets"
         },
+        "noTickets": "No tickets from this user",
+        "ticketsCount": "tickets",
+        "messagesCount": "messages",
         "status": "Status",
         "language": "Language",
         "registration": "Registration",
         "lastActivity": "Last activity",
         "totalSpent": "Total spent",
         "purchases": "Purchases",
+        "campaign": "Advertising campaign",
+        "referralsList": "Referrals list",
+        "referralEarnings": "Referral earnings",
+        "noReferrals": "No referrals",
+        "panelConfig": "Panel configuration",
+        "trojanPassword": "Trojan password",
+        "vlessUuid": "VLESS UUID",
+        "ssPassword": "SS password",
+        "subscriptionUrl": "Subscription URL",
+        "happLink": "HAPP link",
+        "firstConnected": "First connected",
+        "lastOnline": "Last online",
+        "lastNode": "Last node",
+        "liveTraffic": "Current traffic",
+        "lifetime": "Lifetime",
+        "nodeUsage": "Node usage",
+        "copied": "Copied",
+        "panelNotFound": "User not found in panel",
         "referral": {
           "title": "Referral program",
           "referrals": "Referrals",
@@ -1847,6 +1881,10 @@
           "topup": "• Top-up prohibited",
           "subscription": "• Subscription purchase prohibited",
           "reason": "Reason"
+        },
+        "actions": {
+          "title": "Actions",
+          "areYouSure": "Are you sure?"
         },
         "subscription": {
           "current": "Current subscription",

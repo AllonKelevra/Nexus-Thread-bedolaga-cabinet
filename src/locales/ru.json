@@ -190,7 +190,13 @@
     "clickLinkToVerify": "Перейдите по ссылке в письме, чтобы подтвердить аккаунт и войти.",
     "backToLogin": "Вернуться ко входу",
     "emailNotVerified": "Сначала подтвердите email",
-    "loginSuccess": "Авторизация успешна"
+    "loginSuccess": "Авторизация успешна",
+    "continueWithGoogle": "Продолжить через Google",
+    "continueWithYandex": "Продолжить через Яндекс",
+    "continueWithDiscord": "Продолжить через Discord",
+    "continueWithVk": "Продолжить через VK",
+    "oauthError": "Авторизация отклонена или не удалась",
+    "oauthExpired": "Сессия OAuth истекла. Попробуйте снова."
   },
   "emailVerification": {
     "title": "Подтверждение email",
@@ -1118,7 +1124,12 @@
       "emailContent": "Содержимое письма",
       "emailContentHint": "Поддерживается HTML",
       "emailContentPlaceholder": "<p>Здравствуйте, {{user_name}}!</p>\n<p>Текст вашего письма...</p>",
-      "emailVariables": "Доступные переменные"
+      "emailVariables": "Доступные переменные",
+      "enableTelegram": "Telegram",
+      "enableEmail": "Email",
+      "sendingBoth": "Будет создано 2 рассылки",
+      "bothCreated": "Рассылки созданы",
+      "atLeastOneChannel": "Выберите хотя бы один канал"
     },
     "settings": {
       "title": "Настройки системы",
@@ -1782,6 +1793,7 @@
       "reminderCooldownDesc": "Минимальное время между напоминаниями (1-120 минут)",
       "settingsUpdateError": "Ошибка сохранения настроек",
       "copyTelegramId": "Нажмите чтобы скопировать Telegram ID",
+      "viewUser": "Карточка",
       "cabinetNotifications": "Уведомления в кабинете",
       "userNotificationsEnabled": "Уведомления для пользователей",
       "userNotificationsEnabledDesc": "Отправлять уведомления пользователям об ответах админа",
@@ -2335,7 +2347,7 @@
         },
         "confirmDelete": {
           "title": "Удалить пользователя?",
-          "message": "Вы уверены? Это действие необратимо. Все данные пользователя будут удалены."
+          "message": "Вы уверены? Это действие необратимо. Пользователь будет полностью удалён из бота и из панели Remnawave."
         },
         "confirmResetTrial": {
           "title": "Сбросить триал?",
@@ -2355,14 +2367,35 @@
           "info": "Информация",
           "subscription": "Подписка",
           "balance": "Баланс",
-          "sync": "Синхронизация"
+          "sync": "Синхронизация",
+          "tickets": "Тикеты"
         },
+        "noTickets": "У пользователя нет тикетов",
+        "ticketsCount": "тикетов",
+        "messagesCount": "сообщений",
         "status": "Статус",
         "language": "Язык",
         "registration": "Регистрация",
         "lastActivity": "Последняя активность",
         "totalSpent": "Всего потрачено",
         "purchases": "Покупок",
+        "campaign": "Рекламная кампания",
+        "referralsList": "Список рефералов",
+        "noReferrals": "Нет рефералов",
+        "panelConfig": "Конфигурация панели",
+        "trojanPassword": "Trojan пароль",
+        "vlessUuid": "VLESS UUID",
+        "ssPassword": "SS пароль",
+        "subscriptionUrl": "Ссылка подписки",
+        "happLink": "HAPP ссылка",
+        "firstConnected": "Первое подключение",
+        "lastOnline": "Последний онлайн",
+        "lastNode": "Последняя нода",
+        "liveTraffic": "Текущий трафик",
+        "lifetime": "За всё время",
+        "nodeUsage": "Расход по нодам",
+        "copied": "Скопировано",
+        "panelNotFound": "Пользователь не найден в панели",
         "referral": {
           "title": "Реферальная программа",
           "referrals": "Рефералов",
@@ -2374,6 +2407,10 @@
           "topup": "• Запрет пополнения",
           "subscription": "• Запрет покупки подписки",
           "reason": "Причина"
+        },
+        "actions": {
+          "title": "Действия",
+          "areYouSure": "Уверены?"
         },
         "subscription": {
           "current": "Текущая подписка",
