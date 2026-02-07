@@ -27,6 +27,7 @@ export interface TrafficUsageResponse {
   limit: number;
   period_days: number;
   available_tariffs: string[];
+  available_statuses: string[];
 }
 
 export interface ExportCsvResponse {
@@ -42,6 +43,10 @@ export type TrafficParams = {
   sort_by?: string;
   sort_desc?: boolean;
   tariffs?: string;
+  statuses?: string;
+  nodes?: string;
+  start_date?: string;
+  end_date?: string;
 };
 
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
@@ -50,13 +55,17 @@ const trafficCache = new Map<string, { data: TrafficUsageResponse; timestamp: nu
 
 function buildCacheKey(params: TrafficParams): string {
   return JSON.stringify({
-    p: params.period ?? 30,
-    l: params.limit ?? 50,
-    o: params.offset ?? 0,
-    s: params.search ?? '',
-    sb: params.sort_by ?? 'total_bytes',
-    sd: params.sort_desc ?? true,
-    t: params.tariffs ?? '',
+    period: params.period ?? 30,
+    limit: params.limit ?? 50,
+    offset: params.offset ?? 0,
+    search: params.search ?? '',
+    sort_by: params.sort_by ?? 'total_bytes',
+    sort_desc: params.sort_desc ?? true,
+    tariffs: params.tariffs ?? '',
+    statuses: params.statuses ?? '',
+    nodes: params.nodes ?? '',
+    start_date: params.start_date ?? '',
+    end_date: params.end_date ?? '',
   });
 }
 
@@ -95,7 +104,14 @@ export const adminTrafficApi = {
     trafficCache.clear();
   },
 
-  exportCsv: async (data: { period: number }): Promise<ExportCsvResponse> => {
+  exportCsv: async (data: {
+    period: number;
+    start_date?: string;
+    end_date?: string;
+    tariffs?: string;
+    statuses?: string;
+    nodes?: string;
+  }): Promise<ExportCsvResponse> => {
     const response = await apiClient.post('/cabinet/admin/traffic/export-csv', data);
     return response.data;
   },
