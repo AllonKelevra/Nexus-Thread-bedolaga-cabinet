@@ -91,31 +91,74 @@ const getRiskLevel = (ratio: number): RiskLevel => {
   return 'critical';
 };
 
-const getCompositeRatio = (
+interface RiskResult {
+  ratio: number;
+  gbPerDay: number; // the dominant daily value (total or worst node)
+  totalRatio: number;
+  maxNodeRatio: number;
+}
+
+const getCompositeRisk = (
   row: UserTrafficItem,
   totalThreshold: number,
   nodeThreshold: number,
   days: number,
-): number => {
+): RiskResult => {
   const dailyTotal = bytesToGbPerDay(row.total_bytes, days);
   const totalR = totalThreshold > 0 ? getRatio(dailyTotal, totalThreshold) : 0;
-  const nodeR =
-    nodeThreshold > 0
-      ? Math.max(
-          0,
-          ...Object.values(row.node_traffic).map((b) =>
-            getRatio(bytesToGbPerDay(b || 0, days), nodeThreshold),
-          ),
-        )
-      : 0;
-  return Math.max(totalR, nodeR);
+
+  let maxNodeR = 0;
+  let worstNodeGbPerDay = 0;
+  if (nodeThreshold > 0) {
+    for (const b of Object.values(row.node_traffic)) {
+      const daily = bytesToGbPerDay(b || 0, days);
+      const r = getRatio(daily, nodeThreshold);
+      if (r > maxNodeR) {
+        maxNodeR = r;
+        worstNodeGbPerDay = daily;
+      }
+    }
+  }
+
+  // The dominant metric determines what GB/d we show
+  const ratio = Math.max(totalR, maxNodeR);
+  const gbPerDay = totalR >= maxNodeR ? dailyTotal : worstNodeGbPerDay;
+
+  return { ratio, gbPerDay, totalRatio: totalR, maxNodeRatio: maxNodeR };
 };
 
-const RISK_STYLES: Record<RiskLevel, { dot: string; text: string }> = {
-  low: { dot: 'bg-success-400', text: 'text-success-400' },
-  medium: { dot: 'bg-warning-400', text: 'text-warning-400' },
-  high: { dot: 'bg-orange-400', text: 'text-orange-400' },
-  critical: { dot: 'bg-error-400 animate-pulse', text: 'text-error-400' },
+const RISK_STYLES: Record<RiskLevel, { dot: string; text: string; bar: string; bg: string }> = {
+  low: {
+    dot: 'bg-success-400',
+    text: 'text-success-400',
+    bar: 'bg-success-400',
+    bg: 'bg-success-400/10',
+  },
+  medium: {
+    dot: 'bg-warning-400',
+    text: 'text-warning-400',
+    bar: 'bg-warning-400',
+    bg: 'bg-warning-400/10',
+  },
+  high: {
+    dot: 'bg-orange-400',
+    text: 'text-orange-400',
+    bar: 'bg-orange-400',
+    bg: 'bg-orange-400/10',
+  },
+  critical: {
+    dot: 'bg-error-400 animate-pulse',
+    text: 'text-error-400',
+    bar: 'bg-error-400',
+    bg: 'bg-error-400/10',
+  },
+};
+
+const formatGbPerDay = (gbPerDay: number): string => {
+  if (gbPerDay < 0.01) return '<0.01';
+  if (gbPerDay < 10) return gbPerDay.toFixed(2);
+  if (gbPerDay < 100) return gbPerDay.toFixed(1);
+  return Math.round(gbPerDay).toString();
 };
 
 // ============ Icons ============
@@ -811,17 +854,34 @@ function NodeFilter({
 
 // ============ Risk Badge ============
 
-function RiskBadge({ level, ratio }: { level: RiskLevel; ratio: number }) {
-  const { t } = useTranslation();
+function RiskBadge({
+  level,
+  ratio,
+  gbPerDay,
+}: {
+  level: RiskLevel;
+  ratio: number;
+  gbPerDay: number;
+}) {
   const style = RISK_STYLES[level];
-  const labelKey = `admin.trafficUsage.risk${level.charAt(0).toUpperCase() + level.slice(1)}`;
-  const pct = Math.round(ratio * 100);
+  const barWidth = Math.min(ratio * 100, 100);
 
   return (
-    <div className="flex items-center justify-center gap-1.5">
-      <span className={`inline-block h-2 w-2 rounded-full ${style.dot}`} />
-      <span className={`text-[11px] font-medium ${style.text}`}>{pct}%</span>
-      <span className={`text-[10px] ${style.text} opacity-70`}>{t(labelKey)}</span>
+    <div className="flex flex-col items-center gap-0.5">
+      <div className="flex items-center gap-1">
+        <span className={`inline-block h-1.5 w-1.5 rounded-full ${style.dot}`} />
+        <span className={`text-[11px] font-semibold tabular-nums ${style.text}`}>
+          {formatGbPerDay(gbPerDay)}
+        </span>
+        <span className={`text-[10px] ${style.text} opacity-60`}>GB/d</span>
+      </div>
+      {/* Mini progress bar showing ratio to threshold */}
+      <div className={`h-1 w-full max-w-[60px] rounded-full ${style.bg}`}>
+        <div
+          className={`h-full rounded-full ${style.bar} transition-all`}
+          style={{ width: `${barWidth}%` }}
+        />
+      </div>
     </div>
   );
 }
@@ -1155,15 +1215,25 @@ export default function AdminTrafficUsage() {
             const nodeRatio = hasNodeThreshold ? getRatio(dailyNode, nodeThresholdNum) : 0;
             const textColor = hasNodeThreshold ? getNodeTextColor(nodeRatio) : undefined;
             return (
-              <span
-                className="text-xs text-dark-300"
-                style={{
-                  color: textColor,
-                  fontWeight: nodeRatio > 0.8 ? 600 : undefined,
-                }}
-              >
-                {formatBytes(bytes)}
-              </span>
+              <div className="flex flex-col items-center">
+                <span
+                  className="text-xs text-dark-300"
+                  style={{
+                    color: textColor,
+                    fontWeight: nodeRatio > 0.8 ? 600 : undefined,
+                  }}
+                >
+                  {formatBytes(bytes)}
+                </span>
+                {hasNodeThreshold && (
+                  <span
+                    className="text-[9px] leading-tight opacity-60"
+                    style={{ color: textColor }}
+                  >
+                    {formatGbPerDay(dailyNode)} GB/d
+                  </span>
+                )}
+              </div>
             );
           },
         }),
@@ -1178,13 +1248,20 @@ export default function AdminTrafficUsage() {
         size: 100,
         minSize: 80,
         meta: { align: 'center' as const },
-        accessorFn: (row) =>
-          getCompositeRatio(row, totalThresholdNum, nodeThresholdNum, periodDays),
+        accessorFn: (row) => {
+          const result = getCompositeRisk(row, totalThresholdNum, nodeThresholdNum, periodDays);
+          return result.ratio;
+        },
         enableSorting: false,
-        cell: ({ getValue }) => {
-          const maxRatio = getValue() as number;
-          const level = getRiskLevel(maxRatio);
-          return <RiskBadge level={level} ratio={maxRatio} />;
+        cell: ({ row }) => {
+          const result = getCompositeRisk(
+            row.original,
+            totalThresholdNum,
+            nodeThresholdNum,
+            periodDays,
+          );
+          const level = getRiskLevel(result.ratio);
+          return <RiskBadge level={level} ratio={result.ratio} gbPerDay={result.gbPerDay} />;
         },
       });
     }
@@ -1198,10 +1275,19 @@ export default function AdminTrafficUsage() {
       meta: { align: 'center' as const, bold: true },
       cell: ({ getValue }) => {
         const bytes = getValue() as number;
+        if (bytes <= 0) {
+          return <span className="text-xs font-semibold text-dark-100">{'\u2014'}</span>;
+        }
+        const dailyTotal = bytesToGbPerDay(bytes, periodDays);
         return (
-          <span className="text-xs font-semibold text-dark-100">
-            {bytes > 0 ? formatBytes(bytes) : '\u2014'}
-          </span>
+          <div className="flex flex-col items-center">
+            <span className="text-xs font-semibold text-dark-100">{formatBytes(bytes)}</span>
+            {hasTotalThreshold && (
+              <span className="text-[9px] leading-tight text-dark-400">
+                {formatGbPerDay(dailyTotal)} GB/d
+              </span>
+            )}
+          </div>
         );
       },
     });
@@ -1429,12 +1515,12 @@ export default function AdminTrafficUsage() {
               <tbody>
                 {table.getRowModel().rows.map((row) => {
                   const compositeRatio = hasAnyThreshold
-                    ? getCompositeRatio(
+                    ? getCompositeRisk(
                         row.original,
                         totalThresholdNum,
                         nodeThresholdNum,
                         periodDays,
-                      )
+                      ).ratio
                     : 0;
                   const rowBg = hasAnyThreshold ? getRowBgColor(compositeRatio) : undefined;
 
