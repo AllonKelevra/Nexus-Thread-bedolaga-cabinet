@@ -761,7 +761,8 @@
       "campaigns": "Campaigns",
       "promoOffers": "Promo Offers",
       "promocodes": "Promo Codes",
-      "promoGroups": "Discount Groups"
+      "promoGroups": "Discount Groups",
+      "trafficUsage": "Traffic Usage"
     },
     "panel": {
       "title": "Admin Panel",
@@ -783,7 +784,26 @@
       "campaignsDesc": "Advertising campaigns",
       "promoOffersDesc": "Personal discounts",
       "promocodesDesc": "Manage promo codes",
-      "promoGroupsDesc": "Discount groups for users"
+      "promoGroupsDesc": "Discount groups for users",
+      "trafficUsageDesc": "Per-user traffic by nodes"
+    },
+    "trafficUsage": {
+      "title": "Traffic Usage",
+      "subtitle": "Per-user traffic statistics by nodes",
+      "period": "Period",
+      "days": "d",
+      "exportCsv": "Export CSV",
+      "exportSuccess": "CSV sent to your Telegram",
+      "exportError": "Failed to export",
+      "user": "User",
+      "tariff": "Tariff",
+      "devices": "Devices",
+      "trafficLimit": "Limit",
+      "total": "Total",
+      "noData": "No traffic data",
+      "loading": "Loading traffic data...",
+      "noTariff": "\u2014",
+      "search": "Search by name or username"
     },
     "emailTemplates": {
       "title": "Email Templates",

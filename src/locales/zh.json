@@ -642,7 +642,8 @@
       "promocodes": "促销码",
       "promoGroups": "折扣组",
       "remnawave": "RemnaWave",
-      "users": "用户"
+      "users": "用户",
+      "trafficUsage": "流量使用"
     },
     "panel": {
       "title": "管理面板",
@@ -664,7 +665,26 @@
       "promocodesDesc": "管理促销码",
       "promoGroupsDesc": "用户折扣组",
       "remnawaveDesc": "面板管理和统计",
-      "usersDesc": "管理机器人用户"
+      "usersDesc": "管理机器人用户",
+      "trafficUsageDesc": "按节点统计用户流量"
+    },
+    "trafficUsage": {
+      "title": "流量使用",
+      "subtitle": "按节点的用户流量统计",
+      "period": "周期",
+      "days": "天",
+      "exportCsv": "导出CSV",
+      "exportSuccess": "CSV已发送到您的Telegram",
+      "exportError": "导出失败",
+      "user": "用户",
+      "tariff": "套餐",
+      "devices": "设备",
+      "trafficLimit": "限制",
+      "total": "总计",
+      "noData": "无流量数据",
+      "loading": "正在加载流量数据...",
+      "noTariff": "\u2014",
+      "search": "按名称或用户名搜索"
     },
     "paymentMethods": {
       "title": "支付方法",

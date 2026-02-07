@@ -782,7 +782,8 @@
       "campaigns": "Кампании",
       "promoOffers": "Промопредложения",
       "promocodes": "Промокоды",
-      "promoGroups": "Группы скидок"
+      "promoGroups": "Группы скидок",
+      "trafficUsage": "Расход трафика"
     },
     "panel": {
       "title": "Панель администратора",
@@ -804,7 +805,26 @@
       "campaignsDesc": "Рекламные кампании",
       "promoOffersDesc": "Персональные скидки",
       "promocodesDesc": "Управление промокодами",
-      "promoGroupsDesc": "Группы скидок для пользователей"
+      "promoGroupsDesc": "Группы скидок для пользователей",
+      "trafficUsageDesc": "Трафик пользователей по нодам"
+    },
+    "trafficUsage": {
+      "title": "Расход трафика",
+      "subtitle": "Статистика трафика по пользователям и нодам",
+      "period": "Период",
+      "days": "д",
+      "exportCsv": "Экспорт CSV",
+      "exportSuccess": "CSV отправлен в ваш Telegram",
+      "exportError": "Ошибка экспорта",
+      "user": "Пользователь",
+      "tariff": "Тариф",
+      "devices": "Устройства",
+      "trafficLimit": "Лимит",
+      "total": "Всего",
+      "noData": "Нет данных о трафике",
+      "loading": "Загрузка данных о трафике...",
+      "noTariff": "\u2014",
+      "search": "Поиск по имени или юзернейму"
     },
     "emailTemplates": {
       "title": "Email-шаблоны",
