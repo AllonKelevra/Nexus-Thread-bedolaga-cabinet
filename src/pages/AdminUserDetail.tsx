@@ -1208,7 +1208,7 @@ export default function AdminUserDetail() {
                     </span>
                     <div className="flex items-center gap-2">
                       <div className="flex gap-1">
-                        {[7, 14, 30].map((d) => (
+                        {[1, 3, 7, 14, 30].map((d) => (
                           <button
                             key={d}
                             onClick={() => setNodeUsageDays(d)}
