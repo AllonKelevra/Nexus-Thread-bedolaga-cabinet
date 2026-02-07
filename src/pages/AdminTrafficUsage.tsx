@@ -9,7 +9,12 @@ import {
   type SortingState,
   type RowData,
 } from '@tanstack/react-table';
-import { adminTrafficApi, type UserTrafficItem, type TrafficNodeInfo } from '../api/adminTraffic';
+import {
+  adminTrafficApi,
+  type UserTrafficItem,
+  type TrafficNodeInfo,
+  type TrafficParams,
+} from '../api/adminTraffic';
 import { usePlatform } from '../platform/hooks/usePlatform';
 
 // ============ TanStack Table module augmentation ============
@@ -128,6 +133,53 @@ const ChevronDownIcon = () => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
   </svg>
 );
+
+// ============ Progress Bar ============
+
+function ProgressBar({ loading }: { loading: boolean }) {
+  const [progress, setProgress] = useState(0);
+  const [visible, setVisible] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined);
+
+  useEffect(() => {
+    if (loading) {
+      setProgress(0);
+      setVisible(true);
+      // Fast initial progress, then slow down
+      intervalRef.current = setInterval(() => {
+        setProgress((prev) => {
+          if (prev < 30) return prev + 8;
+          if (prev < 60) return prev + 3;
+          if (prev < 85) return prev + 1;
+          if (prev < 95) return prev + 0.3;
+          return prev;
+        });
+      }, 100);
+    } else {
+      if (visible) {
+        setProgress(100);
+        clearInterval(intervalRef.current);
+        const timer = setTimeout(() => {
+          setVisible(false);
+          setProgress(0);
+        }, 300);
+        return () => clearTimeout(timer);
+      }
+    }
+    return () => clearInterval(intervalRef.current);
+  }, [loading, visible]);
+
+  if (!visible) return null;
+
+  return (
+    <div className="absolute left-0 right-0 top-0 z-50 h-0.5 overflow-hidden rounded-full bg-dark-700/50">
+      <div
+        className="h-full rounded-full bg-gradient-to-r from-accent-500 to-accent-400 transition-all duration-200 ease-out"
+        style={{ width: `${progress}%` }}
+      />
+    </div>
+  );
+}
 
 // ============ Components ============
 
@@ -305,7 +357,8 @@ export default function AdminTrafficUsage() {
   const [items, setItems] = useState<UserTrafficItem[]>([]);
   const [nodes, setNodes] = useState<TrafficNodeInfo[]>([]);
   const [availableTariffs, setAvailableTariffs] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [period, setPeriod] = useState(30);
   const [searchInput, setSearchInput] = useState('');
   const [committedSearch, setCommittedSearch] = useState('');
@@ -318,37 +371,93 @@ export default function AdminTrafficUsage() {
   const [columnSizing, setColumnSizing] = useState<Record<string, number>>({});
 
   const limit = 50;
+  const hasData = items.length > 0 || nodes.length > 0;
 
   const sortBy = sorting[0] ? toBackendSortField(sorting[0].id) : 'total_bytes';
   const sortDesc = sorting[0]?.desc ?? true;
   const tariffsParam = selectedTariffs.size > 0 ? [...selectedTariffs].join(',') : undefined;
 
-  const loadData = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await adminTrafficApi.getTrafficUsage({
-        period,
-        limit,
-        offset,
-        search: committedSearch || undefined,
-        sort_by: sortBy,
-        sort_desc: sortDesc,
-        tariffs: tariffsParam,
-      });
+  const buildParams = useCallback(
+    (): TrafficParams => ({
+      period,
+      limit,
+      offset,
+      search: committedSearch || undefined,
+      sort_by: sortBy,
+      sort_desc: sortDesc,
+      tariffs: tariffsParam,
+    }),
+    [period, offset, committedSearch, sortBy, sortDesc, tariffsParam],
+  );
+
+  const applyData = useCallback(
+    (data: {
+      items: UserTrafficItem[];
+      nodes: TrafficNodeInfo[];
+      total: number;
+      available_tariffs: string[];
+    }) => {
       setItems(data.items);
       setNodes(data.nodes);
       setTotal(data.total);
       setAvailableTariffs(data.available_tariffs);
-    } catch {
-      // silently fail
-    } finally {
-      setLoading(false);
-    }
-  }, [period, offset, committedSearch, sortBy, sortDesc, tariffsParam]);
+    },
+    [],
+  );
 
+  const loadData = useCallback(
+    async (skipCache = false) => {
+      const params = buildParams();
+
+      // Check cache first — apply instantly without any loading state
+      if (!skipCache) {
+        const cached = adminTrafficApi.getCached(params);
+        if (cached) {
+          applyData(cached);
+          setInitialLoading(false);
+          return;
+        }
+      }
+
+      try {
+        setLoading(true);
+        const data = await adminTrafficApi.getTrafficUsage(params, { skipCache });
+        applyData(data);
+      } catch {
+        // silently fail — keep stale data visible
+      } finally {
+        setLoading(false);
+        setInitialLoading(false);
+      }
+    },
+    [buildParams, applyData],
+  );
+
+  // Load on param change
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Prefetch adjacent periods in background
+  useEffect(() => {
+    const prefetchPeriods = PERIODS.filter((p) => p !== period);
+    const timer = setTimeout(() => {
+      prefetchPeriods.forEach((p) => {
+        const params: TrafficParams = {
+          period: p,
+          limit,
+          offset: 0,
+          sort_by: 'total_bytes',
+          sort_desc: true,
+        };
+        if (!adminTrafficApi.getCached(params)) {
+          adminTrafficApi.getTrafficUsage(params).catch(() => {});
+        }
+      });
+    }, 500);
+    return () => clearTimeout(timer);
+    // Only prefetch once on mount + when period changes
+  }, [period]);
 
   useEffect(() => {
     if (toast) {
@@ -389,6 +498,10 @@ export default function AdminTrafficUsage() {
   const handleTariffChange = (next: Set<string>) => {
     setSelectedTariffs(next);
     setOffset(0);
+  };
+
+  const handleRefresh = () => {
+    loadData(true);
   };
 
   const columns = useMemo<ColumnDef<UserTrafficItem>[]>(() => {
@@ -509,7 +622,10 @@ export default function AdminTrafficUsage() {
   const currentPage = Math.floor(offset / limit) + 1;
 
   return (
-    <div className="animate-fade-in">
+    <div className="relative animate-fade-in">
+      {/* Progress bar — shown during background refresh */}
+      <ProgressBar loading={loading} />
+
       {/* Toast */}
       {toast && (
         <div
@@ -539,7 +655,11 @@ export default function AdminTrafficUsage() {
             <p className="text-sm text-dark-400">{t('admin.trafficUsage.subtitle')}</p>
           </div>
         </div>
-        <button onClick={loadData} className="rounded-lg p-2 transition-colors hover:bg-dark-700">
+        <button
+          onClick={handleRefresh}
+          disabled={loading}
+          className="rounded-lg p-2 transition-colors hover:bg-dark-700 disabled:opacity-50"
+        >
           <RefreshIcon className={loading ? 'animate-spin' : ''} />
         </button>
       </div>
@@ -584,83 +704,87 @@ export default function AdminTrafficUsage() {
       </div>
 
       {/* Table */}
-      {loading ? (
+      {initialLoading && !hasData ? (
         <div className="flex justify-center py-12">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
         </div>
-      ) : items.length === 0 ? (
+      ) : !hasData && !loading ? (
         <div className="py-12 text-center text-dark-400">{t('admin.trafficUsage.noData')}</div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-dark-700">
-          <table className="text-left text-sm" style={{ width: table.getCenterTotalSize() }}>
-            <thead>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id} className="border-b border-dark-700 bg-dark-800/80">
-                  {headerGroup.headers.map((header) => {
-                    const meta = header.column.columnDef.meta;
-                    const isSticky = meta?.sticky;
-                    const align = meta?.align === 'center' ? 'text-center' : 'text-left';
-                    const isBold = meta?.bold;
+        <div
+          className={`transition-opacity duration-200 ${loading && hasData ? 'opacity-70' : 'opacity-100'}`}
+        >
+          <div className="overflow-x-auto rounded-xl border border-dark-700">
+            <table className="text-left text-sm" style={{ width: table.getCenterTotalSize() }}>
+              <thead>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr key={headerGroup.id} className="border-b border-dark-700 bg-dark-800/80">
+                    {headerGroup.headers.map((header) => {
+                      const meta = header.column.columnDef.meta;
+                      const isSticky = meta?.sticky;
+                      const align = meta?.align === 'center' ? 'text-center' : 'text-left';
+                      const isBold = meta?.bold;
 
-                    return (
-                      <th
-                        key={header.id}
-                        className={`relative px-3 py-2 text-xs font-medium ${
-                          isBold ? 'font-semibold text-dark-200' : 'text-dark-400'
-                        } ${align} ${
-                          isSticky ? 'sticky left-0 z-10 bg-dark-800' : ''
-                        } ${header.column.getCanSort() ? 'cursor-pointer select-none hover:text-dark-200' : ''}`}
-                        style={{ width: header.getSize() }}
-                        onClick={header.column.getToggleSortingHandler()}
-                      >
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                        {header.column.getCanSort() && (
-                          <SortIcon direction={header.column.getIsSorted()} />
-                        )}
-                        <div
-                          onMouseDown={header.getResizeHandler()}
-                          onTouchStart={header.getResizeHandler()}
-                          onClick={(e) => e.stopPropagation()}
-                          className={`absolute right-0 top-0 h-full w-1 cursor-col-resize touch-none select-none ${
-                            header.column.getIsResizing()
-                              ? 'bg-accent-500'
-                              : 'bg-transparent hover:bg-dark-500'
+                      return (
+                        <th
+                          key={header.id}
+                          className={`relative px-3 py-2 text-xs font-medium ${
+                            isBold ? 'font-semibold text-dark-200' : 'text-dark-400'
+                          } ${align} ${
+                            isSticky ? 'sticky left-0 z-10 bg-dark-800' : ''
+                          } ${header.column.getCanSort() ? 'cursor-pointer select-none hover:text-dark-200' : ''}`}
+                          style={{ width: header.getSize() }}
+                          onClick={header.column.getToggleSortingHandler()}
+                        >
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                          {header.column.getCanSort() && (
+                            <SortIcon direction={header.column.getIsSorted()} />
+                          )}
+                          <div
+                            onMouseDown={header.getResizeHandler()}
+                            onTouchStart={header.getResizeHandler()}
+                            onClick={(e) => e.stopPropagation()}
+                            className={`absolute right-0 top-0 h-full w-1 cursor-col-resize touch-none select-none ${
+                              header.column.getIsResizing()
+                                ? 'bg-accent-500'
+                                : 'bg-transparent hover:bg-dark-500'
+                            }`}
+                          />
+                        </th>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </thead>
+              <tbody>
+                {table.getRowModel().rows.map((row) => (
+                  <tr
+                    key={row.id}
+                    className="cursor-pointer border-b border-dark-700/50 transition-colors hover:bg-dark-800/50"
+                    onClick={() => navigate(`/admin/users/${row.original.user_id}`)}
+                  >
+                    {row.getVisibleCells().map((cell) => {
+                      const meta = cell.column.columnDef.meta;
+                      const isSticky = meta?.sticky;
+                      const align = meta?.align === 'center' ? 'text-center' : 'text-left';
+
+                      return (
+                        <td
+                          key={cell.id}
+                          className={`px-3 py-2 ${align} ${
+                            isSticky ? 'sticky left-0 z-10 bg-dark-900' : ''
                           }`}
-                        />
-                      </th>
-                    );
-                  })}
-                </tr>
-              ))}
-            </thead>
-            <tbody>
-              {table.getRowModel().rows.map((row) => (
-                <tr
-                  key={row.id}
-                  className="cursor-pointer border-b border-dark-700/50 transition-colors hover:bg-dark-800/50"
-                  onClick={() => navigate(`/admin/users/${row.original.user_id}`)}
-                >
-                  {row.getVisibleCells().map((cell) => {
-                    const meta = cell.column.columnDef.meta;
-                    const isSticky = meta?.sticky;
-                    const align = meta?.align === 'center' ? 'text-center' : 'text-left';
-
-                    return (
-                      <td
-                        key={cell.id}
-                        className={`px-3 py-2 ${align} ${
-                          isSticky ? 'sticky left-0 z-10 bg-dark-900' : ''
-                        }`}
-                        style={{ width: cell.column.getSize() }}
-                      >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                          style={{ width: cell.column.getSize() }}
+                        >
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

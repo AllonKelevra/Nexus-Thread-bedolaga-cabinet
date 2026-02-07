@@ -34,18 +34,65 @@ export interface ExportCsvResponse {
   message: string;
 }
 
+export type TrafficParams = {
+  period?: number;
+  limit?: number;
+  offset?: number;
+  search?: string;
+  sort_by?: string;
+  sort_desc?: boolean;
+  tariffs?: string;
+};
+
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+const trafficCache = new Map<string, { data: TrafficUsageResponse; timestamp: number }>();
+
+function buildCacheKey(params: TrafficParams): string {
+  return JSON.stringify({
+    p: params.period ?? 30,
+    l: params.limit ?? 50,
+    o: params.offset ?? 0,
+    s: params.search ?? '',
+    sb: params.sort_by ?? 'total_bytes',
+    sd: params.sort_desc ?? true,
+    t: params.tariffs ?? '',
+  });
+}
+
 export const adminTrafficApi = {
-  getTrafficUsage: async (params: {
-    period?: number;
-    limit?: number;
-    offset?: number;
-    search?: string;
-    sort_by?: string;
-    sort_desc?: boolean;
-    tariffs?: string;
-  }): Promise<TrafficUsageResponse> => {
+  getTrafficUsage: async (
+    params: TrafficParams,
+    options?: { skipCache?: boolean },
+  ): Promise<TrafficUsageResponse> => {
+    const key = buildCacheKey(params);
+
+    if (!options?.skipCache) {
+      const cached = trafficCache.get(key);
+      if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+        return cached.data;
+      }
+    }
+
     const response = await apiClient.get('/cabinet/admin/traffic', { params });
-    return response.data;
+    const data: TrafficUsageResponse = response.data;
+
+    trafficCache.set(key, { data, timestamp: Date.now() });
+
+    return data;
+  },
+
+  getCached: (params: TrafficParams): TrafficUsageResponse | null => {
+    const key = buildCacheKey(params);
+    const cached = trafficCache.get(key);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return cached.data;
+    }
+    return null;
+  },
+
+  invalidateCache: () => {
+    trafficCache.clear();
   },
 
   exportCsv: async (data: { period: number }): Promise<ExportCsvResponse> => {
