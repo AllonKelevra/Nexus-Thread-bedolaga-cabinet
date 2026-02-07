@@ -19,6 +19,51 @@ import { ticketsApi } from '../api/tickets';
 import { AdminBackButton } from '../components/admin';
 import { createNumberInputHandler, toNumber } from '../utils/inputHelpers';
 
+// ============ Helpers ============
+
+const getCountryFlag = (code: string | null | undefined): string => {
+  if (!code) return '';
+  const codeMap: Record<string, string> = {
+    RU: '\u{1F1F7}\u{1F1FA}',
+    US: '\u{1F1FA}\u{1F1F8}',
+    DE: '\u{1F1E9}\u{1F1EA}',
+    NL: '\u{1F1F3}\u{1F1F1}',
+    GB: '\u{1F1EC}\u{1F1E7}',
+    UK: '\u{1F1EC}\u{1F1E7}',
+    FR: '\u{1F1EB}\u{1F1F7}',
+    FI: '\u{1F1EB}\u{1F1EE}',
+    SE: '\u{1F1F8}\u{1F1EA}',
+    NO: '\u{1F1F3}\u{1F1F4}',
+    PL: '\u{1F1F5}\u{1F1F1}',
+    TR: '\u{1F1F9}\u{1F1F7}',
+    JP: '\u{1F1EF}\u{1F1F5}',
+    SG: '\u{1F1F8}\u{1F1EC}',
+    HK: '\u{1F1ED}\u{1F1F0}',
+    KR: '\u{1F1F0}\u{1F1F7}',
+    AU: '\u{1F1E6}\u{1F1FA}',
+    CA: '\u{1F1E8}\u{1F1E6}',
+    CH: '\u{1F1E8}\u{1F1ED}',
+    AT: '\u{1F1E6}\u{1F1F9}',
+    IT: '\u{1F1EE}\u{1F1F9}',
+    ES: '\u{1F1EA}\u{1F1F8}',
+    BR: '\u{1F1E7}\u{1F1F7}',
+    IN: '\u{1F1EE}\u{1F1F3}',
+    AE: '\u{1F1E6}\u{1F1EA}',
+    IL: '\u{1F1EE}\u{1F1F1}',
+    KZ: '\u{1F1F0}\u{1F1FF}',
+    UA: '\u{1F1FA}\u{1F1E6}',
+    CZ: '\u{1F1E8}\u{1F1FF}',
+    RO: '\u{1F1F7}\u{1F1F4}',
+    LV: '\u{1F1F1}\u{1F1FB}',
+    LT: '\u{1F1F1}\u{1F1F9}',
+    EE: '\u{1F1EA}\u{1F1EA}',
+    BG: '\u{1F1E7}\u{1F1EC}',
+    HU: '\u{1F1ED}\u{1F1FA}',
+    MD: '\u{1F1F2}\u{1F1E9}',
+  };
+  return codeMap[code.toUpperCase()] || code;
+};
+
 // ============ Icons ============
 
 const RefreshIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
@@ -1177,7 +1222,12 @@ export default function AdminUserDetail() {
                         return (
                           <div key={item.node_uuid}>
                             <div className="mb-1 flex justify-between text-xs">
-                              <span className="text-dark-300">{item.node_name}</span>
+                              <span className="text-dark-300">
+                                {item.country_code && (
+                                  <span className="mr-1">{getCountryFlag(item.country_code)}</span>
+                                )}
+                                {item.node_name}
+                              </span>
                               <span className="text-dark-400">{formatBytes(item.total_bytes)}</span>
                             </div>
                             <div className="h-1.5 overflow-hidden rounded-full bg-dark-700">

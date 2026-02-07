@@ -132,6 +132,7 @@ export interface UserPanelInfo {
 export interface UserNodeUsageItem {
   node_uuid: string;
   node_name: string;
+  country_code: string;
   total_bytes: number;
 }
 
