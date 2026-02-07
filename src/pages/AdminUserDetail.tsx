@@ -199,6 +199,20 @@ export default function AdminUserDetail() {
     }
   };
 
+  const handleTicketStatusChange = async (newStatus: string) => {
+    if (!selectedTicketId) return;
+    setActionLoading(true);
+    try {
+      await adminApi.updateTicketStatus(selectedTicketId, newStatus);
+      await loadTicketDetail(selectedTicketId);
+      await loadTickets();
+    } catch (error) {
+      console.error('Failed to update ticket status:', error);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (selectedTicketId) {
       loadTicketDetail(selectedTicketId);
@@ -1134,6 +1148,24 @@ export default function AdminUserDetail() {
                         <span>{formatDate(selectedTicket.created_at)}</span>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Status buttons */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {(['open', 'pending', 'answered', 'closed'] as const).map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => handleTicketStatusChange(s)}
+                        disabled={selectedTicket.status === s || actionLoading}
+                        className={`rounded-lg border px-2.5 py-1 text-xs transition-all ${
+                          selectedTicket.status === s
+                            ? 'border-accent-500/50 bg-accent-500/20 text-accent-400'
+                            : 'border-dark-700/50 text-dark-400 hover:border-dark-600 hover:text-dark-200'
+                        } disabled:opacity-50`}
+                      >
+                        {t(`admin.tickets.status${s.charAt(0).toUpperCase() + s.slice(1)}`)}
+                      </button>
+                    ))}
                   </div>
 
                   {/* Messages */}
