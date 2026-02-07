@@ -642,7 +642,8 @@
       "promocodes": "کدهای تخفیف",
       "promoGroups": "گروه‌های تخفیف",
       "remnawave": "RemnaWave",
-      "users": "کاربران"
+      "users": "کاربران",
+      "trafficUsage": "مصرف ترافیک"
     },
     "panel": {
       "title": "پنل مدیریت",
@@ -664,7 +665,26 @@
       "promocodesDesc": "مدیریت کدهای تخفیف",
       "promoGroupsDesc": "گروه‌های تخفیف برای کاربران",
       "remnawaveDesc": "مدیریت پنل و آمار",
-      "usersDesc": "مدیریت کاربران ربات"
+      "usersDesc": "مدیریت کاربران ربات",
+      "trafficUsageDesc": "ترافیک هر کاربر بر اساس نود"
+    },
+    "trafficUsage": {
+      "title": "مصرف ترافیک",
+      "subtitle": "آمار ترافیک کاربران بر اساس نودها",
+      "period": "دوره",
+      "days": "روز",
+      "exportCsv": "خروجی CSV",
+      "exportSuccess": "CSV به تلگرام شما ارسال شد",
+      "exportError": "خطا در خروجی",
+      "user": "کاربر",
+      "tariff": "تعرفه",
+      "devices": "دستگاه‌ها",
+      "trafficLimit": "محدودیت",
+      "total": "کل",
+      "noData": "داده ترافیکی موجود نیست",
+      "loading": "در حال بارگذاری داده‌های ترافیک...",
+      "noTariff": "\u2014",
+      "search": "جستجو بر اساس نام یا نام کاربری"
     },
     "emailTemplates": {
       "title": "قالب‌های ایمیل",

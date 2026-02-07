@@ -69,6 +69,7 @@ const AdminPromoOfferSend = lazy(() => import('./pages/AdminPromoOfferSend'));
 const AdminRemnawave = lazy(() => import('./pages/AdminRemnawave'));
 const AdminRemnawaveSquadDetail = lazy(() => import('./pages/AdminRemnawaveSquadDetail'));
 const AdminEmailTemplates = lazy(() => import('./pages/AdminEmailTemplates'));
+const AdminTrafficUsage = lazy(() => import('./pages/AdminTrafficUsage'));
 const AdminUserDetail = lazy(() => import('./pages/AdminUserDetail'));
 const AdminBroadcastDetail = lazy(() => import('./pages/AdminBroadcastDetail'));
 const AdminEmailTemplatePreview = lazy(() => import('./pages/AdminEmailTemplatePreview'));
@@ -561,6 +562,16 @@ function App() {
             <AdminRoute>
               <LazyPage>
                 <AdminPayments />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/traffic-usage"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminTrafficUsage />
               </LazyPage>
             </AdminRoute>
           }
