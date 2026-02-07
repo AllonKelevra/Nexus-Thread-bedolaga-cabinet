@@ -23,8 +23,6 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { adminPaymentMethodsApi } from '../api/adminPaymentMethods';
 import type { PaymentMethodConfig } from '../types';
-import PaymentMethodIcon from '@/components/PaymentMethodIcon';
-
 // ============ Icons ============
 
 const BackIcon = () => (
@@ -134,11 +132,6 @@ function SortablePaymentCard({ config, onClick }: SortableCardProps) {
       >
         <GripIcon />
       </button>
-
-      {/* Method icon */}
-      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center">
-        <PaymentMethodIcon method={config.method_id} className="h-10 w-10" />
-      </div>
 
       {/* Content */}
       <div className="min-w-0 flex-1 cursor-pointer" onClick={onClick}>
@@ -320,9 +313,6 @@ export default function AdminPaymentMethods() {
           </DndContext>
         ) : (
           <div className="py-12 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center">
-              <PaymentMethodIcon method="" className="h-12 w-12" />
-            </div>
             <div className="text-dark-400">{t('admin.paymentMethods.noMethods')}</div>
           </div>
         )}
