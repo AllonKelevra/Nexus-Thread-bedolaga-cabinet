@@ -6,8 +6,6 @@ import { adminPaymentMethodsApi } from '../api/adminPaymentMethods';
 import type { PromoGroupSimple } from '../types';
 import { usePlatform } from '../platform/hooks/usePlatform';
 import { createNumberInputHandler, toNumber } from '../utils/inputHelpers';
-import PaymentMethodIcon from '@/components/PaymentMethodIcon';
-
 const BackIcon = () => (
   <svg
     className="h-5 w-5 text-dark-400"
@@ -195,9 +193,6 @@ export default function AdminPaymentMethodEdit() {
             <BackIcon />
           </button>
         )}
-        <div className="flex h-10 w-10 items-center justify-center">
-          <PaymentMethodIcon method={config.method_id} className="h-10 w-10" />
-        </div>
         <div>
           <h1 className="text-2xl font-bold text-dark-50">{displayName}</h1>
           <p className="text-sm text-dark-500">
