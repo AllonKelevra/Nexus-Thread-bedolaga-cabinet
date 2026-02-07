@@ -1140,7 +1140,7 @@ export default function AdminTrafficUsage() {
         header: t('admin.trafficUsage.user'),
         enableSorting: true,
         size: 120,
-        minSize: 80,
+        minSize: 40,
         maxSize: 200,
         cell: ({ row }) => {
           const item = row.original;
