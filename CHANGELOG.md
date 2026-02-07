@@ -1,5 +1,56 @@
 # Changelog
 
+## [1.9.0](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/compare/v1.8.0...v1.9.0) (2026-02-07)
+
+
+### Features
+
+* add 1d and 3d period filters for node usage ([f36ee60](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/f36ee60c0b74bc6b3d0f51aa1c6ec0d50e5f38d7))
+* add 1d and 3d period filters for node usage ([944b2ec](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/944b2eca02cef28fcb6c0e919fdcfea54cd8dbc7))
+* add Info page link to desktop top navigation ([fa48cc4](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/fa48cc438b0b9e5df9fb1ca69c91196e0ba8153c))
+* add Info page link to desktop top navigation ([18a14d6](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/18a14d64eac156266348911fdcb49a8d690b1c1b))
+* add OAuth 2.0 login UI (Google, Yandex, Discord, VK) ([83aeae8](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/83aeae81b86c99615f0175cf0f3b1f656f6c66cc))
+* add SVG brand icons for payment methods ([c4f228f](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/c4f228fba6cbb0fe9ce0ac007e05c0cf2bf1fff0))
+* add ticket status buttons to inline chat ([5664b28](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/5664b283d6414e853488a86b42f75b49b35dc3d2))
+* add ticket status change buttons to inline chat ([dafa69f](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/dafa69f73689828749072c99206dd7d7f9ea766d))
+* add tickets tab to admin user detail page ([995c034](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/995c0348dc8a65bc3e8432911c15137fe7e72bfa))
+* add Twemoji for cross-platform emoji rendering ([031396d](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/031396dd4529e20fe4d6727f02c84a0b5741cf76))
+* add Twemoji for cross-platform emoji rendering ([72b1089](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/72b1089af7b2e830d993780b45225bd10361722a))
+* add user profile link button in ticket detail ([d483d84](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/d483d84f1c3d22a6220116d581613146b98e4fc1))
+* brand-accurate payment method icons from favicons ([e24afc4](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/e24afc4b6f9b5d9048c8af2d0e427f7e5916cd0c))
+* dual-channel broadcast form (Telegram + Email simultaneously) ([772dcf7](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/772dcf72365581be587456cd1f7e35c969b7c898))
+* dual-channel broadcasts (Telegram + Email) ([74f6c61](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/74f6c61eb3bf317f16348779a4b5286f209d0a77))
+* enhance admin user detail with campaign, panel data, node usage ([0083b47](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/0083b47d0459995e94470df005fe341fe666c41f))
+* enhance admin user detail with campaign, panel data, node usage ([7b19f14](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/7b19f14dc3628dfdea93fbcb995fc13b5276c8da))
+* inline ticket chat in admin user detail ([0b10cfe](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/0b10cfecf33b329a79a958858829289d4401b769))
+* inline ticket chat in admin user detail ([145d94a](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/145d94adcdefafb3257340544e04817cc729f2d4))
+* local period calculation and refresh button for node usage ([64ea757](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/64ea75738feb1338c608754170fa7489b9926f54))
+* local period calculation and refresh button for node usage ([bc6985f](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/bc6985f5222bc28db10f66c2a60aa073ac68d87c))
+* move user action buttons to detail page and fix full delete ([2490399](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/2490399f8eb8a96ea0992c134f4a33c6001c885e))
+* move user actions to detail page, fix full delete ([dad0c5b](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/dad0c5b756a2e99984ee1c423c9c80f6551070e6))
+* OAuth 2.0 login UI (Google, Yandex, Discord, VK) ([b7aca0c](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/b7aca0cc1c924763771853c680d656b2314ed79e))
+* support Telegram HTML formatting in privacy/offer content ([fb055c0](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/fb055c04e878e61be244c1e3ad5dd5f53cf29496))
+* support Telegram HTML formatting in privacy/offer content ([3e70008](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/3e70008b81a05781bff578328b4e96e2387278ab))
+* SVG иконки платёжных методов, фикс колеса удачи ([2003052](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/20030527f07cf1baf6754713883475c33dd86524))
+* tickets tab in admin user detail ([1426e46](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/1426e46c844d29d2fff39d5f4fbf159790f6ea8b))
+* update payment method icons with brand-accurate favicon designs ([33e878d](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/33e878da846409868f623b36532b7d73a1a678d0))
+* user profile link in ticket detail ([e0c9a89](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/e0c9a89d347e1f44fee4274624707cefc690abff))
+
+
+### Bug Fixes
+
+* add country flags to node usage display ([14b73f6](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/14b73f6db5f7ce1b17de46eae97292f09d9c2034))
+* add country flags to node usage display ([80bad9d](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/80bad9d623a2fc125ac3090b570115ba8ea001b0))
+* hide onboarding when blocking screen is active ([af25e6a](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/af25e6a1b8b65168db520d2a7ede661641ab0a58))
+* hide onboarding when blocking screen is active ([4791a9f](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/4791a9f19605624bceb9bdba22a3e0c97168ea6e))
+* move theme save/cancel buttons outside collapsible section ([7c30454](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/7c304545f8fcef0a2d1d589255d363bd35fe877d))
+* remove incorrect ruble top-up prompt from fortune wheel ([2c0d265](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/2c0d265ff5c3ea9e3ed56fdb24cdd2301abba617))
+* remove payment method icons from admin pages ([77e0edf](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/77e0edf12d8a792623added1b438dafbbe824879))
+* remove payment method icons from admin pages ([dd9ed83](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/dd9ed83b085c45dff2137dcda3820eba000ab8e2))
+* theme custom colors not persisting after navigation ([174fefd](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/174fefddefa68156f9bb8359268f92b8f210f73d))
+* theme custom colors save button not appearing ([ab80e31](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/ab80e311b56e4e1fc1b4eca851b52db3af28f79c))
+* кнопка сохранения ручной темы не появлялась ([017a6fa](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/017a6fae35a395234ed6dcbd546e11cc7d38d455))
+
 ## [1.8.0](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/compare/v1.7.0...v1.8.0) (2026-02-06)
 
 
