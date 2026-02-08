@@ -1666,7 +1666,17 @@
           "unavailable": "(غیرقابل دسترس)",
           "noActive": "اشتراک فعالی وجود ندارد",
           "create": "ایجاد اشتراک",
-          "creating": "در حال ایجاد..."
+          "creating": "در حال ایجاد...",
+          "trafficPackages": "بسته‌های ترافیک",
+          "addTraffic": "افزودن ترافیک",
+          "selectPackage": "انتخاب بسته",
+          "addButton": "افزودن",
+          "addTrafficNote": "مدیر: رایگان، ۳۰ روز اعتبار",
+          "trafficRemoved": "بسته ترافیک حذف شد",
+          "trafficAdded": "بسته ترافیک اضافه شد",
+          "expired": "منقضی شده",
+          "daysLeft": "روز باقیمانده",
+          "deviceLimitUpdated": "محدودیت دستگاه به‌روز شد"
         },
         "balance": {
           "current": "موجودی فعلی",

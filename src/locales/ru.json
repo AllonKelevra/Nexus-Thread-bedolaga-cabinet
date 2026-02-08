@@ -2493,7 +2493,17 @@
           "unavailable": "(недоступен)",
           "noActive": "Нет активной подписки",
           "create": "Создать подписку",
-          "creating": "Создание..."
+          "creating": "Создание...",
+          "trafficPackages": "Пакеты трафика",
+          "addTraffic": "Добавить трафик",
+          "selectPackage": "Выберите пакет",
+          "addButton": "Добавить",
+          "addTrafficNote": "Админ: бесплатно, действует 30 дней",
+          "trafficRemoved": "Пакет трафика удалён",
+          "trafficAdded": "Пакет трафика добавлен",
+          "expired": "истёк",
+          "daysLeft": "дн. осталось",
+          "deviceLimitUpdated": "Лимит устройств обновлён"
         },
         "balance": {
           "current": "Текущий баланс",

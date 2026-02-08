@@ -1665,7 +1665,17 @@
           "unavailable": "（不可用）",
           "noActive": "无活跃订阅",
           "create": "创建订阅",
-          "creating": "创建中..."
+          "creating": "创建中...",
+          "trafficPackages": "流量包",
+          "addTraffic": "添加流量",
+          "selectPackage": "选择套餐",
+          "addButton": "添加",
+          "addTrafficNote": "管理员：免费，有效期30天",
+          "trafficRemoved": "流量包已删除",
+          "trafficAdded": "流量包已添加",
+          "expired": "已过期",
+          "daysLeft": "天剩余",
+          "deviceLimitUpdated": "设备限制已更新"
         },
         "balance": {
           "current": "当前余额",

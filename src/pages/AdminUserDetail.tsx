@@ -195,6 +195,9 @@ export default function AdminUserDetail() {
   const [offerValidHours, setOfferValidHours] = useState<number | ''>(24);
   const [offerSending, setOfferSending] = useState(false);
 
+  // Traffic packages
+  const [selectedTrafficGb, setSelectedTrafficGb] = useState<string>('');
+
   // Devices
   const [devices, setDevices] = useState<
     { hwid: string; platform: string; device_model: string; created_at: string | null }[]
@@ -543,6 +546,57 @@ export default function AdminUserDetail() {
       setActionLoading(false);
     }
   };
+
+  const handleAddTraffic = async (gb: number) => {
+    if (!userId) return;
+    setActionLoading(true);
+    try {
+      await adminUsersApi.updateSubscription(userId, { action: 'add_traffic', traffic_gb: gb });
+      notify.success(t('admin.users.detail.subscription.trafficAdded'));
+      setSelectedTrafficGb('');
+      await loadUser();
+    } catch {
+      notify.error(t('admin.users.userActions.error'), t('common.error'));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRemoveTraffic = async (purchaseId: number) => {
+    if (!userId) return;
+    setActionLoading(true);
+    try {
+      await adminUsersApi.updateSubscription(userId, {
+        action: 'remove_traffic',
+        traffic_purchase_id: purchaseId,
+      });
+      notify.success(t('admin.users.detail.subscription.trafficRemoved'));
+      await loadUser();
+    } catch {
+      notify.error(t('admin.users.userActions.error'), t('common.error'));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleSetDeviceLimit = async (newLimit: number) => {
+    if (!userId) return;
+    setActionLoading(true);
+    try {
+      await adminUsersApi.updateSubscription(userId, {
+        action: 'set_device_limit',
+        device_limit: newLimit,
+      });
+      notify.success(t('admin.users.detail.subscription.deviceLimitUpdated'));
+      await loadUser();
+    } catch {
+      notify.error(t('admin.users.userActions.error'), t('common.error'));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const currentTariff = tariffs.find((t) => t.id === user?.subscription?.tariff_id) || null;
 
   const handleChangePromoGroup = async (groupId: number | null) => {
     if (!userId) return;
@@ -1166,10 +1220,135 @@ export default function AdminUserDetail() {
                       <div className="text-xs text-dark-500">
                         {t('admin.users.detail.subscription.devices')}
                       </div>
-                      <div className="text-dark-100">{user.subscription.device_limit}</div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleSetDeviceLimit(user.subscription!.device_limit - 1)}
+                          disabled={actionLoading || user.subscription.device_limit <= 1}
+                          className="flex h-6 w-6 items-center justify-center rounded-md bg-dark-700 text-dark-300 transition-colors hover:bg-dark-600 disabled:opacity-30"
+                        >
+                          <MinusIcon />
+                        </button>
+                        <span className="min-w-[2ch] text-center text-dark-100">
+                          {user.subscription.device_limit}
+                        </span>
+                        <button
+                          onClick={() => handleSetDeviceLimit(user.subscription!.device_limit + 1)}
+                          disabled={
+                            actionLoading ||
+                            (currentTariff?.max_device_limit != null &&
+                              user.subscription.device_limit >= currentTariff.max_device_limit)
+                          }
+                          className="flex h-6 w-6 items-center justify-center rounded-md bg-dark-700 text-dark-300 transition-colors hover:bg-dark-600 disabled:opacity-30"
+                        >
+                          <PlusIcon />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
+
+                {/* Traffic Packages */}
+                {user.subscription.traffic_purchases &&
+                  user.subscription.traffic_purchases.length > 0 && (
+                    <div className="rounded-xl bg-dark-800/50 p-4">
+                      <div className="mb-3 flex items-center justify-between">
+                        <span className="text-sm font-medium text-dark-200">
+                          {t('admin.users.detail.subscription.trafficPackages')}
+                          {user.subscription.purchased_traffic_gb > 0 && (
+                            <span className="ml-2 text-xs text-dark-400">
+                              ({user.subscription.purchased_traffic_gb} {t('common.units.gb')})
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        {user.subscription.traffic_purchases.map((tp) => (
+                          <div
+                            key={tp.id}
+                            className={`flex items-center justify-between rounded-lg px-3 py-2 ${
+                              tp.is_expired ? 'bg-dark-700/30 opacity-60' : 'bg-dark-700/50'
+                            }`}
+                          >
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2 text-sm text-dark-200">
+                                <span className="font-medium">
+                                  {tp.traffic_gb} {t('common.units.gb')}
+                                </span>
+                                {tp.is_expired ? (
+                                  <span className="rounded-full bg-error-500/20 px-1.5 py-0.5 text-[10px] text-error-400">
+                                    {t('admin.users.detail.subscription.expired')}
+                                  </span>
+                                ) : (
+                                  <span className="text-xs text-dark-400">
+                                    {tp.days_remaining}{' '}
+                                    {t('admin.users.detail.subscription.daysLeft')}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            {!tp.is_expired && (
+                              <button
+                                onClick={() =>
+                                  handleInlineConfirm(`removeTraffic_${tp.id}`, () =>
+                                    handleRemoveTraffic(tp.id),
+                                  )
+                                }
+                                disabled={actionLoading}
+                                className={`ml-2 shrink-0 rounded-lg px-2 py-1 text-xs transition-all disabled:opacity-50 ${
+                                  confirmingAction === `removeTraffic_${tp.id}`
+                                    ? 'bg-error-500 text-white'
+                                    : 'text-dark-500 hover:bg-error-500/15 hover:text-error-400'
+                                }`}
+                              >
+                                {confirmingAction === `removeTraffic_${tp.id}` ? '?' : '\u00D7'}
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                {/* Add Traffic */}
+                {currentTariff &&
+                  currentTariff.traffic_topup_enabled &&
+                  Object.keys(currentTariff.traffic_topup_packages).length > 0 && (
+                    <div className="rounded-xl bg-dark-800/50 p-4">
+                      <div className="mb-3 text-sm font-medium text-dark-200">
+                        {t('admin.users.detail.subscription.addTraffic')}
+                      </div>
+                      <div className="flex gap-2">
+                        <select
+                          value={selectedTrafficGb}
+                          onChange={(e) => setSelectedTrafficGb(e.target.value)}
+                          className="input flex-1"
+                        >
+                          <option value="">
+                            {t('admin.users.detail.subscription.selectPackage')}
+                          </option>
+                          {Object.entries(currentTariff.traffic_topup_packages)
+                            .sort(([a], [b]) => Number(a) - Number(b))
+                            .map(([gb]) => (
+                              <option key={gb} value={gb}>
+                                {gb} {t('common.units.gb')}
+                              </option>
+                            ))}
+                        </select>
+                        <button
+                          onClick={() =>
+                            selectedTrafficGb && handleAddTraffic(Number(selectedTrafficGb))
+                          }
+                          disabled={actionLoading || !selectedTrafficGb}
+                          className="shrink-0 rounded-lg bg-accent-500 px-4 py-2 text-sm text-white transition-colors hover:bg-accent-600 disabled:opacity-50"
+                        >
+                          {t('admin.users.detail.subscription.addButton')}
+                        </button>
+                      </div>
+                      <div className="mt-2 text-xs text-dark-500">
+                        {t('admin.users.detail.subscription.addTrafficNote')}
+                      </div>
+                    </div>
+                  )}
 
                 {/* Actions */}
                 <div className="rounded-xl bg-dark-800/50 p-4">
