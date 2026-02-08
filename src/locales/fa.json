@@ -2008,6 +2008,15 @@
       "amount": "مبلغ",
       "method": "روش",
       "date": "تاریخ"
+    },
+    "systemInfo": {
+      "title": "سیستم",
+      "cabinet": "کابینت",
+      "bot": "ربات",
+      "python": "Python",
+      "uptime": "آپتایم",
+      "users": "کاربران",
+      "activeSubs": "اشتراک‌ها"
     }
   },
   "profile": {

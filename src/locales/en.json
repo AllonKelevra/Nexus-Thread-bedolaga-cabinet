@@ -2205,6 +2205,15 @@
       "purchasedWeek": "Week",
       "purchasedMonth": "Month",
       "noTariffs": "No tariffs"
+    },
+    "systemInfo": {
+      "title": "System",
+      "cabinet": "Cabinet",
+      "bot": "Bot",
+      "python": "Python",
+      "uptime": "Uptime",
+      "users": "Users",
+      "activeSubs": "Active Subs"
     }
   },
   "banSystem": {

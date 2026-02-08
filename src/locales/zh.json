@@ -2007,6 +2007,15 @@
       "amount": "金额",
       "method": "方法",
       "date": "日期"
+    },
+    "systemInfo": {
+      "title": "系统",
+      "cabinet": "面板",
+      "bot": "机器人",
+      "python": "Python",
+      "uptime": "运行时间",
+      "users": "用户",
+      "activeSubs": "订阅"
     }
   },
   "profile": {

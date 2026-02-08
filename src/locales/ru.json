@@ -2756,6 +2756,15 @@
       "amount": "Сумма",
       "method": "Метод",
       "date": "Дата"
+    },
+    "systemInfo": {
+      "title": "Система",
+      "cabinet": "Кабинет",
+      "bot": "Бот",
+      "python": "Python",
+      "uptime": "Аптайм",
+      "users": "Юзеров",
+      "activeSubs": "Подписок"
     }
   },
   "banSystem": {
