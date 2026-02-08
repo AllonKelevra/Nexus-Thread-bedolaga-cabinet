@@ -563,4 +563,33 @@ export const adminUsersApi = {
     const response = await apiClient.get(`/cabinet/admin/users/${userId}/node-usage`);
     return response.data;
   },
+
+  // Get user devices
+  getUserDevices: async (
+    userId: number,
+  ): Promise<{
+    devices: { hwid: string; platform: string; device_model: string; created_at: string | null }[];
+    total: number;
+    device_limit: number;
+  }> => {
+    const response = await apiClient.get(`/cabinet/admin/users/${userId}/devices`);
+    return response.data;
+  },
+
+  // Delete single device
+  deleteUserDevice: async (
+    userId: number,
+    hwid: string,
+  ): Promise<{ success: boolean; message: string; deleted_hwid: string | null }> => {
+    const response = await apiClient.delete(`/cabinet/admin/users/${userId}/devices/${hwid}`);
+    return response.data;
+  },
+
+  // Reset all devices
+  resetUserDevices: async (
+    userId: number,
+  ): Promise<{ success: boolean; message: string; deleted_count: number }> => {
+    const response = await apiClient.delete(`/cabinet/admin/users/${userId}/devices`);
+    return response.data;
+  },
 };

@@ -1909,6 +1909,13 @@
         "nodeUsage": "Node usage",
         "copied": "Copied",
         "panelNotFound": "User not found in panel",
+        "devices": {
+          "title": "Devices",
+          "none": "No connected devices",
+          "resetAll": "Reset all",
+          "deleted": "Device removed",
+          "allDeleted": "All devices reset"
+        },
         "referral": {
           "title": "Referral program",
           "referrals": "Referrals",
