@@ -1381,11 +1381,15 @@ export default function AdminTrafficUsage() {
               </div>
               <div className="min-w-0">
                 <div className="truncate text-xs font-medium text-dark-100">{item.full_name}</div>
-                {item.username && (
+                {item.username ? (
                   <div className="truncate text-[10px] leading-tight text-dark-500">
                     @{item.username}
                   </div>
-                )}
+                ) : item.email ? (
+                  <div className="truncate text-[10px] leading-tight text-dark-500">
+                    {item.email}
+                  </div>
+                ) : null}
               </div>
             </div>
           );

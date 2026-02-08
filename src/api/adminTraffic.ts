@@ -10,6 +10,7 @@ export interface UserTrafficItem {
   user_id: number;
   telegram_id: number | null;
   username: string | null;
+  email: string | null;
   full_name: string;
   tariff_name: string | null;
   subscription_status: string | null;
