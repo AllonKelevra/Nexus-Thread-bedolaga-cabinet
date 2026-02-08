@@ -35,6 +35,18 @@ export interface ExportCsvResponse {
   message: string;
 }
 
+export interface TrafficEnrichmentData {
+  devices_connected: number;
+  total_spent_kopeks: number;
+  subscription_start_date: string | null;
+  subscription_end_date: string | null;
+  last_node_name: string | null;
+}
+
+export interface TrafficEnrichmentResponse {
+  data: Record<number, TrafficEnrichmentData>;
+}
+
 export type TrafficParams = {
   period?: number;
   limit?: number;
@@ -69,6 +81,11 @@ function buildCacheKey(params: TrafficParams): string {
   });
 }
 
+const enrichmentCache: { data: TrafficEnrichmentResponse | null; timestamp: number } = {
+  data: null,
+  timestamp: 0,
+};
+
 export const adminTrafficApi = {
   getTrafficUsage: async (
     params: TrafficParams,
@@ -102,6 +119,22 @@ export const adminTrafficApi = {
 
   invalidateCache: () => {
     trafficCache.clear();
+  },
+
+  getEnrichment: async (options?: { skipCache?: boolean }): Promise<TrafficEnrichmentResponse> => {
+    if (
+      !options?.skipCache &&
+      enrichmentCache.data &&
+      Date.now() - enrichmentCache.timestamp < CACHE_TTL
+    ) {
+      return enrichmentCache.data;
+    }
+
+    const response = await apiClient.get('/cabinet/admin/traffic/enrichment');
+    const data: TrafficEnrichmentResponse = response.data;
+    enrichmentCache.data = data;
+    enrichmentCache.timestamp = Date.now();
+    return data;
   },
 
   exportCsv: async (data: {

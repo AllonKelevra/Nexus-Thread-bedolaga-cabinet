@@ -1,4 +1,4 @@
-﻿{
+{
   "common": {
     "loading": "加载中...",
     "error": "错误",
@@ -703,7 +703,12 @@
       "riskLow": "低",
       "riskMedium": "中",
       "riskHigh": "高",
-      "riskCritical": "严重"
+      "riskCritical": "严重",
+      "connected": "连接",
+      "totalSpent": "消费",
+      "subStart": "开始",
+      "subEnd": "结束",
+      "lastNode": "最近节点"
     },
     "paymentMethods": {
       "title": "支付方法",

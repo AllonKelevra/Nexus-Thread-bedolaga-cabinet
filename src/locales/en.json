@@ -822,7 +822,12 @@
       "riskLow": "Low",
       "riskMedium": "Medium",
       "riskHigh": "High",
-      "riskCritical": "Critical"
+      "riskCritical": "Critical",
+      "connected": "Conn.",
+      "totalSpent": "Spent",
+      "subStart": "Start",
+      "subEnd": "End",
+      "lastNode": "Last Node"
     },
     "emailTemplates": {
       "title": "Email Templates",

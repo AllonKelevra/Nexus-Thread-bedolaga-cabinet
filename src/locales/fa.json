@@ -1,4 +1,4 @@
-﻿{
+{
   "common": {
     "loading": "در حال بارگذاری...",
     "all": "همه",
@@ -703,7 +703,12 @@
       "riskLow": "کم",
       "riskMedium": "متوسط",
       "riskHigh": "بالا",
-      "riskCritical": "بحرانی"
+      "riskCritical": "بحرانی",
+      "connected": "متصل",
+      "totalSpent": "هزینه",
+      "subStart": "شروع",
+      "subEnd": "پایان",
+      "lastNode": "آخرین نود"
     },
     "emailTemplates": {
       "title": "قالب‌های ایمیل",

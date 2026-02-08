@@ -1,4 +1,4 @@
-﻿{
+{
   "common": {
     "all": "Все",
     "loading": "Загрузка...",
@@ -843,7 +843,12 @@
       "riskLow": "Низкий",
       "riskMedium": "Средний",
       "riskHigh": "Высокий",
-      "riskCritical": "Критический"
+      "riskCritical": "Критический",
+      "connected": "Подкл.",
+      "totalSpent": "Траты",
+      "subStart": "Начало",
+      "subEnd": "Конец",
+      "lastNode": "Посл. нода"
     },
     "emailTemplates": {
       "title": "Email-шаблоны",
