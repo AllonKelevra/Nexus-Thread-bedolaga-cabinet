@@ -1437,7 +1437,7 @@ export default function AdminTrafficUsage() {
         header: t('admin.trafficUsage.connected'),
         size: 65,
         minSize: 50,
-        enableSorting: false,
+        enableSorting: true,
         meta: { align: 'center' as const },
         cell: ({ row }) => {
           const e = enrichment?.[row.original.user_id];
@@ -1451,7 +1451,7 @@ export default function AdminTrafficUsage() {
         header: t('admin.trafficUsage.totalSpent'),
         size: 75,
         minSize: 55,
-        enableSorting: false,
+        enableSorting: true,
         meta: { align: 'center' as const },
         cell: ({ row }) => {
           const e = enrichment?.[row.original.user_id];
@@ -1469,7 +1469,7 @@ export default function AdminTrafficUsage() {
         header: t('admin.trafficUsage.subStart'),
         size: 80,
         minSize: 65,
-        enableSorting: false,
+        enableSorting: true,
         meta: { align: 'center' as const },
         cell: ({ row }) => {
           const e = enrichment?.[row.original.user_id];
@@ -1487,7 +1487,7 @@ export default function AdminTrafficUsage() {
         header: t('admin.trafficUsage.subEnd'),
         size: 80,
         minSize: 65,
-        enableSorting: false,
+        enableSorting: true,
         meta: { align: 'center' as const },
         cell: ({ row }) => {
           const e = enrichment?.[row.original.user_id];
@@ -1505,7 +1505,7 @@ export default function AdminTrafficUsage() {
         header: t('admin.trafficUsage.lastNode'),
         size: 100,
         minSize: 70,
-        enableSorting: false,
+        enableSorting: true,
         meta: { align: 'center' as const },
         cell: ({ row }) => {
           const e = enrichment?.[row.original.user_id];
