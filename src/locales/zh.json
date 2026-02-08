@@ -1615,7 +1615,9 @@
           "title": "推荐计划",
           "referrals": "推荐人数",
           "earned": "已赚取",
-          "commission": "佣金"
+          "commission": "佣金",
+          "default": "默认",
+          "invalidPercent": "佣金必须在0到100之间"
         },
         "restrictions": {
           "title": "限制",

@@ -2439,7 +2439,9 @@
           "title": "Реферальная программа",
           "referrals": "Рефералов",
           "earned": "Заработано",
-          "commission": "Комиссия"
+          "commission": "Комиссия",
+          "default": "По умолч.",
+          "invalidPercent": "Процент должен быть от 0 до 100"
         },
         "restrictions": {
           "title": "Ограничения",

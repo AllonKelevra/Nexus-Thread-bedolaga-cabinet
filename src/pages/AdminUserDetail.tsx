@@ -186,6 +186,10 @@ export default function AdminUserDetail() {
   const [promoGroups, setPromoGroups] = useState<PromoGroup[]>([]);
   const [editingPromoGroup, setEditingPromoGroup] = useState(false);
 
+  // Referral commission
+  const [editingReferralCommission, setEditingReferralCommission] = useState(false);
+  const [referralCommissionValue, setReferralCommissionValue] = useState<number | ''>('');
+
   // Send promo offer
   const [offerDiscountPercent, setOfferDiscountPercent] = useState<number | ''>('');
   const [offerValidHours, setOfferValidHours] = useState<number | ''>(24);
@@ -496,6 +500,25 @@ export default function AdminUserDetail() {
       await adminUsersApi.updatePromoGroup(userId, groupId);
       await loadUser();
       setEditingPromoGroup(false);
+    } catch {
+      notify.error(t('admin.users.userActions.error'), t('common.error'));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleUpdateReferralCommission = async () => {
+    if (!userId) return;
+    setActionLoading(true);
+    try {
+      const value = referralCommissionValue === '' ? null : toNumber(referralCommissionValue);
+      if (value !== null && (value < 0 || value > 100)) {
+        notify.error(t('admin.users.detail.referral.invalidPercent'), t('common.error'));
+        return;
+      }
+      await adminUsersApi.updateReferralCommission(userId, value);
+      await loadUser();
+      setEditingReferralCommission(false);
     } catch {
       notify.error(t('admin.users.userActions.error'), t('common.error'));
     } finally {
@@ -850,8 +873,21 @@ export default function AdminUserDetail() {
 
             {/* Referral */}
             <div className="rounded-xl bg-dark-800/50 p-3">
-              <div className="mb-2 text-sm font-medium text-dark-200">
-                {t('admin.users.detail.referral.title')}
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-sm font-medium text-dark-200">
+                  {t('admin.users.detail.referral.title')}
+                </span>
+                <button
+                  onClick={() => {
+                    if (!editingReferralCommission) {
+                      setReferralCommissionValue(user.referral.commission_percent ?? '');
+                    }
+                    setEditingReferralCommission(!editingReferralCommission);
+                  }}
+                  className="text-xs text-accent-400 transition-colors hover:text-accent-300"
+                >
+                  {editingReferralCommission ? t('common.cancel') : t('common.edit')}
+                </button>
               </div>
               <div className="grid grid-cols-3 gap-3 text-center">
                 <div>
@@ -871,12 +907,38 @@ export default function AdminUserDetail() {
                   </div>
                 </div>
                 <div>
-                  <div className="text-lg font-bold text-dark-100">
-                    {user.referral.commission_percent || 0}%
-                  </div>
-                  <div className="text-xs text-dark-500">
-                    {t('admin.users.detail.referral.commission')}
-                  </div>
+                  {editingReferralCommission ? (
+                    <div className="space-y-1">
+                      <input
+                        type="number"
+                        value={referralCommissionValue}
+                        onChange={createNumberInputHandler(setReferralCommissionValue, 0)}
+                        placeholder="0-100"
+                        className="input w-full text-center text-sm"
+                        min={0}
+                        max={100}
+                        disabled={actionLoading}
+                      />
+                      <button
+                        onClick={handleUpdateReferralCommission}
+                        disabled={actionLoading}
+                        className="w-full rounded-lg bg-accent-500 px-2 py-1 text-xs text-white transition-colors hover:bg-accent-600 disabled:opacity-50"
+                      >
+                        {actionLoading ? t('common.loading') : t('common.save')}
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="text-lg font-bold text-dark-100">
+                        {user.referral.commission_percent != null
+                          ? `${user.referral.commission_percent}%`
+                          : t('admin.users.detail.referral.default')}
+                      </div>
+                      <div className="text-xs text-dark-500">
+                        {t('admin.users.detail.referral.commission')}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

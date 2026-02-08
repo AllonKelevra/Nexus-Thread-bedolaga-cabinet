@@ -447,6 +447,17 @@ export const adminUsersApi = {
     return response.data;
   },
 
+  // Update referral commission
+  updateReferralCommission: async (
+    userId: number,
+    commissionPercent: number | null,
+  ): Promise<{ success: boolean; message: string }> => {
+    const response = await apiClient.post(`/cabinet/admin/users/${userId}/referral-commission`, {
+      commission_percent: commissionPercent,
+    });
+    return response.data;
+  },
+
   // Delete user (soft delete, does NOT remove from Remnawave)
   deleteUser: async (
     userId: number,

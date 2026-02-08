@@ -1616,7 +1616,9 @@
           "title": "برنامه ارجاع",
           "referrals": "ارجاعات",
           "earned": "درآمد",
-          "commission": "کمیسیون"
+          "commission": "کمیسیون",
+          "default": "پیش‌فرض",
+          "invalidPercent": "کمیسیون باید بین ۰ تا ۱۰۰ باشد"
         },
         "restrictions": {
           "title": "محدودیت‌ها",
