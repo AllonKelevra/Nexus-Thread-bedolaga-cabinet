@@ -210,17 +210,25 @@ export function Aurora() {
 
     const mesh = new Mesh(gl, { geometry, program });
 
-    // Рендерим на 10% разрешения — шейдер обрабатывает в 100 раз меньше пикселей,
-    // CSS масштабирует канвас обратно, а filter: blur() сглаживает результат.
-    // Визуально идентично оригиналу (80px blur всё равно уничтожал детали).
+    // Рендерим на 10% разрешения — шейдер обрабатывает в ~100 раз меньше пикселей.
+    // renderer.setSize задаёт и буфер, и CSS-размер канваса, поэтому после него
+    // принудительно возвращаем CSS на 100% — канвас растягивается браузером,
+    // а filter: blur() сглаживает артефакты масштабирования.
     const RESOLUTION_SCALE = 0.1;
 
     function resize() {
       if (!containerRef.current || !rendererRef.current || !programRef.current) return;
-      const w = Math.max(Math.ceil(containerRef.current.offsetWidth * RESOLUTION_SCALE), 1);
-      const h = Math.max(Math.ceil(containerRef.current.offsetHeight * RESOLUTION_SCALE), 1);
-      rendererRef.current.setSize(w, h);
-      programRef.current.uniforms.uResolution.value = [w, h];
+      const fullW = containerRef.current.offsetWidth;
+      const fullH = containerRef.current.offsetHeight;
+      const bufW = Math.max(Math.ceil(fullW * RESOLUTION_SCALE), 1);
+      const bufH = Math.max(Math.ceil(fullH * RESOLUTION_SCALE), 1);
+      rendererRef.current.setSize(bufW, bufH);
+      // OGL setSize ставит canvas.style.width/height = bufW/bufH px,
+      // перезаписываем на 100% чтобы CSS растянул маленький буфер на весь экран
+      const canvas = rendererRef.current.gl.canvas as HTMLCanvasElement;
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
+      programRef.current.uniforms.uResolution.value = [bufW, bufH];
     }
 
     window.addEventListener('resize', resize);
