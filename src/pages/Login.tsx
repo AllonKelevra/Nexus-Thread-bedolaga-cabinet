@@ -109,6 +109,17 @@ export default function Login() {
     setOauthLoading(provider);
     try {
       const { authorize_url, state } = await authApi.getOAuthAuthorizeUrl(provider);
+
+      // Validate redirect URL — only allow HTTPS to prevent open redirect
+      try {
+        const parsed = new URL(authorize_url);
+        if (parsed.protocol !== 'https:') {
+          throw new Error('Invalid OAuth redirect URL');
+        }
+      } catch {
+        throw new Error('Invalid OAuth redirect URL');
+      }
+
       saveOAuthState(state, provider);
       window.location.href = authorize_url;
     } catch {
@@ -122,7 +133,7 @@ export default function Login() {
   // If email auth is disabled but user came with ref param, redirect to bot
   useEffect(() => {
     if (referralCode && emailAuthConfig?.enabled === false && botUsername) {
-      window.location.href = `https://t.me/${botUsername}?start=${referralCode}`;
+      window.location.href = `https://t.me/${botUsername}?start=${encodeURIComponent(referralCode)}`;
     }
   }, [referralCode, emailAuthConfig, botUsername]);
 
@@ -165,7 +176,8 @@ export default function Login() {
           const error = err as { response?: { status?: number; data?: { detail?: string } } };
           const status = error.response?.status;
           const detail = error.response?.data?.detail;
-          console.warn(`Telegram auth attempt ${attempt + 1} failed:`, status, detail);
+          if (import.meta.env.DEV)
+            console.warn(`Telegram auth attempt ${attempt + 1} failed:`, status, detail);
 
           if (status === 401 && attempt < MAX_RETRIES) {
             await new Promise((r) => setTimeout(r, 1500));
@@ -200,7 +212,7 @@ export default function Login() {
       const error = err as { response?: { status?: number; data?: { detail?: string } } };
       const status = error.response?.status;
       const detail = error.response?.data?.detail;
-      console.warn('Telegram auth retry failed:', status, detail);
+      if (import.meta.env.DEV) console.warn('Telegram auth retry failed:', status, detail);
       setError(
         detail ||
           t('auth.telegramRetryFailed', 'Authorization failed. Close the app and try again.'),
