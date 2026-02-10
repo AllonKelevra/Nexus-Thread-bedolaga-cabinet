@@ -314,10 +314,10 @@ export default function Login() {
       <div className="relative w-full max-w-md space-y-8">
         {/* Logo */}
         <div className="text-center">
-          <div className="relative mx-auto mb-6 flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-accent-400 to-accent-600 shadow-lg shadow-accent-500/30">
+          <div className="relative mx-auto mb-6 flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-dark-700/50 bg-dark-800/80 shadow-md">
             {/* Always show letter as fallback */}
             <span
-              className={`absolute text-2xl font-bold text-white transition-opacity duration-200 ${branding?.has_custom_logo && logoLoaded ? 'opacity-0' : 'opacity-100'}`}
+              className={`absolute text-2xl font-bold text-accent-400 transition-opacity duration-200 ${branding?.has_custom_logo && logoLoaded ? 'opacity-0' : 'opacity-100'}`}
             >
               {appLogo}
             </span>
@@ -326,7 +326,7 @@ export default function Login() {
               <img
                 src={logoUrl}
                 alt={appName || 'Logo'}
-                className={`absolute h-full w-full object-cover transition-opacity duration-200 ${logoLoaded ? 'opacity-100' : 'opacity-0'}`}
+                className={`absolute h-full w-full object-contain transition-opacity duration-200 ${logoLoaded ? 'opacity-100' : 'opacity-0'}`}
                 onLoad={() => setLogoLoaded(true)}
               />
             )}
