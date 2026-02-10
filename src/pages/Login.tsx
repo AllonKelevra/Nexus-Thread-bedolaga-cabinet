@@ -100,7 +100,7 @@ export default function Login() {
     queryFn: authApi.getOAuthProviders,
     staleTime: 60000,
   });
-  const oauthProviders = oauthData?.providers ?? [];
+  const oauthProviders = Array.isArray(oauthData?.providers) ? oauthData.providers : [];
 
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
 
