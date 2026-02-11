@@ -363,7 +363,6 @@ export default function Login() {
             )}
           </div>
           {appName && <h1 className="text-2xl font-bold text-dark-50">{appName}</h1>}
-          <p className="mt-1 text-sm text-dark-400">{t('auth.loginSubtitle')}</p>
 
           {/* Referral Banner */}
           {referralCode && isEmailAuthEnabled && (
@@ -440,8 +439,6 @@ export default function Login() {
 
             {/* Telegram auth section */}
             <div className="space-y-3">
-              <p className="text-center text-xs text-dark-500">{t('auth.registerHint')}</p>
-
               {isLoading && isTelegramWebApp ? (
                 <div className="py-6 text-center">
                   <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
