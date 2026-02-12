@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.15.0](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/compare/v1.14.1...v1.15.0) (2026-02-12)
+
+
+### Features
+
+* add admin pinned messages section ([88cc0d9](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/88cc0d933e1ee24c854f7e2f32698698201ec06e))
+* add admin pinned messages section ([aa5113b](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/aa5113b8e309babb530e849fac12ae87a4769e9f))
+
 ## [1.14.1](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/compare/v1.14.0...v1.14.1) (2026-02-12)
 
 
