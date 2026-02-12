@@ -33,6 +33,7 @@ export const BUTTON_SECTIONS = [
 
 export type ButtonSection = (typeof BUTTON_SECTIONS)[number];
 
+// Bot-side locales (includes 'ua' for Ukrainian, mapped from ISO 'uk' internally).
 export const BOT_LOCALES = ['ru', 'en', 'ua', 'zh', 'fa'] as const;
 
 export type BotLocale = (typeof BOT_LOCALES)[number];
@@ -54,19 +55,23 @@ export const DEFAULT_BUTTON_STYLES: ButtonStylesConfig = {
   admin: { ...DEFAULT_SECTION, style: 'danger' },
 };
 
+function normalizeConfig(data: ButtonStylesConfig): ButtonStylesConfig {
+  const result = {} as ButtonStylesConfig;
+  for (const section of BUTTON_SECTIONS) {
+    result[section] = {
+      ...DEFAULT_SECTION,
+      ...data[section],
+      labels: { ...(data[section]?.labels || {}) },
+    };
+  }
+  return result;
+}
+
 export const buttonStylesApi = {
   getStyles: async (): Promise<ButtonStylesConfig> => {
     try {
       const response = await apiClient.get<ButtonStylesConfig>('/cabinet/admin/button-styles');
-      const data = response.data;
-      for (const section of BUTTON_SECTIONS) {
-        data[section] = {
-          ...DEFAULT_SECTION,
-          ...data[section],
-          labels: { ...(data[section]?.labels || {}) },
-        };
-      }
-      return data;
+      return normalizeConfig(response.data);
     } catch {
       return DEFAULT_BUTTON_STYLES;
     }
@@ -77,11 +82,11 @@ export const buttonStylesApi = {
       '/cabinet/admin/button-styles',
       update,
     );
-    return response.data;
+    return normalizeConfig(response.data);
   },
 
   resetStyles: async (): Promise<ButtonStylesConfig> => {
     const response = await apiClient.post<ButtonStylesConfig>('/cabinet/admin/button-styles/reset');
-    return response.data;
+    return normalizeConfig(response.data);
   },
 };

@@ -10,6 +10,7 @@ import {
   BOT_LOCALES,
 } from '../../api/buttonStyles';
 import { Toggle } from './Toggle';
+import { useNotify } from '../../platform/hooks/useNotify';
 
 type StyleValue = 'primary' | 'success' | 'danger' | 'default';
 
@@ -40,6 +41,7 @@ function stylesEqual(a: ButtonStylesConfig, b: ButtonStylesConfig): boolean {
 export function ButtonsTab() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const notify = useNotify();
 
   const { data: serverStyles } = useQuery({
     queryKey: ['button-styles'],
@@ -73,6 +75,9 @@ export function ButtonsTab() {
       setDraftStyles(data);
       queryClient.setQueryData(['button-styles'], data);
     },
+    onError: () => {
+      notify.error(t('common.error'));
+    },
   });
 
   const resetMutation = useMutation({
@@ -81,6 +86,9 @@ export function ButtonsTab() {
       savedStylesRef.current = data;
       setDraftStyles(data);
       queryClient.setQueryData(['button-styles'], data);
+    },
+    onError: () => {
+      notify.error(t('common.error'));
     },
   });
 
@@ -333,7 +341,11 @@ export function ButtonsTab() {
       {/* Reset */}
       <div className="flex justify-end">
         <button
-          onClick={() => resetMutation.mutate()}
+          onClick={() => {
+            if (window.confirm(t('admin.buttons.resetConfirm'))) {
+              resetMutation.mutate();
+            }
+          }}
           disabled={resetMutation.isPending}
           className="rounded-xl bg-dark-700 px-4 py-2 text-sm text-dark-300 transition-colors hover:bg-dark-600 disabled:opacity-50"
         >

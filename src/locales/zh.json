@@ -1039,6 +1039,7 @@
       "emojiId": "自定义表情 ID",
       "emojiPlaceholder": "自定义表情 ID（可选）",
       "resetAll": "重置所有样式",
+      "resetConfirm": "将所有按钮样式重置为默认值？",
       "hidden": "已隐藏",
       "customLabels": "按钮名称",
       "labelPlaceholder": "自定义按钮文本",

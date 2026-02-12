@@ -1292,6 +1292,7 @@
       "emojiId": "Custom Emoji ID",
       "emojiPlaceholder": "Custom emoji ID (optional)",
       "resetAll": "Reset all styles",
+      "resetConfirm": "Reset all button styles to defaults?",
       "hidden": "Hidden",
       "customLabels": "Button labels",
       "labelPlaceholder": "Custom button text",

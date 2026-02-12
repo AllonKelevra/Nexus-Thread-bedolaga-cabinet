@@ -1807,6 +1807,7 @@
       "emojiId": "Custom Emoji ID",
       "emojiPlaceholder": "ID кастомного эмодзи (необязательно)",
       "resetAll": "Сбросить все стили",
+      "resetConfirm": "Сбросить все стили кнопок к значениям по умолчанию?",
       "hidden": "Скрыта",
       "customLabels": "Названия кнопки",
       "labelPlaceholder": "Свой текст кнопки",
