@@ -789,7 +789,8 @@
       "promocodes": "Промокоды",
       "promoGroups": "Группы скидок",
       "trafficUsage": "Расход трафика",
-      "updates": "Обновления"
+      "updates": "Обновления",
+      "pinnedMessages": "Закреплённые"
     },
     "panel": {
       "title": "Панель администратора",
@@ -813,7 +814,8 @@
       "promocodesDesc": "Управление промокодами",
       "promoGroupsDesc": "Группы скидок для пользователей",
       "trafficUsageDesc": "Трафик пользователей по нодам",
-      "updatesDesc": "Версии бота и кабинета"
+      "updatesDesc": "Версии бота и кабинета",
+      "pinnedMessagesDesc": "Управление закреплёнными сообщениями"
     },
     "trafficUsage": {
       "title": "Расход трафика",
@@ -1181,6 +1183,48 @@
       "sendingBoth": "Будет создано 2 рассылки",
       "bothCreated": "Рассылки созданы",
       "atLeastOneChannel": "Выберите хотя бы один канал"
+    },
+    "pinnedMessages": {
+      "title": "Закреплённые сообщения",
+      "subtitle": "Управление закреплёнными сообщениями для пользователей",
+      "create": "Создать",
+      "empty": "Нет закреплённых сообщений",
+      "content": "Текст сообщения",
+      "contentPlaceholder": "Введите текст закреплённого сообщения...",
+      "noContent": "Без текста",
+      "media": "Медиафайл",
+      "addMedia": "Добавить медиа",
+      "uploading": "Загрузка...",
+      "settings": "Настройки",
+      "sendBeforeMenu": "Отправлять перед меню",
+      "sendOnEveryStart": "Отправлять при каждом старте",
+      "broadcast": "Разослать",
+      "broadcastOnCreate": "Разослать при создании",
+      "broadcastConfirm": "Разослать закреплённое сообщение всем активным пользователям?",
+      "broadcastToAll": "Разослать всем",
+      "activate": "Активировать",
+      "deactivate": "Деактивировать",
+      "unpin": "Открепить",
+      "unpinAll": "Открепить у всех",
+      "unpinConfirm": "Открепить сообщение у всех пользователей?",
+      "delete": "Удалить",
+      "deleteConfirm": "Удалить это закреплённое сообщение?",
+      "active": "Активно",
+      "inactive": "Неактивно",
+      "prev": "Назад",
+      "next": "Далее",
+      "createSuccess": "Закреплённое сообщение создано",
+      "updateSuccess": "Сообщение обновлено",
+      "deleteSuccess": "Сообщение удалено",
+      "activateSuccess": "Сообщение активировано",
+      "deactivateSuccess": "Сообщение деактивировано",
+      "broadcastSuccess": "Рассылка завершена",
+      "unpinSuccess": "Сообщения откреплены",
+      "sentCount": "Отправлено",
+      "failedCount": "Ошибки",
+      "unpinnedCount": "Откреплено",
+      "editMessage": "Редактировать",
+      "cantDeleteActive": "Нельзя удалить активное сообщение"
     },
     "settings": {
       "title": "Настройки системы",
