@@ -328,6 +328,7 @@
       "trafficUnavailable": "您的套餐不支持购买流量",
       "unlimited": "无限制",
       "buyTrafficGb": "购买 {{gb}} GB",
+      "buyUnlimited": "购买无限流量",
       "manageServers": "服务器管理",
       "manageServersTitle": "服务器管理"
     },

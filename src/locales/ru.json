@@ -481,6 +481,7 @@
       "trafficUnavailable": "Докупка трафика недоступна для вашего тарифа",
       "unlimited": "Безлимит",
       "buyTrafficGb": "Купить {{gb}} ГБ",
+      "buyUnlimited": "Купить Безлимит",
       "manageServers": "Управление серверами",
       "manageServersTitle": "Управление серверами"
     },

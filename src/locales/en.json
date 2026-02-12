@@ -454,6 +454,7 @@
       "trafficUnavailable": "Traffic purchase is not available for your tariff",
       "unlimited": "Unlimited",
       "buyTrafficGb": "Buy {{gb}} GB",
+      "buyUnlimited": "Buy Unlimited",
       "manageServers": "Server management",
       "manageServersTitle": "Server management"
     },

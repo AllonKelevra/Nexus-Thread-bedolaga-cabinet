@@ -328,6 +328,7 @@
       "trafficUnavailable": "خرید ترافیک برای اشتراک شما در دسترس نیست",
       "unlimited": "نامحدود",
       "buyTrafficGb": "خرید {{gb}} GB",
+      "buyUnlimited": "خرید نامحدود",
       "manageServers": "مدیریت سرورها",
       "manageServersTitle": "مدیریت سرورها"
     },
