@@ -194,31 +194,31 @@ export function ButtonsTab() {
           return (
             <div
               key={section}
-              className={`rounded-2xl border bg-dark-800/50 p-4 transition-colors sm:p-5 ${
+              className={`overflow-hidden rounded-2xl border bg-dark-800/50 p-4 transition-colors sm:p-5 ${
                 cfg.enabled ? 'border-dark-700/50' : 'border-dark-700/30 opacity-60'
               }`}
             >
               {/* Header */}
-              <div className="mb-3 flex items-center justify-between">
-                <div className="flex-1">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <h4 className="text-sm font-semibold text-dark-100">
+                    <h4 className="truncate text-sm font-semibold text-dark-100">
                       {t(`admin.buttons.sections.${section}`)}
                     </h4>
                     {!cfg.enabled && (
-                      <span className="rounded bg-dark-600 px-1.5 py-0.5 text-[10px] font-medium text-dark-400">
+                      <span className="shrink-0 rounded bg-dark-600 px-1.5 py-0.5 text-[10px] font-medium text-dark-400">
                         {t('admin.buttons.hidden')}
                       </span>
                     )}
                   </div>
-                  <p className="mt-0.5 text-xs text-dark-400">
+                  <p className="mt-0.5 truncate text-xs text-dark-400">
                     {t(`admin.buttons.descriptions.${section}`)}
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex shrink-0 items-center gap-2">
                   {/* Live preview chip */}
                   <div
-                    className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
+                    className={`whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-medium ${
                       cfg.style === 'default'
                         ? 'bg-dark-600 text-dark-300'
                         : cfg.style === 'success'
@@ -240,18 +240,18 @@ export function ButtonsTab() {
                 <label className="mb-1.5 block text-xs font-medium text-dark-300">
                   {t('admin.buttons.color')}
                 </label>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {STYLE_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
                       onClick={() => updateSection(section, 'style', opt.value)}
-                      className={`flex h-8 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium transition-all ${
+                      className={`flex h-7 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-all ${
                         cfg.style === opt.value
                           ? 'border-accent-500 bg-accent-500/10 text-accent-400'
                           : 'border-dark-600 bg-dark-700/50 text-dark-300 hover:border-dark-500'
                       }`}
                     >
-                      <span className={`h-3 w-3 rounded-full ${opt.colorClass}`} />
+                      <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${opt.colorClass}`} />
                       {t(`admin.buttons.styles.${opt.value}`)}
                     </button>
                   ))}
