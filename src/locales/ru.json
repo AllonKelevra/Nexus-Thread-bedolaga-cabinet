@@ -2339,7 +2339,8 @@
         "pending": "Ожидание",
         "approved": "Одобрено",
         "rejected": "Отклонено",
-        "completed": "Выполнено"
+        "completed": "Выполнено",
+        "cancelled": "Отменено"
       },
       "status": {
         "pending": "Ожидание",

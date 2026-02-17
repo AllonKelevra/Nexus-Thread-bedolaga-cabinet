@@ -1554,7 +1554,8 @@
         "pending": "در انتظار",
         "approved": "تأیید شده",
         "rejected": "رد شده",
-        "completed": "تکمیل شده"
+        "completed": "تکمیل شده",
+        "cancelled": "لغو شده"
       },
       "status": {
         "pending": "در انتظار",

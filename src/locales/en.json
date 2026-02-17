@@ -1817,7 +1817,8 @@
         "pending": "Pending",
         "approved": "Approved",
         "rejected": "Rejected",
-        "completed": "Completed"
+        "completed": "Completed",
+        "cancelled": "Cancelled"
       },
       "status": {
         "pending": "Pending",

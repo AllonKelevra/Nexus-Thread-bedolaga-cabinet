@@ -1553,7 +1553,8 @@
         "pending": "待处理",
         "approved": "已批准",
         "rejected": "已拒绝",
-        "completed": "已完成"
+        "completed": "已完成",
+        "cancelled": "已取消"
       },
       "status": {
         "pending": "待处理",
