@@ -561,6 +561,12 @@
       "applying": "提交中...",
       "submitApplication": "提交申请",
       "applyError": "提交申请失败，请重试。",
+      "yourCampaigns": "您的活动",
+      "campaignBonus": {
+        "balance": "+{{amount}} 余额",
+        "subscription": "{{days}} 天订阅",
+        "tariff": "奖励套餐"
+      },
       "fields": {
         "companyName": "公司名称",
         "companyNamePlaceholder": "您的公司或品牌名称",

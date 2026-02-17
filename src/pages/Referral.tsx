@@ -8,6 +8,16 @@ import { partnerApi } from '../api/partners';
 import { withdrawalApi } from '../api/withdrawals';
 import { useCurrency } from '../hooks/useCurrency';
 
+const LinkIcon = () => (
+  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"
+    />
+  </svg>
+);
+
 const CopyIcon = () => (
   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
     <path
@@ -83,6 +93,7 @@ export default function Referral() {
   const { formatAmount, currencySymbol, formatPositive, formatWithCurrency } = useCurrency();
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
+  const [copiedCampaignId, setCopiedCampaignId] = useState<number | null>(null);
 
   const { data: info, isLoading } = useQuery({
     queryKey: ['referral-info'],
@@ -504,6 +515,85 @@ export default function Referral() {
                 {t('referral.partner.reapplyButton')}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==================== Partner Campaigns Section ==================== */}
+
+      {isPartner && partnerStatus?.campaigns && partnerStatus.campaigns.length > 0 && (
+        <div className="bento-card">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-500/10 text-accent-400">
+              <LinkIcon />
+            </div>
+            <h2 className="text-lg font-semibold text-dark-100">
+              {t('referral.partner.yourCampaigns')}
+            </h2>
+          </div>
+
+          <div className="space-y-3">
+            {partnerStatus.campaigns.map((campaign) => {
+              const shareUrl = campaign.deep_link || campaign.web_link || '';
+              const isCopied = copiedCampaignId === campaign.id;
+
+              const copyCampaignLink = () => {
+                if (!shareUrl) return;
+                navigator.clipboard.writeText(shareUrl);
+                setCopiedCampaignId(campaign.id);
+                setTimeout(() => setCopiedCampaignId(null), 2000);
+              };
+
+              const bonusBadge = (() => {
+                switch (campaign.bonus_type) {
+                  case 'balance':
+                    return {
+                      label: t('referral.partner.campaignBonus.balance', {
+                        amount: formatWithCurrency(campaign.balance_bonus_kopeks / 100, 0),
+                      }),
+                      className: 'badge-success',
+                    };
+                  case 'subscription':
+                    return {
+                      label: t('referral.partner.campaignBonus.subscription', {
+                        days: campaign.subscription_duration_days ?? 0,
+                      }),
+                      className: 'badge-info',
+                    };
+                  case 'tariff':
+                    return {
+                      label: t('referral.partner.campaignBonus.tariff'),
+                      className: 'badge-info',
+                    };
+                  default:
+                    return null;
+                }
+              })();
+
+              return (
+                <div
+                  key={campaign.id}
+                  className="rounded-xl border border-dark-700/30 bg-dark-800/30 p-4"
+                >
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="font-medium text-dark-100">{campaign.name}</span>
+                    {bonusBadge && <span className={bonusBadge.className}>{bonusBadge.label}</span>}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input type="text" readOnly value={shareUrl} className="input flex-1 text-xs" />
+                    <button
+                      onClick={copyCampaignLink}
+                      disabled={!shareUrl}
+                      className={`btn-primary shrink-0 px-3 py-2 ${
+                        isCopied ? 'bg-success-500 hover:bg-success-500' : ''
+                      }`}
+                    >
+                      {isCopied ? <CheckIcon /> : <CopyIcon />}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

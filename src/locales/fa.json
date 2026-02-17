@@ -561,6 +561,12 @@
       "applying": "در حال ارسال...",
       "submitApplication": "ارسال درخواست",
       "applyError": "ارسال درخواست ناموفق بود. لطفاً دوباره تلاش کنید.",
+      "yourCampaigns": "کمپین‌های شما",
+      "campaignBonus": {
+        "balance": "+{{amount}} به موجودی",
+        "subscription": "{{days}} روز اشتراک",
+        "tariff": "تعرفه جایزه"
+      },
       "fields": {
         "companyName": "نام شرکت",
         "companyNamePlaceholder": "نام شرکت یا برند شما",

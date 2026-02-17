@@ -697,6 +697,12 @@
       "applying": "Отправка...",
       "submitApplication": "Отправить заявку",
       "applyError": "Не удалось отправить заявку. Попробуйте снова.",
+      "yourCampaigns": "Ваши кампании",
+      "campaignBonus": {
+        "balance": "+{{amount}} на баланс",
+        "subscription": "{{days}} дн. подписки",
+        "tariff": "Бонусный тариф"
+      },
       "fields": {
         "companyName": "Название компании",
         "companyNamePlaceholder": "Название вашей компании или бренда",

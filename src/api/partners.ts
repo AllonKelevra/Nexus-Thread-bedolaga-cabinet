@@ -16,10 +16,23 @@ export interface PartnerApplicationInfo {
   processed_at: string | null;
 }
 
+export interface PartnerCampaignInfo {
+  id: number;
+  name: string;
+  start_parameter: string;
+  bonus_type: string;
+  balance_bonus_kopeks: number;
+  subscription_duration_days: number | null;
+  subscription_traffic_gb: number | null;
+  deep_link: string | null;
+  web_link: string | null;
+}
+
 export interface PartnerStatusResponse {
   partner_status: string;
   commission_percent: number | null;
   latest_application: PartnerApplicationInfo | null;
+  campaigns: PartnerCampaignInfo[];
 }
 
 export interface PartnerApplicationRequest {

@@ -670,6 +670,12 @@
       "applying": "Submitting...",
       "submitApplication": "Submit Application",
       "applyError": "Failed to submit application. Please try again.",
+      "yourCampaigns": "Your campaigns",
+      "campaignBonus": {
+        "balance": "+{{amount}} to balance",
+        "subscription": "{{days}} days subscription",
+        "tariff": "Bonus tariff"
+      },
       "fields": {
         "companyName": "Company Name",
         "companyNamePlaceholder": "Your company or brand name",
