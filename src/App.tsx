@@ -59,6 +59,10 @@ const AdminCampaigns = lazy(() => import('./pages/AdminCampaigns'));
 const AdminCampaignCreate = lazy(() => import('./pages/AdminCampaignCreate'));
 const AdminCampaignStats = lazy(() => import('./pages/AdminCampaignStats'));
 const AdminCampaignEdit = lazy(() => import('./pages/AdminCampaignEdit'));
+const AdminPartners = lazy(() => import('./pages/AdminPartners'));
+const AdminPartnerDetail = lazy(() => import('./pages/AdminPartnerDetail'));
+const AdminWithdrawals = lazy(() => import('./pages/AdminWithdrawals'));
+const AdminWithdrawalDetail = lazy(() => import('./pages/AdminWithdrawalDetail'));
 const AdminUsers = lazy(() => import('./pages/AdminUsers'));
 const AdminPayments = lazy(() => import('./pages/AdminPayments'));
 const AdminPaymentMethods = lazy(() => import('./pages/AdminPaymentMethods'));
@@ -545,6 +549,46 @@ function App() {
             <AdminRoute>
               <LazyPage>
                 <AdminCampaignEdit />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/partners"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminPartners />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/partners/:userId"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminPartnerDetail />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/withdrawals"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminWithdrawals />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/withdrawals/:id"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminWithdrawalDetail />
               </LazyPage>
             </AdminRoute>
           }

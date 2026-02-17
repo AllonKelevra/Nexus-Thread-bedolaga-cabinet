@@ -1,9 +1,20 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, type FormEvent } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { referralApi } from '../api/referral';
 import { brandingApi } from '../api/branding';
+import { partnerApi, type PartnerApplicationRequest } from '../api/partners';
+import { withdrawalApi } from '../api/withdrawals';
 import { useCurrency } from '../hooks/useCurrency';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from '../components/primitives/Dialog/Dialog';
 
 const CopyIcon = () => (
   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -28,10 +39,75 @@ const ShareIcon = () => (
   </svg>
 );
 
+const PartnerIcon = () => (
+  <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z"
+    />
+  </svg>
+);
+
+const ClockIcon = () => (
+  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
+  </svg>
+);
+
+const WalletIcon = () => (
+  <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3"
+    />
+  </svg>
+);
+
+function getWithdrawalStatusBadge(status: string): string {
+  switch (status) {
+    case 'completed':
+      return 'badge-success';
+    case 'approved':
+      return 'badge-info';
+    case 'pending':
+      return 'badge-warning';
+    case 'rejected':
+    case 'cancelled':
+      return 'badge-error';
+    default:
+      return 'badge-neutral';
+  }
+}
+
 export default function Referral() {
   const { t } = useTranslation();
-  const { formatAmount, currencySymbol, formatPositive } = useCurrency();
+  const { formatAmount, currencySymbol, formatPositive, formatWithCurrency } = useCurrency();
+  const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
+  const [showApplyDialog, setShowApplyDialog] = useState(false);
+  const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
+  const [showReapply, setShowReapply] = useState(false);
+
+  // Partner application form state
+  const [applyForm, setApplyForm] = useState<PartnerApplicationRequest>({
+    company_name: '',
+    website_url: '',
+    telegram_channel: '',
+    description: '',
+    expected_monthly_referrals: undefined,
+  });
+
+  // Withdrawal form state
+  const [withdrawForm, setWithdrawForm] = useState({
+    amount_kopeks: 0,
+    payment_details: '',
+  });
 
   const { data: info, isLoading } = useQuery({
     queryKey: ['referral-info'],
@@ -62,6 +138,63 @@ export default function Referral() {
     queryKey: ['branding'],
     queryFn: brandingApi.getBranding,
     staleTime: 60000,
+  });
+
+  // Partner status query
+  const { data: partnerStatus } = useQuery({
+    queryKey: ['partner-status'],
+    queryFn: partnerApi.getStatus,
+  });
+
+  const isPartner = partnerStatus?.partner_status === 'approved';
+
+  // Withdrawal queries (only when partner is approved)
+  const { data: withdrawalBalance } = useQuery({
+    queryKey: ['withdrawal-balance'],
+    queryFn: withdrawalApi.getBalance,
+    enabled: isPartner,
+  });
+
+  const { data: withdrawalHistory } = useQuery({
+    queryKey: ['withdrawal-history'],
+    queryFn: withdrawalApi.getHistory,
+    enabled: isPartner,
+  });
+
+  // Partner apply mutation
+  const applyMutation = useMutation({
+    mutationFn: partnerApi.apply,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['partner-status'] });
+      setShowApplyDialog(false);
+      setApplyForm({
+        company_name: '',
+        website_url: '',
+        telegram_channel: '',
+        description: '',
+        expected_monthly_referrals: undefined,
+      });
+    },
+  });
+
+  // Withdrawal create mutation
+  const withdrawMutation = useMutation({
+    mutationFn: withdrawalApi.create,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['withdrawal-balance'] });
+      queryClient.invalidateQueries({ queryKey: ['withdrawal-history'] });
+      setShowWithdrawDialog(false);
+      setWithdrawForm({ amount_kopeks: 0, payment_details: '' });
+    },
+  });
+
+  // Withdrawal cancel mutation
+  const cancelWithdrawalMutation = useMutation({
+    mutationFn: withdrawalApi.cancel,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['withdrawal-balance'] });
+      queryClient.invalidateQueries({ queryKey: ['withdrawal-history'] });
+    },
   });
 
   const copyLink = () => {
@@ -98,6 +231,29 @@ export default function Referral() {
     window.open(telegramUrl, '_blank', 'noopener,noreferrer');
   };
 
+  const handleApplySubmit = (e: FormEvent) => {
+    e.preventDefault();
+    const payload: PartnerApplicationRequest = {};
+    if (applyForm.company_name) payload.company_name = applyForm.company_name;
+    if (applyForm.website_url) payload.website_url = applyForm.website_url;
+    if (applyForm.telegram_channel) payload.telegram_channel = applyForm.telegram_channel;
+    if (applyForm.description) payload.description = applyForm.description;
+    if (applyForm.expected_monthly_referrals) {
+      payload.expected_monthly_referrals = applyForm.expected_monthly_referrals;
+    }
+    applyMutation.mutate(payload);
+  };
+
+  const handleWithdrawSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (withdrawForm.payment_details.length < 5) return;
+    if (withdrawForm.amount_kopeks <= 0) return;
+    withdrawMutation.mutate({
+      amount_kopeks: withdrawForm.amount_kopeks,
+      payment_details: withdrawForm.payment_details,
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="flex min-h-64 items-center justify-center">
@@ -132,6 +288,12 @@ export default function Referral() {
       </div>
     );
   }
+
+  const partnerStatusValue = partnerStatus?.partner_status ?? 'none';
+  const showApplySection = partnerStatusValue === 'none' || showReapply;
+  const showPendingSection = partnerStatusValue === 'pending' && !showReapply;
+  const showApprovedSection = partnerStatusValue === 'approved';
+  const showRejectedSection = partnerStatusValue === 'rejected' && !showReapply;
 
   return (
     <div className="space-y-6">
@@ -301,6 +463,442 @@ export default function Referral() {
           </div>
         </div>
       )}
+
+      {/* ==================== Partner Application Section ==================== */}
+
+      {/* Status: none — Become a Partner CTA */}
+      {showApplySection && (
+        <div className="bento-card">
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-accent-500/10 text-accent-400">
+              <PartnerIcon />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-lg font-semibold text-dark-100">
+                {t('referral.partner.becomePartner')}
+              </h2>
+              <p className="mt-1 text-sm text-dark-400">
+                {t('referral.partner.becomePartnerDesc')}
+              </p>
+              <button onClick={() => setShowApplyDialog(true)} className="btn-primary mt-4 px-6">
+                {t('referral.partner.applyButton')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Status: pending — Application Under Review */}
+      {showPendingSection && (
+        <div className="bento-card border-warning-500/20">
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-warning-500/10 text-warning-400">
+              <ClockIcon />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-lg font-semibold text-dark-100">
+                {t('referral.partner.underReview')}
+              </h2>
+              <p className="mt-1 text-sm text-dark-400">{t('referral.partner.underReviewDesc')}</p>
+              {partnerStatus?.latest_application?.created_at && (
+                <p className="mt-2 text-xs text-dark-500">
+                  {t('referral.partner.submittedAt', {
+                    date: new Date(
+                      partnerStatus.latest_application.created_at,
+                    ).toLocaleDateString(),
+                  })}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Status: approved — Partner Badge */}
+      {showApprovedSection && (
+        <div className="bento-card border-success-500/20">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-success-500/10 text-success-400">
+              <PartnerIcon />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-dark-100">
+                  {t('referral.partner.partnerStatus')}
+                </h2>
+                <span className="badge-success">{t('referral.partner.active')}</span>
+              </div>
+              <p className="mt-1 text-sm text-dark-400">
+                {t('referral.partner.commissionInfo', {
+                  percent: partnerStatus?.commission_percent ?? 0,
+                })}
+              </p>
+            </div>
+            <a href="#withdrawal-section" className="btn-secondary hidden px-4 sm:flex">
+              {t('referral.withdrawal.goToWithdrawal')}
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* Status: rejected — Rejection Notice */}
+      {showRejectedSection && (
+        <div className="bento-card border-error-500/20">
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-error-500/10 text-error-400">
+              <svg
+                className="h-8 w-8"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+                />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h2 className="text-lg font-semibold text-dark-100">
+                {t('referral.partner.rejected')}
+              </h2>
+              {partnerStatus?.latest_application?.admin_comment && (
+                <p className="mt-1 text-sm text-dark-300">
+                  {partnerStatus.latest_application.admin_comment}
+                </p>
+              )}
+              <button onClick={() => setShowReapply(true)} className="btn-primary mt-4 px-6">
+                {t('referral.partner.reapplyButton')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==================== Withdrawal Section (approved partners only) ==================== */}
+
+      {isPartner && (
+        <div id="withdrawal-section" className="space-y-6">
+          {/* Withdrawal Balance Card */}
+          {withdrawalBalance && (
+            <div className="bento-card">
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-500/10 text-accent-400">
+                  <WalletIcon />
+                </div>
+                <h2 className="text-lg font-semibold text-dark-100">
+                  {t('referral.withdrawal.title')}
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+                <div className="col-span-2 rounded-xl bg-dark-800/30 p-4 md:col-span-1">
+                  <div className="text-sm text-dark-500">{t('referral.withdrawal.available')}</div>
+                  <div className="mt-1 text-2xl font-bold text-success-400">
+                    {formatWithCurrency(withdrawalBalance.available_total / 100)}
+                  </div>
+                </div>
+                <div className="rounded-xl bg-dark-800/30 p-3">
+                  <div className="text-sm text-dark-500">
+                    {t('referral.withdrawal.totalEarned')}
+                  </div>
+                  <div className="mt-1 text-lg font-semibold text-dark-100">
+                    {formatWithCurrency(withdrawalBalance.total_earned / 100)}
+                  </div>
+                </div>
+                <div className="rounded-xl bg-dark-800/30 p-3">
+                  <div className="text-sm text-dark-500">{t('referral.withdrawal.withdrawn')}</div>
+                  <div className="mt-1 text-lg font-semibold text-dark-100">
+                    {formatWithCurrency(withdrawalBalance.withdrawn / 100)}
+                  </div>
+                </div>
+                <div className="rounded-xl bg-dark-800/30 p-3">
+                  <div className="text-sm text-dark-500">{t('referral.withdrawal.spent')}</div>
+                  <div className="mt-1 text-lg font-semibold text-dark-100">
+                    {formatWithCurrency(withdrawalBalance.referral_spent / 100)}
+                  </div>
+                </div>
+                <div className="rounded-xl bg-dark-800/30 p-3">
+                  <div className="text-sm text-dark-500">{t('referral.withdrawal.pending')}</div>
+                  <div className="mt-1 text-lg font-semibold text-warning-400">
+                    {formatWithCurrency(withdrawalBalance.pending / 100)}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <button
+                  onClick={() => setShowWithdrawDialog(true)}
+                  disabled={!withdrawalBalance.can_request}
+                  className={`btn-primary w-full px-6 sm:w-auto ${
+                    !withdrawalBalance.can_request ? 'cursor-not-allowed opacity-50' : ''
+                  }`}
+                >
+                  {t('referral.withdrawal.requestButton')}
+                </button>
+                {!withdrawalBalance.can_request && withdrawalBalance.cannot_request_reason && (
+                  <p className="mt-2 text-xs text-dark-500">
+                    {withdrawalBalance.cannot_request_reason}
+                  </p>
+                )}
+                {withdrawalBalance.min_amount_kopeks > 0 && (
+                  <p className="mt-2 text-xs text-dark-500">
+                    {t('referral.withdrawal.minAmount', {
+                      amount: formatWithCurrency(withdrawalBalance.min_amount_kopeks / 100),
+                    })}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Withdrawal History */}
+          <div className="bento-card">
+            <h2 className="mb-4 text-lg font-semibold text-dark-100">
+              {t('referral.withdrawal.history')}
+            </h2>
+            {withdrawalHistory?.items && withdrawalHistory.items.length > 0 ? (
+              <div className="space-y-3">
+                {withdrawalHistory.items.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between rounded-xl border border-dark-700/30 bg-dark-800/30 p-3"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-dark-100">
+                          {formatWithCurrency(item.amount_rubles)}
+                        </span>
+                        <span className={getWithdrawalStatusBadge(item.status)}>
+                          {t(`referral.withdrawal.status.${item.status}`, item.status)}
+                        </span>
+                      </div>
+                      <div className="mt-0.5 text-xs text-dark-500">
+                        {new Date(item.created_at).toLocaleDateString()}
+                        {item.payment_details && (
+                          <span className="ml-1">
+                            &bull;{' '}
+                            {item.payment_details.length > 40
+                              ? `${item.payment_details.slice(0, 40)}...`
+                              : item.payment_details}
+                          </span>
+                        )}
+                      </div>
+                      {item.admin_comment && (
+                        <div className="mt-1 text-xs text-dark-400">{item.admin_comment}</div>
+                      )}
+                    </div>
+                    {item.status === 'pending' && (
+                      <button
+                        onClick={() => cancelWithdrawalMutation.mutate(item.id)}
+                        disabled={cancelWithdrawalMutation.isPending}
+                        className="ml-3 shrink-0 text-sm text-error-400 transition-colors hover:text-error-300"
+                      >
+                        {t('common.cancel')}
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-8 text-center">
+                <div className="text-dark-400">{t('referral.withdrawal.noHistory')}</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ==================== Partner Application Dialog ==================== */}
+      <Dialog open={showApplyDialog} onOpenChange={setShowApplyDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('referral.partner.applyTitle')}</DialogTitle>
+            <DialogDescription>{t('referral.partner.applyDesc')}</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleApplySubmit} className="space-y-4">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-dark-300">
+                {t('referral.partner.fields.companyName')}
+              </label>
+              <input
+                type="text"
+                className="input w-full"
+                value={applyForm.company_name ?? ''}
+                onChange={(e) => setApplyForm({ ...applyForm, company_name: e.target.value })}
+                placeholder={t('referral.partner.fields.companyNamePlaceholder')}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-dark-300">
+                {t('referral.partner.fields.telegramChannel')}
+              </label>
+              <input
+                type="text"
+                className="input w-full"
+                value={applyForm.telegram_channel ?? ''}
+                onChange={(e) => setApplyForm({ ...applyForm, telegram_channel: e.target.value })}
+                placeholder={t('referral.partner.fields.telegramChannelPlaceholder')}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-dark-300">
+                {t('referral.partner.fields.websiteUrl')}
+              </label>
+              <input
+                type="url"
+                className="input w-full"
+                value={applyForm.website_url ?? ''}
+                onChange={(e) => setApplyForm({ ...applyForm, website_url: e.target.value })}
+                placeholder={t('referral.partner.fields.websiteUrlPlaceholder')}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-dark-300">
+                {t('referral.partner.fields.description')}
+              </label>
+              <textarea
+                className="input min-h-[80px] w-full"
+                value={applyForm.description ?? ''}
+                onChange={(e) => setApplyForm({ ...applyForm, description: e.target.value })}
+                placeholder={t('referral.partner.fields.descriptionPlaceholder')}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-dark-300">
+                {t('referral.partner.fields.expectedReferrals')}
+              </label>
+              <input
+                type="number"
+                min={0}
+                className="input w-full"
+                value={applyForm.expected_monthly_referrals ?? ''}
+                onChange={(e) =>
+                  setApplyForm({
+                    ...applyForm,
+                    expected_monthly_referrals: e.target.value ? Number(e.target.value) : undefined,
+                  })
+                }
+                placeholder={t('referral.partner.fields.expectedReferralsPlaceholder')}
+              />
+            </div>
+
+            {applyMutation.isError && (
+              <div className="rounded-lg bg-error-500/10 p-3 text-sm text-error-400">
+                {t('referral.partner.applyError')}
+              </div>
+            )}
+
+            <DialogFooter>
+              <DialogClose asChild>
+                <button type="button" className="btn-secondary px-5">
+                  {t('common.cancel')}
+                </button>
+              </DialogClose>
+              <button
+                type="submit"
+                disabled={applyMutation.isPending}
+                className={`btn-primary px-5 ${applyMutation.isPending ? 'opacity-50' : ''}`}
+              >
+                {applyMutation.isPending
+                  ? t('referral.partner.applying')
+                  : t('referral.partner.submitApplication')}
+              </button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ==================== Withdrawal Request Dialog ==================== */}
+      <Dialog open={showWithdrawDialog} onOpenChange={setShowWithdrawDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('referral.withdrawal.requestTitle')}</DialogTitle>
+            <DialogDescription>
+              {t('referral.withdrawal.requestDesc', {
+                available: withdrawalBalance
+                  ? formatWithCurrency(withdrawalBalance.available_total / 100)
+                  : '',
+              })}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleWithdrawSubmit} className="space-y-4">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-dark-300">
+                {t('referral.withdrawal.fields.amount')}
+              </label>
+              <input
+                type="number"
+                min={withdrawalBalance?.min_amount_kopeks ?? 0}
+                max={withdrawalBalance?.available_total ?? 0}
+                step={100}
+                className="input w-full"
+                value={withdrawForm.amount_kopeks || ''}
+                onChange={(e) =>
+                  setWithdrawForm({
+                    ...withdrawForm,
+                    amount_kopeks: e.target.value ? Number(e.target.value) : 0,
+                  })
+                }
+                placeholder={t('referral.withdrawal.fields.amountPlaceholder')}
+              />
+              <p className="mt-1 text-xs text-dark-500">
+                {t('referral.withdrawal.fields.amountHint', { currency: currencySymbol })}
+              </p>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-dark-300">
+                {t('referral.withdrawal.fields.paymentDetails')}
+              </label>
+              <textarea
+                className="input min-h-[80px] w-full"
+                value={withdrawForm.payment_details}
+                onChange={(e) =>
+                  setWithdrawForm({ ...withdrawForm, payment_details: e.target.value })
+                }
+                placeholder={t('referral.withdrawal.fields.paymentDetailsPlaceholder')}
+                required
+                minLength={5}
+              />
+            </div>
+
+            {withdrawMutation.isError && (
+              <div className="rounded-lg bg-error-500/10 p-3 text-sm text-error-400">
+                {t('referral.withdrawal.requestError')}
+              </div>
+            )}
+
+            <DialogFooter>
+              <DialogClose asChild>
+                <button type="button" className="btn-secondary px-5">
+                  {t('common.cancel')}
+                </button>
+              </DialogClose>
+              <button
+                type="submit"
+                disabled={
+                  withdrawMutation.isPending ||
+                  withdrawForm.payment_details.length < 5 ||
+                  withdrawForm.amount_kopeks <= 0
+                }
+                className={`btn-primary px-5 ${
+                  withdrawMutation.isPending ||
+                  withdrawForm.payment_details.length < 5 ||
+                  withdrawForm.amount_kopeks <= 0
+                    ? 'opacity-50'
+                    : ''
+                }`}
+              >
+                {withdrawMutation.isPending
+                  ? t('referral.withdrawal.requesting')
+                  : t('referral.withdrawal.submitRequest')}
+              </button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
