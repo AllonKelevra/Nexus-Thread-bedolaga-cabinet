@@ -83,7 +83,7 @@ export default function ReferralWithdrawalRequest() {
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-dark-300">
-              {t('referral.withdrawal.fields.paymentDetails')}
+              {balance?.requisites_text || t('referral.withdrawal.fields.paymentDetails')}
             </label>
             <textarea
               className="input min-h-[80px] w-full"

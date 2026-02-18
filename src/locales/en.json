@@ -1906,6 +1906,29 @@
         "description": "Reject partner application from {{name}}",
         "commentLabel": "Comment (optional)",
         "commentPlaceholder": "Reason for rejection..."
+      },
+      "settings": "Settings",
+      "settingsSubtitle": "Partner program and withdrawal settings",
+      "settingsLoadError": "Failed to load settings",
+      "settingsUpdateError": "Failed to save settings",
+      "settingsSection": {
+        "referralProgram": "Referral Program",
+        "withdrawalSettings": "Withdrawal Settings"
+      },
+      "settingsFields": {
+        "programEnabled": "Referral program enabled",
+        "programEnabledDesc": "Enable/disable referral program for all users",
+        "partnerVisible": "Partner section visible in cabinet",
+        "partnerVisibleDesc": "Show/hide partner application and withdrawal sections for users",
+        "withdrawalEnabled": "Withdrawal enabled",
+        "withdrawalEnabledDesc": "Allow partners to request withdrawal of referral balance",
+        "minAmount": "Min. withdrawal amount (kopeks)",
+        "minAmountDesc": "Minimum amount for a withdrawal request (100 kopeks = 1 ₽)",
+        "cooldownDays": "Cooldown between withdrawals (days)",
+        "cooldownDaysDesc": "How many days must pass between withdrawal requests",
+        "requisitesText": "Requisites field prompt",
+        "requisitesTextDesc": "Custom text shown to users to describe what payment details to provide",
+        "requisitesTextPlaceholder": "E.g.: Provide your bank card number or USDT TRC-20 address"
       }
     },
     "partnerDetail": {

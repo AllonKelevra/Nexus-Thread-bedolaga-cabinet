@@ -113,6 +113,26 @@ export interface PartnerStats {
   total_earnings_kopeks: number;
 }
 
+// ==================== Partner Settings types ====================
+
+export interface PartnerSettings {
+  withdrawal_enabled: boolean;
+  withdrawal_min_amount_kopeks: number;
+  withdrawal_cooldown_days: number;
+  withdrawal_requisites_text: string;
+  partner_section_visible: boolean;
+  referral_program_enabled: boolean;
+}
+
+export interface PartnerSettingsUpdate {
+  withdrawal_enabled?: boolean;
+  withdrawal_min_amount_kopeks?: number;
+  withdrawal_cooldown_days?: number;
+  withdrawal_requisites_text?: string;
+  partner_section_visible?: boolean;
+  referral_program_enabled?: boolean;
+}
+
 export const partnerApi = {
   // User endpoints
   getStatus: async (): Promise<PartnerStatusResponse> => {
@@ -190,5 +210,19 @@ export const partnerApi = {
 
   unassignCampaign: async (userId: number, campaignId: number): Promise<void> => {
     await apiClient.post(`/cabinet/admin/partners/${userId}/campaigns/${campaignId}/unassign`);
+  },
+
+  // Settings
+  getPartnerSettings: async (): Promise<PartnerSettings> => {
+    const response = await apiClient.get<PartnerSettings>('/cabinet/admin/partners/settings');
+    return response.data;
+  },
+
+  updatePartnerSettings: async (data: PartnerSettingsUpdate): Promise<PartnerSettings> => {
+    const response = await apiClient.patch<PartnerSettings>(
+      '/cabinet/admin/partners/settings',
+      data,
+    );
+    return response.data;
   },
 };

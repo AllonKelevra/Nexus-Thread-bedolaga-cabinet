@@ -14,6 +14,7 @@ export interface WithdrawalBalanceResponse {
   is_withdrawal_enabled: boolean;
   can_request: boolean;
   cannot_request_reason: string | null;
+  requisites_text: string;
 }
 
 export interface WithdrawalCreateRequest {

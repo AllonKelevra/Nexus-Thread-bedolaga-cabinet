@@ -60,6 +60,7 @@ const AdminCampaignCreate = lazy(() => import('./pages/AdminCampaignCreate'));
 const AdminCampaignStats = lazy(() => import('./pages/AdminCampaignStats'));
 const AdminCampaignEdit = lazy(() => import('./pages/AdminCampaignEdit'));
 const AdminPartners = lazy(() => import('./pages/AdminPartners'));
+const AdminPartnerSettings = lazy(() => import('./pages/AdminPartnerSettings'));
 const AdminPartnerDetail = lazy(() => import('./pages/AdminPartnerDetail'));
 const AdminApplicationReview = lazy(() => import('./pages/AdminApplicationReview'));
 const AdminPartnerCommission = lazy(() => import('./pages/AdminPartnerCommission'));
@@ -587,6 +588,16 @@ function App() {
             <AdminRoute>
               <LazyPage>
                 <AdminPartners />
+              </LazyPage>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/partners/settings"
+          element={
+            <AdminRoute>
+              <LazyPage>
+                <AdminPartnerSettings />
               </LazyPage>
             </AdminRoute>
           }

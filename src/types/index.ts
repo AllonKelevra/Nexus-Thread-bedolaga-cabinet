@@ -431,6 +431,7 @@ export interface ReferralTerms {
   first_topup_bonus_rubles: number;
   inviter_bonus_kopeks: number;
   inviter_bonus_rubles: number;
+  partner_section_visible?: boolean;
 }
 
 // Ticket types
