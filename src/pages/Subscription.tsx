@@ -829,10 +829,10 @@ export default function Subscription() {
             </div>
           </div>
 
-          {/* Servers */}
+          {/* Locations */}
           {subscription.servers && subscription.servers.length > 0 && (
             <div className="mb-6">
-              <div className="mb-2 text-sm text-dark-500">{t('subscription.serversLabel')}</div>
+              <div className="mb-2 text-sm text-dark-500">{t('subscription.locationsLabel')}</div>
               <div className="flex flex-wrap gap-2">
                 {subscription.servers.map((server) => (
                   <span
