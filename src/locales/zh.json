@@ -2628,6 +2628,7 @@
         "timestamp": "时间戳",
         "before": "之前",
         "after": "之后",
+        "queryParams": "请求参数",
         "requestBody": "请求数据",
         "fullDetails": "完整详情"
       },

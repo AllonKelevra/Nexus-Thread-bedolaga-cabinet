@@ -2629,6 +2629,7 @@
         "timestamp": "زمان",
         "before": "قبل",
         "after": "بعد",
+        "queryParams": "پارامترهای درخواست",
         "requestBody": "داده‌های درخواست",
         "fullDetails": "جزئیات کامل"
       },

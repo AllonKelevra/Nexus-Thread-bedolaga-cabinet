@@ -363,6 +363,20 @@ function LogEntryCard({ entry, isExpanded, onToggle }: LogEntryCardProps) {
               </div>
             )}
 
+            {/* Query params */}
+            {entry.details &&
+              'query_params' in entry.details &&
+              entry.details.query_params != null && (
+                <div className="sm:col-span-2">
+                  <p className="mb-1 text-xs font-medium uppercase text-dark-500">
+                    {t('admin.auditLog.details.queryParams')}
+                  </p>
+                  <pre className="max-h-40 overflow-auto rounded-lg bg-dark-900 p-2 text-xs text-dark-300">
+                    {JSON.stringify(entry.details.query_params, null, 2)}
+                  </pre>
+                </div>
+              )}
+
             {/* Request body */}
             {entry.details &&
               'request_body' in entry.details &&
