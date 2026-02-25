@@ -2762,7 +2762,15 @@
         "rateLimit": "Rate limit",
         "rateLimitValue": "Rate limit value",
         "rateValue": "{{count}}/hr",
-        "perHour": "actions per hour"
+        "perHour": "actions per hour",
+        "weekdays": "Days of week",
+        "day0": "Sun",
+        "day1": "Mon",
+        "day2": "Tue",
+        "day3": "Wed",
+        "day4": "Thu",
+        "day5": "Fri",
+        "day6": "Sat"
       },
       "confirm": {
         "title": "Delete policy?",

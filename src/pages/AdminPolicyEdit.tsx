@@ -11,6 +11,7 @@ interface PolicyConditions {
   time_range?: { start: string; end: string };
   ip_whitelist?: string[];
   rate_limit?: number;
+  weekdays?: number[];
 }
 
 interface PolicyFormData {
@@ -26,6 +27,7 @@ interface PolicyFormData {
     time_range: boolean;
     ip_whitelist: boolean;
     rate_limit: boolean;
+    weekdays: boolean;
   };
 }
 
@@ -41,11 +43,13 @@ const INITIAL_FORM: PolicyFormData = {
     time_range: { start: '09:00', end: '18:00' },
     ip_whitelist: [],
     rate_limit: 100,
+    weekdays: [1, 2, 3, 4, 5],
   },
   conditionsEnabled: {
     time_range: false,
     ip_whitelist: false,
     rate_limit: false,
+    weekdays: false,
   },
 };
 
@@ -69,6 +73,10 @@ function parseConditions(raw: Record<string, unknown>): PolicyConditions {
     result.rate_limit = raw.rate_limit;
   }
 
+  if (Array.isArray(raw.weekdays)) {
+    result.weekdays = raw.weekdays.filter((d): d is number => typeof d === 'number');
+  }
+
   return result;
 }
 
@@ -86,6 +94,9 @@ function buildConditionsPayload(
   }
   if (enabled.rate_limit && conditions.rate_limit !== undefined) {
     result.rate_limit = conditions.rate_limit;
+  }
+  if (enabled.weekdays && conditions.weekdays && conditions.weekdays.length > 0) {
+    result.weekdays = conditions.weekdays;
   }
 
   return result;
@@ -232,11 +243,13 @@ export default function AdminPolicyEdit() {
               time_range: parsed.time_range ?? { start: '09:00', end: '18:00' },
               ip_whitelist: parsed.ip_whitelist ?? [],
               rate_limit: parsed.rate_limit ?? 100,
+              weekdays: parsed.weekdays ?? [1, 2, 3, 4, 5],
             },
             conditionsEnabled: {
               time_range: !!parsed.time_range,
               ip_whitelist: !!parsed.ip_whitelist && parsed.ip_whitelist.length > 0,
               rate_limit: parsed.rate_limit !== undefined,
+              weekdays: !!parsed.weekdays && parsed.weekdays.length > 0,
             },
           });
         }
@@ -685,6 +698,53 @@ export default function AdminPolicyEdit() {
                 <span className="text-xs text-dark-500">
                   {t('admin.policies.conditions.perHour')}
                 </span>
+              </div>
+            </ConditionToggle>
+
+            {/* Weekdays */}
+            <ConditionToggle
+              label={t('admin.policies.conditions.weekdays')}
+              enabled={formData.conditionsEnabled.weekdays}
+              onToggle={() =>
+                setFormData((prev) => ({
+                  ...prev,
+                  conditionsEnabled: {
+                    ...prev.conditionsEnabled,
+                    weekdays: !prev.conditionsEnabled.weekdays,
+                  },
+                }))
+              }
+            >
+              <div className="flex flex-wrap gap-1.5">
+                {[1, 2, 3, 4, 5, 6, 0].map((day) => {
+                  const selected = (formData.conditions.weekdays ?? []).includes(day);
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() =>
+                        setFormData((prev) => {
+                          const current = prev.conditions.weekdays ?? [];
+                          const next = selected
+                            ? current.filter((d) => d !== day)
+                            : [...current, day];
+                          return {
+                            ...prev,
+                            conditions: { ...prev.conditions, weekdays: next },
+                          };
+                        })
+                      }
+                      className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                        selected
+                          ? 'bg-accent-500/20 text-accent-400'
+                          : 'bg-dark-700/50 text-dark-400 hover:bg-dark-700 hover:text-dark-300'
+                      }`}
+                      aria-pressed={selected}
+                    >
+                      {t(`admin.policies.conditions.day${day}`)}
+                    </button>
+                  );
+                })}
               </div>
             </ConditionToggle>
           </div>

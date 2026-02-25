@@ -2547,7 +2547,15 @@
         "rateLimit": "速率限制",
         "rateLimitValue": "速率限制值",
         "rateValue": "{{count}}/小时",
-        "perHour": "每小时操作数"
+        "perHour": "每小时操作数",
+        "weekdays": "星期",
+        "day0": "日",
+        "day1": "一",
+        "day2": "二",
+        "day3": "三",
+        "day4": "四",
+        "day5": "五",
+        "day6": "六"
       },
       "confirm": {
         "title": "删除策略？",

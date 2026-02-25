@@ -86,12 +86,23 @@ const BoltIcon = () => (
   </svg>
 );
 
+const CalendarIcon = () => (
+  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"
+    />
+  </svg>
+);
+
 // === Helpers ===
 
 interface PolicyConditions {
   time_range?: { start: string; end: string };
   ip_whitelist?: string[];
   rate_limit?: number;
+  weekdays?: number[];
 }
 
 function parseConditions(raw: Record<string, unknown>): PolicyConditions {
@@ -110,6 +121,10 @@ function parseConditions(raw: Record<string, unknown>): PolicyConditions {
 
   if (typeof raw.rate_limit === 'number') {
     result.rate_limit = raw.rate_limit;
+  }
+
+  if (Array.isArray(raw.weekdays)) {
+    result.weekdays = raw.weekdays.filter((d): d is number => typeof d === 'number');
   }
 
   return result;
@@ -235,6 +250,22 @@ export default function AdminPolicies() {
           >
             <BoltIcon />
             {t('admin.policies.conditions.rateValue', { count: parsed.rate_limit })}
+          </span>,
+        );
+      }
+
+      if (parsed.weekdays && parsed.weekdays.length > 0 && parsed.weekdays.length < 7) {
+        const dayOrder = [1, 2, 3, 4, 5, 6, 0];
+        const sorted = dayOrder.filter((d) => parsed.weekdays!.includes(d));
+        const dayNames = sorted.map((d) => t(`admin.policies.conditions.day${d}`));
+        icons.push(
+          <span
+            key="weekdays"
+            className="inline-flex items-center gap-1 rounded bg-dark-700 px-1.5 py-0.5 text-xs text-dark-300"
+            title={t('admin.policies.conditions.weekdays')}
+          >
+            <CalendarIcon />
+            {dayNames.join(', ')}
           </span>,
         );
       }
