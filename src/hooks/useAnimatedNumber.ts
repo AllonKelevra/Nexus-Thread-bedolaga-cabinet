@@ -1,30 +1,26 @@
 import { useEffect, useRef, useState } from 'react';
 
-export function useAnimatedNumber(target: number, duration = 600): number {
-  const [current, setCurrent] = useState(target);
+/**
+ * Animates a number from its current value to a new target.
+ * Uses easeOutExpo easing matching the prototype.
+ */
+export function useAnimatedNumber(target: number, duration = 1200): number {
+  const [value, setValue] = useState(0);
+  const ref = useRef({ start: 0, startTime: 0, target: 0 });
   const rafRef = useRef<number>(0);
-  const startRef = useRef<number>(0);
-  const fromRef = useRef<number>(target);
-  const currentRef = useRef<number>(target);
-  const prevTargetRef = useRef<number>(target);
-
-  // Keep currentRef in sync with state
-  currentRef.current = current;
 
   useEffect(() => {
-    if (prevTargetRef.current === target) return;
-    prevTargetRef.current = target;
-    fromRef.current = currentRef.current;
-    startRef.current = performance.now();
+    ref.current.start = value;
+    ref.current.target = target;
+    ref.current.startTime = performance.now();
 
     const animate = (now: number) => {
-      const elapsed = now - startRef.current;
+      const elapsed = now - ref.current.startTime;
       const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      const value = fromRef.current + (target - fromRef.current) * eased;
-      setCurrent(value);
-      currentRef.current = value;
-
+      // easeOutExpo
+      const ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      const current = ref.current.start + (ref.current.target - ref.current.start) * ease;
+      setValue(current);
       if (progress < 1) {
         rafRef.current = requestAnimationFrame(animate);
       }
@@ -34,5 +30,5 @@ export function useAnimatedNumber(target: number, duration = 600): number {
     return () => cancelAnimationFrame(rafRef.current);
   }, [target, duration]);
 
-  return current;
+  return value;
 }

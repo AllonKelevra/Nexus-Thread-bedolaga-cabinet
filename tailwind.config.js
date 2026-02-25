@@ -177,9 +177,9 @@ export default {
         'spotlight-ace': 'spotlightAce 2s ease 0.75s 1 forwards',
         // Dashboard traffic animations
         'traffic-shimmer': 'trafficShimmer 2s ease-in-out infinite',
-        'unlimited-flow': 'unlimitedFlow 3s linear infinite',
+        'unlimited-flow': 'unlimitedFlow 3s ease-in-out infinite',
         'unlimited-pulse': 'unlimitedPulse 2s ease-in-out infinite',
-        'trial-glow': 'trialGlow 2s ease-in-out infinite',
+        'trial-glow': 'trialGlow 3s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -265,15 +265,16 @@ export default {
         },
         unlimitedFlow: {
           '0%': { backgroundPosition: '0% 50%' },
-          '100%': { backgroundPosition: '200% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+          '100%': { backgroundPosition: '0% 50%' },
         },
         unlimitedPulse: {
-          '0%, 100%': { opacity: '0.6', transform: 'scale(1)' },
-          '50%': { opacity: '1', transform: 'scale(1.3)' },
+          '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+          '50%': { opacity: '0.5', transform: 'scale(0.7)' },
         },
         trialGlow: {
-          '0%, 100%': { boxShadow: '0 0 15px rgba(var(--color-warning-500), 0.2)' },
-          '50%': { boxShadow: '0 0 30px rgba(var(--color-warning-500), 0.4)' },
+          '0%, 100%': { boxShadow: '0 0 15px rgba(62, 219, 176, 0.06)' },
+          '50%': { boxShadow: '0 0 30px rgba(62, 219, 176, 0.12)' },
         },
       },
       transitionTimingFunction: {

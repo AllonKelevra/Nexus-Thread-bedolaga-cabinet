@@ -4,36 +4,33 @@ interface SparklineProps {
   data: number[];
   width?: number;
   height?: number;
+  color: string;
   className?: string;
 }
 
 export default function Sparkline({
   data,
-  width = 120,
-  height = 32,
+  width = 200,
+  height = 40,
+  color,
   className = '',
 }: SparklineProps) {
   const gradientId = useId();
 
   if (data.length < 2) return null;
 
-  const max = Math.max(...data);
-  const min = Math.min(...data);
-  const range = max - min || 1;
-  const padding = 2;
-  const innerW = width - padding * 2;
-  const innerH = height - padding * 2;
-
+  const max = Math.max(...data, 1);
   const points = data.map((v, i) => {
-    const x = padding + (i / (data.length - 1)) * innerW;
-    const y = padding + innerH - ((v - min) / range) * innerH;
+    const x = (i / (data.length - 1)) * width;
+    const y = height - (v / max) * height * 0.85 - 2;
     return `${x},${y}`;
   });
 
   const polyline = points.join(' ');
-  const lastX = padding + innerW;
-  const bottomY = padding + innerH;
-  const areaPath = `M${points[0]} ${points.slice(1).join(' ')} L${lastX},${bottomY} L${padding},${bottomY} Z`;
+  const lastPoint = points[points.length - 1].split(',');
+  const lastX = parseFloat(lastPoint[0]);
+  const lastY = parseFloat(lastPoint[1]);
+  const areaPath = `M${points[0]} ${points.slice(1).join(' ')} L${width},${height} L0,${height} Z`;
 
   return (
     <svg
@@ -41,22 +38,31 @@ export default function Sparkline({
       height={height}
       viewBox={`0 0 ${width} ${height}`}
       className={className}
+      style={{ overflow: 'visible' }}
       fill="none"
       aria-hidden="true"
     >
       <defs>
         <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="rgb(var(--color-accent-400))" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="rgb(var(--color-accent-400))" stopOpacity="0" />
+          <stop offset="0%" stopColor={color} stopOpacity="0.25" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
       </defs>
       <path d={areaPath} fill={`url(#${gradientId})`} />
       <polyline
         points={polyline}
-        stroke="rgb(var(--color-accent-400))"
+        stroke={color}
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
+      />
+      {/* Last point dot */}
+      <circle
+        cx={lastX}
+        cy={lastY}
+        r="3"
+        fill={color}
+        style={{ filter: `drop-shadow(0 0 4px ${color})` }}
       />
     </svg>
   );
