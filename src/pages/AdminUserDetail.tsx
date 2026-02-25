@@ -20,6 +20,7 @@ import { promoOffersApi } from '../api/promoOffers';
 import { ticketsApi } from '../api/tickets';
 import { AdminBackButton } from '../components/admin';
 import { createNumberInputHandler, toNumber } from '../utils/inputHelpers';
+import { usePermissionStore } from '../store/permissions';
 
 // ============ Helpers ============
 
@@ -135,6 +136,7 @@ export default function AdminUserDetail() {
   const navigate = useNavigate();
   const notify = useNotify();
   const { id } = useParams<{ id: string }>();
+  const hasPermission = usePermissionStore((s) => s.hasPermission);
 
   const localeMap: Record<string, string> = { ru: 'ru-RU', en: 'en-US', zh: 'zh-CN', fa: 'fa-IR' };
   const locale = localeMap[i18n.language] || 'ru-RU';
@@ -384,9 +386,9 @@ export default function AdminUserDetail() {
   useEffect(() => {
     if (activeTab === 'info') {
       loadReferrals();
-      loadPromoGroups();
+      if (hasPermission('promo_groups:read')) loadPromoGroups();
     }
-    if (activeTab === 'sync') loadSyncStatus();
+    if (activeTab === 'sync' && hasPermission('users:sync')) loadSyncStatus();
     if (activeTab === 'subscription') {
       loadTariffs();
       loadSubscriptionData();
@@ -400,6 +402,7 @@ export default function AdminUserDetail() {
     loadReferrals,
     loadSubscriptionData,
     loadPromoGroups,
+    hasPermission,
   ]);
 
   const handleUpdateBalance = async (isAdd: boolean) => {
@@ -831,23 +834,25 @@ export default function AdminUserDetail() {
         className="scrollbar-hide -mx-4 mb-6 flex gap-2 overflow-x-auto px-4 py-1"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
-        {(['info', 'subscription', 'balance', 'sync', 'tickets'] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`shrink-0 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
-              activeTab === tab
-                ? 'bg-accent-500/15 text-accent-400 ring-1 ring-accent-500/30'
-                : 'bg-dark-800/50 text-dark-400 active:bg-dark-700'
-            }`}
-          >
-            {tab === 'info' && t('admin.users.detail.tabs.info')}
-            {tab === 'subscription' && t('admin.users.detail.tabs.subscription')}
-            {tab === 'balance' && t('admin.users.detail.tabs.balance')}
-            {tab === 'sync' && t('admin.users.detail.tabs.sync')}
-            {tab === 'tickets' && t('admin.users.detail.tabs.tickets')}
-          </button>
-        ))}
+        {(['info', 'subscription', 'balance', 'sync', 'tickets'] as const)
+          .filter((tab) => tab !== 'sync' || hasPermission('users:sync'))
+          .map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`shrink-0 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
+                activeTab === tab
+                  ? 'bg-accent-500/15 text-accent-400 ring-1 ring-accent-500/30'
+                  : 'bg-dark-800/50 text-dark-400 active:bg-dark-700'
+              }`}
+            >
+              {tab === 'info' && t('admin.users.detail.tabs.info')}
+              {tab === 'subscription' && t('admin.users.detail.tabs.subscription')}
+              {tab === 'balance' && t('admin.users.detail.tabs.balance')}
+              {tab === 'sync' && t('admin.users.detail.tabs.sync')}
+              {tab === 'tickets' && t('admin.users.detail.tabs.tickets')}
+            </button>
+          ))}
       </div>
 
       {/* Content */}
@@ -930,14 +935,16 @@ export default function AdminUserDetail() {
             <div className="rounded-xl bg-dark-800/50 p-3">
               <div className="mb-1 flex items-center justify-between">
                 <span className="text-xs text-dark-500">{t('admin.users.detail.promoGroup')}</span>
-                <button
-                  onClick={() => setEditingPromoGroup(!editingPromoGroup)}
-                  className="text-xs text-accent-400 transition-colors hover:text-accent-300"
-                >
-                  {editingPromoGroup
-                    ? t('common.cancel')
-                    : t('admin.users.detail.changePromoGroup')}
-                </button>
+                {hasPermission('promo_groups:read') && (
+                  <button
+                    onClick={() => setEditingPromoGroup(!editingPromoGroup)}
+                    className="text-xs text-accent-400 transition-colors hover:text-accent-300"
+                  >
+                    {editingPromoGroup
+                      ? t('common.cancel')
+                      : t('admin.users.detail.changePromoGroup')}
+                  </button>
+                )}
               </div>
               {editingPromoGroup ? (
                 <div className="mt-2 space-y-2">
