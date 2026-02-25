@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { brandingApi } from '@/api/branding';
 import type { AnimationConfig, BackgroundType } from '@/components/ui/backgrounds/types';
 import { DEFAULT_ANIMATION_CONFIG } from '@/components/ui/backgrounds/types';
-import { backgroundComponents } from '@/components/ui/backgrounds/registry';
+import { backgroundComponents, prefetchBackground } from '@/components/ui/backgrounds/registry';
 
 const ANIMATION_CACHE_KEY = 'cabinet_animation_config';
 
@@ -14,6 +14,14 @@ function getCachedConfig(): AnimationConfig | null {
   } catch {
     return null;
   }
+}
+
+// Prefetch the background JS chunk immediately based on localStorage cache.
+// This starts the download before React even renders, so by the time
+// Suspense needs the component, the chunk is already loaded.
+const cachedConfig = getCachedConfig();
+if (cachedConfig?.enabled && cachedConfig.type && cachedConfig.type !== 'none') {
+  prefetchBackground(cachedConfig.type);
 }
 
 function setCachedConfig(config: AnimationConfig) {

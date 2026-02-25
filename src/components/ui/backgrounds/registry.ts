@@ -1,6 +1,32 @@
 import { lazy, type ComponentType } from 'react';
 import type { BackgroundType, BackgroundDefinition } from './types';
 
+// Raw import functions for prefetching (doesn't create React components)
+const backgroundImports: Record<Exclude<BackgroundType, 'none'>, () => Promise<unknown>> = {
+  aurora: () => import('./aurora-background'),
+  sparkles: () => import('./sparkles'),
+  vortex: () => import('./vortex'),
+  'shooting-stars': () => import('./shooting-stars'),
+  'background-beams': () => import('./background-beams'),
+  'background-beams-collision': () => import('./background-beams-collision'),
+  'gradient-animation': () => import('./background-gradient-animation'),
+  wavy: () => import('./wavy-background'),
+  'background-lines': () => import('./background-lines'),
+  boxes: () => import('./background-boxes'),
+  meteors: () => import('./meteors'),
+  grid: () => import('./grid-background'),
+  dots: () => import('./grid-background'),
+  spotlight: () => import('./spotlight-bg'),
+  ripple: () => import('./background-ripple'),
+};
+
+/** Prefetch the JS chunk for a background type (call early to avoid lazy-load delay) */
+export function prefetchBackground(type: BackgroundType): void {
+  if (type !== 'none' && backgroundImports[type]) {
+    backgroundImports[type]();
+  }
+}
+
 // Lazy-loaded components — only the selected type is fetched
 export const backgroundComponents: Record<
   Exclude<BackgroundType, 'none'>,
