@@ -243,8 +243,9 @@ export interface DashboardStats {
 
 export interface TopReferrerItem {
   user_id: number;
-  telegram_id: number;
+  telegram_id: number | null;
   username?: string;
+  email?: string | null;
   display_name: string;
   invited_count: number;
   invited_today: number;
