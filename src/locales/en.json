@@ -1152,6 +1152,7 @@
         "avgDeposit": "Avg Deposit",
         "byMethod": "By Payment Method",
         "dailyChart": "Daily Deposits",
+        "dailyByMethod": "Daily Deposits by Payment Method",
         "revenue": "Revenue"
       },
       "loadError": "Failed to load statistics"

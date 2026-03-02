@@ -975,6 +975,7 @@
         "avgDeposit": "平均充值",
         "byMethod": "按支付方式",
         "dailyChart": "每日充值",
+        "dailyByMethod": "每日按支付方式充值",
         "revenue": "收入"
       },
       "loadError": "加载统计失败"

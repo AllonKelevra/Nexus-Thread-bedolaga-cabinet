@@ -19,6 +19,7 @@ interface MultiSeriesAreaChartProps {
   title: string;
   chartId: string;
   valueLabel?: string;
+  valueFormatter?: (value: number) => string;
   height?: number;
 }
 
@@ -27,6 +28,7 @@ export function MultiSeriesAreaChart({
   title,
   chartId,
   valueLabel,
+  valueFormatter,
   height = SALES_STATS.CHART.HEIGHT,
 }: MultiSeriesAreaChartProps) {
   const { t, i18n } = useTranslation();
@@ -129,7 +131,7 @@ export function MultiSeriesAreaChart({
             }}
             labelStyle={{ color: colors.label }}
             formatter={(value: number | undefined, name: string | undefined) => [
-              value ?? 0,
+              valueFormatter ? valueFormatter(value ?? 0) : (value ?? 0),
               name || valueLabel || '',
             ]}
           />

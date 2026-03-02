@@ -149,12 +149,19 @@ export interface DailyDepositItem {
   amount_kopeks: number;
 }
 
+export interface DailyDepositByMethodItem {
+  date: string;
+  method: string;
+  amount_kopeks: number;
+}
+
 export interface DepositsStats {
   total_deposits: number;
   total_amount_kopeks: number;
   avg_deposit_kopeks: number;
   by_method: DepositByMethodItem[];
   daily: DailyDepositItem[];
+  daily_by_method: DailyDepositByMethodItem[];
 }
 
 // ============ API ============

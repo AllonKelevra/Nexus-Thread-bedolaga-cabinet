@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
@@ -7,6 +8,7 @@ import { SALES_STATS } from '../../constants/salesStats';
 import { useCurrency } from '../../hooks/useCurrency';
 import { StatCard } from '../stats';
 
+import { MultiSeriesAreaChart } from './MultiSeriesAreaChart';
 import { SimpleAreaChart } from './SimpleAreaChart';
 import { SimpleBarChart } from './SimpleBarChart';
 
@@ -39,6 +41,36 @@ export function DepositsTab({ params }: DepositsTabProps) {
     staleTime: SALES_STATS.STALE_TIME,
   });
 
+  const formatValue = useCallback((v: number) => formatWithCurrency(v), [formatWithCurrency]);
+
+  const methodBarData = useMemo(
+    () =>
+      data?.by_method.map((item) => ({
+        name: METHOD_LABELS[item.method] || item.method,
+        value: item.amount_kopeks / SALES_STATS.KOPEKS_DIVISOR,
+      })) ?? [],
+    [data?.by_method],
+  );
+
+  const dailyData = useMemo(
+    () =>
+      data?.daily.map((item) => ({
+        date: item.date,
+        value: item.amount_kopeks / SALES_STATS.KOPEKS_DIVISOR,
+      })) ?? [],
+    [data?.daily],
+  );
+
+  const dailyByMethodData = useMemo(
+    () =>
+      data?.daily_by_method.map((i) => ({
+        date: i.date,
+        key: METHOD_LABELS[i.method] || i.method,
+        value: i.amount_kopeks / SALES_STATS.KOPEKS_DIVISOR,
+      })) ?? [],
+    [data?.daily_by_method],
+  );
+
   if (isLoading) {
     return (
       <div className="animate-pulse space-y-4">
@@ -52,16 +84,6 @@ export function DepositsTab({ params }: DepositsTabProps) {
   if (isError || !data) {
     return <div className="py-8 text-center text-red-400">{t('admin.salesStats.loadError')}</div>;
   }
-
-  const methodBarData = data.by_method.map((item) => ({
-    name: METHOD_LABELS[item.method] || item.method,
-    value: item.amount_kopeks / SALES_STATS.KOPEKS_DIVISOR,
-  }));
-
-  const dailyData = data.daily.map((item) => ({
-    date: item.date,
-    value: item.amount_kopeks / SALES_STATS.KOPEKS_DIVISOR,
-  }));
 
   return (
     <div className="space-y-4">
@@ -84,7 +106,7 @@ export function DepositsTab({ params }: DepositsTabProps) {
       <SimpleBarChart
         data={methodBarData}
         title={t('admin.salesStats.deposits.byMethod')}
-        valueFormatter={(v) => formatWithCurrency(v)}
+        valueFormatter={formatValue}
       />
 
       <SimpleAreaChart
@@ -92,6 +114,14 @@ export function DepositsTab({ params }: DepositsTabProps) {
         title={t('admin.salesStats.deposits.dailyChart')}
         chartId="deposits-daily"
         valueLabel={t('admin.salesStats.deposits.revenue')}
+      />
+
+      <MultiSeriesAreaChart
+        data={dailyByMethodData}
+        title={t('admin.salesStats.deposits.dailyByMethod')}
+        chartId="deposits-daily-by-method"
+        valueLabel={t('admin.salesStats.deposits.revenue')}
+        valueFormatter={formatValue}
       />
     </div>
   );
