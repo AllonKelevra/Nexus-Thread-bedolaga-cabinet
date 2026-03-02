@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { referralApi } from '../api/referral';
+import { copyToClipboard } from '../utils/clipboard';
 import { brandingApi } from '../api/branding';
 import { partnerApi } from '../api/partners';
 import { withdrawalApi } from '../api/withdrawals';
@@ -89,11 +90,18 @@ function getWithdrawalStatusBadge(status: string): string {
 }
 
 export default function Referral() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { formatAmount, currencySymbol, formatPositive, formatWithCurrency } = useCurrency();
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    };
+  }, []);
 
   const { data: info, isLoading } = useQuery({
     queryKey: ['referral-info'],
@@ -156,11 +164,15 @@ export default function Referral() {
     },
   });
 
-  const copyLink = () => {
-    if (referralLink) {
-      navigator.clipboard.writeText(referralLink);
+  const copyLink = async () => {
+    if (!referralLink) return;
+    try {
+      await copyToClipboard(referralLink);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // clipboard write failed silently
     }
   };
 
@@ -334,10 +346,10 @@ export default function Referral() {
               >
                 <div>
                   <div className="font-medium text-dark-100">
-                    {ref.first_name || ref.username || `User #${ref.id}`}
+                    {ref.first_name || ref.username || t('referral.anonymousUser', { id: ref.id })}
                   </div>
                   <div className="mt-0.5 text-xs text-dark-500">
-                    {new Date(ref.created_at).toLocaleDateString()}
+                    {new Date(ref.created_at).toLocaleDateString(i18n.language)}
                   </div>
                 </div>
                 {ref.has_paid ? (
@@ -384,11 +396,13 @@ export default function Referral() {
               >
                 <div>
                   <div className="text-dark-100">
-                    {earning.referral_first_name || earning.referral_username || 'Referral'}
+                    {earning.referral_first_name ||
+                      earning.referral_username ||
+                      t('referral.anonymousReferral')}
                   </div>
                   <div className="mt-0.5 text-xs text-dark-500">
                     {t(`referral.reasons.${earning.reason}`, earning.reason)} •{' '}
-                    {new Date(earning.created_at).toLocaleDateString()}
+                    {new Date(earning.created_at).toLocaleDateString(i18n.language)}
                   </div>
                 </div>
                 <div className="font-semibold text-success-400">
@@ -442,9 +456,9 @@ export default function Referral() {
               {partnerStatus?.latest_application?.created_at && (
                 <p className="mt-2 text-xs text-dark-500">
                   {t('referral.partner.submittedAt', {
-                    date: new Date(
-                      partnerStatus.latest_application.created_at,
-                    ).toLocaleDateString(),
+                    date: new Date(partnerStatus.latest_application.created_at).toLocaleDateString(
+                      i18n.language,
+                    ),
                   })}
                 </p>
               )}
@@ -641,7 +655,7 @@ export default function Referral() {
                         </span>
                       </div>
                       <div className="mt-0.5 text-xs text-dark-500">
-                        {new Date(item.created_at).toLocaleDateString()}
+                        {new Date(item.created_at).toLocaleDateString(i18n.language)}
                         {item.payment_details && (
                           <span className="ml-1">
                             &bull;{' '}

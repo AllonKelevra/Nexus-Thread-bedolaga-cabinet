@@ -702,6 +702,8 @@
     },
     "yourReferrals": "Your Referrals",
     "noReferrals": "No referrals yet. Share your link to invite friends!",
+    "anonymousUser": "User #{{id}}",
+    "anonymousReferral": "Referral",
     "user": "User",
     "joined": "Joined",
     "hasPaid": "Has Paid",
@@ -1040,7 +1042,8 @@
       "roles": "Roles",
       "roleAssign": "Role Assignment",
       "policies": "Access Policies",
-      "auditLog": "Audit Log"
+      "auditLog": "Audit Log",
+      "salesStats": "Sales Statistics"
     },
     "panel": {
       "title": "Admin Panel",
@@ -1072,7 +1075,78 @@
       "rolesDesc": "Manage admin roles and permissions",
       "roleAssignDesc": "Assign and revoke user roles",
       "policiesDesc": "Configure ABAC access policies",
-      "auditLogDesc": "Review system activity and access history"
+      "auditLogDesc": "Review system activity and access history",
+      "salesStatsDesc": "Sales analytics and trends"
+    },
+    "salesStats": {
+      "title": "Sales Statistics",
+      "subtitle": "Revenue, trials, subscriptions, and renewals",
+      "period": {
+        "week": "7 days",
+        "month": "30 days",
+        "quarter": "90 days",
+        "all": "All time",
+        "custom": "Custom"
+      },
+      "tabs": {
+        "trials": "Trials",
+        "sales": "Sales",
+        "renewals": "Renewals",
+        "addons": "Add-ons",
+        "deposits": "Deposits"
+      },
+      "summary": {
+        "revenue": "Revenue",
+        "activeSubs": "Active Subs",
+        "activeTrials": "Active Trials",
+        "newTrials": "New Trials",
+        "conversion": "Conversion",
+        "renewals": "Renewals",
+        "addonRevenue": "Add-on Revenue"
+      },
+      "trials": {
+        "total": "Total Trials",
+        "conversion": "Conversion Rate",
+        "avgDuration": "Avg Duration",
+        "byProvider": "By Registration Source",
+        "dailyChart": "Daily Registrations",
+        "registrations": "Registrations"
+      },
+      "sales": {
+        "totalSales": "Total Sales",
+        "avgOrder": "Avg Order",
+        "topTariff": "Top Tariff",
+        "byTariff": "Sales by Tariff",
+        "byPeriod": "By Subscription Period",
+        "dailyChart": "Daily Sales"
+      },
+      "renewals": {
+        "total": "Total Renewals",
+        "rate": "Renewal Rate",
+        "revenue": "Revenue",
+        "comparison": "Period Comparison",
+        "currentPeriod": "Current Period",
+        "previousPeriod": "Previous Period",
+        "dailyChart": "Daily Renewals",
+        "renewals": "Renewals"
+      },
+      "addons": {
+        "totalPurchases": "Total Purchases",
+        "totalGb": "Total Traffic",
+        "revenue": "Revenue",
+        "byPackage": "By Package Size",
+        "dailyChart": "Daily Purchases",
+        "purchases": "Purchases"
+      },
+      "deposits": {
+        "totalDeposits": "Total Deposits",
+        "totalAmount": "Total Amount",
+        "avgDeposit": "Avg Deposit",
+        "byMethod": "By Payment Method",
+        "dailyChart": "Daily Deposits",
+        "revenue": "Revenue"
+      },
+      "loadError": "Failed to load statistics"
     },
     "trafficUsage": {
       "title": "Traffic Usage",
@@ -2021,9 +2095,7 @@
         "totalSpending": "Subscription Spending",
         "periodComparison": "Period comparison",
         "vsLastWeek": "vs last week",
-        "topRegistrations": "Top registrations",
-        "noRegistrations": "No registrations yet",
-        "chartLoading": "Loading chart data..."
+        "topRegistrations": "Top registrations"
       },
       "users": {
         "title": "Campaign Users",

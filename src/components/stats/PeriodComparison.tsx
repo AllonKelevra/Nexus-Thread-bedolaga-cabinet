@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
 import type { PeriodComparison as PeriodComparisonType } from './types';
+import { TREND_STYLES } from './constants';
 import { PARTNER_STATS } from '../../constants/partner';
 import { useCurrency } from '../../hooks/useCurrency';
 
@@ -11,16 +12,6 @@ interface PeriodComparisonProps {
   earningsLabel?: string;
   comparisonLabel?: string;
 }
-
-const TREND_ARROW_UP = '\u2191';
-const TREND_ARROW_DOWN = '\u2193';
-const TREND_ARROW_STABLE = '\u2192';
-
-const TREND_STYLES = {
-  up: { arrow: TREND_ARROW_UP, className: 'text-success-400' },
-  down: { arrow: TREND_ARROW_DOWN, className: 'text-error-400' },
-  stable: { arrow: TREND_ARROW_STABLE, className: 'text-dark-400' },
-} as const;
 
 interface TrendBadgeProps {
   trend: 'up' | 'down' | 'stable';

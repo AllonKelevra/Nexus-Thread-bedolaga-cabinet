@@ -730,6 +730,8 @@
     },
     "yourReferrals": "Ваши рефералы",
     "noReferrals": "Пока нет рефералов. Поделитесь ссылкой, чтобы пригласить друзей!",
+    "anonymousUser": "Пользователь #{{id}}",
+    "anonymousReferral": "Реферал",
     "user": "Пользователь",
     "joined": "Присоединился",
     "hasPaid": "Оплатил",
@@ -1061,7 +1063,8 @@
       "roles": "Роли",
       "roleAssign": "Назначение ролей",
       "policies": "Политики доступа",
-      "auditLog": "Журнал аудита"
+      "auditLog": "Журнал аудита",
+      "salesStats": "Статистика продаж"
     },
     "panel": {
       "title": "Панель администратора",
@@ -1093,7 +1096,78 @@
       "rolesDesc": "Управление ролями и правами администраторов",
       "roleAssignDesc": "Назначение и отзыв ролей пользователей",
       "policiesDesc": "Настройка политик контроля доступа ABAC",
-      "auditLogDesc": "Просмотр активности системы и истории доступа"
+      "auditLogDesc": "Просмотр активности системы и истории доступа",
+      "salesStatsDesc": "Аналитика продаж и тренды"
+    },
+    "salesStats": {
+      "title": "Статистика продаж",
+      "subtitle": "Доход, триалы, подписки и продления",
+      "period": {
+        "week": "7 дней",
+        "month": "30 дней",
+        "quarter": "90 дней",
+        "all": "Всё время",
+        "custom": "Свой период"
+      },
+      "tabs": {
+        "trials": "Триалы",
+        "sales": "Продажи",
+        "renewals": "Продления",
+        "addons": "Доп. услуги",
+        "deposits": "Пополнения"
+      },
+      "summary": {
+        "revenue": "Доход",
+        "activeSubs": "Активные подписки",
+        "activeTrials": "Активные триалы",
+        "newTrials": "Новые триалы",
+        "conversion": "Конверсия",
+        "renewals": "Продления",
+        "addonRevenue": "Доп. услуги"
+      },
+      "trials": {
+        "total": "Всего триалов",
+        "conversion": "Конверсия",
+        "avgDuration": "Средняя длит.",
+        "byProvider": "По источнику регистрации",
+        "dailyChart": "Регистрации по дням",
+        "registrations": "Регистрации"
+      },
+      "sales": {
+        "totalSales": "Всего продаж",
+        "avgOrder": "Средний чек",
+        "topTariff": "Топ тариф",
+        "byTariff": "Продажи по тарифам",
+        "byPeriod": "По периоду подписки",
+        "dailyChart": "Продажи по дням"
+      },
+      "renewals": {
+        "total": "Всего продлений",
+        "rate": "Доля продлений",
+        "revenue": "Доход",
+        "comparison": "Сравнение периодов",
+        "currentPeriod": "Текущий период",
+        "previousPeriod": "Предыдущий период",
+        "dailyChart": "Продления по дням",
+        "renewals": "Продления"
+      },
+      "addons": {
+        "totalPurchases": "Всего покупок",
+        "totalGb": "Всего трафика",
+        "revenue": "Доход",
+        "byPackage": "По размеру пакета",
+        "dailyChart": "Покупки по дням",
+        "purchases": "Покупки"
+      },
+      "deposits": {
+        "totalDeposits": "Всего пополнений",
+        "totalAmount": "Общая сумма",
+        "avgDeposit": "Средний чек",
+        "byMethod": "По способу оплаты",
+        "dailyChart": "Пополнения по дням",
+        "revenue": "Доход"
+      },
+      "loadError": "Не удалось загрузить статистику"
     },
     "trafficUsage": {
       "title": "Расход трафика",
@@ -2542,9 +2616,7 @@
         "totalSpending": "Расход на подписки",
         "periodComparison": "Сравнение периодов",
         "vsLastWeek": "vs прошлая неделя",
-        "topRegistrations": "Топ регистрации",
-        "noRegistrations": "Пока нет регистраций",
-        "chartLoading": "Загрузка данных..."
+        "topRegistrations": "Топ регистрации"
       },
       "users": {
         "title": "Пользователи кампании",

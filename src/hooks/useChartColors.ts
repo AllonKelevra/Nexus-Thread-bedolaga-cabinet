@@ -1,3 +1,5 @@
+import { useEffect, useMemo, useState } from 'react';
+
 import { rgbToHex } from '../utils/colorConversion';
 
 /** CSS variable names for chart theme colors */
@@ -48,16 +50,35 @@ export interface ChartColors {
  * Returns hex values derived from the current theme's CSS variables,
  * adapting to light/dark mode and admin-customized accent colors.
  *
- * No memoization — getComputedStyle is cheap and themes can change at any time.
+ * Colors are memoized and only recomputed when the document element's
+ * class attribute changes (i.e. theme switch).
  */
 export function useChartColors(): ChartColors {
-  return {
-    earnings: cssVarToHex(CSS_VARS.earnings, FALLBACK.earnings),
-    referrals: cssVarToHex(CSS_VARS.referrals, FALLBACK.referrals),
-    grid: cssVarToHex(CSS_VARS.grid, FALLBACK.grid),
-    tooltipBg: cssVarToHex(CSS_VARS.tooltipBg, FALLBACK.tooltipBg),
-    tooltipBorder: cssVarToHex(CSS_VARS.tooltipBorder, FALLBACK.tooltipBorder),
-    tick: cssVarToHex(CSS_VARS.tick, FALLBACK.tick),
-    label: cssVarToHex(CSS_VARS.label, FALLBACK.label),
-  };
+  const [themeKey, setThemeKey] = useState(() =>
+    typeof document !== 'undefined' ? document.documentElement.className : '',
+  );
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setThemeKey(document.documentElement.className);
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+
+  const colors = useMemo<ChartColors>(
+    () => ({
+      earnings: cssVarToHex(CSS_VARS.earnings, FALLBACK.earnings),
+      referrals: cssVarToHex(CSS_VARS.referrals, FALLBACK.referrals),
+      grid: cssVarToHex(CSS_VARS.grid, FALLBACK.grid),
+      tooltipBg: cssVarToHex(CSS_VARS.tooltipBg, FALLBACK.tooltipBg),
+      tooltipBorder: cssVarToHex(CSS_VARS.tooltipBorder, FALLBACK.tooltipBorder),
+      tick: cssVarToHex(CSS_VARS.tick, FALLBACK.tick),
+      label: cssVarToHex(CSS_VARS.label, FALLBACK.label),
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [themeKey],
+  );
+
+  return colors;
 }

@@ -21,7 +21,9 @@ export function StatCard({
         {icon}
         <span>{label}</span>
       </div>
-      <div className={`mt-1 text-base font-semibold sm:text-lg ${valueClassName}`}>{value}</div>
+      <div className={`mt-1 truncate text-base font-semibold sm:text-lg ${valueClassName}`}>
+        {value}
+      </div>
     </div>
   );
 }

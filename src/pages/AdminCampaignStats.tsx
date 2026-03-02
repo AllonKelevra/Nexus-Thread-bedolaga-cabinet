@@ -82,6 +82,8 @@ const bonusTypeConfig: Record<
 export default function AdminCampaignStats() {
   const { t, i18n } = useTranslation();
   const { id } = useParams<{ id: string }>();
+  const numericId = id ? Number(id) : null;
+  const isValidId = numericId !== null && !isNaN(numericId);
   const navigate = useNavigate();
   const haptic = useHaptic();
   const { formatWithCurrency } = useCurrency();
@@ -105,22 +107,23 @@ export default function AdminCampaignStats() {
     error,
   } = useQuery({
     queryKey: ['campaign-stats', id],
-    queryFn: () => campaignsApi.getCampaignStats(Number(id)),
-    enabled: !!id,
+    queryFn: () => campaignsApi.getCampaignStats(numericId!),
+    enabled: isValidId,
+    staleTime: PARTNER_STATS.STATS_STALE_TIME,
   });
 
   // Fetch registrations when users section is open
   const { data: registrationsData, isLoading: usersLoading } = useQuery({
     queryKey: ['campaign-registrations', id],
-    queryFn: () => campaignsApi.getCampaignRegistrations(Number(id), 1, 50),
-    enabled: !!id && showUsers,
+    queryFn: () => campaignsApi.getCampaignRegistrations(numericId!, 1, 50),
+    enabled: isValidId && showUsers,
   });
 
   // Fetch chart data
   const { data: chartData, isLoading: chartLoading } = useQuery<AdminCampaignChartData>({
     queryKey: ['campaign-chart-data', id],
-    queryFn: () => campaignsApi.getChartData(Number(id)),
-    enabled: !!id,
+    queryFn: () => campaignsApi.getChartData(numericId!),
+    enabled: isValidId,
     staleTime: PARTNER_STATS.STATS_STALE_TIME,
   });
 
@@ -517,7 +520,9 @@ export default function AdminCampaignStats() {
                     >
                       <div>
                         <div className="font-medium text-dark-100">
-                          {reg.first_name || reg.username || `User #${reg.user_id}`}
+                          {reg.first_name ||
+                            reg.username ||
+                            `${t('admin.campaigns.stats.users')} #${reg.user_id}`}
                         </div>
                         <div className="text-xs text-dark-500">{reg.telegram_id}</div>
                       </div>

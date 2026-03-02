@@ -56,12 +56,15 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
       try {
         await copyToClipboard(url);
         haptic.notification('success');
+        setCopiedLink(key);
+        clearTimeout(copyTimerRef.current);
+        copyTimerRef.current = setTimeout(
+          () => setCopiedLink(null),
+          PARTNER_STATS.COPY_FEEDBACK_MS,
+        );
       } catch {
         haptic.notification('error');
       }
-      setCopiedLink(key);
-      clearTimeout(copyTimerRef.current);
-      copyTimerRef.current = setTimeout(() => setCopiedLink(null), PARTNER_STATS.COPY_FEEDBACK_MS);
     },
     [haptic],
   );

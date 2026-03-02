@@ -536,6 +536,8 @@
     },
     "yourReferrals": "معرفی‌های شما",
     "noReferrals": "هنوز معرفی ندارید. لینک را به اشتراک بگذارید!",
+    "anonymousUser": "کاربر #{{id}}",
+    "anonymousReferral": "معرفی‌شده",
     "user": "کاربر",
     "joined": "تاریخ عضویت",
     "hasPaid": "پرداخت کرده",
@@ -863,7 +865,8 @@
       "roles": "نقش‌ها",
       "roleAssign": "تخصیص نقش",
       "policies": "سیاست‌های دسترسی",
-      "auditLog": "گزارش بازرسی"
+      "auditLog": "گزارش بازرسی",
+      "salesStats": "آمار فروش"
     },
     "panel": {
       "title": "پنل مدیریت",
@@ -895,7 +898,78 @@
       "rolesDesc": "مدیریت نقش‌ها و مجوزهای مدیران",
       "roleAssignDesc": "تخصیص و لغو نقش‌های کاربران",
       "policiesDesc": "تنظیم سیاست‌های کنترل دسترسی ABAC",
-      "auditLogDesc": "بررسی فعالیت سیستم و تاریخچه دسترسی"
+      "auditLogDesc": "بررسی فعالیت سیستم و تاریخچه دسترسی",
+      "salesStatsDesc": "تحلیل فروش و روندها"
+    },
+    "salesStats": {
+      "title": "آمار فروش",
+      "subtitle": "درآمد، آزمایشی، اشتراک و تمدید",
+      "period": {
+        "week": "۷ روز",
+        "month": "۳۰ روز",
+        "quarter": "۹۰ روز",
+        "all": "همه",
+        "custom": "سفارشی"
+      },
+      "tabs": {
+        "trials": "آزمایشی",
+        "sales": "فروش",
+        "renewals": "تمدید",
+        "addons": "خدمات اضافی",
+        "deposits": "شارژ"
+      },
+      "summary": {
+        "revenue": "درآمد",
+        "activeSubs": "اشتراک فعال",
+        "activeTrials": "آزمایشی فعال",
+        "newTrials": "آزمایشی جدید",
+        "conversion": "تبدیل",
+        "renewals": "تمدید",
+        "addonRevenue": "درآمد خدمات اضافی"
+      },
+      "trials": {
+        "total": "کل آزمایشی",
+        "conversion": "نرخ تبدیل",
+        "avgDuration": "میانگین مدت",
+        "byProvider": "بر اساس منبع",
+        "dailyChart": "ثبت‌نام روزانه",
+        "registrations": "ثبت‌نام"
+      },
+      "sales": {
+        "totalSales": "کل فروش",
+        "avgOrder": "میانگین سفارش",
+        "topTariff": "تعرفه برتر",
+        "byTariff": "بر اساس تعرفه",
+        "byPeriod": "بر اساس دوره",
+        "dailyChart": "فروش روزانه"
+      },
+      "renewals": {
+        "total": "کل تمدیدها",
+        "rate": "نرخ تمدید",
+        "revenue": "درآمد",
+        "comparison": "مقایسه دوره",
+        "currentPeriod": "دوره فعلی",
+        "previousPeriod": "دوره قبلی",
+        "dailyChart": "تمدید روزانه",
+        "renewals": "تمدید"
+      },
+      "addons": {
+        "totalPurchases": "کل خرید",
+        "totalGb": "کل ترافیک",
+        "revenue": "درآمد",
+        "byPackage": "بر اساس بسته",
+        "dailyChart": "خرید روزانه",
+        "purchases": "خرید"
+      },
+      "deposits": {
+        "totalDeposits": "کل شارژ",
+        "totalAmount": "مبلغ کل",
+        "avgDeposit": "میانگین شارژ",
+        "byMethod": "بر اساس روش پرداخت",
+        "dailyChart": "شارژ روزانه",
+        "revenue": "درآمد"
+      },
+      "loadError": "بارگذاری آمار ناموفق بود"
     },
     "trafficUsage": {
       "title": "مصرف ترافیک",
@@ -1700,9 +1774,7 @@
         "totalSpending": "هزینه اشتراک",
         "periodComparison": "مقایسه دوره‌ها",
         "vsLastWeek": "نسبت به هفته قبل",
-        "topRegistrations": "بالاترین ثبت‌نام‌ها",
-        "noRegistrations": "هنوز ثبت‌نامی وجود ندارد",
-        "chartLoading": "در حال بارگذاری..."
+        "topRegistrations": "بالاترین ثبت‌نام‌ها"
       },
       "users": {
         "title": "کاربران کمپین",
@@ -1752,7 +1824,8 @@
         "approved": "تأیید شده",
         "rejected": "رد شده",
         "completed": "تکمیل شده",
-        "cancelled": "لغو شده"
+        "cancelled": "لغو شده",
+        "unknown": "ناشناخته"
       },
       "detail": {
         "title": "جزئیات برداشت",

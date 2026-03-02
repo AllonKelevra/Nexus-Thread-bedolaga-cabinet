@@ -536,6 +536,8 @@
     },
     "yourReferrals": "您的推荐",
     "noReferrals": "暂无推荐。分享链接邀请好友！",
+    "anonymousUser": "用户 #{{id}}",
+    "anonymousReferral": "推荐人",
     "user": "用户",
     "joined": "加入时间",
     "hasPaid": "已付款",
@@ -863,7 +865,8 @@
       "roles": "角色",
       "roleAssign": "角色分配",
       "policies": "访问策略",
-      "auditLog": "审计日志"
+      "auditLog": "审计日志",
+      "salesStats": "销售统计"
     },
     "panel": {
       "title": "管理面板",
@@ -895,7 +898,78 @@
       "rolesDesc": "管理管理员角色和权限",
       "roleAssignDesc": "分配和撤销用户角色",
       "policiesDesc": "配置ABAC访问控制策略",
-      "auditLogDesc": "查看系统活动和访问历史"
+      "auditLogDesc": "查看系统活动和访问历史",
+      "salesStatsDesc": "销售分析与趋势"
+    },
+    "salesStats": {
+      "title": "销售统计",
+      "subtitle": "收入、试用、订阅和续订",
+      "period": {
+        "week": "7天",
+        "month": "30天",
+        "quarter": "90天",
+        "all": "全部",
+        "custom": "自定义"
+      },
+      "tabs": {
+        "trials": "试用",
+        "sales": "销售",
+        "renewals": "续订",
+        "addons": "附加服务",
+        "deposits": "充值"
+      },
+      "summary": {
+        "revenue": "收入",
+        "activeSubs": "活跃订阅",
+        "activeTrials": "活跃试用",
+        "newTrials": "新试用",
+        "conversion": "转化率",
+        "renewals": "续订",
+        "addonRevenue": "附加服务收入"
+      },
+      "trials": {
+        "total": "试用总数",
+        "conversion": "转化率",
+        "avgDuration": "平均时长",
+        "byProvider": "按注册来源",
+        "dailyChart": "每日注册",
+        "registrations": "注册"
+      },
+      "sales": {
+        "totalSales": "总销售",
+        "avgOrder": "平均订单",
+        "topTariff": "热门套餐",
+        "byTariff": "按套餐",
+        "byPeriod": "按订阅周期",
+        "dailyChart": "每日销售"
+      },
+      "renewals": {
+        "total": "续订总数",
+        "rate": "续订率",
+        "revenue": "收入",
+        "comparison": "期间对比",
+        "currentPeriod": "当前期间",
+        "previousPeriod": "上一期间",
+        "dailyChart": "每日续订",
+        "renewals": "续订"
+      },
+      "addons": {
+        "totalPurchases": "购买总数",
+        "totalGb": "总流量",
+        "revenue": "收入",
+        "byPackage": "按套餐大小",
+        "dailyChart": "每日购买",
+        "purchases": "购买"
+      },
+      "deposits": {
+        "totalDeposits": "充值总数",
+        "totalAmount": "总金额",
+        "avgDeposit": "平均充值",
+        "byMethod": "按支付方式",
+        "dailyChart": "每日充值",
+        "revenue": "收入"
+      },
+      "loadError": "加载统计失败"
     },
     "trafficUsage": {
       "title": "流量使用",
@@ -1699,9 +1773,7 @@
         "totalSpending": "订阅支出",
         "periodComparison": "期间比较",
         "vsLastWeek": "与上周对比",
-        "topRegistrations": "热门注册",
-        "noRegistrations": "暂无注册",
-        "chartLoading": "加载图表数据..."
+        "topRegistrations": "热门注册"
       },
       "users": {
         "title": "活动用户",
@@ -1751,7 +1823,8 @@
         "approved": "已批准",
         "rejected": "已拒绝",
         "completed": "已完成",
-        "cancelled": "已取消"
+        "cancelled": "已取消",
+        "unknown": "未知"
       },
       "detail": {
         "title": "提现详情",
