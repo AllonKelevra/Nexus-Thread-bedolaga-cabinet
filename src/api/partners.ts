@@ -27,6 +27,10 @@ export interface PartnerCampaignInfo {
   subscription_traffic_gb: number | null;
   deep_link: string | null;
   web_link: string | null;
+  // Per-campaign statistics
+  registrations_count: number;
+  referrals_count: number;
+  earnings_kopeks: number;
 }
 
 export interface PartnerStatusResponse {
@@ -43,6 +47,57 @@ export interface PartnerApplicationRequest {
   description?: string;
   expected_monthly_referrals?: number;
   desired_commission_percent?: number;
+}
+
+// ==================== Campaign detailed stats types ====================
+
+export interface DailyStatItem {
+  date: string;
+  referrals_count: number;
+  earnings_kopeks: number;
+}
+
+export interface PeriodStats {
+  days: number;
+  referrals_count: number;
+  earnings_kopeks: number;
+}
+
+export interface PeriodChange {
+  absolute: number;
+  percent: number;
+  trend: 'up' | 'down' | 'stable';
+}
+
+export interface PeriodComparison {
+  current: PeriodStats;
+  previous: PeriodStats;
+  referrals_change: PeriodChange;
+  earnings_change: PeriodChange;
+}
+
+export interface CampaignReferralItem {
+  id: number;
+  full_name: string;
+  created_at: string;
+  has_paid: boolean;
+  is_active: boolean;
+  total_earnings_kopeks: number;
+}
+
+export interface PartnerCampaignDetailedStats {
+  campaign_id: number;
+  campaign_name: string;
+  registrations_count: number;
+  referrals_count: number;
+  earnings_kopeks: number;
+  conversion_rate: number;
+  earnings_today: number;
+  earnings_week: number;
+  earnings_month: number;
+  daily_stats: DailyStatItem[];
+  period_comparison: PeriodComparison;
+  top_referrals: CampaignReferralItem[];
 }
 
 // ==================== Admin-facing types ====================
@@ -155,6 +210,13 @@ export const partnerApi = {
     const response = await apiClient.post<PartnerApplicationInfo>(
       '/cabinet/referral/partner/apply',
       data,
+    );
+    return response.data;
+  },
+
+  getCampaignStats: async (campaignId: number): Promise<PartnerCampaignDetailedStats> => {
+    const response = await apiClient.get<PartnerCampaignDetailedStats>(
+      `/cabinet/referral/partner/campaigns/${campaignId}/stats`,
     );
     return response.data;
   },

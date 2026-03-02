@@ -6,6 +6,7 @@ import { referralApi } from '../api/referral';
 import { brandingApi } from '../api/branding';
 import { partnerApi } from '../api/partners';
 import { withdrawalApi } from '../api/withdrawals';
+import { CampaignCard } from '../components/partner/CampaignCard';
 import { useCurrency } from '../hooks/useCurrency';
 
 const LinkIcon = () => (
@@ -93,7 +94,6 @@ export default function Referral() {
   const { formatAmount, currencySymbol, formatPositive, formatWithCurrency } = useCurrency();
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
-  const [copiedLink, setCopiedLink] = useState<string | null>(null);
 
   const { data: info, isLoading } = useQuery({
     queryKey: ['referral-info'],
@@ -535,99 +535,9 @@ export default function Referral() {
               </h2>
             </div>
 
-            {partnerStatus.campaigns.map((campaign) => {
-              const copyLink = (url: string, key: string) => {
-                navigator.clipboard.writeText(url);
-                setCopiedLink(key);
-                setTimeout(() => setCopiedLink(null), 2000);
-              };
-
-              const botKey = `${campaign.id}-bot`;
-              const webKey = `${campaign.id}-web`;
-
-              return (
-                <div key={campaign.id} className="bento-card space-y-4">
-                  {/* Campaign header */}
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-base font-semibold text-dark-100">{campaign.name}</h3>
-                  </div>
-
-                  {/* Bonus info */}
-                  {campaign.bonus_type !== 'none' && (
-                    <div className="rounded-lg bg-success-500/10 p-3">
-                      <div className="mb-1 text-xs font-medium text-success-500">
-                        {t('referral.partner.campaignBonus.title')}
-                      </div>
-                      <div className="text-sm font-semibold text-success-400">
-                        {campaign.bonus_type === 'balance' &&
-                          t('referral.partner.campaignBonus.balanceDesc', {
-                            amount: formatWithCurrency(campaign.balance_bonus_kopeks / 100, 0),
-                          })}
-                        {campaign.bonus_type === 'subscription' &&
-                          t('referral.partner.campaignBonus.subscriptionDesc', {
-                            days: campaign.subscription_duration_days ?? 0,
-                            ...(campaign.subscription_traffic_gb
-                              ? { traffic: campaign.subscription_traffic_gb }
-                              : {}),
-                          })}
-                        {campaign.bonus_type === 'tariff' &&
-                          t('referral.partner.campaignBonus.tariffDesc')}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Bot link */}
-                  {campaign.deep_link && (
-                    <div>
-                      <div className="mb-1 text-xs font-medium text-dark-500">
-                        {t('referral.partner.campaignLinks.bot')}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          readOnly
-                          value={campaign.deep_link}
-                          className="input flex-1 text-xs"
-                        />
-                        <button
-                          onClick={() => copyLink(campaign.deep_link!, botKey)}
-                          className={`btn-primary shrink-0 px-3 py-2 ${
-                            copiedLink === botKey ? 'bg-success-500 hover:bg-success-500' : ''
-                          }`}
-                        >
-                          {copiedLink === botKey ? <CheckIcon /> : <CopyIcon />}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Web link */}
-                  {campaign.web_link && (
-                    <div>
-                      <div className="mb-1 text-xs font-medium text-dark-500">
-                        {t('referral.partner.campaignLinks.web')}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          readOnly
-                          value={campaign.web_link}
-                          className="input flex-1 text-xs"
-                        />
-                        <button
-                          onClick={() => copyLink(campaign.web_link!, webKey)}
-                          className={`btn-primary shrink-0 px-3 py-2 ${
-                            copiedLink === webKey ? 'bg-success-500 hover:bg-success-500' : ''
-                          }`}
-                        >
-                          {copiedLink === webKey ? <CheckIcon /> : <CopyIcon />}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+            {partnerStatus.campaigns.map((campaign) => (
+              <CampaignCard key={campaign.id} campaign={campaign} />
+            ))}
           </div>
         )}
 

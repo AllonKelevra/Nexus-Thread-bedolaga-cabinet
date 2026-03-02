@@ -584,6 +584,28 @@
         "tariff": "تعرفه جایزه",
         "tariffDesc": "طرح تعرفه رایگان"
       },
+      "stats": {
+        "registrations": "ثبت‌نام",
+        "referrals": "معرفی‌شده‌ها",
+        "earnings": "درآمد",
+        "conversionRate": "نرخ تبدیل",
+        "today": "امروز",
+        "week": "هفته",
+        "month": "ماه",
+        "showDetails": "جزئیات",
+        "hideDetails": "بستن",
+        "vsLastWeek": "مقایسه با هفته قبل",
+        "topReferrals": "برترین معرفی‌شده‌ها",
+        "noData": "داده‌ای نیست",
+        "dailyChart": "روند ۳۰ روزه",
+        "periodComparison": "مقایسه دوره‌ها",
+        "noReferrals": "هنوز معرفی‌شده‌ای نیست",
+        "paid": "پرداخت شده",
+        "pending": "در انتظار",
+        "active": "فعال",
+        "referralsCount": "تعداد معرفی",
+        "earningsAmount": "کسب شده"
+      },
       "fields": {
         "companyName": "نام شرکت",
         "companyNamePlaceholder": "نام شرکت یا برند شما",
@@ -1670,7 +1692,17 @@
         "users": "کاربران",
         "noUsers": "کاربر ثبت‌نام شده‌ای وجود ندارد",
         "paid": "پرداخت کرده",
-        "hasSub": "دارای اشتراک"
+        "hasSub": "دارای اشتراک",
+        "dailyChart": "روند ۳۰ روزه",
+        "chartRegistrations": "ثبت‌نام‌ها",
+        "chartRevenue": "درآمد",
+        "totalDeposits": "کل واریزی‌ها",
+        "totalSpending": "هزینه اشتراک",
+        "periodComparison": "مقایسه دوره‌ها",
+        "vsLastWeek": "نسبت به هفته قبل",
+        "topRegistrations": "بالاترین ثبت‌نام‌ها",
+        "noRegistrations": "هنوز ثبت‌نامی وجود ندارد",
+        "chartLoading": "در حال بارگذاری..."
       },
       "users": {
         "title": "کاربران کمپین",

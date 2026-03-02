@@ -750,6 +750,28 @@
         "tariff": "Bonus tariff",
         "tariffDesc": "Free tariff plan"
       },
+      "stats": {
+        "registrations": "Registrations",
+        "referrals": "Referrals",
+        "earnings": "Earnings",
+        "conversionRate": "Conversion",
+        "today": "Today",
+        "week": "Week",
+        "month": "Month",
+        "showDetails": "Details",
+        "hideDetails": "Collapse",
+        "vsLastWeek": "vs last week",
+        "topReferrals": "Top Referrals",
+        "noData": "No data",
+        "dailyChart": "30-day trends",
+        "periodComparison": "Period comparison",
+        "noReferrals": "No referrals yet",
+        "paid": "Paid",
+        "pending": "Pending",
+        "active": "Active",
+        "referralsCount": "Referrals",
+        "earningsAmount": "Earned"
+      },
       "fields": {
         "companyName": "Company Name",
         "companyNamePlaceholder": "Your company or brand name",
@@ -1991,7 +2013,17 @@
         "users": "Users",
         "noUsers": "No registered users",
         "paid": "Paid",
-        "hasSub": "Has sub"
+        "hasSub": "Has sub",
+        "dailyChart": "30-day trends",
+        "chartRegistrations": "Registrations",
+        "chartRevenue": "Revenue",
+        "totalDeposits": "Total Deposits",
+        "totalSpending": "Subscription Spending",
+        "periodComparison": "Period comparison",
+        "vsLastWeek": "vs last week",
+        "topRegistrations": "Top registrations",
+        "noRegistrations": "No registrations yet",
+        "chartLoading": "Loading chart data..."
       },
       "users": {
         "title": "Campaign Users",

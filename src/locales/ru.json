@@ -778,6 +778,28 @@
         "tariff": "Бонусный тариф",
         "tariffDesc": "Бесплатный тарифный план"
       },
+      "stats": {
+        "registrations": "Регистрации",
+        "referrals": "Рефералы",
+        "earnings": "Заработок",
+        "conversionRate": "Конверсия",
+        "today": "Сегодня",
+        "week": "Неделя",
+        "month": "Месяц",
+        "showDetails": "Подробнее",
+        "hideDetails": "Свернуть",
+        "vsLastWeek": "vs прошлая неделя",
+        "topReferrals": "Топ рефералы",
+        "noData": "Нет данных",
+        "dailyChart": "Динамика за 30 дней",
+        "periodComparison": "Сравнение периодов",
+        "noReferrals": "Пока нет рефералов",
+        "paid": "Оплатил",
+        "pending": "Ожидание",
+        "active": "Активен",
+        "referralsCount": "Рефералов",
+        "earningsAmount": "Заработано"
+      },
       "fields": {
         "companyName": "Название компании",
         "companyNamePlaceholder": "Название вашей компании или бренда",
@@ -2512,7 +2534,17 @@
         "users": "Пользователи",
         "noUsers": "Нет зарегистрированных пользователей",
         "paid": "Платил",
-        "hasSub": "Подписка"
+        "hasSub": "Подписка",
+        "dailyChart": "Динамика за 30 дней",
+        "chartRegistrations": "Регистрации",
+        "chartRevenue": "Доход",
+        "totalDeposits": "Всего пополнений",
+        "totalSpending": "Расход на подписки",
+        "periodComparison": "Сравнение периодов",
+        "vsLastWeek": "vs прошлая неделя",
+        "topRegistrations": "Топ регистрации",
+        "noRegistrations": "Пока нет регистраций",
+        "chartLoading": "Загрузка данных..."
       },
       "users": {
         "title": "Пользователи кампании",

@@ -584,6 +584,28 @@
         "tariff": "奖励套餐",
         "tariffDesc": "免费套餐方案"
       },
+      "stats": {
+        "registrations": "注册",
+        "referrals": "推荐",
+        "earnings": "收入",
+        "conversionRate": "转化率",
+        "today": "今天",
+        "week": "本周",
+        "month": "本月",
+        "showDetails": "详情",
+        "hideDetails": "收起",
+        "vsLastWeek": "对比上周",
+        "topReferrals": "热门推荐",
+        "noData": "暂无数据",
+        "dailyChart": "30天趋势",
+        "periodComparison": "周期对比",
+        "noReferrals": "暂无推荐",
+        "paid": "已付款",
+        "pending": "待处理",
+        "active": "活跃",
+        "referralsCount": "推荐数",
+        "earningsAmount": "收入"
+      },
       "fields": {
         "companyName": "公司名称",
         "companyNamePlaceholder": "您的公司或品牌名称",
@@ -1669,7 +1691,17 @@
         "users": "用户",
         "noUsers": "没有注册用户",
         "paid": "已付费",
-        "hasSub": "有订阅"
+        "hasSub": "有订阅",
+        "dailyChart": "30天趋势",
+        "chartRegistrations": "注册",
+        "chartRevenue": "收入",
+        "totalDeposits": "总充值",
+        "totalSpending": "订阅支出",
+        "periodComparison": "期间比较",
+        "vsLastWeek": "与上周对比",
+        "topRegistrations": "热门注册",
+        "noRegistrations": "暂无注册",
+        "chartLoading": "加载图表数据..."
       },
       "users": {
         "title": "活动用户",
