@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router';
 import { subscriptionApi } from '../api/subscription';
 import TrafficProgressBar from '../components/dashboard/TrafficProgressBar';
 import { HoverBorderGradient } from '../components/ui/hover-border-gradient';
-import { getTrafficZone } from '../utils/trafficZone';
+import { useTrafficZone } from '../hooks/useTrafficZone';
 import { formatTraffic } from '../utils/formatTraffic';
 import { getGlassColors } from '../utils/glassTheme';
 import { useTheme } from '../hooks/useTheme';
@@ -202,6 +202,10 @@ export default function Subscription() {
 
   // Extract subscription from response (null if no subscription)
   const subscription = subscriptionResponse?.subscription ?? null;
+
+  // Traffic zone (theme-aware) — called unconditionally at top level
+  const usedPercent = trafficData?.traffic_used_percent ?? subscription?.traffic_used_percent ?? 0;
+  const zone = useTrafficZone(usedPercent);
 
   // Purchase options (needed for balance_kopeks in device/traffic/server management)
   const { data: purchaseOptions } = useQuery({
@@ -432,12 +436,9 @@ export default function Subscription() {
       {/* Current Subscription */}
       {subscription ? (
         (() => {
-          const usedPercent =
-            trafficData?.traffic_used_percent ?? subscription.traffic_used_percent;
           const usedGb = trafficData?.traffic_used_gb ?? subscription.traffic_used_gb;
           const isUnlimited =
             (trafficData?.is_unlimited ?? false) || subscription.traffic_limit_gb === 0;
-          const zone = getTrafficZone(usedPercent);
           const connectedDevices = devicesData?.total ?? 0;
 
           return (
@@ -1089,7 +1090,8 @@ export default function Subscription() {
                       className="absolute inset-0 rounded-full transition-[width] duration-500"
                       style={{
                         width: `${progress}%`,
-                        background: 'linear-gradient(90deg, #00E5A0, #00C987)',
+                        background:
+                          'linear-gradient(90deg, rgb(var(--color-accent-500)), rgb(var(--color-accent-400)))',
                       }}
                     />
                   </div>
@@ -1244,14 +1246,14 @@ export default function Subscription() {
                       {/* Discount badge */}
                       {devicePriceData.discount_percent && devicePriceData.discount_percent > 0 && (
                         <div className="mb-2">
-                          <span className="inline-block rounded-full bg-green-500/20 px-2.5 py-0.5 text-sm font-medium text-green-400">
+                          <span className="inline-block rounded-full bg-success-500/20 px-2.5 py-0.5 text-sm font-medium text-success-400">
                             -{devicePriceData.discount_percent}%
                           </span>
                         </div>
                       )}
                       {/* Total price - show as free if 100% discount or 0 */}
                       {devicePriceData.total_price_kopeks === 0 ? (
-                        <div className="text-2xl font-bold text-green-400">
+                        <div className="text-2xl font-bold text-success-400">
                           {t('subscription.switchTariff.free')}
                         </div>
                       ) : (
@@ -1570,7 +1572,7 @@ export default function Subscription() {
                             {/* Discount badge */}
                             {pkg.discount_percent && pkg.discount_percent > 0 && (
                               <div className="mb-1">
-                                <span className="inline-block rounded-full bg-green-500/20 px-2 py-0.5 text-xs font-medium text-green-400">
+                                <span className="inline-block rounded-full bg-success-500/20 px-2 py-0.5 text-xs font-medium text-success-400">
                                   -{pkg.discount_percent}%
                                 </span>
                               </div>
@@ -1971,7 +1973,10 @@ export default function Subscription() {
             <div className="flex items-center justify-center py-8">
               <div
                 className="h-8 w-8 animate-spin rounded-full border-2 border-t-transparent"
-                style={{ borderColor: '#00E5A0', borderTopColor: 'transparent' }}
+                style={{
+                  borderColor: 'rgb(var(--color-accent-500))',
+                  borderTopColor: 'transparent',
+                }}
               />
             </div>
           ) : devicesData && devicesData.devices.length > 0 ? (
