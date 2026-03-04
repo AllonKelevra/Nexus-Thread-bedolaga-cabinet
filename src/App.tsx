@@ -41,6 +41,7 @@ const TopUpMethodSelect = lazy(() => import('./pages/TopUpMethodSelect'));
 const TopUpAmount = lazy(() => import('./pages/TopUpAmount'));
 const ConnectedAccounts = lazy(() => import('./pages/ConnectedAccounts'));
 const LinkOAuthCallback = lazy(() => import('./pages/LinkOAuthCallback'));
+const LinkTelegramCallback = lazy(() => import('./pages/LinkTelegramCallback'));
 const MergeAccounts = lazy(() => import('./pages/MergeAccounts'));
 
 // Admin pages - lazy load (only for admins)
@@ -322,6 +323,16 @@ function App() {
             <ProtectedRoute>
               <LazyPage>
                 <LinkOAuthCallback />
+              </LazyPage>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/auth/link/telegram/callback"
+          element={
+            <ProtectedRoute>
+              <LazyPage>
+                <LinkTelegramCallback />
               </LazyPage>
             </ProtectedRoute>
           }

@@ -233,6 +233,27 @@ export const authApi = {
     return response.data;
   },
 
+  // Link Telegram account (Mini App initData or Login Widget data)
+  linkTelegram: async (
+    data:
+      | { init_data: string }
+      | {
+          id: number;
+          first_name: string;
+          last_name?: string;
+          username?: string;
+          photo_url?: string;
+          auth_date: number;
+          hash: string;
+        },
+  ): Promise<LinkCallbackResponse> => {
+    const response = await apiClient.post<LinkCallbackResponse>(
+      '/cabinet/auth/account/link/telegram',
+      data,
+    );
+    return response.data;
+  },
+
   unlinkProvider: async (provider: string): Promise<{ success: boolean }> => {
     const response = await apiClient.post<{ success: boolean }>(
       `/cabinet/auth/account/unlink/${encodeURIComponent(provider)}`,

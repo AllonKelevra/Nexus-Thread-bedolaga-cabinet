@@ -3051,6 +3051,8 @@
       "unlinkError": "قطع اتصال ناموفق بود",
       "goToAccounts": "حساب‌های متصل",
       "linking": "در حال اتصال حساب...",
+      "linkTelegramWidget": "برای اتصال از طریق تلگرام وارد شوید",
+      "linkingTelegram": "در حال اتصال تلگرام...",
       "providers": {
         "telegram": "تلگرام",
         "email": "ایمیل",

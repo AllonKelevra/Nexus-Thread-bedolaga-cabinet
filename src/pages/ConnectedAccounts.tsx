@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { authApi } from '../api/auth';
@@ -9,11 +10,62 @@ import { Button } from '@/components/primitives/Button';
 import { staggerContainer, staggerItem } from '@/components/motion/transitions';
 import ProviderIcon from '../components/ProviderIcon';
 import { LINK_OAUTH_STATE_KEY, LINK_OAUTH_PROVIDER_KEY } from './LinkOAuthCallback';
+import { isInTelegramWebApp, getTelegramInitData } from '../hooks/useTelegramSDK';
 import type { LinkedProvider } from '../types';
 
 const OAUTH_PROVIDERS = ['google', 'yandex', 'discord', 'vk'];
 
 const isOAuthProvider = (provider: string): boolean => OAUTH_PROVIDERS.includes(provider);
+
+const isLinkableProvider = (provider: string): boolean =>
+  isOAuthProvider(provider) || provider === 'telegram';
+
+// SessionStorage key for Telegram link CSRF state
+export const LINK_TELEGRAM_STATE_KEY = 'link_telegram_state';
+
+/** Compact Telegram Login Widget for account linking (browser only). */
+function TelegramLinkWidget() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || '';
+
+  useEffect(() => {
+    if (!containerRef.current || !botUsername) return;
+
+    const container = containerRef.current;
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
+
+    // Generate CSRF state token and store in sessionStorage
+    const csrfState = crypto.randomUUID();
+    sessionStorage.setItem(LINK_TELEGRAM_STATE_KEY, csrfState);
+
+    const redirectUrl = `${window.location.origin}/auth/link/telegram/callback?csrf_state=${encodeURIComponent(csrfState)}`;
+
+    const script = document.createElement('script');
+    script.src = 'https://telegram.org/js/telegram-widget.js?22';
+    script.setAttribute('data-telegram-login', botUsername);
+    script.setAttribute('data-size', 'small');
+    script.setAttribute('data-radius', '8');
+    script.setAttribute('data-auth-url', redirectUrl);
+    script.setAttribute('data-request-access', 'write');
+    script.async = true;
+
+    container.appendChild(script);
+
+    return () => {
+      while (container.firstChild) {
+        container.removeChild(container.firstChild);
+      }
+    };
+  }, [botUsername]);
+
+  if (!botUsername) {
+    return null;
+  }
+
+  return <div ref={containerRef} className="flex items-center" />;
+}
 
 function LoadingSkeleton() {
   return (
@@ -40,10 +92,13 @@ export default function ConnectedAccounts() {
   const { t } = useTranslation();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const [confirmingUnlink, setConfirmingUnlink] = useState<string | null>(null);
   const [linkingProvider, setLinkingProvider] = useState<string | null>(null);
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  const inTelegram = isInTelegramWebApp();
 
   useEffect(() => {
     return () => {
@@ -83,7 +138,7 @@ export default function ConnectedAccounts() {
     return linkedCount > 1;
   };
 
-  const handleLink = async (provider: string) => {
+  const handleLinkOAuth = async (provider: string) => {
     if (linkingProvider) return;
     setLinkingProvider(provider);
     try {
@@ -100,6 +155,35 @@ export default function ConnectedAccounts() {
     }
   };
 
+  const handleLinkTelegram = async () => {
+    if (linkingProvider) return;
+    const initData = getTelegramInitData();
+    if (!initData) return;
+
+    setLinkingProvider('telegram');
+    try {
+      const response = await authApi.linkTelegram({ init_data: initData });
+      if (response.merge_required && response.merge_token) {
+        navigate(`/merge/${response.merge_token}`, { replace: true });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['linked-providers'] });
+        showToast({ type: 'success', message: t('profile.accounts.linkSuccess') });
+      }
+    } catch {
+      showToast({ type: 'error', message: t('profile.accounts.linkError') });
+    } finally {
+      setLinkingProvider(null);
+    }
+  };
+
+  const handleLink = async (provider: string) => {
+    if (provider === 'telegram') {
+      await handleLinkTelegram();
+    } else {
+      await handleLinkOAuth(provider);
+    }
+  };
+
   const handleUnlink = (provider: string) => {
     if (confirmingUnlink === provider) {
       setConfirmingUnlink(null);
@@ -107,6 +191,43 @@ export default function ConnectedAccounts() {
     } else {
       setConfirmingUnlink(provider);
     }
+  };
+
+  const renderLinkButton = (provider: LinkedProvider) => {
+    if (provider.provider === 'telegram') {
+      if (inTelegram && getTelegramInitData()) {
+        // Mini App: one-click button
+        return (
+          <Button
+            variant="primary"
+            size="sm"
+            disabled={linkingProvider !== null}
+            loading={linkingProvider === 'telegram'}
+            onClick={() => handleLink('telegram')}
+          >
+            {t('profile.accounts.link')}
+          </Button>
+        );
+      }
+      // Browser: Telegram Login Widget
+      return <TelegramLinkWidget />;
+    }
+
+    if (isOAuthProvider(provider.provider)) {
+      return (
+        <Button
+          variant="primary"
+          size="sm"
+          disabled={linkingProvider !== null}
+          loading={linkingProvider === provider.provider}
+          onClick={() => handleLink(provider.provider)}
+        >
+          {t('profile.accounts.link')}
+        </Button>
+      );
+    }
+
+    return null;
   };
 
   return (
@@ -170,7 +291,6 @@ export default function ConnectedAccounts() {
                         }
                         onClick={() => handleUnlink(provider.provider)}
                         onBlur={() => {
-                          // Delay so click on the same button fires before blur resets state
                           blurTimeoutRef.current = setTimeout(() => {
                             setConfirmingUnlink((cur) => (cur === provider.provider ? null : cur));
                           }, 150);
@@ -183,17 +303,7 @@ export default function ConnectedAccounts() {
                     )}
                   </>
                 ) : (
-                  isOAuthProvider(provider.provider) && (
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      disabled={linkingProvider !== null}
-                      loading={linkingProvider === provider.provider}
-                      onClick={() => handleLink(provider.provider)}
-                    >
-                      {t('profile.accounts.link')}
-                    </Button>
-                  )
+                  isLinkableProvider(provider.provider) && renderLinkButton(provider)
                 )}
               </div>
             </div>

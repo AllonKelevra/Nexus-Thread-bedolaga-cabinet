@@ -3050,6 +3050,8 @@
       "unlinkError": "取消关联失败",
       "goToAccounts": "关联账户",
       "linking": "正在关联账户...",
+      "linkTelegramWidget": "通过 Telegram 登录以关联",
+      "linkingTelegram": "正在关联 Telegram...",
       "providers": {
         "telegram": "Telegram",
         "email": "邮箱",
