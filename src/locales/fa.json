@@ -3034,6 +3034,29 @@
       "promoOffers": "پیشنهادات تبلیغاتی",
       "promoOffersDesc": "دریافت پیشنهادات ویژه و تخفیف‌ها",
       "unavailable": "تنظیمات اعلان در دسترس نیست"
+    },
+    "accounts": {
+      "title": "حساب‌های متصل",
+      "subtitle": "مدیریت روش‌های ورود",
+      "linked": "متصل",
+      "notLinked": "متصل نیست",
+      "link": "اتصال",
+      "unlink": "قطع اتصال",
+      "unlinkConfirm": "آیا مطمئن هستید؟ پس از قطع اتصال نمی‌توانید از طریق این سرویس وارد شوید.",
+      "cannotUnlinkLast": "نمی‌توان آخرین روش ورود را قطع کرد",
+      "linkSuccess": "حساب با موفقیت متصل شد",
+      "unlinkSuccess": "اتصال حساب با موفقیت قطع شد",
+      "linkError": "اتصال حساب ناموفق بود",
+      "unlinkError": "قطع اتصال ناموفق بود",
+      "goToAccounts": "حساب‌های متصل",
+      "providers": {
+        "telegram": "تلگرام",
+        "email": "ایمیل",
+        "google": "گوگل",
+        "yandex": "یاندکس",
+        "discord": "دیسکورد",
+        "vk": "VK"
+      }
     }
   },
   "theme": {
@@ -3358,5 +3381,32 @@
       "reason": "دلیل",
       "contactSupport": "اگر فکر می‌کنید این اشتباه است، با پشتیبانی تماس بگیرید."
     }
+  },
+  "merge": {
+    "title": "ادغام حساب‌ها",
+    "description": "این روش ورود به حساب دیگری متصل است. می‌توانید هر دو حساب را ادغام کنید.",
+    "currentAccount": "حساب فعلی شما",
+    "foundAccount": "حساب یافت شده",
+    "authMethods": "روش‌های ورود",
+    "subscription": "اشتراک",
+    "noSubscription": "بدون اشتراک",
+    "traffic": "ترافیک",
+    "devices": "دستگاه‌ها",
+    "balance": "موجودی",
+    "until": "تا {{date}}",
+    "keepThisSubscription": "نگه داشتن این اشتراک",
+    "chooseSubscription": "اشتراک مورد نظر را انتخاب کنید",
+    "afterMerge": "پس از ادغام",
+    "allAuthMethodsMerged": "تمام روش‌های ورود ادغام خواهند شد",
+    "balanceSummed": "موجودی: {{amount}} ₽ (مجموع)",
+    "unselectedSubscriptionDeleted": "اشتراک انتخاب نشده حذف خواهد شد",
+    "historyPreserved": "تاریخچه تراکنش‌ها حفظ خواهد شد",
+    "confirm": "ادغام حساب‌ها",
+    "cancel": "لغو",
+    "expired": "لینک ادغام منقضی شده است. لطفاً دوباره تلاش کنید.",
+    "success": "حساب‌ها با موفقیت ادغام شدند!",
+    "error": "ادغام ناموفق بود. لطفاً بعداً دوباره تلاش کنید.",
+    "expiresIn": "{{minutes}} دقیقه باقی مانده",
+    "merging": "در حال ادغام..."
   }
 }

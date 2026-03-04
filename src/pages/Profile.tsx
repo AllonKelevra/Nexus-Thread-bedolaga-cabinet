@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -61,6 +61,7 @@ const PencilIcon = () => (
 
 export default function Profile() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
   const queryClient = useQueryClient();
@@ -390,6 +391,29 @@ export default function Profile() {
                 {user?.created_at ? new Date(user.created_at).toLocaleDateString() : '-'}
               </span>
             </div>
+          </div>
+        </Card>
+      </motion.div>
+
+      {/* Connected Accounts Link */}
+      <motion.div variants={staggerItem}>
+        <Card interactive onClick={() => navigate('/profile/accounts')}>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-dark-100">
+                {t('profile.accounts.goToAccounts')}
+              </h2>
+              <p className="text-sm text-dark-400">{t('profile.accounts.subtitle')}</p>
+            </div>
+            <svg
+              className="h-5 w-5 text-dark-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
           </div>
         </Card>
       </motion.div>
