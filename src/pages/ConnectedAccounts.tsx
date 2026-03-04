@@ -106,6 +106,7 @@ export default function ConnectedAccounts() {
   const canUnlink = (provider: LinkedProvider): boolean => {
     if (!provider.linked) return false;
     if (!isOAuthProvider(provider.provider)) return false;
+    if (unlinkMutation.isPending) return false;
     const linkedCount = data?.providers.filter((p) => p.linked).length ?? 0;
     return linkedCount > 1;
   };

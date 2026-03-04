@@ -112,9 +112,10 @@ function ProviderBadgeIcon({ provider }: { provider: string }) {
 }
 
 function formatCountdown(seconds: number): string {
-  const min = Math.floor(seconds / 60);
-  const sec = seconds % 60;
-  return `${min}:${sec.toString().padStart(2, '0')}`;
+  const clamped = Math.max(0, seconds);
+  const min = Math.floor(clamped / 60);
+  const sec = clamped % 60;
+  return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
 }
 
 function formatDate(dateStr: string | null): string {
@@ -356,7 +357,10 @@ export default function MergeAccounts() {
   // Fetch merge preview (no auth required)
   const { data, isLoading, error } = useQuery({
     queryKey: ['merge-preview', mergeToken],
-    queryFn: () => authApi.getMergePreview(mergeToken!),
+    queryFn: () => {
+      if (!mergeToken) return Promise.reject(new Error('Missing merge token'));
+      return authApi.getMergePreview(mergeToken);
+    },
     enabled: !!mergeToken,
     retry: false,
     staleTime: Infinity,
@@ -409,25 +413,22 @@ export default function MergeAccounts() {
       return authApi.executeMerge(mergeToken, selectedUserId);
     },
     onSuccess: async (response) => {
-      if (response.success && response.access_token && response.refresh_token) {
+      if (!response.success) {
+        showToast({ type: 'error', message: t('merge.error') });
+        return;
+      }
+
+      if (response.access_token && response.refresh_token) {
         const { setTokens, setUser, checkAdminStatus } = useAuthStore.getState();
         setTokens(response.access_token, response.refresh_token);
         if (response.user) {
           setUser(response.user);
         }
         await checkAdminStatus();
-        showToast({
-          type: 'success',
-          message: t('merge.success'),
-        });
-        navigate('/', { replace: true });
-      } else {
-        showToast({
-          type: 'success',
-          message: t('merge.success'),
-        });
-        navigate('/', { replace: true });
       }
+
+      showToast({ type: 'success', message: t('merge.success') });
+      navigate('/', { replace: true });
     },
     onError: () => {
       showToast({
@@ -451,6 +452,11 @@ export default function MergeAccounts() {
     data && !!data.primary.subscription && !!data.secondary.subscription;
   const canConfirm = selectedUserId !== null && !isExpired && !mergeMutation.isPending;
   const combinedBalance = data ? data.primary.balance_kopeks + data.secondary.balance_kopeks : 0;
+
+  // Missing token param
+  if (!mergeToken) {
+    return <ErrorState />;
+  }
 
   // Loading
   if (isLoading) {

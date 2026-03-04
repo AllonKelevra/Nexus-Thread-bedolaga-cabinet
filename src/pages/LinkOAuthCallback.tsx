@@ -8,13 +8,16 @@ import { useToast } from '../components/Toast';
 export const LINK_OAUTH_STATE_KEY = 'link_oauth_state';
 export const LINK_OAUTH_PROVIDER_KEY = 'link_oauth_provider';
 
-function getAndClearLinkOAuthState(): { state: string; provider: string } | null {
+function getLinkOAuthState(): { state: string; provider: string } | null {
   const state = sessionStorage.getItem(LINK_OAUTH_STATE_KEY);
   const provider = sessionStorage.getItem(LINK_OAUTH_PROVIDER_KEY);
-  sessionStorage.removeItem(LINK_OAUTH_STATE_KEY);
-  sessionStorage.removeItem(LINK_OAUTH_PROVIDER_KEY);
   if (!state || !provider) return null;
   return { state, provider };
+}
+
+function clearLinkOAuthState(): void {
+  sessionStorage.removeItem(LINK_OAUTH_STATE_KEY);
+  sessionStorage.removeItem(LINK_OAUTH_PROVIDER_KEY);
 }
 
 export default function LinkOAuthCallback() {
@@ -41,8 +44,8 @@ export default function LinkOAuthCallback() {
         return;
       }
 
-      // Get saved state from sessionStorage
-      const saved = getAndClearLinkOAuthState();
+      // Get saved state from sessionStorage (read only, don't clear yet)
+      const saved = getLinkOAuthState();
       if (!saved) {
         showToast({ type: 'error', message: t('profile.accounts.linkError') });
         navigate('/profile/accounts', { replace: true });
@@ -55,6 +58,9 @@ export default function LinkOAuthCallback() {
         navigate('/profile/accounts', { replace: true });
         return;
       }
+
+      // State validated — clear it now (one-time use)
+      clearLinkOAuthState();
 
       try {
         const response = await authApi.linkProviderCallback(
