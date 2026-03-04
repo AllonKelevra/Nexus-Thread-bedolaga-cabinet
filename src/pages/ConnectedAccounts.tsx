@@ -41,6 +41,8 @@ export default function ConnectedAccounts() {
   const { showToast } = useToast();
   const queryClient = useQueryClient();
 
+  const [confirmingUnlink, setConfirmingUnlink] = useState<string | null>(null);
+
   const { data, isLoading, isError } = useQuery({
     queryKey: ['linked-providers'],
     queryFn: () => authApi.getLinkedProviders(),
@@ -86,8 +88,6 @@ export default function ConnectedAccounts() {
       });
     }
   };
-
-  const [confirmingUnlink, setConfirmingUnlink] = useState<string | null>(null);
 
   const handleUnlink = (provider: string) => {
     if (confirmingUnlink === provider) {
