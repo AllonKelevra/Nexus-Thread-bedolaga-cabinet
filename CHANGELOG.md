@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.23.1](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/compare/v1.23.0...v1.23.1) (2026-03-04)
+
+
+### Bug Fixes
+
+* ordered list numbering in Info page shows correct sequence ([8157ca5](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/8157ca5f0280dbcbf99eda210cd83130ec77c0b1))
+* replace hardcoded green with theme-aware accent color ([a3ddddf](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/a3ddddfa8ce167c22177fde3b131083c710ea619))
+
 ## [1.23.0](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/compare/v1.22.0...v1.23.0) (2026-03-02)
 
 
