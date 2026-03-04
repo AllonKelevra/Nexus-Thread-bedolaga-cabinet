@@ -2,10 +2,11 @@ import { useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { authApi } from '../api/auth';
+import { useToast } from '../components/Toast';
 
-// SessionStorage keys (set by ConnectedAccounts.tsx handleLink)
-const LINK_OAUTH_STATE_KEY = 'link_oauth_state';
-const LINK_OAUTH_PROVIDER_KEY = 'link_oauth_provider';
+// SessionStorage keys — shared with ConnectedAccounts.tsx
+export const LINK_OAUTH_STATE_KEY = 'link_oauth_state';
+export const LINK_OAUTH_PROVIDER_KEY = 'link_oauth_provider';
 
 function getAndClearLinkOAuthState(): { state: string; provider: string } | null {
   const state = sessionStorage.getItem(LINK_OAUTH_STATE_KEY);
@@ -20,6 +21,7 @@ export default function LinkOAuthCallback() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { showToast } = useToast();
   const hasRun = useRef(false);
 
   useEffect(() => {
@@ -34,6 +36,7 @@ export default function LinkOAuthCallback() {
       const deviceId = searchParams.get('device_id');
 
       if (!code || !urlState) {
+        showToast({ type: 'error', message: t('profile.accounts.linkError') });
         navigate('/profile/accounts', { replace: true });
         return;
       }
@@ -41,12 +44,14 @@ export default function LinkOAuthCallback() {
       // Get saved state from sessionStorage
       const saved = getAndClearLinkOAuthState();
       if (!saved) {
+        showToast({ type: 'error', message: t('profile.accounts.linkError') });
         navigate('/profile/accounts', { replace: true });
         return;
       }
 
       // Validate state match
       if (saved.state !== urlState) {
+        showToast({ type: 'error', message: t('profile.accounts.linkError') });
         navigate('/profile/accounts', { replace: true });
         return;
       }
@@ -64,15 +69,17 @@ export default function LinkOAuthCallback() {
           navigate(`/merge/${response.merge_token}`, { replace: true });
         } else {
           // Success - redirect back to accounts
+          showToast({ type: 'success', message: t('profile.accounts.linkSuccess') });
           navigate('/profile/accounts', { replace: true });
         }
       } catch {
+        showToast({ type: 'error', message: t('profile.accounts.linkError') });
         navigate('/profile/accounts', { replace: true });
       }
     };
 
     linkAccount();
-  }, [searchParams, navigate]);
+  }, [searchParams, navigate, showToast, t]);
 
   return (
     <div className="flex min-h-screen items-center justify-center">

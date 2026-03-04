@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { authApi } from '../api/auth';
 import { useToast } from '../components/Toast';
@@ -7,6 +7,7 @@ import { Card } from '@/components/data-display/Card';
 import { Button } from '@/components/primitives/Button';
 import { staggerContainer, staggerItem } from '@/components/motion/transitions';
 import OAuthProviderIcon from '../components/OAuthProviderIcon';
+import { LINK_OAUTH_STATE_KEY, LINK_OAUTH_PROVIDER_KEY } from './LinkOAuthCallback';
 import type { LinkedProvider } from '../types';
 
 const OAUTH_PROVIDERS = ['google', 'yandex', 'discord', 'vk'];
@@ -78,8 +79,9 @@ function LoadingSkeleton() {
 export default function ConnectedAccounts() {
   const { t } = useTranslation();
   const { showToast } = useToast();
+  const queryClient = useQueryClient();
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['linked-providers'],
     queryFn: () => authApi.getLinkedProviders(),
   });
@@ -87,7 +89,7 @@ export default function ConnectedAccounts() {
   const unlinkMutation = useMutation({
     mutationFn: (provider: string) => authApi.unlinkProvider(provider),
     onSuccess: () => {
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ['linked-providers'] });
       showToast({
         type: 'success',
         message: t('profile.accounts.unlinkSuccess'),
@@ -111,8 +113,8 @@ export default function ConnectedAccounts() {
   const handleLink = async (provider: string) => {
     try {
       const { authorize_url, state } = await authApi.linkProviderInit(provider);
-      sessionStorage.setItem('link_oauth_state', state);
-      sessionStorage.setItem('link_oauth_provider', provider);
+      sessionStorage.setItem(LINK_OAUTH_STATE_KEY, state);
+      sessionStorage.setItem(LINK_OAUTH_PROVIDER_KEY, provider);
       window.location.href = authorize_url;
     } catch {
       showToast({
@@ -147,6 +149,15 @@ export default function ConnectedAccounts() {
       {isLoading && (
         <motion.div variants={staggerItem}>
           <LoadingSkeleton />
+        </motion.div>
+      )}
+
+      {/* Error state */}
+      {isError && (
+        <motion.div variants={staggerItem}>
+          <Card>
+            <p className="text-center text-dark-400">{t('common.error')}</p>
+          </Card>
         </motion.div>
       )}
 

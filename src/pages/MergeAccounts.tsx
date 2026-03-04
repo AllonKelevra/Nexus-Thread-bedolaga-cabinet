@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -114,10 +114,7 @@ function ProviderBadgeIcon({ provider }: { provider: string }) {
 function formatCountdown(seconds: number): string {
   const min = Math.floor(seconds / 60);
   const sec = seconds % 60;
-  if (min > 0) {
-    return `${min} ${min === 1 ? 'min' : 'min'} ${sec.toString().padStart(2, '0')} ${sec === 1 ? 'sec' : 'sec'}`;
-  }
-  return `${sec} sec`;
+  return `${min}:${sec.toString().padStart(2, '0')}`;
 }
 
 function formatDate(dateStr: string | null): string {
@@ -329,7 +326,7 @@ function ErrorState() {
       </motion.div>
 
       <motion.div variants={staggerItem} className="text-center">
-        <p className="text-lg font-medium text-dark-100">{t('merge.expired')}</p>
+        <p className="text-lg font-medium text-dark-100">{t('merge.error')}</p>
       </motion.div>
 
       <motion.div variants={staggerItem}>
@@ -362,6 +359,8 @@ export default function MergeAccounts() {
     queryFn: () => authApi.getMergePreview(mergeToken!),
     enabled: !!mergeToken,
     retry: false,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
   });
 
   // Auto-select subscription when data loads
@@ -403,14 +402,26 @@ export default function MergeAccounts() {
 
   // Execute merge
   const mergeMutation = useMutation({
-    mutationFn: () => authApi.executeMerge(mergeToken!, selectedUserId!),
-    onSuccess: (response) => {
+    mutationFn: () => {
+      if (!mergeToken || !selectedUserId) {
+        return Promise.reject(new Error('Missing merge token or user selection'));
+      }
+      return authApi.executeMerge(mergeToken, selectedUserId);
+    },
+    onSuccess: async (response) => {
       if (response.success && response.access_token && response.refresh_token) {
-        const { setTokens, setUser } = useAuthStore.getState();
+        const { setTokens, setUser, checkAdminStatus } = useAuthStore.getState();
         setTokens(response.access_token, response.refresh_token);
         if (response.user) {
           setUser(response.user);
         }
+        await checkAdminStatus();
+        showToast({
+          type: 'success',
+          message: t('merge.success'),
+        });
+        navigate('/', { replace: true });
+      } else {
         showToast({
           type: 'success',
           message: t('merge.success'),
@@ -426,14 +437,14 @@ export default function MergeAccounts() {
     },
   });
 
-  const handleMerge = useCallback(() => {
+  const handleMerge = () => {
     if (!selectedUserId || mergeMutation.isPending || isExpired) return;
     mergeMutation.mutate();
-  }, [selectedUserId, mergeMutation, isExpired]);
+  };
 
-  const handleCancel = useCallback(() => {
+  const handleCancel = () => {
     navigate('/profile/accounts', { replace: true });
-  }, [navigate]);
+  };
 
   // Derived state
   const bothHaveSubscriptions =

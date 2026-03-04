@@ -3049,6 +3049,7 @@
       "linkError": "اتصال حساب ناموفق بود",
       "unlinkError": "قطع اتصال ناموفق بود",
       "goToAccounts": "حساب‌های متصل",
+      "linking": "در حال اتصال حساب...",
       "providers": {
         "telegram": "تلگرام",
         "email": "ایمیل",
