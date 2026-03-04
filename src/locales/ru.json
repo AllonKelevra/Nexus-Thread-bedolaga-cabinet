@@ -4175,7 +4175,6 @@
       "unlinkError": "Не удалось отвязать аккаунт",
       "goToAccounts": "Привязанные аккаунты",
       "linking": "Привязка аккаунта...",
-      "linkTelegramWidget": "Войдите через Telegram для привязки",
       "linkingTelegram": "Привязка Telegram...",
       "providers": {
         "telegram": "Telegram",

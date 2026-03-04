@@ -3615,7 +3615,6 @@
       "unlinkError": "Failed to disconnect account",
       "goToAccounts": "Connected Accounts",
       "linking": "Linking account...",
-      "linkTelegramWidget": "Sign in with Telegram to connect",
       "linkingTelegram": "Connecting Telegram...",
       "providers": {
         "telegram": "Telegram",
