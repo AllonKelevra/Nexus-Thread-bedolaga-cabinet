@@ -23,6 +23,7 @@ function WarningIcon({ className = 'h-5 w-5' }: { className?: string }) {
       viewBox="0 0 24 24"
       stroke="currentColor"
       strokeWidth={2}
+      aria-hidden="true"
     >
       <path
         strokeLinecap="round"
@@ -41,6 +42,7 @@ function ClockIcon({ className = 'h-4 w-4' }: { className?: string }) {
       viewBox="0 0 24 24"
       stroke="currentColor"
       strokeWidth={2}
+      aria-hidden="true"
     >
       <path
         strokeLinecap="round"
@@ -59,6 +61,7 @@ function CheckCircleIcon({ className = 'h-5 w-5' }: { className?: string }) {
       viewBox="0 0 24 24"
       stroke="currentColor"
       strokeWidth={2}
+      aria-hidden="true"
     >
       <path
         strokeLinecap="round"
@@ -221,6 +224,8 @@ function AccountCard({ account, label, isSelected, onSelect, showRadio }: Accoun
         {showRadio && account.subscription && (
           <button
             type="button"
+            role="radio"
+            aria-checked={isSelected}
             onClick={onSelect}
             className="mt-2 flex w-full items-center gap-2.5 rounded-lg bg-dark-800/50 px-3 py-2.5 text-left transition-colors hover:bg-dark-800"
           >
@@ -367,9 +372,11 @@ export default function MergeAccounts() {
     refetchOnWindowFocus: false,
   });
 
-  // Auto-select subscription when data loads
+  // Auto-select subscription when data loads (only once)
   useEffect(() => {
     if (!data) return;
+    // Don't overwrite if user already made a selection
+    if (selectedUserId !== null) return;
 
     const primaryHasSub = !!data.primary.subscription;
     const secondaryHasSub = !!data.secondary.subscription;
@@ -383,7 +390,7 @@ export default function MergeAccounts() {
       setSelectedUserId(data.primary.id);
     }
     // If both have subs — null until user picks
-  }, [data]);
+  }, [data, selectedUserId]);
 
   // Countdown timer
   useEffect(() => {
@@ -418,14 +425,17 @@ export default function MergeAccounts() {
         return;
       }
 
-      if (response.access_token && response.refresh_token) {
-        const { setTokens, setUser, checkAdminStatus } = useAuthStore.getState();
-        setTokens(response.access_token, response.refresh_token);
-        if (response.user) {
-          setUser(response.user);
-        }
-        await checkAdminStatus();
+      if (!response.access_token || !response.refresh_token) {
+        showToast({ type: 'error', message: t('merge.error') });
+        return;
       }
+
+      const { setTokens, setUser, checkAdminStatus } = useAuthStore.getState();
+      setTokens(response.access_token, response.refresh_token);
+      if (response.user) {
+        setUser(response.user);
+      }
+      await checkAdminStatus();
 
       showToast({ type: 'success', message: t('merge.success') });
       navigate('/', { replace: true });

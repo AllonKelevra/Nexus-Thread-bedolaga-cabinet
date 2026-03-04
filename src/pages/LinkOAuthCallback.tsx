@@ -54,6 +54,7 @@ export default function LinkOAuthCallback() {
 
       // Validate state match
       if (saved.state !== urlState) {
+        clearLinkOAuthState();
         showToast({ type: 'error', message: t('profile.accounts.linkError') });
         navigate('/profile/accounts', { replace: true });
         return;
