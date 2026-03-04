@@ -199,7 +199,10 @@ export default function ConnectedAccounts() {
                         }
                         onClick={() => handleUnlink(provider.provider)}
                         onBlur={() => {
-                          if (confirmingUnlink === provider.provider) setConfirmingUnlink(null);
+                          // Delay so click on the same button fires before blur resets state
+                          setTimeout(() => {
+                            setConfirmingUnlink((cur) => (cur === provider.provider ? null : cur));
+                          }, 150);
                         }}
                       >
                         {confirmingUnlink === provider.provider
