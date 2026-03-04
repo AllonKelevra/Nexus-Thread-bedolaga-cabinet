@@ -3042,6 +3042,7 @@
       "link": "关联",
       "unlink": "取消关联",
       "unlinkConfirm": "确定吗？取消关联后，您将无法通过此服务登录。",
+      "unlinkConfirmBtn": "确认取消关联？",
       "cannotUnlinkLast": "无法取消最后一种登录方式",
       "linkSuccess": "账户关联成功",
       "unlinkSuccess": "账户取消关联成功",

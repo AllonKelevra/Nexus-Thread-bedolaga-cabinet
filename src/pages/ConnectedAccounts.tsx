@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -126,9 +127,14 @@ export default function ConnectedAccounts() {
     }
   };
 
+  const [confirmingUnlink, setConfirmingUnlink] = useState<string | null>(null);
+
   const handleUnlink = (provider: string) => {
-    if (window.confirm(t('profile.accounts.unlinkConfirm'))) {
+    if (confirmingUnlink === provider) {
+      setConfirmingUnlink(null);
       unlinkMutation.mutate(provider);
+    } else {
+      setConfirmingUnlink(provider);
     }
   };
 
@@ -185,15 +191,20 @@ export default function ConnectedAccounts() {
                     <span className="text-sm text-success-500">{t('profile.accounts.linked')}</span>
                     {canUnlink(provider) && (
                       <Button
-                        variant="outline"
+                        variant={confirmingUnlink === provider.provider ? 'destructive' : 'outline'}
                         size="sm"
                         disabled={unlinkMutation.isPending}
                         loading={
                           unlinkMutation.isPending && unlinkMutation.variables === provider.provider
                         }
                         onClick={() => handleUnlink(provider.provider)}
+                        onBlur={() => {
+                          if (confirmingUnlink === provider.provider) setConfirmingUnlink(null);
+                        }}
                       >
-                        {t('profile.accounts.unlink')}
+                        {confirmingUnlink === provider.provider
+                          ? t('profile.accounts.unlinkConfirmBtn')
+                          : t('profile.accounts.unlink')}
                       </Button>
                     )}
                   </>

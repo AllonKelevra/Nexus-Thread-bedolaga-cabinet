@@ -3607,6 +3607,7 @@
       "link": "Connect",
       "unlink": "Disconnect",
       "unlinkConfirm": "Are you sure? You won't be able to sign in with this service after disconnecting.",
+      "unlinkConfirmBtn": "Confirm disconnect?",
       "cannotUnlinkLast": "Cannot disconnect the last sign-in method",
       "linkSuccess": "Account connected successfully",
       "unlinkSuccess": "Account disconnected successfully",
