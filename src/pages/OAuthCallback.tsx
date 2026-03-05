@@ -3,7 +3,11 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/auth';
 import { authApi } from '../api/auth';
-import { LINK_OAUTH_STATE_KEY, LINK_OAUTH_PROVIDER_KEY } from './LinkOAuthCallback';
+import type { LinkCallbackResponse } from '../types';
+
+// SessionStorage keys for OAuth LINK state (shared with ConnectedAccounts)
+export const LINK_OAUTH_STATE_KEY = 'link_oauth_state';
+export const LINK_OAUTH_PROVIDER_KEY = 'link_oauth_provider';
 
 // SessionStorage helpers for OAuth LOGIN state
 const OAUTH_STATE_KEY = 'oauth_state';
@@ -38,12 +42,15 @@ function clearLinkOAuthState(): void {
 
 type CallbackMode = 'login' | 'link-browser' | 'link-server';
 
-/** Result after successful server-complete linking from external browser. */
-interface ServerLinkResult {
-  success: boolean;
-  merge_required: boolean;
-  merge_token: string | null;
-  provider?: string;
+type ServerLinkResult = LinkCallbackResponse & { provider?: string };
+
+function getErrorDetail(err: unknown): string | null {
+  if (err && typeof err === 'object' && 'response' in err) {
+    const resp = (err as { response?: { data?: { detail?: string } } }).response;
+    if (resp?.data?.detail) return resp.data.detail;
+  }
+  if (err instanceof Error) return err.message;
+  return null;
 }
 
 export default function OAuthCallback() {
@@ -51,10 +58,18 @@ export default function OAuthCallback() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [error, setError] = useState('');
+  const [errorMode, setErrorMode] = useState<CallbackMode>('login');
   const [serverLinkResult, setServerLinkResult] = useState<ServerLinkResult | null>(null);
   const loginWithOAuth = useAuthStore((state) => state.loginWithOAuth);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const hasRun = useRef(false);
+
+  // Handle merge redirect via useEffect (not in render)
+  useEffect(() => {
+    if (serverLinkResult?.merge_required && serverLinkResult.merge_token) {
+      navigate(`/merge/${serverLinkResult.merge_token}`, { replace: true });
+    }
+  }, [serverLinkResult, navigate]);
 
   useEffect(() => {
     // Prevent double-fire from React StrictMode
@@ -75,32 +90,32 @@ export default function OAuthCallback() {
     // 2. Login state in sessionStorage → login flow
     // 3. Neither → opened from external browser (Mini App flow) → server-complete
     let mode: CallbackMode = 'link-server';
-    let savedProvider: string | null = null;
-    let savedState: string | null = null;
+    let provider: string | undefined;
+    let state: string | undefined;
 
     const linkSaved = peekLinkOAuthState();
     if (linkSaved && linkSaved.state === urlState) {
       clearLinkOAuthState();
       mode = 'link-browser';
-      savedProvider = linkSaved.provider;
-      savedState = linkSaved.state;
+      provider = linkSaved.provider;
+      state = linkSaved.state;
     } else {
       const loginSaved = getAndClearOAuthState();
       if (loginSaved && loginSaved.state === urlState) {
         mode = 'login';
-        savedProvider = loginSaved.provider;
-        savedState = loginSaved.state;
+        provider = loginSaved.provider;
+        state = loginSaved.state;
       }
     }
 
     const handle = async () => {
-      if (mode === 'link-browser') {
+      if (mode === 'link-browser' && provider && state) {
         // Browser linking: user is authenticated, complete via JWT-protected endpoint
         try {
           const response = await authApi.linkProviderCallback(
-            savedProvider!,
+            provider,
             code,
-            savedState!,
+            state,
             deviceId ?? undefined,
           );
           if (response.merge_required && response.merge_token) {
@@ -109,24 +124,23 @@ export default function OAuthCallback() {
             navigate('/profile/accounts', { replace: true });
           }
         } catch {
+          setErrorMode('link-browser');
           setError(t('profile.accounts.linkError'));
         }
         return;
       }
 
-      if (mode === 'login') {
+      if (mode === 'login' && provider && state) {
         // Login flow
         if (isAuthenticated) {
           navigate('/', { replace: true });
           return;
         }
         try {
-          await loginWithOAuth(savedProvider!, code, savedState!, deviceId);
+          await loginWithOAuth(provider, code, state, deviceId);
           navigate('/', { replace: true });
         } catch (err: unknown) {
-          const detail =
-            (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
-            (err instanceof Error ? err.message : null);
+          const detail = getErrorDetail(err);
           setError(detail || t('auth.oauthError', 'Authorization was denied or failed'));
         }
         return;
@@ -141,9 +155,9 @@ export default function OAuthCallback() {
       try {
         // Provider is resolved server-side from the state token in Redis.
         const response = await authApi.linkServerComplete(code, urlState, deviceId ?? undefined);
-
         setServerLinkResult(response);
       } catch {
+        setErrorMode('link-server');
         setError(t('profile.accounts.linkError'));
       }
     };
@@ -151,14 +165,9 @@ export default function OAuthCallback() {
     handle();
   }, [searchParams, loginWithOAuth, navigate, isAuthenticated, t]);
 
-  // Server-complete result: show success/error with "Return to Telegram" link
-  if (serverLinkResult) {
-    if (serverLinkResult.merge_required && serverLinkResult.merge_token) {
-      // Redirect to merge page (public, works without JWT)
-      navigate(`/merge/${serverLinkResult.merge_token}`, { replace: true });
-      return null;
-    }
-
+  // Server-complete result: show success with "Return to Telegram" link
+  // (merge redirect is handled by the useEffect above)
+  if (serverLinkResult && !(serverLinkResult.merge_required && serverLinkResult.merge_token)) {
     const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || '';
     const telegramLink = botUsername ? `https://t.me/${botUsername}` : '';
 
@@ -197,6 +206,10 @@ export default function OAuthCallback() {
   }
 
   if (error) {
+    const isServerMode = errorMode === 'link-server';
+    const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || '';
+    const telegramLink = botUsername ? `https://t.me/${botUsername}` : '';
+
     return (
       <div className="flex min-h-screen items-center justify-center px-4 py-8">
         <div className="fixed inset-0 bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950" />
@@ -219,12 +232,21 @@ export default function OAuthCallback() {
             </div>
             <h2 className="mb-2 text-lg font-semibold text-dark-50">{t('auth.loginFailed')}</h2>
             <p className="mb-6 text-sm text-dark-400">{error}</p>
-            <button
-              onClick={() => navigate('/login', { replace: true })}
-              className="btn-primary w-full"
-            >
-              {t('auth.backToLogin', 'Back to login')}
-            </button>
+            {isServerMode && telegramLink ? (
+              <a
+                href={telegramLink}
+                className="btn-primary inline-block w-full rounded-lg bg-accent-500 px-6 py-3 text-center font-medium text-dark-950 no-underline transition-colors hover:bg-accent-400"
+              >
+                {t('profile.accounts.openTelegram')}
+              </a>
+            ) : (
+              <button
+                onClick={() => navigate('/login', { replace: true })}
+                className="btn-primary w-full"
+              >
+                {t('auth.backToLogin', 'Back to login')}
+              </button>
+            )}
           </div>
         </div>
       </div>

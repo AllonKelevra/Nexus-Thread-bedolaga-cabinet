@@ -40,7 +40,6 @@ const ConnectionQR = lazy(() => import('./pages/ConnectionQR'));
 const TopUpMethodSelect = lazy(() => import('./pages/TopUpMethodSelect'));
 const TopUpAmount = lazy(() => import('./pages/TopUpAmount'));
 const ConnectedAccounts = lazy(() => import('./pages/ConnectedAccounts'));
-const LinkOAuthCallback = lazy(() => import('./pages/LinkOAuthCallback'));
 const LinkTelegramCallback = lazy(() => import('./pages/LinkTelegramCallback'));
 const MergeAccounts = lazy(() => import('./pages/MergeAccounts'));
 
@@ -313,16 +312,6 @@ function App() {
             <ProtectedRoute>
               <LazyPage>
                 <ConnectedAccounts />
-              </LazyPage>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/auth/link/callback"
-          element={
-            <ProtectedRoute>
-              <LazyPage>
-                <LinkOAuthCallback />
               </LazyPage>
             </ProtectedRoute>
           }

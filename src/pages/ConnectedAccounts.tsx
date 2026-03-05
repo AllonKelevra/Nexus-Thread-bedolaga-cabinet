@@ -9,7 +9,7 @@ import { Card } from '@/components/data-display/Card';
 import { Button } from '@/components/primitives/Button';
 import { staggerContainer, staggerItem } from '@/components/motion/transitions';
 import ProviderIcon from '../components/ProviderIcon';
-import { LINK_OAUTH_STATE_KEY, LINK_OAUTH_PROVIDER_KEY } from './LinkOAuthCallback';
+import { LINK_OAUTH_STATE_KEY, LINK_OAUTH_PROVIDER_KEY } from './OAuthCallback';
 import { getTelegramInitData } from '../hooks/useTelegramSDK';
 import { usePlatform, useIsTelegram } from '@/platform/hooks/usePlatform';
 import type { LinkedProvider } from '../types';
@@ -98,6 +98,7 @@ export default function ConnectedAccounts() {
   const [confirmingUnlink, setConfirmingUnlink] = useState<string | null>(null);
   const [linkingProvider, setLinkingProvider] = useState<string | null>(null);
   const [waitingExternalLink, setWaitingExternalLink] = useState(false);
+  const linkedCountBeforePolling = useRef<number | null>(null);
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const inTelegram = useIsTelegram();
@@ -123,6 +124,18 @@ export default function ConnectedAccounts() {
     const timeout = setTimeout(() => setWaitingExternalLink(false), 90_000);
     return () => clearTimeout(timeout);
   }, [waitingExternalLink]);
+
+  // Detect successful external link: stop polling and show toast when linked count increases
+  useEffect(() => {
+    if (!waitingExternalLink || !data) return;
+    const currentLinked = data.providers.filter((p) => p.linked).length;
+    if (linkedCountBeforePolling.current === null) return;
+    if (currentLinked > linkedCountBeforePolling.current) {
+      setWaitingExternalLink(false);
+      linkedCountBeforePolling.current = null;
+      showToast({ type: 'success', message: t('profile.accounts.linkSuccess') });
+    }
+  }, [data, waitingExternalLink, showToast, t]);
 
   const unlinkMutation = useMutation({
     mutationFn: (provider: string) => authApi.unlinkProvider(provider),
@@ -162,6 +175,8 @@ export default function ConnectedAccounts() {
         // The callback will use server-complete flow (auth via state token, no JWT).
         platform.openLink(authorize_url);
         setLinkingProvider(null);
+        // Snapshot current linked count before polling starts
+        linkedCountBeforePolling.current = data?.providers.filter((p) => p.linked).length ?? 0;
         // Start polling for linked providers (external browser has no way to notify Mini App)
         setWaitingExternalLink(true);
         showToast({
