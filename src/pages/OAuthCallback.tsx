@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/auth';
 import { authApi } from '../api/auth';
-import type { LinkCallbackResponse } from '../types';
+import type { ServerCompleteResponse } from '../types';
 
 // SessionStorage keys for OAuth LINK state (shared with ConnectedAccounts)
 export const LINK_OAUTH_STATE_KEY = 'link_oauth_state';
@@ -16,15 +16,6 @@ const OAUTH_PROVIDER_KEY = 'oauth_provider';
 export function saveOAuthState(state: string, provider: string): void {
   sessionStorage.setItem(OAUTH_STATE_KEY, state);
   sessionStorage.setItem(OAUTH_PROVIDER_KEY, provider);
-}
-
-export function getAndClearOAuthState(): { state: string; provider: string } | null {
-  const state = sessionStorage.getItem(OAUTH_STATE_KEY);
-  const provider = sessionStorage.getItem(OAUTH_PROVIDER_KEY);
-  sessionStorage.removeItem(OAUTH_STATE_KEY);
-  sessionStorage.removeItem(OAUTH_PROVIDER_KEY);
-  if (!state || !provider) return null;
-  return { state, provider };
 }
 
 /** Read link OAuth state without clearing (cleared only after successful match). */
@@ -42,12 +33,15 @@ function clearLinkOAuthState(): void {
 
 type CallbackMode = 'login' | 'link-browser' | 'link-server';
 
-type ServerLinkResult = LinkCallbackResponse & { provider?: string };
-
-function getErrorDetail(err: unknown): string | null {
+export function getErrorDetail(err: unknown): string | null {
   if (err && typeof err === 'object' && 'response' in err) {
-    const resp = (err as { response?: { data?: { detail?: string } } }).response;
-    if (resp?.data?.detail) return resp.data.detail;
+    const resp = (err as { response?: { data?: { detail?: unknown } } }).response;
+    const detail = resp?.data?.detail;
+    if (typeof detail === 'string') return detail;
+    if (detail && typeof detail === 'object' && 'message' in detail) {
+      const msg = (detail as Record<string, unknown>).message;
+      if (typeof msg === 'string') return msg;
+    }
   }
   if (err instanceof Error) return err.message;
   return null;
@@ -59,7 +53,9 @@ export default function OAuthCallback() {
   const [searchParams] = useSearchParams();
   const [error, setError] = useState('');
   const [errorMode, setErrorMode] = useState<CallbackMode>('login');
-  const [serverLinkResult, setServerLinkResult] = useState<ServerLinkResult | null>(null);
+  const [serverLinkResult, setServerCompleteResponse] = useState<ServerCompleteResponse | null>(
+    null,
+  );
   const loginWithOAuth = useAuthStore((state) => state.loginWithOAuth);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const hasRun = useRef(false);
@@ -100,15 +96,22 @@ export default function OAuthCallback() {
       provider = linkSaved.provider;
       state = linkSaved.state;
     } else {
-      const loginSaved = getAndClearOAuthState();
-      if (loginSaved && loginSaved.state === urlState) {
+      // Peek at login state first; only clear if it matches URL state
+      const loginState = sessionStorage.getItem(OAUTH_STATE_KEY);
+      const loginProvider = sessionStorage.getItem(OAUTH_PROVIDER_KEY);
+      if (loginState && loginProvider && loginState === urlState) {
+        sessionStorage.removeItem(OAUTH_STATE_KEY);
+        sessionStorage.removeItem(OAUTH_PROVIDER_KEY);
         mode = 'login';
-        provider = loginSaved.provider;
-        state = loginSaved.state;
+        provider = loginProvider;
+        state = loginState;
       }
     }
 
     const handle = async () => {
+      // Clear sensitive OAuth params (code, state) from URL immediately for all modes
+      window.history.replaceState({}, '', '/auth/oauth/callback');
+
       if (mode === 'link-browser' && provider && state) {
         // Browser linking: user is authenticated, complete via JWT-protected endpoint
         try {
@@ -123,9 +126,9 @@ export default function OAuthCallback() {
           } else {
             navigate('/profile/accounts', { replace: true });
           }
-        } catch {
+        } catch (err: unknown) {
           setErrorMode('link-browser');
-          setError(t('profile.accounts.linkError'));
+          setError(getErrorDetail(err) || t('profile.accounts.linkError'));
         }
         return;
       }
@@ -149,16 +152,13 @@ export default function OAuthCallback() {
       // mode === 'link-server': No sessionStorage state found.
       // This happens when OAuth was opened in external browser from Mini App.
       // Complete linking via state-token-authenticated server endpoint.
-      // Clear sensitive data from URL immediately.
-      window.history.replaceState({}, '', '/auth/oauth/callback');
-
       try {
         // Provider is resolved server-side from the state token in Redis.
         const response = await authApi.linkServerComplete(code, urlState, deviceId ?? undefined);
-        setServerLinkResult(response);
-      } catch {
+        setServerCompleteResponse(response);
+      } catch (err: unknown) {
         setErrorMode('link-server');
-        setError(t('profile.accounts.linkError'));
+        setError(getErrorDetail(err) || t('profile.accounts.linkError'));
       }
     };
 
@@ -167,7 +167,11 @@ export default function OAuthCallback() {
 
   // Server-complete result: show success with "Return to Telegram" link
   // (merge redirect is handled by the useEffect above)
-  if (serverLinkResult && !(serverLinkResult.merge_required && serverLinkResult.merge_token)) {
+  if (
+    serverLinkResult &&
+    serverLinkResult.success &&
+    !(serverLinkResult.merge_required && serverLinkResult.merge_token)
+  ) {
     const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || '';
     const telegramLink = botUsername ? `https://t.me/${botUsername}` : '';
 
@@ -207,8 +211,33 @@ export default function OAuthCallback() {
 
   if (error) {
     const isServerMode = errorMode === 'link-server';
+    const isLinkBrowserMode = errorMode === 'link-browser';
     const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || '';
     const telegramLink = botUsername ? `https://t.me/${botUsername}` : '';
+
+    const errorAction =
+      isServerMode && telegramLink ? (
+        <a
+          href={telegramLink}
+          className="btn-primary inline-block w-full rounded-lg bg-accent-500 px-6 py-3 text-center font-medium text-dark-950 no-underline transition-colors hover:bg-accent-400"
+        >
+          {t('profile.accounts.openTelegram')}
+        </a>
+      ) : isLinkBrowserMode ? (
+        <button
+          onClick={() => navigate('/profile/accounts', { replace: true })}
+          className="btn-primary w-full"
+        >
+          {t('profile.accounts.backToAccounts', 'Back to accounts')}
+        </button>
+      ) : (
+        <button
+          onClick={() => navigate('/login', { replace: true })}
+          className="btn-primary w-full"
+        >
+          {t('auth.backToLogin', 'Back to login')}
+        </button>
+      );
 
     return (
       <div className="flex min-h-screen items-center justify-center px-4 py-8">
@@ -232,21 +261,7 @@ export default function OAuthCallback() {
             </div>
             <h2 className="mb-2 text-lg font-semibold text-dark-50">{t('auth.loginFailed')}</h2>
             <p className="mb-6 text-sm text-dark-400">{error}</p>
-            {isServerMode && telegramLink ? (
-              <a
-                href={telegramLink}
-                className="btn-primary inline-block w-full rounded-lg bg-accent-500 px-6 py-3 text-center font-medium text-dark-950 no-underline transition-colors hover:bg-accent-400"
-              >
-                {t('profile.accounts.openTelegram')}
-              </a>
-            ) : (
-              <button
-                onClick={() => navigate('/login', { replace: true })}
-                className="btn-primary w-full"
-              >
-                {t('auth.backToLogin', 'Back to login')}
-              </button>
-            )}
+            {errorAction}
           </div>
         </div>
       </div>

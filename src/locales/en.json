@@ -3619,6 +3619,7 @@
       "returnToTelegram": "Return to Telegram to continue",
       "openTelegram": "Open Telegram",
       "continueInBrowser": "Continue authorization in the opened browser",
+      "pollingTimeout": "Authorization check timed out. Refresh the page if you completed linking.",
       "providers": {
         "telegram": "Telegram",
         "email": "Email",

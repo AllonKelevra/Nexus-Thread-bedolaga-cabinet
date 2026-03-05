@@ -4179,6 +4179,7 @@
       "returnToTelegram": "Вернитесь в Telegram, чтобы продолжить",
       "openTelegram": "Открыть Telegram",
       "continueInBrowser": "Продолжите авторизацию в открывшемся браузере",
+      "pollingTimeout": "Проверка авторизации истекла. Обновите страницу, если привязка завершена.",
       "providers": {
         "telegram": "Telegram",
         "email": "Email",

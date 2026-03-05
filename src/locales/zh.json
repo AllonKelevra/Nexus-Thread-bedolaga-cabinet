@@ -3054,6 +3054,7 @@
       "returnToTelegram": "返回 Telegram 继续操作",
       "openTelegram": "打开 Telegram",
       "continueInBrowser": "请在打开的浏览器中继续授权",
+      "pollingTimeout": "授权检查超时。如果您已完成关联，请刷新页面。",
       "providers": {
         "telegram": "Telegram",
         "email": "邮箱",

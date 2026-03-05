@@ -9,7 +9,7 @@ import { Card } from '@/components/data-display/Card';
 import { Button } from '@/components/primitives/Button';
 import { staggerContainer, staggerItem } from '@/components/motion/transitions';
 import ProviderIcon from '../components/ProviderIcon';
-import { LINK_OAUTH_STATE_KEY, LINK_OAUTH_PROVIDER_KEY } from './OAuthCallback';
+import { LINK_OAUTH_STATE_KEY, LINK_OAUTH_PROVIDER_KEY, getErrorDetail } from './OAuthCallback';
 import { getTelegramInitData } from '../hooks/useTelegramSDK';
 import { usePlatform, useIsTelegram } from '@/platform/hooks/usePlatform';
 import type { LinkedProvider } from '../types';
@@ -98,7 +98,7 @@ export default function ConnectedAccounts() {
   const [confirmingUnlink, setConfirmingUnlink] = useState<string | null>(null);
   const [linkingProvider, setLinkingProvider] = useState<string | null>(null);
   const [waitingExternalLink, setWaitingExternalLink] = useState(false);
-  const linkedCountBeforePolling = useRef<number | null>(null);
+  const pendingLinkProvider = useRef<string | null>(null);
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const inTelegram = useIsTelegram();
@@ -118,21 +118,26 @@ export default function ConnectedAccounts() {
     refetchInterval: waitingExternalLink ? 5000 : false,
   });
 
-  // Stop polling after 90 seconds
+  // Stop polling after 90 seconds with timeout feedback
   useEffect(() => {
     if (!waitingExternalLink) return;
-    const timeout = setTimeout(() => setWaitingExternalLink(false), 90_000);
-    return () => clearTimeout(timeout);
-  }, [waitingExternalLink]);
-
-  // Detect successful external link: stop polling and show toast when linked count increases
-  useEffect(() => {
-    if (!waitingExternalLink || !data) return;
-    const currentLinked = data.providers.filter((p) => p.linked).length;
-    if (linkedCountBeforePolling.current === null) return;
-    if (currentLinked > linkedCountBeforePolling.current) {
+    const timeout = setTimeout(() => {
       setWaitingExternalLink(false);
-      linkedCountBeforePolling.current = null;
+      pendingLinkProvider.current = null;
+      // Final refresh in case link succeeded during the last polling interval
+      queryClient.invalidateQueries({ queryKey: ['linked-providers'] });
+      showToast({ type: 'warning', message: t('profile.accounts.pollingTimeout') });
+    }, 90_000);
+    return () => clearTimeout(timeout);
+  }, [waitingExternalLink, showToast, t, queryClient]);
+
+  // Detect successful external link: stop polling when the target provider becomes linked
+  useEffect(() => {
+    if (!waitingExternalLink || !data || !pendingLinkProvider.current) return;
+    const target = data.providers.find((p) => p.provider === pendingLinkProvider.current);
+    if (target?.linked) {
+      setWaitingExternalLink(false);
+      pendingLinkProvider.current = null;
       showToast({ type: 'success', message: t('profile.accounts.linkSuccess') });
     }
   }, [data, waitingExternalLink, showToast, t]);
@@ -169,14 +174,28 @@ export default function ConnectedAccounts() {
     setLinkingProvider(provider);
     try {
       const { authorize_url, state } = await authApi.linkProviderInit(provider);
+      if (!authorize_url || !state) {
+        throw new Error('Invalid response from server');
+      }
+
+      // Validate redirect URL — only allow HTTPS to prevent open redirect
+      let parsed: URL;
+      try {
+        parsed = new URL(authorize_url);
+      } catch {
+        throw new Error('Invalid OAuth redirect URL');
+      }
+      if (parsed.protocol !== 'https:') {
+        throw new Error('Invalid OAuth redirect URL');
+      }
 
       if (inTelegram) {
         // Mini App: open in external browser to avoid WebView OAuth restrictions.
         // The callback will use server-complete flow (auth via state token, no JWT).
         platform.openLink(authorize_url);
         setLinkingProvider(null);
-        // Snapshot current linked count before polling starts
-        linkedCountBeforePolling.current = data?.providers.filter((p) => p.linked).length ?? 0;
+        // Track which provider we're waiting to become linked
+        pendingLinkProvider.current = provider;
         // Start polling for linked providers (external browser has no way to notify Mini App)
         setWaitingExternalLink(true);
         showToast({
@@ -190,10 +209,10 @@ export default function ConnectedAccounts() {
         sessionStorage.setItem(LINK_OAUTH_PROVIDER_KEY, provider);
         window.location.href = authorize_url;
       }
-    } catch {
+    } catch (err: unknown) {
       showToast({
         type: 'error',
-        message: t('profile.accounts.linkError'),
+        message: getErrorDetail(err) || t('profile.accounts.linkError'),
       });
       setLinkingProvider(null);
     }
@@ -213,8 +232,8 @@ export default function ConnectedAccounts() {
         queryClient.invalidateQueries({ queryKey: ['linked-providers'] });
         showToast({ type: 'success', message: t('profile.accounts.linkSuccess') });
       }
-    } catch {
-      showToast({ type: 'error', message: t('profile.accounts.linkError') });
+    } catch (err: unknown) {
+      showToast({ type: 'error', message: getErrorDetail(err) || t('profile.accounts.linkError') });
     } finally {
       setLinkingProvider(null);
     }
@@ -245,7 +264,7 @@ export default function ConnectedAccounts() {
           <Button
             variant="primary"
             size="sm"
-            disabled={linkingProvider !== null}
+            disabled={linkingProvider !== null || waitingExternalLink}
             loading={linkingProvider === 'telegram'}
             onClick={() => handleLink('telegram')}
           >
@@ -262,7 +281,7 @@ export default function ConnectedAccounts() {
         <Button
           variant="primary"
           size="sm"
-          disabled={linkingProvider !== null}
+          disabled={linkingProvider !== null || waitingExternalLink}
           loading={linkingProvider === provider.provider}
           onClick={() => handleLink(provider.provider)}
         >

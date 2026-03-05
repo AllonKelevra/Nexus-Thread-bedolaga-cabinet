@@ -7,6 +7,7 @@ import type {
   MergeResponse,
   OAuthProvider,
   RegisterResponse,
+  ServerCompleteResponse,
   TokenResponse,
   User,
 } from '../types';
@@ -260,8 +261,8 @@ export const authApi = {
     code: string,
     state: string,
     deviceId?: string,
-  ): Promise<LinkCallbackResponse & { provider?: string }> => {
-    const response = await apiClient.post<LinkCallbackResponse & { provider?: string }>(
+  ): Promise<ServerCompleteResponse> => {
+    const response = await apiClient.post<ServerCompleteResponse>(
       '/cabinet/auth/account/link/server-complete',
       {
         code,

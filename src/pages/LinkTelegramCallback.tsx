@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { authApi } from '../api/auth';
 import { useToast } from '../components/Toast';
 import { LINK_TELEGRAM_STATE_KEY } from './ConnectedAccounts';
+import { getErrorDetail } from './OAuthCallback';
 
 export default function LinkTelegramCallback() {
   const { t } = useTranslation();
@@ -69,8 +70,11 @@ export default function LinkTelegramCallback() {
           showToast({ type: 'success', message: t('profile.accounts.linkSuccess') });
           navigate('/profile/accounts', { replace: true });
         }
-      } catch {
-        showToast({ type: 'error', message: t('profile.accounts.linkError') });
+      } catch (err: unknown) {
+        showToast({
+          type: 'error',
+          message: getErrorDetail(err) || t('profile.accounts.linkError'),
+        });
         navigate('/profile/accounts', { replace: true });
       }
     };

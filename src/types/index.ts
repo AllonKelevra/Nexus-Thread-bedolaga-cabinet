@@ -655,6 +655,10 @@ export interface LinkCallbackResponse {
   merge_token: string | null;
 }
 
+export interface ServerCompleteResponse extends LinkCallbackResponse {
+  provider: string;
+}
+
 // Account Merge
 export interface MergeSubscriptionPreview {
   status: string;
