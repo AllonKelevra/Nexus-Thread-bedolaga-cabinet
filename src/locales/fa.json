@@ -2914,7 +2914,12 @@
       "invalidSlug": "Slug can only contain lowercase letters, numbers, and hyphens",
       "titleRequired": "Title is required",
       "noTariffs": "Select at least one tariff",
-      "noPaymentMethods": "Add at least one payment method"
+      "noPaymentMethods": "Add at least one payment method",
+      "selectMethods": "انتخاب روش‌های پرداخت موجود",
+      "noSystemMethods": "هیچ روش پرداختی در سیستم پیکربندی نشده است",
+      "methodOrder": "برای تغییر ترتیب بکشید",
+      "loadingPeriods": "در حال بارگذاری...",
+      "periodDaySuffix": "روز"
     }
   },
   "adminUpdates": {

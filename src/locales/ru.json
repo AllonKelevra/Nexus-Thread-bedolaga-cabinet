@@ -3743,7 +3743,12 @@
       "invalidSlug": "Slug может содержать только строчные буквы, цифры и дефисы",
       "titleRequired": "Заголовок обязателен",
       "noTariffs": "Выберите хотя бы один тариф",
-      "noPaymentMethods": "Добавьте хотя бы один способ оплаты"
+      "noPaymentMethods": "Добавьте хотя бы один способ оплаты",
+      "selectMethods": "Выберите доступные методы",
+      "noSystemMethods": "В системе не настроено ни одного способа оплаты",
+      "methodOrder": "Перетащите для изменения порядка",
+      "loadingPeriods": "Загрузка...",
+      "periodDaySuffix": "д"
     }
   },
   "adminUpdates": {

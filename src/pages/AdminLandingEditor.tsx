@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueries, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
   adminLandingsApi,
@@ -8,7 +8,8 @@ import {
   LandingFeature,
   LandingPaymentMethod,
 } from '../api/landings';
-import { tariffsApi, TariffListItem } from '../api/tariffs';
+import { tariffsApi, TariffListItem, PeriodPrice } from '../api/tariffs';
+import { adminPaymentMethodsApi } from '../api/adminPaymentMethods';
 import { Toggle } from '../components/admin';
 import { useNotify } from '@/platform';
 import { usePlatform } from '../platform/hooks/usePlatform';
@@ -47,6 +48,10 @@ const ChevronDownIcon = ({ open }: { open: boolean }) => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
   </svg>
 );
+
+function formatPrice(kopeks: number): string {
+  return `${(kopeks / 100).toLocaleString('ru-RU')} \u20BD`;
+}
 
 // ============ Sortable Feature Item ============
 
@@ -121,17 +126,14 @@ function SortableFeatureItem({ feature, index, onUpdate, onRemove }: SortableFea
   );
 }
 
-// ============ Sortable Payment Method ============
+// ============ Sortable Selected Payment Method Card ============
 
-interface SortableMethodProps {
+interface SortableSelectedMethodProps {
   method: MethodWithId;
-  index: number;
-  onUpdate: (index: number, field: keyof LandingPaymentMethod, value: string) => void;
-  onRemove: (index: number) => void;
+  onRemove: (methodId: string) => void;
 }
 
-function SortableMethodItem({ method, index, onUpdate, onRemove }: SortableMethodProps) {
-  const { t } = useTranslation();
+function SortableSelectedMethodCard({ method, onRemove }: SortableSelectedMethodProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: method._id,
   });
@@ -148,54 +150,21 @@ function SortableMethodItem({ method, index, onUpdate, onRemove }: SortableMetho
       ref={setNodeRef}
       style={style}
       className={cn(
-        'flex items-start gap-2 rounded-lg border p-3',
+        'flex items-center gap-2 rounded-lg border px-3 py-2',
         isDragging ? 'border-accent-500/50 bg-dark-700' : 'border-dark-700 bg-dark-800/50',
       )}
     >
       <button
         {...attributes}
         {...listeners}
-        className="mt-2 flex-shrink-0 cursor-grab touch-none text-dark-500 hover:text-dark-300 active:cursor-grabbing"
+        className="flex-shrink-0 cursor-grab touch-none text-dark-500 hover:text-dark-300 active:cursor-grabbing"
       >
         <GripIcon />
       </button>
-      <div className="min-w-0 flex-1 space-y-2">
-        <div className="grid grid-cols-2 gap-2">
-          <input
-            type="text"
-            value={method.method_id}
-            onChange={(e) => onUpdate(index, 'method_id', e.target.value)}
-            placeholder={t('admin.landings.methodId')}
-            className="rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
-          />
-          <input
-            type="text"
-            value={method.display_name}
-            onChange={(e) => onUpdate(index, 'display_name', e.target.value)}
-            placeholder={t('admin.landings.methodName')}
-            className="rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <input
-            type="text"
-            value={method.description}
-            onChange={(e) => onUpdate(index, 'description', e.target.value)}
-            placeholder={t('admin.landings.methodDesc')}
-            className="rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
-          />
-          <input
-            type="text"
-            value={method.icon_url}
-            onChange={(e) => onUpdate(index, 'icon_url', e.target.value)}
-            placeholder={t('admin.landings.methodIcon')}
-            className="rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
-          />
-        </div>
-      </div>
+      <span className="min-w-0 flex-1 truncate text-sm text-dark-100">{method.display_name}</span>
       <button
-        onClick={() => onRemove(index)}
-        className="mt-2 flex-shrink-0 text-dark-500 hover:text-error-400"
+        onClick={() => onRemove(method.method_id)}
+        className="flex-shrink-0 text-dark-500 hover:text-error-400"
       >
         <TrashIcon />
       </button>
@@ -281,6 +250,38 @@ export default function AdminLandingEditor() {
   });
 
   const allTariffs = tariffsData?.tariffs ?? [];
+
+  // Fetch system payment methods
+  const { data: systemMethods } = useQuery({
+    queryKey: ['admin-payment-methods'],
+    queryFn: () => adminPaymentMethodsApi.getAll(),
+    staleTime: 30_000,
+  });
+
+  const availablePaymentMethods = useMemo(
+    () => (systemMethods ?? []).filter((m) => m.is_enabled && m.is_provider_configured),
+    [systemMethods],
+  );
+
+  // Fetch tariff details for period info
+  const tariffDetailQueries = useQueries({
+    queries: selectedTariffIds.map((tariffId) => ({
+      queryKey: ['admin-tariff-detail', tariffId],
+      queryFn: () => tariffsApi.getTariff(tariffId),
+      staleTime: 60_000,
+      enabled: selectedTariffIds.includes(tariffId),
+    })),
+  });
+
+  const tariffPeriodsMap = useMemo(() => {
+    const map: Record<number, PeriodPrice[]> = {};
+    tariffDetailQueries.forEach((q, i) => {
+      if (q.data) {
+        map[selectedTariffIds[i]] = q.data.period_prices;
+      }
+    });
+    return map;
+  }, [tariffDetailQueries, selectedTariffIds]);
 
   // Fetch landing for editing
   const { data: landingData } = useQuery({
@@ -431,26 +432,30 @@ export default function AdminLandingEditor() {
   }, []);
 
   // ---- Payment methods helpers ----
-  const addMethod = () => {
-    setPaymentMethods((prev) => [
-      ...prev,
-      {
-        _id: crypto.randomUUID(),
-        method_id: '',
-        display_name: '',
-        description: '',
-        icon_url: '',
-        sort_order: prev.length,
-      },
-    ]);
+  const togglePaymentMethod = (methodId: string) => {
+    setPaymentMethods((prev) => {
+      const exists = prev.find((m) => m.method_id === methodId);
+      if (exists) {
+        return prev.filter((m) => m.method_id !== methodId);
+      }
+      const systemMethod = availablePaymentMethods.find((m) => m.method_id === methodId);
+      if (!systemMethod) return prev;
+      return [
+        ...prev,
+        {
+          _id: crypto.randomUUID(),
+          method_id: systemMethod.method_id,
+          display_name: systemMethod.display_name ?? systemMethod.default_display_name,
+          description: '',
+          icon_url: '',
+          sort_order: prev.length,
+        },
+      ];
+    });
   };
 
-  const updateMethod = (index: number, field: keyof LandingPaymentMethod, value: string) => {
-    setPaymentMethods((prev) => prev.map((m, i) => (i === index ? { ...m, [field]: value } : m)));
-  };
-
-  const removeMethod = (index: number) => {
-    setPaymentMethods((prev) => prev.filter((_, i) => i !== index));
+  const removePaymentMethod = (methodId: string) => {
+    setPaymentMethods((prev) => prev.filter((m) => m.method_id !== methodId));
   };
 
   const handleMethodDragEnd = useCallback((event: DragEndEvent) => {
@@ -472,13 +477,27 @@ export default function AdminLandingEditor() {
     );
   };
 
-  const togglePeriod = (tariffId: number, days: number) => {
+  const togglePeriodFromTariff = (tariffId: number, days: number, allPeriods: PeriodPrice[]) => {
     const key = String(tariffId);
+    const allDays = allPeriods.map((p) => p.days);
+
     setAllowedPeriods((prev) => {
-      const current = prev[key] ?? [];
-      const updated = current.includes(days)
-        ? current.filter((d) => d !== days)
-        : [...current, days];
+      const current = prev[key];
+      if (!current) {
+        // No override yet -- all periods allowed. Remove this one.
+        const updated = allDays.filter((d) => d !== days);
+        return { ...prev, [key]: updated };
+      }
+
+      const hasDay = current.includes(days);
+      const updated = hasDay ? current.filter((d) => d !== days) : [...current, days];
+
+      // If all periods are selected again, remove the override
+      if (updated.length === allDays.length) {
+        const { [key]: _, ...rest } = prev;
+        return rest;
+      }
+
       return { ...prev, [key]: updated };
     });
   };
@@ -664,23 +683,44 @@ export default function AdminLandingEditor() {
                     </span>
                   )}
                 </label>
-                {/* Period checkboxes if tariff is selected and is not daily */}
+                {/* Period checkboxes from tariff detail */}
                 {selectedTariffIds.includes(tariff.id) && !tariff.is_daily && (
-                  <div className="ml-7 mt-2 flex flex-wrap gap-2">
+                  <div className="ml-7 mt-2">
                     <span className="text-xs text-dark-500">{t('admin.landings.periods')}:</span>
-                    {/* We show known periods from the tariff detail. Since TariffListItem doesn't have period_prices,
-                        we let the user type periods or rely on the backend returning allowed_periods.
-                        For simplicity, show the allowed_periods for this tariff if any are set. */}
-                    {(allowedPeriods[String(tariff.id)] ?? []).map((days) => (
-                      <button
-                        key={days}
-                        onClick={() => togglePeriod(tariff.id, days)}
-                        className="rounded bg-accent-500/20 px-2 py-0.5 text-xs text-accent-400 hover:bg-accent-500/30"
-                      >
-                        {days}d<span className="ml-1 text-accent-300">x</span>
-                      </button>
-                    ))}
-                    <AddPeriodButton tariffId={tariff.id} onAdd={togglePeriod} />
+                    {tariffPeriodsMap[tariff.id] ? (
+                      <div className="mt-1 flex flex-wrap gap-2">
+                        {tariffPeriodsMap[tariff.id].map((period) => {
+                          const override = allowedPeriods[String(tariff.id)];
+                          const isAllowed = !override || override.includes(period.days);
+                          return (
+                            <button
+                              key={period.days}
+                              onClick={() =>
+                                togglePeriodFromTariff(
+                                  tariff.id,
+                                  period.days,
+                                  tariffPeriodsMap[tariff.id],
+                                )
+                              }
+                              className={cn(
+                                'rounded-full px-3 py-1 text-xs font-medium transition-colors',
+                                isAllowed
+                                  ? 'bg-accent-500/20 text-accent-400'
+                                  : 'bg-dark-700/50 text-dark-500 line-through',
+                              )}
+                            >
+                              {period.days}
+                              {t('admin.landings.periodDaySuffix')} —{' '}
+                              {formatPrice(period.price_kopeks)}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <span className="ml-2 text-xs text-dark-600">
+                        {t('admin.landings.loadingPeriods')}
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
@@ -694,27 +734,62 @@ export default function AdminLandingEditor() {
           open={openSections.methods}
           onToggle={() => toggleSection('methods')}
         >
-          <div className="space-y-3">
-            <DndContext sensors={sensors} onDragEnd={handleMethodDragEnd}>
-              <SortableContext items={methodIds} strategy={verticalListSortingStrategy}>
-                {paymentMethods.map((method, index) => (
-                  <SortableMethodItem
-                    key={method._id}
-                    method={method}
-                    index={index}
-                    onUpdate={updateMethod}
-                    onRemove={removeMethod}
-                  />
-                ))}
-              </SortableContext>
-            </DndContext>
-            <button
-              onClick={addMethod}
-              className="flex items-center gap-2 rounded-lg border border-dashed border-dark-600 px-4 py-2 text-sm text-dark-400 transition-colors hover:border-dark-500 hover:text-dark-300"
-            >
-              <PlusIcon />
-              {t('admin.landings.addMethod')}
-            </button>
+          <div className="space-y-4">
+            {/* Available system methods as toggleable list */}
+            <div>
+              <p className="mb-2 text-sm text-dark-500">{t('admin.landings.selectMethods')}</p>
+              <div className="space-y-2">
+                {availablePaymentMethods.map((sysMethod) => {
+                  const isSelected = paymentMethods.some(
+                    (m) => m.method_id === sysMethod.method_id,
+                  );
+                  return (
+                    <label
+                      key={sysMethod.method_id}
+                      className={cn(
+                        'flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors',
+                        isSelected
+                          ? 'border-accent-500/50 bg-accent-500/5'
+                          : 'border-dark-700 bg-dark-800/50 hover:border-dark-600',
+                      )}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => togglePaymentMethod(sysMethod.method_id)}
+                        className="h-4 w-4 rounded border-dark-600 bg-dark-700 text-accent-500"
+                      />
+                      <span className="text-sm font-medium text-dark-100">
+                        {sysMethod.display_name ?? sysMethod.default_display_name}
+                      </span>
+                    </label>
+                  );
+                })}
+                {availablePaymentMethods.length === 0 && (
+                  <p className="text-sm text-dark-600">{t('admin.landings.noSystemMethods')}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Selected methods with drag-to-reorder */}
+            {paymentMethods.length > 0 && (
+              <div>
+                <p className="mb-2 text-sm text-dark-500">{t('admin.landings.methodOrder')}</p>
+                <DndContext sensors={sensors} onDragEnd={handleMethodDragEnd}>
+                  <SortableContext items={methodIds} strategy={verticalListSortingStrategy}>
+                    <div className="space-y-2">
+                      {paymentMethods.map((method) => (
+                        <SortableSelectedMethodCard
+                          key={method._id}
+                          method={method}
+                          onRemove={removePaymentMethod}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
+              </div>
+            )}
           </div>
         </Section>
 
@@ -763,62 +838,5 @@ export default function AdminLandingEditor() {
         </Section>
       </div>
     </div>
-  );
-}
-
-// ============ Tiny helper for adding a period ============
-
-function AddPeriodButton({
-  tariffId,
-  onAdd,
-}: {
-  tariffId: number;
-  onAdd: (tariffId: number, days: number) => void;
-}) {
-  const [value, setValue] = useState('');
-  const [showInput, setShowInput] = useState(false);
-
-  if (!showInput) {
-    return (
-      <button
-        onClick={() => setShowInput(true)}
-        className="rounded border border-dashed border-dark-600 px-2 py-0.5 text-xs text-dark-500 hover:border-dark-500 hover:text-dark-400"
-      >
-        +
-      </button>
-    );
-  }
-
-  return (
-    <input
-      type="number"
-      autoFocus
-      value={value}
-      onChange={(e) => setValue(e.target.value)}
-      onBlur={() => {
-        const days = parseInt(value, 10);
-        if (days > 0) {
-          onAdd(tariffId, days);
-        }
-        setValue('');
-        setShowInput(false);
-      }}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter') {
-          const days = parseInt(value, 10);
-          if (days > 0) {
-            onAdd(tariffId, days);
-          }
-          setValue('');
-          setShowInput(false);
-        }
-        if (e.key === 'Escape') {
-          setValue('');
-          setShowInput(false);
-        }
-      }}
-      placeholder="30"
-      className="w-16 rounded border border-dark-600 bg-dark-800 px-2 py-0.5 text-xs text-dark-100 outline-none focus:border-accent-500"
-    />
   );
 }

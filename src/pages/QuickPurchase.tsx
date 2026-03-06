@@ -569,22 +569,53 @@ export default function QuickPurchase() {
     };
   }, []);
 
+  // Collect ALL unique periods across ALL tariffs
+  const allPeriods = useMemo(() => {
+    if (!config) return [];
+    const periodMap = new Map<number, LandingTariffPeriod>();
+    for (const tariff of config.tariffs) {
+      for (const period of tariff.periods) {
+        if (!periodMap.has(period.days)) {
+          periodMap.set(period.days, period);
+        }
+      }
+    }
+    return Array.from(periodMap.values()).sort((a, b) => a.days - b.days);
+  }, [config]);
+
+  // Filter tariffs to only those that have the selected period
+  const visibleTariffs = useMemo(() => {
+    if (!config || !selectedPeriodDays) return config?.tariffs ?? [];
+    return config.tariffs.filter((t) => t.periods.some((p) => p.days === selectedPeriodDays));
+  }, [config, selectedPeriodDays]);
+
   // Auto-select first tariff, period, method on config load
   useEffect(() => {
     if (!config) return;
 
-    if (config.tariffs.length > 0 && selectedTariffId === null) {
-      const firstTariff = config.tariffs[0];
-      setSelectedTariffId(firstTariff.id);
-      if (firstTariff.periods.length > 0 && selectedPeriodDays === null) {
-        setSelectedPeriodDays(firstTariff.periods[0].days);
-      }
+    // Auto-select first period from all available periods
+    if (allPeriods.length > 0 && selectedPeriodDays === null) {
+      setSelectedPeriodDays(allPeriods[0].days);
+    }
+
+    // Auto-select first visible tariff
+    if (visibleTariffs.length > 0 && selectedTariffId === null) {
+      setSelectedTariffId(visibleTariffs[0].id);
     }
 
     if (config.payment_methods.length > 0 && selectedMethod === null) {
       setSelectedMethod(config.payment_methods[0].method_id);
     }
-  }, [config, selectedTariffId, selectedPeriodDays, selectedMethod]);
+  }, [config, allPeriods, visibleTariffs, selectedTariffId, selectedPeriodDays, selectedMethod]);
+
+  // When period changes, auto-select first visible tariff if current is hidden
+  useEffect(() => {
+    if (!visibleTariffs.length) return;
+    const currentVisible = visibleTariffs.find((t) => t.id === selectedTariffId);
+    if (!currentVisible) {
+      setSelectedTariffId(visibleTariffs[0].id);
+    }
+  }, [visibleTariffs, selectedTariffId]);
 
   // SEO: set document title
   useEffect(() => {
@@ -647,23 +678,12 @@ export default function QuickPurchase() {
     [config?.tariffs, selectedTariffId],
   );
 
-  const availablePeriods = useMemo(() => selectedTariff?.periods ?? [], [selectedTariff]);
-
   const selectedPeriod = useMemo(
-    () => availablePeriods.find((p) => p.days === selectedPeriodDays),
-    [availablePeriods, selectedPeriodDays],
+    () => selectedTariff?.periods.find((p) => p.days === selectedPeriodDays),
+    [selectedTariff, selectedPeriodDays],
   );
 
   const currentPrice = selectedPeriod?.price_kopeks ?? 0;
-
-  // When tariff changes, reset period to first available if current is invalid
-  useEffect(() => {
-    if (!selectedTariff) return;
-    const hasCurrent = selectedTariff.periods.some((p) => p.days === selectedPeriodDays);
-    if (!hasCurrent && selectedTariff.periods.length > 0) {
-      setSelectedPeriodDays(selectedTariff.periods[0].days);
-    }
-  }, [selectedTariff, selectedPeriodDays]);
 
   // Validation
   const canSubmit = useMemo(() => {
@@ -727,7 +747,7 @@ export default function QuickPurchase() {
     return <ErrorState message={errMsg} />;
   }
 
-  const showTariffCards = config.tariffs.length > 1;
+  const showTariffCards = visibleTariffs.length > 1;
 
   return (
     <div className="min-h-dvh bg-dark-950">
@@ -757,13 +777,13 @@ export default function QuickPurchase() {
             className="space-y-6"
           >
             {/* Period tabs */}
-            {availablePeriods.length > 0 && (
+            {allPeriods.length > 0 && (
               <div>
                 <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-dark-400">
                   {t('landing.choosePeriod', 'Choose period')}
                 </h2>
                 <PeriodTabs
-                  periods={availablePeriods}
+                  periods={allPeriods}
                   selectedDays={selectedPeriodDays ?? 0}
                   onSelect={setSelectedPeriodDays}
                 />
@@ -801,7 +821,7 @@ export default function QuickPurchase() {
                   aria-label={t('landing.chooseTariff', 'Choose tariff')}
                   className="grid gap-3 sm:grid-cols-2"
                 >
-                  {config.tariffs.map((tariff) => {
+                  {visibleTariffs.map((tariff) => {
                     const period = tariff.periods.find((p) => p.days === selectedPeriodDays);
                     return (
                       <TariffCard

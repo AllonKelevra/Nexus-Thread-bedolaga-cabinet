@@ -2913,7 +2913,12 @@
       "invalidSlug": "Slug can only contain lowercase letters, numbers, and hyphens",
       "titleRequired": "Title is required",
       "noTariffs": "Select at least one tariff",
-      "noPaymentMethods": "Add at least one payment method"
+      "noPaymentMethods": "Add at least one payment method",
+      "selectMethods": "选择可用的支付方式",
+      "noSystemMethods": "系统中未配置任何支付方式",
+      "methodOrder": "拖动以调整顺序",
+      "loadingPeriods": "加载中...",
+      "periodDaySuffix": "天"
     }
   },
   "adminUpdates": {
