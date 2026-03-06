@@ -3960,6 +3960,7 @@
     "total": "Total",
     "pay": "Pay",
     "choosePeriod": "Choose period",
+    "copy": "Copy",
     "copied": "Copied!",
     "copyLink": "Copy link",
     "giftToggleLabel": "Purchase type",
@@ -3970,6 +3971,16 @@
     "activateNow": "Activate now",
     "activating": "Activating...",
     "activationFailed": "Activation failed",
-    "giftMessage": "Message"
+    "giftMessage": "Message",
+    "cabinetReady": "Your account is ready",
+    "cabinetEmail": "Email",
+    "cabinetPassword": "Password",
+    "goToCabinet": "Go to Cabinet",
+    "saveCredentials": "Save these login credentials",
+    "credentialsSentToEmail": "Login credentials sent to your email",
+    "giftSentSuccess": "Gift sent!",
+    "giftSentDesc": "Recipient will be notified by email",
+    "autoLoginFailed": "Auto-login failed",
+    "autoLoginProcessing": "Signing in..."
   }
 }

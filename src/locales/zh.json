@@ -3510,6 +3510,7 @@
     "total": "总计",
     "pay": "支付",
     "choosePeriod": "选择时长",
+    "copy": "复制",
     "copied": "已复制！",
     "copyLink": "复制链接",
     "giftToggleLabel": "\u8d2d\u4e70\u7c7b\u578b",
@@ -3520,6 +3521,16 @@
     "activateNow": "立即激活",
     "activating": "激活中...",
     "activationFailed": "激活失败",
-    "giftMessage": "留言"
+    "giftMessage": "留言",
+    "cabinetReady": "您的账户已准备就绪",
+    "cabinetEmail": "邮箱",
+    "cabinetPassword": "密码",
+    "goToCabinet": "前往个人中心",
+    "saveCredentials": "请保存这些登录信息",
+    "credentialsSentToEmail": "登录信息已发送到您的邮箱",
+    "giftSentSuccess": "礼物已发送！",
+    "giftSentDesc": "收件人将通过邮件收到通知",
+    "autoLoginFailed": "自动登录失败",
+    "autoLoginProcessing": "正在登录..."
   }
 }

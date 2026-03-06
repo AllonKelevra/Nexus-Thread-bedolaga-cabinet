@@ -40,6 +40,7 @@ const Connection = lazy(() => import('./pages/Connection'));
 const ConnectionQR = lazy(() => import('./pages/ConnectionQR'));
 const QuickPurchase = lazy(() => import('./pages/QuickPurchase'));
 const PurchaseSuccess = lazy(() => import('./pages/PurchaseSuccess'));
+const AutoLogin = lazy(() => import('./pages/AutoLogin'));
 const TopUpMethodSelect = lazy(() => import('./pages/TopUpMethodSelect'));
 const TopUpAmount = lazy(() => import('./pages/TopUpAmount'));
 const ConnectedAccounts = lazy(() => import('./pages/ConnectedAccounts'));
@@ -215,6 +216,16 @@ function App() {
             <ErrorBoundary level="app">
               <LazyPage>
                 <QuickPurchase />
+              </LazyPage>
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="/auto-login"
+          element={
+            <ErrorBoundary level="app">
+              <LazyPage>
+                <AutoLogin />
               </LazyPage>
             </ErrorBoundary>
           }

@@ -1,10 +1,12 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { useParams } from 'react-router';
-import { useQuery } from '@tanstack/react-query';
+import { useParams, useNavigate } from 'react-router';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { landingApi } from '../api/landings';
+import { authApi } from '../api/auth';
+import { useAuthStore } from '../store/auth';
 import { copyToClipboard } from '../utils/clipboard';
 import { cn } from '../lib/utils';
 
@@ -41,6 +43,168 @@ function PendingState() {
         </h1>
         <p className="mt-2 text-sm text-dark-400">{t('landing.awaitingPaymentDesc')}</p>
       </div>
+    </motion.div>
+  );
+}
+
+function CopyableField({ label, value }: { label: string; value: string }) {
+  const { t } = useTranslation();
+  const [copied, setCopied] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
+  const handleCopy = useCallback(async () => {
+    try {
+      await copyToClipboard(value);
+      setCopied(true);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard write failed silently
+    }
+  }, [value]);
+
+  return (
+    <div className="flex items-center gap-2 rounded-xl bg-dark-800/50 px-4 py-3">
+      <div className="flex-1 text-left">
+        <p className="text-xs text-dark-400">{label}</p>
+        <p className="mt-0.5 font-mono text-sm text-dark-100">{value}</p>
+      </div>
+      <button
+        type="button"
+        onClick={handleCopy}
+        className={cn(
+          'shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
+          copied
+            ? 'bg-success-500/10 text-success-500'
+            : 'bg-dark-700/50 text-dark-300 hover:bg-dark-600/50',
+        )}
+      >
+        {copied ? t('landing.copied', 'Copied!') : t('landing.copy', 'Copy')}
+      </button>
+    </div>
+  );
+}
+
+function CabinetCredentialsState({
+  cabinetEmail,
+  cabinetPassword,
+  autoLoginToken,
+  tariffName,
+  periodDays,
+}: {
+  cabinetEmail: string;
+  cabinetPassword: string | null;
+  autoLoginToken: string | null;
+  tariffName: string | null;
+  periodDays: number | null;
+}) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { setTokens, setUser, checkAdminStatus } = useAuthStore();
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [loginError, setLoginError] = useState(false);
+
+  const handleGoToCabinet = useCallback(async () => {
+    if (!autoLoginToken) {
+      navigate('/login');
+      return;
+    }
+    setIsLoggingIn(true);
+    setLoginError(false);
+    try {
+      const response = await authApi.autoLogin(autoLoginToken);
+      setTokens(response.access_token, response.refresh_token);
+      setUser(response.user);
+      await checkAdminStatus();
+      navigate('/');
+    } catch {
+      setLoginError(true);
+      setIsLoggingIn(false);
+    }
+  }, [autoLoginToken, navigate, setTokens, setUser, checkAdminStatus]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="flex flex-col items-center gap-6 text-center"
+    >
+      {/* Animated checkmark */}
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
+        className="flex h-20 w-20 items-center justify-center rounded-full bg-success-500/10"
+      >
+        <motion.svg
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={{ pathLength: 1, opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+          className="h-10 w-10 text-success-500"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2.5}
+        >
+          <motion.path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M5 13l4 4L19 7"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+          />
+        </motion.svg>
+      </motion.div>
+
+      {/* Title */}
+      <div>
+        <h1 className="text-xl font-bold text-dark-50">{t('landing.cabinetReady')}</h1>
+        {tariffName && periodDays !== null && (
+          <p className="mt-1 text-sm text-dark-300">
+            {tariffName} — {periodDays} {t('landing.daysAccess')}
+          </p>
+        )}
+      </div>
+
+      {/* Credentials */}
+      <div className="w-full space-y-3">
+        <CopyableField label={t('landing.cabinetEmail')} value={cabinetEmail} />
+        {cabinetPassword && (
+          <CopyableField label={t('landing.cabinetPassword')} value={cabinetPassword} />
+        )}
+        {cabinetPassword && <p className="text-xs text-dark-400">{t('landing.saveCredentials')}</p>}
+        {!cabinetPassword && (
+          <p className="text-xs text-dark-400">{t('landing.credentialsSentToEmail')}</p>
+        )}
+      </div>
+
+      {/* Go to Cabinet button */}
+      <button
+        type="button"
+        onClick={handleGoToCabinet}
+        disabled={isLoggingIn}
+        className={cn(
+          'flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-medium text-white transition-colors',
+          isLoggingIn ? 'cursor-not-allowed bg-accent-500/50' : 'bg-accent-500 hover:bg-accent-400',
+        )}
+      >
+        {isLoggingIn ? (
+          <>
+            <Spinner className="h-4 w-4" />
+            {t('landing.autoLoginProcessing')}
+          </>
+        ) : (
+          t('landing.goToCabinet')
+        )}
+      </button>
+      {loginError && <p className="text-xs text-error-400">{t('landing.autoLoginFailed')}</p>}
     </motion.div>
   );
 }
@@ -127,8 +291,10 @@ function SuccessState({
 
       {/* Title */}
       <div>
-        <h1 className="text-xl font-bold text-dark-50">{t('landing.purchaseSuccess')}</h1>
-        {tariffName && periodDays && (
+        <h1 className="text-xl font-bold text-dark-50">
+          {isGift ? t('landing.giftSentSuccess') : t('landing.purchaseSuccess')}
+        </h1>
+        {tariffName && periodDays !== null && (
           <p className="mt-1 text-sm text-dark-300">
             {tariffName} — {periodDays} {t('landing.daysAccess')}
           </p>
@@ -216,6 +382,7 @@ function PendingActivationState({
   isGift,
   isActivating,
   onActivate,
+  autoLoginToken,
 }: {
   tariffName: string | null;
   periodDays: number | null;
@@ -223,8 +390,30 @@ function PendingActivationState({
   isGift: boolean;
   isActivating: boolean;
   onActivate: () => void;
+  autoLoginToken: string | null;
 }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { setTokens, setUser, checkAdminStatus } = useAuthStore();
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  const handleGoToCabinet = useCallback(async () => {
+    if (!autoLoginToken) {
+      navigate('/login');
+      return;
+    }
+    setIsLoggingIn(true);
+    try {
+      const response = await authApi.autoLogin(autoLoginToken);
+      setTokens(response.access_token, response.refresh_token);
+      setUser(response.user);
+      await checkAdminStatus();
+      navigate('/');
+    } catch {
+      setIsLoggingIn(false);
+      navigate('/login');
+    }
+  }, [autoLoginToken, navigate, setTokens, setUser, checkAdminStatus]);
 
   return (
     <motion.div
@@ -251,7 +440,7 @@ function PendingActivationState({
 
       <div>
         <h1 className="text-xl font-bold text-dark-50">{t('landing.pendingActivation')}</h1>
-        {tariffName && periodDays && (
+        {tariffName && periodDays !== null && (
           <p className="mt-1 text-sm text-dark-300">
             {tariffName} — {periodDays} {t('landing.daysAccess')}
           </p>
@@ -264,26 +453,51 @@ function PendingActivationState({
         )}
       </div>
 
-      <button
-        type="button"
-        onClick={onActivate}
-        disabled={isActivating}
-        className={cn(
-          'flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-medium text-white transition-colors',
-          isActivating
-            ? 'cursor-not-allowed bg-accent-500/50'
-            : 'bg-accent-500 hover:bg-accent-400',
+      <div className="flex w-full flex-col gap-3">
+        <button
+          type="button"
+          onClick={onActivate}
+          disabled={isActivating}
+          className={cn(
+            'flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-medium text-white transition-colors',
+            isActivating
+              ? 'cursor-not-allowed bg-accent-500/50'
+              : 'bg-accent-500 hover:bg-accent-400',
+          )}
+        >
+          {isActivating ? (
+            <>
+              <Spinner className="h-4 w-4" />
+              {t('landing.activating')}
+            </>
+          ) : (
+            t('landing.activateNow')
+          )}
+        </button>
+
+        {autoLoginToken && (
+          <button
+            type="button"
+            onClick={handleGoToCabinet}
+            disabled={isLoggingIn}
+            className={cn(
+              'flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-medium transition-colors',
+              isLoggingIn
+                ? 'cursor-not-allowed bg-dark-800/30 text-dark-400'
+                : 'bg-dark-800/50 text-dark-200 hover:bg-dark-700/50',
+            )}
+          >
+            {isLoggingIn ? (
+              <>
+                <Spinner className="h-4 w-4" />
+                {t('landing.autoLoginProcessing')}
+              </>
+            ) : (
+              t('landing.goToCabinet')
+            )}
+          </button>
         )}
-      >
-        {isActivating ? (
-          <>
-            <Spinner className="h-4 w-4" />
-            {t('landing.activating')}
-          </>
-        ) : (
-          t('landing.activateNow')
-        )}
-      </button>
+      </div>
     </motion.div>
   );
 }
@@ -386,6 +600,8 @@ export default function PurchaseSuccess() {
     };
   }, []);
 
+  const queryClient = useQueryClient();
+
   const {
     data: purchaseStatus,
     isError,
@@ -420,25 +636,40 @@ export default function PurchaseSuccess() {
     setIsActivating(true);
     setActivationError(false);
     try {
-      await landingApi.activatePurchase(token);
-      await refetch();
+      const result = await landingApi.activatePurchase(token);
+      queryClient.setQueryData(['purchase-status', token], result);
     } catch {
       setActivationError(true);
     } finally {
       activatingRef.current = false;
       setIsActivating(false);
     }
-  }, [token, refetch]);
+  }, [token, queryClient]);
 
   const isSuccess = purchaseStatus?.status === 'delivered';
   const isPendingActivation = purchaseStatus?.status === 'pending_activation';
   const isFailed = purchaseStatus?.status === 'failed' || purchaseStatus?.status === 'expired';
+
+  // Email self-purchase delivered → show cabinet credentials
+  const isEmailSelfPurchase =
+    isSuccess &&
+    purchaseStatus.contact_type === 'email' &&
+    !purchaseStatus.is_gift &&
+    purchaseStatus.cabinet_email;
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-dark-950 px-4">
       <div className="w-full max-w-md rounded-2xl border border-dark-800/50 bg-dark-900/50 p-8">
         {isError ? (
           <FailedState />
+        ) : isEmailSelfPurchase ? (
+          <CabinetCredentialsState
+            cabinetEmail={purchaseStatus.cabinet_email!}
+            cabinetPassword={purchaseStatus.cabinet_password}
+            autoLoginToken={purchaseStatus.auto_login_token}
+            tariffName={purchaseStatus.tariff_name}
+            periodDays={purchaseStatus.period_days}
+          />
         ) : isSuccess ? (
           <SuccessState
             subscriptionUrl={purchaseStatus.subscription_url}
@@ -459,6 +690,7 @@ export default function PurchaseSuccess() {
               isGift={purchaseStatus.is_gift}
               isActivating={isActivating}
               onActivate={handleActivate}
+              autoLoginToken={purchaseStatus.auto_login_token}
             />
             {activationError && (
               <p className="text-center text-sm text-error-400">{t('landing.activationFailed')}</p>

@@ -4523,6 +4523,7 @@
     "total": "Итого",
     "pay": "Оплатить",
     "choosePeriod": "Выберите период",
+    "copy": "Скопировать",
     "copied": "Скопировано!",
     "copyLink": "Скопировать ссылку",
     "giftToggleLabel": "Тип покупки",
@@ -4533,6 +4534,16 @@
     "activateNow": "Активировать",
     "activating": "Активация...",
     "activationFailed": "Ошибка активации",
-    "giftMessage": "Сообщение"
+    "giftMessage": "Сообщение",
+    "cabinetReady": "Ваш аккаунт готов",
+    "cabinetEmail": "Email",
+    "cabinetPassword": "Пароль",
+    "goToCabinet": "Перейти в кабинет",
+    "saveCredentials": "Сохраните эти данные для входа",
+    "credentialsSentToEmail": "Данные для входа отправлены на email",
+    "giftSentSuccess": "Подарок отправлен!",
+    "giftSentDesc": "Получатель получит уведомление на email",
+    "autoLoginFailed": "Не удалось выполнить автоматический вход",
+    "autoLoginProcessing": "Выполняется вход..."
   }
 }

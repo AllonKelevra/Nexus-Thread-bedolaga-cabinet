@@ -3511,6 +3511,7 @@
     "total": "مجموع",
     "pay": "پرداخت",
     "choosePeriod": "انتخاب دوره",
+    "copy": "کپی",
     "copied": "کپی شد!",
     "copyLink": "کپی لینک",
     "giftToggleLabel": "\u0646\u0648\u0639 \u062e\u0631\u06cc\u062f",
@@ -3521,6 +3522,16 @@
     "activateNow": "فعال‌سازی",
     "activating": "در حال فعال‌سازی...",
     "activationFailed": "خطا در فعال‌سازی",
-    "giftMessage": "پیام"
+    "giftMessage": "پیام",
+    "cabinetReady": "حساب شما آماده است",
+    "cabinetEmail": "ایمیل",
+    "cabinetPassword": "رمز عبور",
+    "goToCabinet": "رفتن به پنل کاربری",
+    "saveCredentials": "این اطلاعات ورود را ذخیره کنید",
+    "credentialsSentToEmail": "اطلاعات ورود به ایمیل شما ارسال شد",
+    "giftSentSuccess": "هدیه ارسال شد!",
+    "giftSentDesc": "گیرنده از طریق ایمیل مطلع خواهد شد",
+    "autoLoginFailed": "ورود خودکار ناموفق بود",
+    "autoLoginProcessing": "در حال ورود..."
   }
 }

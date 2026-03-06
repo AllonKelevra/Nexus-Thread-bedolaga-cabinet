@@ -90,6 +90,10 @@ export interface PurchaseStatus {
   period_days: number | null;
   tariff_name: string | null;
   gift_message: string | null;
+  contact_type: 'email' | 'telegram' | null;
+  cabinet_email: string | null;
+  cabinet_password: string | null;
+  auto_login_token: string | null;
 }
 
 // ============================================================

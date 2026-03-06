@@ -280,6 +280,12 @@ export const authApi = {
     return response.data;
   },
 
+  // Auto-login from guest purchase success page
+  autoLogin: async (token: string): Promise<AuthResponse> => {
+    const response = await apiClient.post<AuthResponse>('/cabinet/auth/login/auto', { token });
+    return response.data;
+  },
+
   // Account merge (no JWT required)
   getMergePreview: async (mergeToken: string): Promise<MergePreviewResponse> => {
     const response = await apiClient.get<MergePreviewResponse>(
