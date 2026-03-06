@@ -2909,7 +2909,11 @@
       "general": "基本设置",
       "content": "内容",
       "save": "保存",
-      "back": "返回"
+      "back": "返回",
+      "invalidSlug": "Slug can only contain lowercase letters, numbers, and hyphens",
+      "titleRequired": "Title is required",
+      "noTariffs": "Select at least one tariff",
+      "noPaymentMethods": "Add at least one payment method"
     }
   },
   "adminUpdates": {
@@ -3500,6 +3504,9 @@
     "pay": "支付",
     "choosePeriod": "选择时长",
     "copied": "已复制！",
-    "copyLink": "复制链接"
+    "copyLink": "复制链接",
+    "giftToggleLabel": "Purchase type",
+    "pollTimedOut": "Taking longer than expected",
+    "pollTimedOutDesc": "Payment processing is taking longer than usual. You can try checking again."
   }
 }

@@ -62,6 +62,13 @@ function SuccessState({
 }) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
+  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+    };
+  }, []);
 
   const handleCopy = useCallback(async () => {
     const url = subscriptionUrl ?? cryptoLink;
@@ -70,7 +77,8 @@ function SuccessState({
     try {
       await copyToClipboard(url);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+      copyTimeoutRef.current = setTimeout(() => setCopied(false), 2000);
     } catch {
       // Clipboard write failed silently
     }
@@ -219,6 +227,52 @@ function FailedState() {
   );
 }
 
+function PollTimedOutState({ onRetry }: { onRetry: () => void }) {
+  const { t } = useTranslation();
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="flex flex-col items-center gap-6 text-center"
+    >
+      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-dark-800/50">
+        <svg
+          className="h-10 w-10 text-dark-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+      </div>
+      <div>
+        <h1 className="text-xl font-bold text-dark-50">
+          {t('landing.pollTimedOut', 'Taking longer than expected')}
+        </h1>
+        <p className="mt-2 text-sm text-dark-400">
+          {t(
+            'landing.pollTimedOutDesc',
+            'Payment processing is taking longer than usual. You can try checking again.',
+          )}
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="rounded-xl bg-accent-500 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-accent-400"
+      >
+        {t('common.retry', 'Retry')}
+      </button>
+    </motion.div>
+  );
+}
+
 // ============================================================
 // Main Component
 // ============================================================
@@ -226,6 +280,7 @@ function FailedState() {
 export default function PurchaseSuccess() {
   const { token } = useParams<{ token: string }>();
   const pollStart = useRef(Date.now());
+  const [pollTimedOut, setPollTimedOut] = useState(false);
 
   // Referrer-Policy: prevent leaking payment token via referer header
   useEffect(() => {
@@ -238,14 +293,19 @@ export default function PurchaseSuccess() {
     };
   }, []);
 
-  const { data: status, isError } = useQuery({
+  const {
+    data: status,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ['purchase-status', token],
     queryFn: () => landingApi.getPurchaseStatus(token!),
-    enabled: !!token,
+    enabled: !!token && !pollTimedOut,
     refetchInterval: (query) => {
       const currentStatus = query.state.data?.status;
       if (currentStatus === 'pending' || currentStatus === 'paid') {
         if (Date.now() - pollStart.current > MAX_POLL_MS) {
+          setPollTimedOut(true);
           return false;
         }
         return 3_000;
@@ -254,6 +314,12 @@ export default function PurchaseSuccess() {
     },
     retry: 2,
   });
+
+  const handleRetryPoll = useCallback(() => {
+    pollStart.current = Date.now();
+    setPollTimedOut(false);
+    refetch();
+  }, [refetch]);
 
   const isSuccess = status?.status === 'delivered';
   const isFailed = status?.status === 'failed' || status?.status === 'expired';
@@ -274,6 +340,8 @@ export default function PurchaseSuccess() {
           />
         ) : isFailed ? (
           <FailedState />
+        ) : pollTimedOut ? (
+          <PollTimedOutState onRetry={handleRetryPoll} />
         ) : (
           <PendingState />
         )}

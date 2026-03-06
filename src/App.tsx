@@ -9,6 +9,7 @@ import {
   ChannelSubscriptionScreen,
   BlacklistedScreen,
 } from './components/blocking';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { PermissionRoute } from '@/components/auth/PermissionRoute';
 import { saveReturnUrl } from './utils/token';
 import { useAnalyticsCounters } from './hooks/useAnalyticsCounters';
@@ -201,17 +202,21 @@ function App() {
         <Route
           path="/buy/success/:token"
           element={
-            <LazyPage>
-              <PurchaseSuccess />
-            </LazyPage>
+            <ErrorBoundary level="app">
+              <LazyPage>
+                <PurchaseSuccess />
+              </LazyPage>
+            </ErrorBoundary>
           }
         />
         <Route
           path="/buy/:slug"
           element={
-            <LazyPage>
-              <QuickPurchase />
-            </LazyPage>
+            <ErrorBoundary level="app">
+              <LazyPage>
+                <QuickPurchase />
+              </LazyPage>
+            </ErrorBoundary>
           }
         />
 

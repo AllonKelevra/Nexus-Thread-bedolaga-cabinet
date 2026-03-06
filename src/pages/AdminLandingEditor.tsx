@@ -12,6 +12,8 @@ import { tariffsApi, TariffListItem } from '../api/tariffs';
 import { Toggle } from '../components/admin';
 import { useNotify } from '@/platform';
 import { usePlatform } from '../platform/hooks/usePlatform';
+import { getApiErrorMessage } from '../utils/api-error';
+import { BackIcon, PlusIcon, TrashIcon, GripIcon } from '../components/icons/LandingIcons';
 import {
   DndContext,
   KeyboardSensor,
@@ -28,49 +30,15 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { cn } from '../lib/utils';
 
-// Icons
-const BackIcon = () => (
-  <svg
-    className="h-5 w-5 text-dark-400"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-  </svg>
-);
-
-const PlusIcon = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-  </svg>
-);
-
-const TrashIcon = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-    />
-  </svg>
-);
-
-const GripIcon = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-    />
-  </svg>
-);
+// Types with stable IDs for DnD
+type FeatureWithId = LandingFeature & { _id: string };
+type MethodWithId = LandingPaymentMethod & { _id: string };
 
 const ChevronDownIcon = ({ open }: { open: boolean }) => (
   <svg
-    className={`h-5 w-5 transition-transform ${open ? 'rotate-180' : ''}`}
+    className={cn('h-5 w-5 transition-transform', open && 'rotate-180')}
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -83,23 +51,16 @@ const ChevronDownIcon = ({ open }: { open: boolean }) => (
 // ============ Sortable Feature Item ============
 
 interface SortableFeatureProps {
-  feature: LandingFeature;
-  featureId: string;
+  feature: FeatureWithId;
   index: number;
   onUpdate: (index: number, field: keyof LandingFeature, value: string) => void;
   onRemove: (index: number) => void;
 }
 
-function SortableFeatureItem({
-  feature,
-  featureId,
-  index,
-  onUpdate,
-  onRemove,
-}: SortableFeatureProps) {
+function SortableFeatureItem({ feature, index, onUpdate, onRemove }: SortableFeatureProps) {
   const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: featureId,
+    id: feature._id,
   });
 
   const style: React.CSSProperties = {
@@ -113,9 +74,10 @@ function SortableFeatureItem({
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-start gap-2 rounded-lg border p-3 ${
-        isDragging ? 'border-accent-500/50 bg-dark-700' : 'border-dark-700 bg-dark-800/50'
-      }`}
+      className={cn(
+        'flex items-start gap-2 rounded-lg border p-3',
+        isDragging ? 'border-accent-500/50 bg-dark-700' : 'border-dark-700 bg-dark-800/50',
+      )}
     >
       <button
         {...attributes}
@@ -162,17 +124,16 @@ function SortableFeatureItem({
 // ============ Sortable Payment Method ============
 
 interface SortableMethodProps {
-  method: LandingPaymentMethod;
-  methodId: string;
+  method: MethodWithId;
   index: number;
   onUpdate: (index: number, field: keyof LandingPaymentMethod, value: string) => void;
   onRemove: (index: number) => void;
 }
 
-function SortableMethodItem({ method, methodId, index, onUpdate, onRemove }: SortableMethodProps) {
+function SortableMethodItem({ method, index, onUpdate, onRemove }: SortableMethodProps) {
   const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: methodId,
+    id: method._id,
   });
 
   const style: React.CSSProperties = {
@@ -186,9 +147,10 @@ function SortableMethodItem({ method, methodId, index, onUpdate, onRemove }: Sor
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-start gap-2 rounded-lg border p-3 ${
-        isDragging ? 'border-accent-500/50 bg-dark-700' : 'border-dark-700 bg-dark-800/50'
-      }`}
+      className={cn(
+        'flex items-start gap-2 rounded-lg border p-3',
+        isDragging ? 'border-accent-500/50 bg-dark-700' : 'border-dark-700 bg-dark-800/50',
+      )}
     >
       <button
         {...attributes}
@@ -297,10 +259,10 @@ export default function AdminLandingEditor() {
   const [isActive, setIsActive] = useState(true);
   const [metaTitle, setMetaTitle] = useState('');
   const [metaDescription, setMetaDescription] = useState('');
-  const [features, setFeatures] = useState<LandingFeature[]>([]);
+  const [features, setFeatures] = useState<FeatureWithId[]>([]);
   const [selectedTariffIds, setSelectedTariffIds] = useState<number[]>([]);
   const [allowedPeriods, setAllowedPeriods] = useState<Record<string, number[]>>({});
-  const [paymentMethods, setPaymentMethods] = useState<LandingPaymentMethod[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<MethodWithId[]>([]);
   const [giftEnabled, setGiftEnabled] = useState(false);
   const [footerText, setFooterText] = useState('');
   const [customCss, setCustomCss] = useState('');
@@ -315,6 +277,7 @@ export default function AdminLandingEditor() {
   const { data: tariffsData } = useQuery({
     queryKey: ['admin-tariffs'],
     queryFn: () => tariffsApi.getTariffs(true),
+    staleTime: 30_000,
   });
 
   const allTariffs = tariffsData?.tariffs ?? [];
@@ -347,10 +310,12 @@ export default function AdminLandingEditor() {
     setIsActive(landingData.is_active);
     setMetaTitle(landingData.meta_title ?? '');
     setMetaDescription(landingData.meta_description ?? '');
-    setFeatures(landingData.features ?? []);
+    setFeatures((landingData.features ?? []).map((f) => ({ ...f, _id: crypto.randomUUID() })));
     setSelectedTariffIds(landingData.allowed_tariff_ids ?? []);
     setAllowedPeriods(landingData.allowed_periods ?? {});
-    setPaymentMethods(landingData.payment_methods ?? []);
+    setPaymentMethods(
+      (landingData.payment_methods ?? []).map((m) => ({ ...m, _id: crypto.randomUUID() })),
+    );
     setGiftEnabled(landingData.gift_enabled);
     setFooterText(landingData.footer_text ?? '');
     setCustomCss(landingData.custom_css ?? '');
@@ -365,9 +330,7 @@ export default function AdminLandingEditor() {
       navigate('/admin/landings');
     },
     onError: (err: unknown) => {
-      const message = (err as { response?: { data?: { detail?: string } } })?.response?.data
-        ?.detail;
-      notify.error(message || t('common.error'));
+      notify.error(getApiErrorMessage(err, t('common.error')));
     },
   });
 
@@ -382,23 +345,48 @@ export default function AdminLandingEditor() {
       navigate('/admin/landings');
     },
     onError: (err: unknown) => {
-      const message = (err as { response?: { data?: { detail?: string } } })?.response?.data
-        ?.detail;
-      notify.error(message || t('common.error'));
+      notify.error(getApiErrorMessage(err, t('common.error')));
     },
   });
 
   const handleSubmit = () => {
+    // Client-side validation
+    if (!isEdit && !/^[a-z0-9-]+$/.test(slug)) {
+      notify.error(
+        t(
+          'admin.landings.invalidSlug',
+          'Slug can only contain lowercase letters, numbers, and hyphens',
+        ),
+      );
+      return;
+    }
+    if (!title.trim()) {
+      notify.error(t('admin.landings.titleRequired', 'Title is required'));
+      return;
+    }
+    if (selectedTariffIds.length === 0) {
+      notify.error(t('admin.landings.noTariffs', 'Select at least one tariff'));
+      return;
+    }
+    if (paymentMethods.length === 0) {
+      notify.error(t('admin.landings.noPaymentMethods', 'Add at least one payment method'));
+      return;
+    }
+
+    // Strip _id before sending to API
+    const cleanFeatures = features.map(({ _id: _, ...rest }) => rest);
+    const cleanMethods = paymentMethods.map(({ _id: _, ...rest }) => rest);
+
     const data: LandingCreateRequest = {
       slug,
       title,
       subtitle: subtitle || undefined,
       is_active: isActive,
-      features,
+      features: cleanFeatures,
       footer_text: footerText || undefined,
       allowed_tariff_ids: selectedTariffIds,
       allowed_periods: allowedPeriods,
-      payment_methods: paymentMethods,
+      payment_methods: cleanMethods,
       gift_enabled: giftEnabled,
       custom_css: customCss || undefined,
       meta_title: metaTitle || undefined,
@@ -416,7 +404,10 @@ export default function AdminLandingEditor() {
 
   // ---- Features helpers ----
   const addFeature = () => {
-    setFeatures((prev) => [...prev, { icon: '', title: '', description: '' }]);
+    setFeatures((prev) => [
+      ...prev,
+      { _id: crypto.randomUUID(), icon: '', title: '', description: '' },
+    ]);
   };
 
   const updateFeature = (index: number, field: keyof LandingFeature, value: string) => {
@@ -431,8 +422,8 @@ export default function AdminLandingEditor() {
     const { active, over } = event;
     if (over && active.id !== over.id) {
       setFeatures((prev) => {
-        const oldIndex = prev.findIndex((_, i) => `feature-${i}` === active.id);
-        const newIndex = prev.findIndex((_, i) => `feature-${i}` === over.id);
+        const oldIndex = prev.findIndex((f) => f._id === active.id);
+        const newIndex = prev.findIndex((f) => f._id === over.id);
         if (oldIndex === -1 || newIndex === -1) return prev;
         return arrayMove(prev, oldIndex, newIndex);
       });
@@ -444,6 +435,7 @@ export default function AdminLandingEditor() {
     setPaymentMethods((prev) => [
       ...prev,
       {
+        _id: crypto.randomUUID(),
         method_id: '',
         display_name: '',
         description: '',
@@ -465,8 +457,8 @@ export default function AdminLandingEditor() {
     const { active, over } = event;
     if (over && active.id !== over.id) {
       setPaymentMethods((prev) => {
-        const oldIndex = prev.findIndex((_, i) => `method-${i}` === active.id);
-        const newIndex = prev.findIndex((_, i) => `method-${i}` === over.id);
+        const oldIndex = prev.findIndex((m) => m._id === active.id);
+        const newIndex = prev.findIndex((m) => m._id === over.id);
         if (oldIndex === -1 || newIndex === -1) return prev;
         return arrayMove(prev, oldIndex, newIndex);
       });
@@ -492,8 +484,8 @@ export default function AdminLandingEditor() {
   };
 
   // Feature IDs for DnD
-  const featureIds = features.map((_, i) => `feature-${i}`);
-  const methodIds = paymentMethods.map((_, i) => `method-${i}`);
+  const featureIds = features.map((f) => f._id);
+  const methodIds = paymentMethods.map((m) => m._id);
 
   return (
     <div className="animate-fade-in">
@@ -541,8 +533,11 @@ export default function AdminLandingEditor() {
         >
           <div className="space-y-4">
             <div>
-              <label className="mb-1 block text-sm text-dark-400">{t('admin.landings.slug')}</label>
+              <label htmlFor="landing-slug" className="mb-1 block text-sm text-dark-400">
+                {t('admin.landings.slug')}
+              </label>
               <input
+                id="landing-slug"
                 type="text"
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
@@ -554,10 +549,11 @@ export default function AdminLandingEditor() {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm text-dark-400">
+              <label htmlFor="landing-title" className="mb-1 block text-sm text-dark-400">
                 {t('admin.landings.pageTitle')}
               </label>
               <input
+                id="landing-title"
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -566,10 +562,11 @@ export default function AdminLandingEditor() {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm text-dark-400">
+              <label htmlFor="landing-subtitle" className="mb-1 block text-sm text-dark-400">
                 {t('admin.landings.subtitle')}
               </label>
               <textarea
+                id="landing-subtitle"
                 value={subtitle}
                 onChange={(e) => setSubtitle(e.target.value)}
                 rows={2}
@@ -624,9 +621,8 @@ export default function AdminLandingEditor() {
               <SortableContext items={featureIds} strategy={verticalListSortingStrategy}>
                 {features.map((feature, index) => (
                   <SortableFeatureItem
-                    key={featureIds[index]}
+                    key={feature._id}
                     feature={feature}
-                    featureId={featureIds[index]}
                     index={index}
                     onUpdate={updateFeature}
                     onRemove={removeFeature}
@@ -703,9 +699,8 @@ export default function AdminLandingEditor() {
               <SortableContext items={methodIds} strategy={verticalListSortingStrategy}>
                 {paymentMethods.map((method, index) => (
                   <SortableMethodItem
-                    key={methodIds[index]}
+                    key={method._id}
                     method={method}
-                    methodId={methodIds[index]}
                     index={index}
                     onUpdate={updateMethod}
                     onRemove={removeMethod}

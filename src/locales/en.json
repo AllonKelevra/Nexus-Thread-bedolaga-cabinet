@@ -3184,7 +3184,11 @@
       "general": "General",
       "content": "Content",
       "save": "Save",
-      "back": "Back"
+      "back": "Back",
+      "invalidSlug": "Slug can only contain lowercase letters, numbers, and hyphens",
+      "titleRequired": "Title is required",
+      "noTariffs": "Select at least one tariff",
+      "noPaymentMethods": "Add at least one payment method"
     }
   },
   "adminUpdates": {
@@ -3950,6 +3954,9 @@
     "pay": "Pay",
     "choosePeriod": "Choose period",
     "copied": "Copied!",
-    "copyLink": "Copy link"
+    "copyLink": "Copy link",
+    "giftToggleLabel": "Purchase type",
+    "pollTimedOut": "Taking longer than expected",
+    "pollTimedOutDesc": "Payment processing is taking longer than usual. You can try checking again."
   }
 }

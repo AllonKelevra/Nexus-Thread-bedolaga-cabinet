@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams } from 'react-router';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import DOMPurify from 'dompurify';
@@ -13,6 +13,7 @@ import type {
   PurchaseRequest,
 } from '../api/landings';
 import { cn } from '../lib/utils';
+import { getApiErrorMessage } from '../utils/api-error';
 
 // ============================================================
 // Helpers
@@ -117,10 +118,15 @@ function GiftToggle({ isGift, onToggle }: { isGift: boolean; onToggle: (v: boole
   const { t } = useTranslation();
 
   return (
-    <div className="flex rounded-xl bg-dark-800/50 p-1">
+    <div
+      role="group"
+      aria-label={t('landing.giftToggleLabel', 'Purchase type')}
+      className="flex rounded-xl bg-dark-800/50 p-1"
+    >
       <button
         type="button"
         onClick={() => onToggle(false)}
+        aria-pressed={!isGift}
         className={cn(
           'flex-1 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200',
           !isGift ? 'bg-dark-700 text-dark-50 shadow-sm' : 'text-dark-400 hover:text-dark-200',
@@ -131,6 +137,7 @@ function GiftToggle({ isGift, onToggle }: { isGift: boolean; onToggle: (v: boole
       <button
         type="button"
         onClick={() => onToggle(true)}
+        aria-pressed={isGift}
         className={cn(
           'flex-1 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200',
           isGift ? 'bg-dark-700 text-dark-50 shadow-sm' : 'text-dark-400 hover:text-dark-200',
@@ -165,10 +172,11 @@ function ContactForm({
     <div className="space-y-4 rounded-2xl border border-dark-800/50 bg-dark-900/50 p-5">
       {/* Main contact */}
       <div>
-        <label className="mb-2 block text-sm font-medium text-dark-200">
+        <label htmlFor="contact-input" className="mb-2 block text-sm font-medium text-dark-200">
           {t('landing.yourContact', 'Your contact')}
         </label>
         <input
+          id="contact-input"
           type="text"
           value={contactValue}
           onChange={(e) => onContactChange(e.target.value)}
@@ -189,10 +197,14 @@ function ContactForm({
             className="space-y-4 overflow-hidden"
           >
             <div className="border-t border-dark-800/50 pt-4">
-              <label className="mb-2 block text-sm font-medium text-dark-200">
+              <label
+                htmlFor="gift-recipient-input"
+                className="mb-2 block text-sm font-medium text-dark-200"
+              >
                 {t('landing.recipientLabel')}
               </label>
               <input
+                id="gift-recipient-input"
                 type="text"
                 value={giftRecipient}
                 onChange={(e) => onGiftRecipientChange(e.target.value)}
@@ -201,10 +213,14 @@ function ContactForm({
               />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-medium text-dark-200">
+              <label
+                htmlFor="gift-message-input"
+                className="mb-2 block text-sm font-medium text-dark-200"
+              >
                 {t('landing.giftMessageLabel')}
               </label>
               <textarea
+                id="gift-message-input"
                 value={giftMessage}
                 onChange={(e) => onGiftMessageChange(e.target.value)}
                 placeholder={t(
@@ -238,6 +254,8 @@ function TariffCard({
   return (
     <button
       type="button"
+      role="radio"
+      aria-checked={isSelected}
       onClick={onSelect}
       className={cn(
         'relative flex w-full flex-col rounded-2xl border p-5 text-left transition-all duration-200',
@@ -334,6 +352,8 @@ function PaymentMethodCard({
   return (
     <button
       type="button"
+      role="radio"
+      aria-checked={isSelected}
       onClick={onSelect}
       className={cn(
         'flex w-full items-center gap-4 rounded-2xl border p-4 text-left transition-all duration-200',
@@ -371,22 +391,22 @@ function PaymentMethodCard({
 }
 
 function SanitizedHtml({ html, className }: { html: string; className?: string }) {
-  const sanitized = useMemo(
-    () =>
-      DOMPurify.sanitize(html, {
-        ALLOWED_TAGS: ['p', 'a', 'strong', 'em', 'b', 'i', 'br', 'span', 'ul', 'ol', 'li', 'div'],
-        ALLOWED_ATTR: ['href', 'target', 'rel', 'class'],
-      }),
-    [html],
-  );
+  const sanitized = useMemo(() => {
+    const clean = DOMPurify.sanitize(html, {
+      ALLOWED_TAGS: ['p', 'a', 'strong', 'em', 'b', 'i', 'br', 'span', 'ul', 'ol', 'li'],
+      ALLOWED_ATTR: ['href', 'target', 'rel'],
+    });
+    // Enforce rel="noopener noreferrer" and target="_blank" on all links
+    const container = document.createElement('div');
+    container.innerHTML = clean;
+    container.querySelectorAll('a').forEach((a) => {
+      a.setAttribute('rel', 'noopener noreferrer');
+      a.setAttribute('target', '_blank');
+    });
+    return container.innerHTML;
+  }, [html]);
 
-  return (
-    <div
-      className={className}
-      // Content is sanitized via DOMPurify above
-      dangerouslySetInnerHTML={{ __html: sanitized }}
-    />
-  );
+  return <div className={className} dangerouslySetInnerHTML={{ __html: sanitized }} />;
 }
 
 function SummaryCard({
@@ -540,6 +560,14 @@ export default function QuickPurchase() {
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Cleanup redirect timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (redirectTimeoutRef.current) clearTimeout(redirectTimeoutRef.current);
+    };
+  }, []);
 
   // Auto-select first tariff, period, method on config load
   useEffect(() => {
@@ -584,29 +612,24 @@ export default function QuickPurchase() {
     };
   }, [config?.meta_description]);
 
-  // Inject custom CSS (sanitized: strip JS expressions, imports, and url() with non-data schemes)
+  // Inject custom CSS (sanitized)
   useEffect(() => {
     if (!config?.custom_css) return;
 
     let css = config.custom_css;
-    // Remove @import rules
-    css = css.replace(/@import\b[^;]*;?/gi, '');
-    // Remove expression() (IE)
+    // Strip all at-rules (including @font-face, @import, @charset, @namespace, @keyframes, @media)
+    css = css.replace(/@[a-zA-Z-]+\s*[^{}]*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g, '');
+    css = css.replace(/@[a-zA-Z-]+\s*[^;{}]+;/g, '');
+    // Strip ALL url() including data: URIs
+    css = css.replace(/url\s*\([^)]*\)/gi, 'url(about:blank)');
+    // Strip expression(), behavior, -moz-binding
     css = css.replace(/expression\s*\([^)]*\)/gi, '');
-    // Block all url() except safe data:image/* — prevents data exfiltration via external URLs
-    css = css.replace(
-      /url\s*\(\s*['"]?\s*(?!data:image\/)(.*?)\s*['"]?\s*\)/gi,
-      'url(about:blank)',
-    );
-    // Remove behavior and -moz-binding (IE/Firefox legacy)
-    css = css.replace(/behavior\s*:/gi, '/* blocked */');
-    css = css.replace(/-moz-binding\s*:/gi, '/* blocked */');
-    // Strip @font-face blocks (can load external fonts for tracking)
-    css = css.replace(/@font-face\s*\{[^}]*\}/gi, '');
-    // Strip @charset declarations
-    css = css.replace(/@charset\b[^;]*;?/gi, '');
-    // Strip @namespace declarations
-    css = css.replace(/@namespace\b[^;]*;?/gi, '');
+    css = css.replace(/behavior\s*:[^;]+/gi, '');
+    css = css.replace(/-moz-binding\s*:[^;]+/gi, '');
+    // Strip content property (prevents text injection via ::before/::after)
+    css = css.replace(/content\s*:[^;]+;/gi, '');
+    // Strip CSS escape sequences that could bypass filters
+    css = css.replace(/\\[0-9a-fA-F]{1,6}\s?/g, '');
 
     const style = document.createElement('style');
     style.setAttribute('data-landing-css', 'true');
@@ -650,8 +673,26 @@ export default function QuickPurchase() {
     return true;
   }, [selectedTariffId, selectedPeriodDays, selectedMethod, contactValue, isGift, giftRecipient]);
 
+  // Purchase mutation
+  const purchaseMutation = useMutation({
+    mutationFn: (data: PurchaseRequest) => landingApi.createPurchase(slug!, data),
+    onSuccess: (result) => {
+      window.location.href = result.payment_url;
+      // If redirect blocked (popup blocker etc.), reset after 5s
+      redirectTimeoutRef.current = setTimeout(() => setIsSubmitting(false), 5000);
+    },
+    onError: (err) => {
+      const msg = getApiErrorMessage(
+        err,
+        t('landing.purchaseError', 'Something went wrong. Please try again.'),
+      );
+      setSubmitError(msg);
+      setIsSubmitting(false);
+    },
+  });
+
   // Submit handler
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!canSubmit || !slug || isSubmitting) return;
 
     setIsSubmitting(true);
@@ -672,19 +713,7 @@ export default function QuickPurchase() {
       data.gift_message = giftMessage.trim() || undefined;
     }
 
-    try {
-      const result = await landingApi.createPurchase(slug, data);
-      window.location.href = result.payment_url;
-      // If redirect blocked (popup blocker etc.), reset after 5s
-      setTimeout(() => setIsSubmitting(false), 5000);
-    } catch (err) {
-      const axiosErr = err as { response?: { data?: { detail?: string } } };
-      const message =
-        axiosErr?.response?.data?.detail ??
-        t('landing.purchaseError', 'Something went wrong. Please try again.');
-      setSubmitError(message);
-      setIsSubmitting(false);
-    }
+    purchaseMutation.mutate(data);
   };
 
   // Loading state
@@ -694,9 +723,7 @@ export default function QuickPurchase() {
 
   // Error state
   if (error || !config) {
-    const errMsg =
-      (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
-      t('landing.notFound', 'Landing page not found');
+    const errMsg = getApiErrorMessage(error, t('landing.notFound', 'Landing page not found'));
     return <ErrorState message={errMsg} />;
   }
 
@@ -769,7 +796,11 @@ export default function QuickPurchase() {
                 <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-dark-400">
                   {t('landing.chooseTariff', 'Choose tariff')}
                 </h2>
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div
+                  role="radiogroup"
+                  aria-label={t('landing.chooseTariff', 'Choose tariff')}
+                  className="grid gap-3 sm:grid-cols-2"
+                >
                   {config.tariffs.map((tariff) => {
                     const period = tariff.periods.find((p) => p.days === selectedPeriodDays);
                     return (
@@ -792,7 +823,11 @@ export default function QuickPurchase() {
                 <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-dark-400">
                   {t('landing.paymentMethod', 'Payment method')}
                 </h2>
-                <div className="space-y-2">
+                <div
+                  role="radiogroup"
+                  aria-label={t('landing.paymentMethod', 'Payment method')}
+                  className="space-y-2"
+                >
                   {config.payment_methods.map((method) => (
                     <PaymentMethodCard
                       key={method.method_id}
