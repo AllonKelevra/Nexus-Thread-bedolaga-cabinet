@@ -42,7 +42,6 @@ export interface LandingPaymentMethod {
   min_amount_kopeks: number | null;
   max_amount_kopeks: number | null;
   currency: string | null;
-  return_url: string | null;
   sub_options: LandingPaymentMethodSubOption[] | null;
 }
 

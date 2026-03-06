@@ -631,8 +631,10 @@ export default function QuickPurchase() {
     if (config.payment_methods.length > 0 && selectedMethod === null) {
       const firstMethod = config.payment_methods[0];
       setSelectedMethod(firstMethod.method_id);
-      if (firstMethod.sub_options && firstMethod.sub_options.length > 1) {
+      if (firstMethod.sub_options && firstMethod.sub_options.length >= 1) {
         setSelectedSubOption(firstMethod.sub_options[0].id);
+      } else {
+        setSelectedSubOption(null);
       }
     }
   }, [config, allPeriods, visibleTariffs, selectedTariffId, selectedPeriodDays, selectedMethod]);
@@ -899,8 +901,8 @@ export default function QuickPurchase() {
                       }
                       onSelect={() => {
                         setSelectedMethod(method.method_id);
-                        // Auto-select first sub-option when switching methods
-                        if (method.sub_options && method.sub_options.length > 1) {
+                        // Auto-select first sub-option (even for single — backend needs suffix)
+                        if (method.sub_options && method.sub_options.length >= 1) {
                           setSelectedSubOption(method.sub_options[0].id);
                         } else {
                           setSelectedSubOption(null);
