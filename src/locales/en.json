@@ -3964,6 +3964,12 @@
     "copyLink": "Copy link",
     "giftToggleLabel": "Purchase type",
     "pollTimedOut": "Taking longer than expected",
-    "pollTimedOutDesc": "Payment processing is taking longer than usual. You can try checking again."
+    "pollTimedOutDesc": "Payment processing is taking longer than usual. You can try checking again.",
+    "pendingActivation": "Subscription ready to activate",
+    "pendingActivationDesc": "You already have an active subscription. Activating will replace it.",
+    "activateNow": "Activate now",
+    "activating": "Activating...",
+    "activationFailed": "Activation failed",
+    "giftMessage": "Message"
   }
 }

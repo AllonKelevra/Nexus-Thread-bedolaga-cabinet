@@ -49,16 +49,20 @@ function SuccessState({
   subscriptionUrl,
   cryptoLink,
   contactValue,
+  recipientContactValue,
   tariffName,
   periodDays,
   isGift,
+  giftMessage,
 }: {
   subscriptionUrl: string | null;
   cryptoLink: string | null;
   contactValue: string | null;
+  recipientContactValue: string | null;
   tariffName: string | null;
   periodDays: number | null;
   isGift: boolean;
+  giftMessage: string | null;
 }) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
@@ -85,6 +89,7 @@ function SuccessState({
   }, [subscriptionUrl, cryptoLink]);
 
   const displayUrl = subscriptionUrl ?? cryptoLink;
+  const displayContact = isGift ? recipientContactValue : contactValue;
 
   return (
     <motion.div
@@ -128,11 +133,16 @@ function SuccessState({
             {tariffName} — {periodDays} {t('landing.daysAccess')}
           </p>
         )}
-        {contactValue && (
+        {displayContact && (
           <p className="mt-2 text-sm text-dark-400">
             {isGift
-              ? t('landing.giftSentTo', { contact: contactValue })
-              : t('landing.keySentTo', { contact: contactValue })}
+              ? t('landing.giftSentTo', { contact: displayContact })
+              : t('landing.keySentTo', { contact: displayContact })}
+          </p>
+        )}
+        {isGift && giftMessage && (
+          <p className="mt-2 text-sm italic text-dark-400">
+            {t('landing.giftMessage')}: {giftMessage}
           </p>
         )}
       </div>
@@ -195,6 +205,85 @@ function SuccessState({
           </button>
         </div>
       )}
+    </motion.div>
+  );
+}
+
+function PendingActivationState({
+  tariffName,
+  periodDays,
+  giftMessage,
+  isGift,
+  isActivating,
+  onActivate,
+}: {
+  tariffName: string | null;
+  periodDays: number | null;
+  giftMessage: string | null;
+  isGift: boolean;
+  isActivating: boolean;
+  onActivate: () => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="flex flex-col items-center gap-6 text-center"
+    >
+      {/* Warning icon */}
+      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-warning-500/10">
+        <svg
+          className="h-10 w-10 text-warning-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+          />
+        </svg>
+      </div>
+
+      <div>
+        <h1 className="text-xl font-bold text-dark-50">{t('landing.pendingActivation')}</h1>
+        {tariffName && periodDays && (
+          <p className="mt-1 text-sm text-dark-300">
+            {tariffName} — {periodDays} {t('landing.daysAccess')}
+          </p>
+        )}
+        <p className="mt-2 text-sm text-dark-400">{t('landing.pendingActivationDesc')}</p>
+        {isGift && giftMessage && (
+          <p className="mt-2 text-sm italic text-dark-400">
+            {t('landing.giftMessage')}: {giftMessage}
+          </p>
+        )}
+      </div>
+
+      <button
+        type="button"
+        onClick={onActivate}
+        disabled={isActivating}
+        className={cn(
+          'flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-medium text-white transition-colors',
+          isActivating
+            ? 'cursor-not-allowed bg-accent-500/50'
+            : 'bg-accent-500 hover:bg-accent-400',
+        )}
+      >
+        {isActivating ? (
+          <>
+            <Spinner className="h-4 w-4" />
+            {t('landing.activating')}
+          </>
+        ) : (
+          t('landing.activateNow')
+        )}
+      </button>
     </motion.div>
   );
 }
@@ -278,9 +367,13 @@ function PollTimedOutState({ onRetry }: { onRetry: () => void }) {
 // ============================================================
 
 export default function PurchaseSuccess() {
+  const { t } = useTranslation();
   const { token } = useParams<{ token: string }>();
   const pollStart = useRef(Date.now());
   const [pollTimedOut, setPollTimedOut] = useState(false);
+  const [isActivating, setIsActivating] = useState(false);
+  const [activationError, setActivationError] = useState(false);
+  const activatingRef = useRef(false);
 
   // Referrer-Policy: prevent leaking payment token via referer header
   useEffect(() => {
@@ -294,7 +387,7 @@ export default function PurchaseSuccess() {
   }, []);
 
   const {
-    data: status,
+    data: purchaseStatus,
     isError,
     refetch,
   } = useQuery({
@@ -321,8 +414,25 @@ export default function PurchaseSuccess() {
     refetch();
   }, [refetch]);
 
-  const isSuccess = status?.status === 'delivered';
-  const isFailed = status?.status === 'failed' || status?.status === 'expired';
+  const handleActivate = useCallback(async () => {
+    if (!token || activatingRef.current) return;
+    activatingRef.current = true;
+    setIsActivating(true);
+    setActivationError(false);
+    try {
+      await landingApi.activatePurchase(token);
+      await refetch();
+    } catch {
+      setActivationError(true);
+    } finally {
+      activatingRef.current = false;
+      setIsActivating(false);
+    }
+  }, [token, refetch]);
+
+  const isSuccess = purchaseStatus?.status === 'delivered';
+  const isPendingActivation = purchaseStatus?.status === 'pending_activation';
+  const isFailed = purchaseStatus?.status === 'failed' || purchaseStatus?.status === 'expired';
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-dark-950 px-4">
@@ -331,13 +441,29 @@ export default function PurchaseSuccess() {
           <FailedState />
         ) : isSuccess ? (
           <SuccessState
-            subscriptionUrl={status.subscription_url}
-            cryptoLink={status.subscription_crypto_link}
-            contactValue={status.contact_value}
-            tariffName={status.tariff_name}
-            periodDays={status.period_days}
-            isGift={status.is_gift}
+            subscriptionUrl={purchaseStatus.subscription_url}
+            cryptoLink={purchaseStatus.subscription_crypto_link}
+            contactValue={purchaseStatus.contact_value}
+            recipientContactValue={purchaseStatus.recipient_contact_value}
+            tariffName={purchaseStatus.tariff_name}
+            periodDays={purchaseStatus.period_days}
+            isGift={purchaseStatus.is_gift}
+            giftMessage={purchaseStatus.gift_message}
           />
+        ) : isPendingActivation ? (
+          <div className="space-y-4">
+            <PendingActivationState
+              tariffName={purchaseStatus.tariff_name}
+              periodDays={purchaseStatus.period_days}
+              giftMessage={purchaseStatus.gift_message}
+              isGift={purchaseStatus.is_gift}
+              isActivating={isActivating}
+              onActivate={handleActivate}
+            />
+            {activationError && (
+              <p className="text-center text-sm text-error-400">{t('landing.activationFailed')}</p>
+            )}
+          </div>
         ) : isFailed ? (
           <FailedState />
         ) : pollTimedOut ? (

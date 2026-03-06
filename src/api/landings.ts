@@ -33,7 +33,21 @@ export interface LandingPaymentMethod {
   description: string | null;
   icon_url: string | null;
   sort_order: number;
+  min_amount_kopeks: number | null;
+  max_amount_kopeks: number | null;
+  currency: string | null;
+  return_url: string | null;
 }
+
+/** Editable fields on a payment method in the landing editor */
+export type EditableMethodField =
+  | 'display_name'
+  | 'description'
+  | 'icon_url'
+  | 'min_amount_kopeks'
+  | 'max_amount_kopeks'
+  | 'currency'
+  | 'return_url';
 
 export interface LandingConfig {
   slug: string;
@@ -67,13 +81,15 @@ export interface PurchaseResponse {
 }
 
 export interface PurchaseStatus {
-  status: 'pending' | 'paid' | 'delivered' | 'failed' | 'expired';
+  status: 'pending' | 'paid' | 'delivered' | 'pending_activation' | 'failed' | 'expired';
   subscription_url: string | null;
   subscription_crypto_link: string | null;
   is_gift: boolean;
   contact_value: string | null;
+  recipient_contact_value: string | null;
   period_days: number | null;
   tariff_name: string | null;
+  gift_message: string | null;
 }
 
 // ============================================================
@@ -201,6 +217,11 @@ export const landingApi = {
 
   getPurchaseStatus: async (token: string): Promise<PurchaseStatus> => {
     const response = await apiClient.get(`/cabinet/landing/purchase/${token}`);
+    return response.data;
+  },
+
+  activatePurchase: async (token: string): Promise<PurchaseStatus> => {
+    const response = await apiClient.post(`/cabinet/landing/activate/${token}`);
     return response.data;
   },
 };

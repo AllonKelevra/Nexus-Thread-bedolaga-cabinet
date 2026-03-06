@@ -7,6 +7,7 @@ import {
   type LandingCreateRequest,
   type AdminLandingFeature,
   type LandingPaymentMethod,
+  type EditableMethodField,
   type LocaleDict,
   type SupportedLocale,
   toLocaleDict,
@@ -139,10 +140,13 @@ function SortableFeatureItem({
 
 interface SortableSelectedMethodProps {
   method: MethodWithId;
+  onUpdate: (methodId: string, field: EditableMethodField, value: string | number | null) => void;
   onRemove: (methodId: string) => void;
 }
 
-function SortableSelectedMethodCard({ method, onRemove }: SortableSelectedMethodProps) {
+function SortableSelectedMethodCard({ method, onUpdate, onRemove }: SortableSelectedMethodProps) {
+  const { t } = useTranslation();
+  const [expanded, setExpanded] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: method._id,
   });
@@ -159,24 +163,142 @@ function SortableSelectedMethodCard({ method, onRemove }: SortableSelectedMethod
       ref={setNodeRef}
       style={style}
       className={cn(
-        'flex items-center gap-2 rounded-lg border px-3 py-2',
+        'rounded-lg border',
         isDragging ? 'border-accent-500/50 bg-dark-700' : 'border-dark-700 bg-dark-800/50',
       )}
     >
-      <button
-        {...attributes}
-        {...listeners}
-        className="flex-shrink-0 cursor-grab touch-none text-dark-500 hover:text-dark-300 active:cursor-grabbing"
-      >
-        <GripIcon />
-      </button>
-      <span className="min-w-0 flex-1 truncate text-sm text-dark-100">{method.display_name}</span>
-      <button
-        onClick={() => onRemove(method.method_id)}
-        className="flex-shrink-0 text-dark-500 hover:text-error-400"
-      >
-        <TrashIcon />
-      </button>
+      <div className="flex items-center gap-2 px-3 py-2">
+        <button
+          {...attributes}
+          {...listeners}
+          className="flex-shrink-0 cursor-grab touch-none text-dark-500 hover:text-dark-300 active:cursor-grabbing"
+        >
+          <GripIcon />
+        </button>
+        <button onClick={() => setExpanded((v) => !v)} className="min-w-0 flex-1 text-start">
+          <span className="truncate text-sm text-dark-100">{method.display_name}</span>
+        </button>
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          className="flex-shrink-0 text-dark-500 hover:text-dark-300"
+        >
+          <ChevronDownIcon open={expanded} />
+        </button>
+        <button
+          onClick={() => onRemove(method.method_id)}
+          className="flex-shrink-0 text-dark-500 hover:text-error-400"
+        >
+          <TrashIcon />
+        </button>
+      </div>
+      {expanded && (
+        <div className="space-y-3 border-t border-dark-700 px-3 py-3">
+          <div>
+            <label className="mb-1 block text-xs text-dark-500">
+              {t('admin.landings.methodDisplayName', 'Display name')}
+            </label>
+            <input
+              type="text"
+              value={method.display_name}
+              onChange={(e) => onUpdate(method.method_id, 'display_name', e.target.value)}
+              className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-dark-500">
+              {t('admin.landings.methodDescription', 'Description')}
+            </label>
+            <input
+              type="text"
+              value={method.description ?? ''}
+              onChange={(e) => onUpdate(method.method_id, 'description', e.target.value || null)}
+              placeholder={t('admin.landings.methodDescPlaceholder', 'Optional description')}
+              className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-dark-500">
+              {t('admin.landings.methodIconUrl', 'Icon URL')}
+            </label>
+            <input
+              type="text"
+              value={method.icon_url ?? ''}
+              onChange={(e) => onUpdate(method.method_id, 'icon_url', e.target.value || null)}
+              placeholder="https://..."
+              className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1 block text-xs text-dark-500">
+                {t('admin.landings.methodMinAmount', 'Min amount (kopeks)')}
+              </label>
+              <input
+                type="number"
+                min={0}
+                step={1}
+                value={method.min_amount_kopeks ?? ''}
+                onChange={(e) =>
+                  onUpdate(
+                    method.method_id,
+                    'min_amount_kopeks',
+                    e.target.value ? Math.max(0, Math.floor(Number(e.target.value))) : null,
+                  )
+                }
+                placeholder="—"
+                className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs text-dark-500">
+                {t('admin.landings.methodMaxAmount', 'Max amount (kopeks)')}
+              </label>
+              <input
+                type="number"
+                min={0}
+                step={1}
+                value={method.max_amount_kopeks ?? ''}
+                onChange={(e) =>
+                  onUpdate(
+                    method.method_id,
+                    'max_amount_kopeks',
+                    e.target.value ? Math.max(0, Math.floor(Number(e.target.value))) : null,
+                  )
+                }
+                placeholder="—"
+                className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-dark-500">
+              {t('admin.landings.methodCurrency', 'Currency')}
+            </label>
+            <input
+              type="text"
+              value={method.currency ?? ''}
+              onChange={(e) => onUpdate(method.method_id, 'currency', e.target.value || null)}
+              placeholder="RUB"
+              className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-dark-500">
+              {t('admin.landings.methodReturnUrl', 'Return URL after payment')}
+            </label>
+            <input
+              type="text"
+              value={method.return_url ?? ''}
+              onChange={(e) => onUpdate(method.method_id, 'return_url', e.target.value || null)}
+              placeholder={t(
+                'admin.landings.methodReturnUrlPlaceholder',
+                'Default: cabinet success page. Use {token} for purchase token',
+              )}
+              className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -336,7 +458,14 @@ export default function AdminLandingEditor() {
     setSelectedTariffIds(landingData.allowed_tariff_ids ?? []);
     setAllowedPeriods(landingData.allowed_periods ?? {});
     setPaymentMethods(
-      (landingData.payment_methods ?? []).map((m) => ({ ...m, _id: crypto.randomUUID() })),
+      (landingData.payment_methods ?? []).map((m) => ({
+        ...m,
+        _id: crypto.randomUUID(),
+        min_amount_kopeks: m.min_amount_kopeks ?? null,
+        max_amount_kopeks: m.max_amount_kopeks ?? null,
+        currency: m.currency ?? null,
+        return_url: m.return_url ?? null,
+      })),
     );
     setGiftEnabled(landingData.gift_enabled);
     setFooterText(toLocaleDict(landingData.footer_text));
@@ -410,6 +539,10 @@ export default function AdminLandingEditor() {
       ...rest,
       description: rest.description || null,
       icon_url: rest.icon_url || null,
+      min_amount_kopeks: rest.min_amount_kopeks ?? null,
+      max_amount_kopeks: rest.max_amount_kopeks ?? null,
+      currency: rest.currency || null,
+      return_url: rest.return_url || null,
     }));
 
     // Filter out empty period arrays and periods for non-selected tariffs
@@ -480,31 +613,47 @@ export default function AdminLandingEditor() {
   }, []);
 
   // ---- Payment methods helpers ----
-  const togglePaymentMethod = (methodId: string) => {
-    setPaymentMethods((prev) => {
-      const exists = prev.find((m) => m.method_id === methodId);
-      if (exists) {
-        return prev.filter((m) => m.method_id !== methodId);
-      }
-      const systemMethod = availablePaymentMethods.find((m) => m.method_id === methodId);
-      if (!systemMethod) return prev;
-      return [
-        ...prev,
-        {
-          _id: crypto.randomUUID(),
-          method_id: systemMethod.method_id,
-          display_name: systemMethod.display_name ?? systemMethod.default_display_name,
-          description: '',
-          icon_url: '',
-          sort_order: prev.length,
-        },
-      ];
-    });
-  };
+  const togglePaymentMethod = useCallback(
+    (methodId: string) => {
+      setPaymentMethods((prev) => {
+        const exists = prev.find((m) => m.method_id === methodId);
+        if (exists) {
+          return prev.filter((m) => m.method_id !== methodId);
+        }
+        const systemMethod = availablePaymentMethods.find((m) => m.method_id === methodId);
+        if (!systemMethod) return prev;
+        return [
+          ...prev,
+          {
+            _id: crypto.randomUUID(),
+            method_id: systemMethod.method_id,
+            display_name: systemMethod.display_name ?? systemMethod.default_display_name,
+            description: null,
+            icon_url: null,
+            sort_order: prev.length,
+            min_amount_kopeks: systemMethod.min_amount_kopeks ?? null,
+            max_amount_kopeks: systemMethod.max_amount_kopeks ?? null,
+            currency: null,
+            return_url: null,
+          },
+        ];
+      });
+    },
+    [availablePaymentMethods],
+  );
 
-  const removePaymentMethod = (methodId: string) => {
+  const updatePaymentMethod = useCallback(
+    (methodId: string, field: EditableMethodField, value: string | number | null) => {
+      setPaymentMethods((prev) =>
+        prev.map((m) => (m.method_id === methodId ? { ...m, [field]: value } : m)),
+      );
+    },
+    [],
+  );
+
+  const removePaymentMethod = useCallback((methodId: string) => {
     setPaymentMethods((prev) => prev.filter((m) => m.method_id !== methodId));
-  };
+  }, []);
 
   const handleMethodDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
@@ -857,6 +1006,7 @@ export default function AdminLandingEditor() {
                         <SortableSelectedMethodCard
                           key={method._id}
                           method={method}
+                          onUpdate={updatePaymentMethod}
                           onRemove={removePaymentMethod}
                         />
                       ))}

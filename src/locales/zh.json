@@ -3514,6 +3514,12 @@
     "copyLink": "复制链接",
     "giftToggleLabel": "\u8d2d\u4e70\u7c7b\u578b",
     "pollTimedOut": "\u5904\u7406\u65f6\u95f4\u8f83\u957f",
-    "pollTimedOutDesc": "\u4ed8\u6b3e\u5904\u7406\u65f6\u95f4\u6bd4\u5e73\u65f6\u957f\u3002\u60a8\u53ef\u4ee5\u5c1d\u8bd5\u518d\u6b21\u68c0\u67e5\u3002"
+    "pollTimedOutDesc": "\u4ed8\u6b3e\u5904\u7406\u65f6\u95f4\u6bd4\u5e73\u65f6\u957f\u3002\u60a8\u53ef\u4ee5\u5c1d\u8bd5\u518d\u6b21\u68c0\u67e5\u3002",
+    "pendingActivation": "订阅准备激活",
+    "pendingActivationDesc": "您已有活跃订阅。激活新订阅将替换当前订阅。",
+    "activateNow": "立即激活",
+    "activating": "激活中...",
+    "activationFailed": "激活失败",
+    "giftMessage": "留言"
   }
 }
