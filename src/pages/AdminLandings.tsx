@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { adminLandingsApi, LandingListItem } from '../api/landings';
+import { adminLandingsApi, LandingListItem, resolveLocaleDisplay } from '../api/landings';
 import { useNotify } from '@/platform';
 import { copyToClipboard } from '../utils/clipboard';
 import { getApiErrorMessage } from '../utils/api-error';
@@ -137,7 +137,9 @@ function SortableLandingCard({
         {/* Content */}
         <div className="min-w-0 flex-1">
           <div className="mb-1 flex items-center gap-2">
-            <h3 className="truncate font-medium text-dark-100">{landing.title}</h3>
+            <h3 className="truncate font-medium text-dark-100">
+              {resolveLocaleDisplay(landing.title)}
+            </h3>
             <span className="rounded bg-dark-800 px-2 py-0.5 text-xs text-dark-400">
               {landing.slug}
             </span>
@@ -204,7 +206,7 @@ function SortableLandingCard({
             )}
             title={
               isPendingDelete
-                ? t('admin.landings.deleteConfirm', { title: landing.title })
+                ? t('admin.landings.deleteConfirm', { title: resolveLocaleDisplay(landing.title) })
                 : t('common.delete')
             }
           >

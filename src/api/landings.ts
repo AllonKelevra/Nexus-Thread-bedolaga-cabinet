@@ -108,7 +108,7 @@ export interface AdminLandingFeature {
 export interface LandingListItem {
   id: number;
   slug: string;
-  title: string;
+  title: LocaleDict;
   is_active: boolean;
   display_order: number;
   gift_enabled: boolean;
@@ -167,6 +167,13 @@ export type LandingUpdateRequest = Partial<LandingCreateRequest>;
  * If it's a string, wraps it as `{ ru: value }`.
  * If null/undefined, returns the fallback.
  */
+/** Extract best display string from a LocaleDict: ru → en → first available → '' */
+export function resolveLocaleDisplay(dict: LocaleDict | string | null | undefined): string {
+  if (!dict) return '';
+  if (typeof dict === 'string') return dict;
+  return dict.ru || dict.en || Object.values(dict).find((v) => v?.trim()) || '';
+}
+
 export function toLocaleDict(
   value: string | LocaleDict | null | undefined,
   fallback: LocaleDict = {},
