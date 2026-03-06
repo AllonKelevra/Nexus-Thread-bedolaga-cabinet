@@ -4,10 +4,10 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '../../lib/utils';
 import { GripIcon, TrashIcon } from '../icons/LandingIcons';
-import type { LandingPaymentMethod, EditableMethodField } from '../../api/landings';
+import type { AdminLandingPaymentMethod, EditableMethodField } from '../../api/landings';
 import type { PaymentMethodSubOptionInfo } from '../../types';
 
-export type MethodWithId = LandingPaymentMethod & { _id: string };
+export type MethodWithId = AdminLandingPaymentMethod & { _id: string };
 
 const ChevronDownIcon = ({ open }: { open: boolean }) => (
   <svg

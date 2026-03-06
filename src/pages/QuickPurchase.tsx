@@ -332,50 +332,83 @@ function TariffCard({
 function PaymentMethodCard({
   method,
   isSelected,
+  selectedSubOption,
   onSelect,
+  onSelectSubOption,
 }: {
   method: LandingPaymentMethod;
   isSelected: boolean;
+  selectedSubOption: string | null;
   onSelect: () => void;
+  onSelectSubOption: (subOptionId: string) => void;
 }) {
+  const hasSubOptions = method.sub_options && method.sub_options.length > 1;
+
   return (
-    <button
-      type="button"
-      role="radio"
-      aria-checked={isSelected}
-      onClick={onSelect}
+    <div
       className={cn(
-        'flex w-full items-center gap-4 rounded-2xl border p-4 text-start transition-all duration-200',
+        'rounded-2xl border transition-all duration-200',
         isSelected
           ? 'border-accent-500/50 bg-accent-500/5'
           : 'border-dark-800/50 bg-dark-900/50 hover:border-dark-700/50 hover:bg-dark-800/30',
       )}
     >
-      {/* Icon */}
-      {method.icon_url && (
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-dark-800/50">
-          <img src={method.icon_url} alt="" className="h-6 w-6 object-contain" />
+      <button
+        type="button"
+        role="radio"
+        aria-checked={isSelected}
+        onClick={onSelect}
+        className="flex w-full items-center gap-4 p-4 text-start"
+      >
+        {/* Icon */}
+        {method.icon_url && (
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-dark-800/50">
+            <img src={method.icon_url} alt="" className="h-6 w-6 object-contain" />
+          </div>
+        )}
+
+        {/* Text */}
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium text-dark-100">{method.display_name}</p>
+          {method.description && (
+            <p className="mt-0.5 truncate text-xs text-dark-400">{method.description}</p>
+          )}
+        </div>
+
+        {/* Radio */}
+        <div
+          className={cn(
+            'flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
+            isSelected ? 'border-accent-500 bg-accent-500' : 'border-dark-600',
+          )}
+        >
+          {isSelected && <div className="h-2 w-2 rounded-full bg-white" />}
+        </div>
+      </button>
+
+      {/* Sub-options */}
+      {isSelected && hasSubOptions && (
+        <div className="border-t border-dark-800/30 px-4 pb-4 pt-3">
+          <div className="flex flex-wrap gap-2">
+            {method.sub_options!.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => onSelectSubOption(opt.id)}
+                className={cn(
+                  'rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200',
+                  selectedSubOption === opt.id
+                    ? 'bg-accent-500 text-white shadow-sm shadow-accent-500/25'
+                    : 'bg-dark-800/50 text-dark-300 hover:bg-dark-700/50 hover:text-dark-100',
+                )}
+              >
+                {opt.name}
+              </button>
+            ))}
+          </div>
         </div>
       )}
-
-      {/* Text */}
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-dark-100">{method.display_name}</p>
-        {method.description && (
-          <p className="mt-0.5 truncate text-xs text-dark-400">{method.description}</p>
-        )}
-      </div>
-
-      {/* Radio */}
-      <div
-        className={cn(
-          'flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
-          isSelected ? 'border-accent-500 bg-accent-500' : 'border-dark-600',
-        )}
-      >
-        {isSelected && <div className="h-2 w-2 rounded-full bg-white" />}
-      </div>
-    </button>
+    </div>
   );
 }
 
@@ -547,6 +580,7 @@ export default function QuickPurchase() {
   const [giftRecipient, setGiftRecipient] = useState('');
   const [giftMessage, setGiftMessage] = useState('');
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
+  const [selectedSubOption, setSelectedSubOption] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -595,7 +629,11 @@ export default function QuickPurchase() {
     }
 
     if (config.payment_methods.length > 0 && selectedMethod === null) {
-      setSelectedMethod(config.payment_methods[0].method_id);
+      const firstMethod = config.payment_methods[0];
+      setSelectedMethod(firstMethod.method_id);
+      if (firstMethod.sub_options && firstMethod.sub_options.length > 1) {
+        setSelectedSubOption(firstMethod.sub_options[0].id);
+      }
     }
   }, [config, allPeriods, visibleTariffs, selectedTariffId, selectedPeriodDays, selectedMethod]);
 
@@ -709,12 +747,19 @@ export default function QuickPurchase() {
     setIsSubmitting(true);
     setSubmitError(null);
 
+    // Build the payment_method string: append sub-option suffix if selected
+    // e.g. "platega" + "2" → "platega_2", "yookassa" + "sbp" → "yookassa_sbp"
+    let paymentMethod = selectedMethod!;
+    if (selectedSubOption) {
+      paymentMethod = `${paymentMethod}_${selectedSubOption}`;
+    }
+
     const data: PurchaseRequest = {
       tariff_id: selectedTariffId!,
       period_days: selectedPeriodDays!,
       contact_type: detectContactType(contactValue),
       contact_value: contactValue.trim(),
-      payment_method: selectedMethod!,
+      payment_method: paymentMethod,
       is_gift: isGift,
     };
 
@@ -849,7 +894,19 @@ export default function QuickPurchase() {
                       key={method.method_id}
                       method={method}
                       isSelected={method.method_id === selectedMethod}
-                      onSelect={() => setSelectedMethod(method.method_id)}
+                      selectedSubOption={
+                        method.method_id === selectedMethod ? selectedSubOption : null
+                      }
+                      onSelect={() => {
+                        setSelectedMethod(method.method_id);
+                        // Auto-select first sub-option when switching methods
+                        if (method.sub_options && method.sub_options.length > 1) {
+                          setSelectedSubOption(method.sub_options[0].id);
+                        } else {
+                          setSelectedSubOption(null);
+                        }
+                      }}
+                      onSelectSubOption={setSelectedSubOption}
                     />
                   ))}
                 </div>

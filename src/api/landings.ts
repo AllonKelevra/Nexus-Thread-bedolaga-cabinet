@@ -27,7 +27,27 @@ export interface LandingTariff {
   periods: LandingTariffPeriod[];
 }
 
+export interface LandingPaymentMethodSubOption {
+  id: string;
+  name: string;
+}
+
+/** Payment method as returned by the public landing config API */
 export interface LandingPaymentMethod {
+  method_id: string;
+  display_name: string;
+  description: string | null;
+  icon_url: string | null;
+  sort_order: number;
+  min_amount_kopeks: number | null;
+  max_amount_kopeks: number | null;
+  currency: string | null;
+  return_url: string | null;
+  sub_options: LandingPaymentMethodSubOption[] | null;
+}
+
+/** Payment method as stored/returned by the admin landing API (sub_options is a dict) */
+export interface AdminLandingPaymentMethod {
   method_id: string;
   display_name: string;
   description: string | null;
@@ -158,7 +178,7 @@ export interface LandingDetail {
   footer_text: LocaleDict | null;
   allowed_tariff_ids: number[];
   allowed_periods: Record<string, number[]>;
-  payment_methods: LandingPaymentMethod[];
+  payment_methods: AdminLandingPaymentMethod[];
   gift_enabled: boolean;
   custom_css: string | null;
   meta_title: LocaleDict | null;
@@ -177,7 +197,7 @@ export interface LandingCreateRequest {
   footer_text?: LocaleDict;
   allowed_tariff_ids?: number[];
   allowed_periods?: Record<string, number[]>;
-  payment_methods?: LandingPaymentMethod[];
+  payment_methods?: AdminLandingPaymentMethod[];
   gift_enabled?: boolean;
   custom_css?: string;
   meta_title?: LocaleDict;
