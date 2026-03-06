@@ -575,6 +575,16 @@ export interface ManualCheckResponse {
   new_status: string | null;
 }
 
+// Saved payment method (card) for recurrent payments
+export interface SavedCard {
+  id: number;
+  method_type: string;
+  card_last4: string | null;
+  card_type: string | null;
+  title: string | null;
+  created_at: string;
+}
+
 // Ticket notifications types
 export interface TicketNotification {
   id: number;
