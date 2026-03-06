@@ -288,9 +288,9 @@ export default function AdminLandingEditor() {
   const tariffPeriodsData = tariffDetailQueries.map((q) => q.data);
   const tariffPeriodsMap = useMemo(() => {
     const map: Record<number, PeriodPrice[]> = {};
-    tariffPeriodsData.forEach((data, i) => {
+    tariffPeriodsData.forEach((data) => {
       if (data) {
-        map[selectedTariffIds[i]] = data.period_prices;
+        map[data.id] = data.period_prices;
       }
     });
     return map;
@@ -408,6 +408,13 @@ export default function AdminLandingEditor() {
     const cleanFeatures: AdminLandingFeature[] = features.map(({ _id: _, ...rest }) => rest);
     const cleanMethods = paymentMethods.map(({ _id: _, ...rest }) => rest);
 
+    // Filter out empty period arrays and periods for non-selected tariffs
+    const cleanPeriods = Object.fromEntries(
+      Object.entries(allowedPeriods).filter(
+        ([key, days]) => days.length > 0 && selectedTariffIds.includes(Number(key)),
+      ),
+    );
+
     const data: LandingCreateRequest = {
       slug,
       title,
@@ -416,7 +423,7 @@ export default function AdminLandingEditor() {
       features: cleanFeatures,
       footer_text: nonEmptyDict(footerText),
       allowed_tariff_ids: selectedTariffIds,
-      allowed_periods: allowedPeriods,
+      allowed_periods: cleanPeriods,
       payment_methods: cleanMethods,
       gift_enabled: giftEnabled,
       custom_css: customCss || undefined,
@@ -509,9 +516,19 @@ export default function AdminLandingEditor() {
 
   // ---- Tariff/period helpers ----
   const toggleTariff = (tariffId: number) => {
-    setSelectedTariffIds((prev) =>
-      prev.includes(tariffId) ? prev.filter((id) => id !== tariffId) : [...prev, tariffId],
-    );
+    setSelectedTariffIds((prev) => {
+      if (prev.includes(tariffId)) {
+        // Clean up allowedPeriods for unchecked tariff
+        const key = String(tariffId);
+        setAllowedPeriods((ap) => {
+          if (!(key in ap)) return ap;
+          const { [key]: _, ...rest } = ap;
+          return rest;
+        });
+        return prev.filter((id) => id !== tariffId);
+      }
+      return [...prev, tariffId];
+    });
   };
 
   const togglePeriodFromTariff = (tariffId: number, days: number, allPeriods: PeriodPrice[]) => {
