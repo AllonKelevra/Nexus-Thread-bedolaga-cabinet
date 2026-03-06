@@ -3748,7 +3748,9 @@
       "noSystemMethods": "В системе не настроено ни одного способа оплаты",
       "methodOrder": "Перетащите для изменения порядка",
       "loadingPeriods": "Загрузка...",
-      "periodDaySuffix": "д"
+      "periodDaySuffix": "д",
+      "localeTab": "Язык",
+      "localeHint": "Переключите язык для редактирования текста на этом языке"
     }
   },
   "adminUpdates": {

@@ -12,21 +12,10 @@ import type {
   LandingPaymentMethod,
   PurchaseRequest,
 } from '../api/landings';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 import { cn } from '../lib/utils';
 import { getApiErrorMessage } from '../utils/api-error';
-
-// ============================================================
-// Helpers
-// ============================================================
-
-function formatPrice(kopeks: number): string {
-  const rubles = kopeks / 100;
-  return new Intl.NumberFormat('ru-RU', {
-    style: 'currency',
-    currency: 'RUB',
-    maximumFractionDigits: 0,
-  }).format(rubles);
-}
+import { formatPrice } from '../utils/format';
 
 function detectContactType(value: string): 'email' | 'telegram' {
   return value.startsWith('@') ? 'telegram' : 'email';
@@ -258,7 +247,7 @@ function TariffCard({
       aria-checked={isSelected}
       onClick={onSelect}
       className={cn(
-        'relative flex w-full flex-col rounded-2xl border p-5 text-left transition-all duration-200',
+        'relative flex w-full flex-col rounded-2xl border p-5 text-start transition-all duration-200',
         isSelected
           ? 'border-accent-500/50 bg-accent-500/5 ring-1 ring-accent-500/25'
           : 'border-dark-800/50 bg-dark-900/50 hover:border-dark-700/50 hover:bg-dark-800/30',
@@ -356,7 +345,7 @@ function PaymentMethodCard({
       aria-checked={isSelected}
       onClick={onSelect}
       className={cn(
-        'flex w-full items-center gap-4 rounded-2xl border p-4 text-left transition-all duration-200',
+        'flex w-full items-center gap-4 rounded-2xl border p-4 text-start transition-all duration-200',
         isSelected
           ? 'border-accent-500/50 bg-accent-500/5'
           : 'border-dark-800/50 bg-dark-900/50 hover:border-dark-700/50 hover:bg-dark-800/30',
@@ -535,7 +524,7 @@ function SummaryCard({
 
 export default function QuickPurchase() {
   const { slug } = useParams<{ slug: string }>();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   // Fetch config
   const {
@@ -543,8 +532,8 @@ export default function QuickPurchase() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['landing-config', slug],
-    queryFn: () => landingApi.getConfig(slug!),
+    queryKey: ['landing-config', slug, i18n.language],
+    queryFn: () => landingApi.getConfig(slug!, i18n.language),
     enabled: !!slug,
     staleTime: 60_000,
     retry: 1,
@@ -586,7 +575,9 @@ export default function QuickPurchase() {
   // Filter tariffs to only those that have the selected period
   const visibleTariffs = useMemo(() => {
     if (!config || !selectedPeriodDays) return config?.tariffs ?? [];
-    return config.tariffs.filter((t) => t.periods.some((p) => p.days === selectedPeriodDays));
+    return config.tariffs.filter((tariff) =>
+      tariff.periods.some((p) => p.days === selectedPeriodDays),
+    );
   }, [config, selectedPeriodDays]);
 
   // Auto-select first tariff, period, method on config load
@@ -611,7 +602,7 @@ export default function QuickPurchase() {
   // When period changes, auto-select first visible tariff if current is hidden
   useEffect(() => {
     if (!visibleTariffs.length) return;
-    const currentVisible = visibleTariffs.find((t) => t.id === selectedTariffId);
+    const currentVisible = visibleTariffs.find((tariff) => tariff.id === selectedTariffId);
     if (!currentVisible) {
       setSelectedTariffId(visibleTariffs[0].id);
     }
@@ -752,6 +743,11 @@ export default function QuickPurchase() {
   return (
     <div className="min-h-dvh bg-dark-950">
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Language switcher */}
+        <div className="mb-4 flex justify-end">
+          <LanguageSwitcher />
+        </div>
+
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

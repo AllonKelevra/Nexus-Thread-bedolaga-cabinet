@@ -3193,7 +3193,9 @@
       "noSystemMethods": "No payment methods configured in the system",
       "methodOrder": "Drag to reorder",
       "loadingPeriods": "Loading...",
-      "periodDaySuffix": "d"
+      "periodDaySuffix": "d",
+      "localeTab": "Language",
+      "localeHint": "Switch language to edit text in that language"
     }
   },
   "adminUpdates": {

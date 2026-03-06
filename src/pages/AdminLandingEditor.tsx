@@ -4,13 +4,17 @@ import { useQuery, useQueries, useMutation, useQueryClient } from '@tanstack/rea
 import { useTranslation } from 'react-i18next';
 import {
   adminLandingsApi,
-  LandingCreateRequest,
-  LandingFeature,
-  LandingPaymentMethod,
+  type LandingCreateRequest,
+  type AdminLandingFeature,
+  type LandingPaymentMethod,
+  type LocaleDict,
+  type SupportedLocale,
+  toLocaleDict,
 } from '../api/landings';
 import { tariffsApi, TariffListItem, PeriodPrice } from '../api/tariffs';
+import { formatPrice } from '../utils/format';
 import { adminPaymentMethodsApi } from '../api/adminPaymentMethods';
-import { Toggle } from '../components/admin';
+import { Toggle, LocaleTabs, LocalizedInput } from '../components/admin';
 import { useNotify } from '@/platform';
 import { usePlatform } from '../platform/hooks/usePlatform';
 import { getApiErrorMessage } from '../utils/api-error';
@@ -34,7 +38,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { cn } from '../lib/utils';
 
 // Types with stable IDs for DnD
-type FeatureWithId = LandingFeature & { _id: string };
+type FeatureWithId = AdminLandingFeature & { _id: string };
 type MethodWithId = LandingPaymentMethod & { _id: string };
 
 const ChevronDownIcon = ({ open }: { open: boolean }) => (
@@ -49,20 +53,25 @@ const ChevronDownIcon = ({ open }: { open: boolean }) => (
   </svg>
 );
 
-function formatPrice(kopeks: number): string {
-  return `${(kopeks / 100).toLocaleString('ru-RU')} \u20BD`;
-}
-
 // ============ Sortable Feature Item ============
 
 interface SortableFeatureProps {
   feature: FeatureWithId;
   index: number;
-  onUpdate: (index: number, field: keyof LandingFeature, value: string) => void;
+  locale: SupportedLocale;
+  onUpdateIcon: (index: number, value: string) => void;
+  onUpdateLocalized: (index: number, field: 'title' | 'description', value: LocaleDict) => void;
   onRemove: (index: number) => void;
 }
 
-function SortableFeatureItem({ feature, index, onUpdate, onRemove }: SortableFeatureProps) {
+function SortableFeatureItem({
+  feature,
+  index,
+  locale,
+  onUpdateIcon,
+  onUpdateLocalized,
+  onRemove,
+}: SortableFeatureProps) {
   const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: feature._id,
@@ -96,22 +105,22 @@ function SortableFeatureItem({ feature, index, onUpdate, onRemove }: SortableFea
           <input
             type="text"
             value={feature.icon}
-            onChange={(e) => onUpdate(index, 'icon', e.target.value)}
+            onChange={(e) => onUpdateIcon(index, e.target.value)}
             placeholder={t('admin.landings.featureIcon')}
             className="w-16 rounded-lg border border-dark-700 bg-dark-800 px-2 py-1.5 text-center text-sm text-dark-100 outline-none focus:border-accent-500"
           />
-          <input
-            type="text"
+          <LocalizedInput
             value={feature.title}
-            onChange={(e) => onUpdate(index, 'title', e.target.value)}
+            onChange={(v) => onUpdateLocalized(index, 'title', v)}
+            locale={locale}
             placeholder={t('admin.landings.featureTitle')}
             className="min-w-0 flex-1 rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
           />
         </div>
-        <input
-          type="text"
+        <LocalizedInput
           value={feature.description}
-          onChange={(e) => onUpdate(index, 'description', e.target.value)}
+          onChange={(v) => onUpdateLocalized(index, 'description', v)}
+          locale={locale}
           placeholder={t('admin.landings.featureDesc')}
           className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
         />
@@ -186,7 +195,7 @@ function Section({ title, open, onToggle, children }: SectionProps) {
     <div className="overflow-hidden rounded-xl border border-dark-700 bg-dark-900/50">
       <button
         onClick={onToggle}
-        className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium text-dark-100 hover:bg-dark-800/50"
+        className="flex w-full items-center justify-between px-4 py-3 text-start text-sm font-medium text-dark-100 hover:bg-dark-800/50"
       >
         {title}
         <ChevronDownIcon open={open} />
@@ -217,23 +226,26 @@ export default function AdminLandingEditor() {
     footer: false,
   });
 
-  const toggleSection = (key: string) => {
+  const toggleSection = useCallback((key: string) => {
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
+  }, []);
 
-  // Form state
+  // Locale editing state
+  const [editingLocale, setEditingLocale] = useState<SupportedLocale>('ru');
+
+  // Form state — text fields are now LocaleDict
   const [slug, setSlug] = useState('');
-  const [title, setTitle] = useState('');
-  const [subtitle, setSubtitle] = useState('');
+  const [title, setTitle] = useState<LocaleDict>({ ru: '' });
+  const [subtitle, setSubtitle] = useState<LocaleDict>({});
   const [isActive, setIsActive] = useState(true);
-  const [metaTitle, setMetaTitle] = useState('');
-  const [metaDescription, setMetaDescription] = useState('');
+  const [metaTitle, setMetaTitle] = useState<LocaleDict>({});
+  const [metaDescription, setMetaDescription] = useState<LocaleDict>({});
   const [features, setFeatures] = useState<FeatureWithId[]>([]);
   const [selectedTariffIds, setSelectedTariffIds] = useState<number[]>([]);
   const [allowedPeriods, setAllowedPeriods] = useState<Record<string, number[]>>({});
   const [paymentMethods, setPaymentMethods] = useState<MethodWithId[]>([]);
   const [giftEnabled, setGiftEnabled] = useState(false);
-  const [footerText, setFooterText] = useState('');
+  const [footerText, setFooterText] = useState<LocaleDict>({});
   const [customCss, setCustomCss] = useState('');
 
   // DnD sensors
@@ -273,15 +285,17 @@ export default function AdminLandingEditor() {
     })),
   });
 
+  const tariffPeriodsData = tariffDetailQueries.map((q) => q.data);
   const tariffPeriodsMap = useMemo(() => {
     const map: Record<number, PeriodPrice[]> = {};
-    tariffDetailQueries.forEach((q, i) => {
-      if (q.data) {
-        map[selectedTariffIds[i]] = q.data.period_prices;
+    tariffPeriodsData.forEach((data, i) => {
+      if (data) {
+        map[selectedTariffIds[i]] = data.period_prices;
       }
     });
     return map;
-  }, [tariffDetailQueries, selectedTariffIds]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(tariffPeriodsData.map((d) => d?.id)), selectedTariffIds]);
 
   // Fetch landing for editing
   const { data: landingData } = useQuery({
@@ -306,19 +320,26 @@ export default function AdminLandingEditor() {
     if (!landingData || formPopulated.current) return;
     formPopulated.current = true;
     setSlug(landingData.slug);
-    setTitle(landingData.title);
-    setSubtitle(landingData.subtitle ?? '');
+    setTitle(toLocaleDict(landingData.title, { ru: '' }));
+    setSubtitle(toLocaleDict(landingData.subtitle));
     setIsActive(landingData.is_active);
-    setMetaTitle(landingData.meta_title ?? '');
-    setMetaDescription(landingData.meta_description ?? '');
-    setFeatures((landingData.features ?? []).map((f) => ({ ...f, _id: crypto.randomUUID() })));
+    setMetaTitle(toLocaleDict(landingData.meta_title));
+    setMetaDescription(toLocaleDict(landingData.meta_description));
+    setFeatures(
+      (landingData.features ?? []).map((f) => ({
+        ...f,
+        _id: crypto.randomUUID(),
+        title: toLocaleDict(f.title),
+        description: toLocaleDict(f.description),
+      })),
+    );
     setSelectedTariffIds(landingData.allowed_tariff_ids ?? []);
     setAllowedPeriods(landingData.allowed_periods ?? {});
     setPaymentMethods(
       (landingData.payment_methods ?? []).map((m) => ({ ...m, _id: crypto.randomUUID() })),
     );
     setGiftEnabled(landingData.gift_enabled);
-    setFooterText(landingData.footer_text ?? '');
+    setFooterText(toLocaleDict(landingData.footer_text));
     setCustomCss(landingData.custom_css ?? '');
   }, [landingData]);
 
@@ -350,6 +371,14 @@ export default function AdminLandingEditor() {
     },
   });
 
+  /** Return a LocaleDict only if it has at least one non-empty value, else undefined */
+  const nonEmptyDict = (dict: LocaleDict): LocaleDict | undefined => {
+    const filtered = Object.fromEntries(
+      Object.entries(dict).filter(([, v]) => typeof v === 'string' && v.trim().length > 0),
+    );
+    return Object.keys(filtered).length > 0 ? filtered : undefined;
+  };
+
   const handleSubmit = () => {
     // Client-side validation
     if (!isEdit && !/^[a-z0-9-]+$/.test(slug)) {
@@ -361,7 +390,8 @@ export default function AdminLandingEditor() {
       );
       return;
     }
-    if (!title.trim()) {
+    const titleHasContent = Object.values(title).some((v) => v.trim().length > 0);
+    if (!titleHasContent) {
       notify.error(t('admin.landings.titleRequired', 'Title is required'));
       return;
     }
@@ -375,23 +405,23 @@ export default function AdminLandingEditor() {
     }
 
     // Strip _id before sending to API
-    const cleanFeatures = features.map(({ _id: _, ...rest }) => rest);
+    const cleanFeatures: AdminLandingFeature[] = features.map(({ _id: _, ...rest }) => rest);
     const cleanMethods = paymentMethods.map(({ _id: _, ...rest }) => rest);
 
     const data: LandingCreateRequest = {
       slug,
       title,
-      subtitle: subtitle || undefined,
+      subtitle: nonEmptyDict(subtitle),
       is_active: isActive,
       features: cleanFeatures,
-      footer_text: footerText || undefined,
+      footer_text: nonEmptyDict(footerText),
       allowed_tariff_ids: selectedTariffIds,
       allowed_periods: allowedPeriods,
       payment_methods: cleanMethods,
       gift_enabled: giftEnabled,
       custom_css: customCss || undefined,
-      meta_title: metaTitle || undefined,
-      meta_description: metaDescription || undefined,
+      meta_title: nonEmptyDict(metaTitle),
+      meta_description: nonEmptyDict(metaDescription),
     };
 
     if (isEdit) {
@@ -407,17 +437,24 @@ export default function AdminLandingEditor() {
   const addFeature = () => {
     setFeatures((prev) => [
       ...prev,
-      { _id: crypto.randomUUID(), icon: '', title: '', description: '' },
+      { _id: crypto.randomUUID(), icon: '', title: {}, description: {} },
     ]);
   };
 
-  const updateFeature = (index: number, field: keyof LandingFeature, value: string) => {
-    setFeatures((prev) => prev.map((f, i) => (i === index ? { ...f, [field]: value } : f)));
-  };
+  const updateFeatureIcon = useCallback((index: number, value: string) => {
+    setFeatures((prev) => prev.map((f, i) => (i === index ? { ...f, icon: value } : f)));
+  }, []);
 
-  const removeFeature = (index: number) => {
+  const updateFeatureLocalized = useCallback(
+    (index: number, field: 'title' | 'description', value: LocaleDict) => {
+      setFeatures((prev) => prev.map((f, i) => (i === index ? { ...f, [field]: value } : f)));
+    },
+    [],
+  );
+
+  const removeFeature = useCallback((index: number) => {
     setFeatures((prev) => prev.filter((_, i) => i !== index));
-  };
+  }, []);
 
   const handleFeatureDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
@@ -503,8 +540,8 @@ export default function AdminLandingEditor() {
   };
 
   // Feature IDs for DnD
-  const featureIds = features.map((f) => f._id);
-  const methodIds = paymentMethods.map((m) => m._id);
+  const featureIds = useMemo(() => features.map((f) => f._id), [features]);
+  const methodIds = useMemo(() => paymentMethods.map((m) => m._id), [paymentMethods]);
 
   return (
     <div className="animate-fade-in">
@@ -532,7 +569,7 @@ export default function AdminLandingEditor() {
           </button>
           <button
             onClick={handleSubmit}
-            disabled={isPending || !slug || !title}
+            disabled={isPending || !slug || !Object.values(title).some((v) => v.trim())}
             className="flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-sm text-white transition-colors hover:bg-accent-600 disabled:opacity-50"
           >
             {isPending && (
@@ -542,6 +579,21 @@ export default function AdminLandingEditor() {
           </button>
         </div>
       </div>
+
+      {/* Locale tabs — always visible above sections */}
+      <LocaleTabs
+        activeLocale={editingLocale}
+        onChange={setEditingLocale}
+        contentIndicators={[
+          title,
+          subtitle,
+          metaTitle,
+          metaDescription,
+          footerText,
+          ...features.flatMap((f) => [f.title, f.description]),
+        ]}
+        className="mb-4"
+      />
 
       <div className="space-y-4">
         {/* General Section */}
@@ -571,12 +623,11 @@ export default function AdminLandingEditor() {
               <label htmlFor="landing-title" className="mb-1 block text-sm text-dark-400">
                 {t('admin.landings.pageTitle')}
               </label>
-              <input
+              <LocalizedInput
                 id="landing-title"
-                type="text"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-2 text-sm text-dark-100 outline-none focus:border-accent-500"
+                onChange={setTitle}
+                locale={editingLocale}
               />
             </div>
 
@@ -584,12 +635,13 @@ export default function AdminLandingEditor() {
               <label htmlFor="landing-subtitle" className="mb-1 block text-sm text-dark-400">
                 {t('admin.landings.subtitle')}
               </label>
-              <textarea
+              <LocalizedInput
                 id="landing-subtitle"
                 value={subtitle}
-                onChange={(e) => setSubtitle(e.target.value)}
+                onChange={setSubtitle}
+                locale={editingLocale}
+                multiline
                 rows={2}
-                className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-2 text-sm text-dark-100 outline-none focus:border-accent-500"
               />
             </div>
 
@@ -606,22 +658,22 @@ export default function AdminLandingEditor() {
                   <label className="mb-1 block text-sm text-dark-400">
                     {t('admin.landings.metaTitle')}
                   </label>
-                  <input
-                    type="text"
+                  <LocalizedInput
                     value={metaTitle}
-                    onChange={(e) => setMetaTitle(e.target.value)}
-                    className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-2 text-sm text-dark-100 outline-none focus:border-accent-500"
+                    onChange={setMetaTitle}
+                    locale={editingLocale}
                   />
                 </div>
                 <div>
                   <label className="mb-1 block text-sm text-dark-400">
                     {t('admin.landings.metaDesc')}
                   </label>
-                  <textarea
+                  <LocalizedInput
                     value={metaDescription}
-                    onChange={(e) => setMetaDescription(e.target.value)}
+                    onChange={setMetaDescription}
+                    locale={editingLocale}
+                    multiline
                     rows={2}
-                    className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-2 text-sm text-dark-100 outline-none focus:border-accent-500"
                   />
                 </div>
               </div>
@@ -643,7 +695,9 @@ export default function AdminLandingEditor() {
                     key={feature._id}
                     feature={feature}
                     index={index}
-                    onUpdate={updateFeature}
+                    locale={editingLocale}
+                    onUpdateIcon={updateFeatureIcon}
+                    onUpdateLocalized={updateFeatureLocalized}
                     onRemove={removeFeature}
                   />
                 ))}
@@ -816,11 +870,12 @@ export default function AdminLandingEditor() {
               <label className="mb-1 block text-sm text-dark-400">
                 {t('admin.landings.footerText')}
               </label>
-              <textarea
+              <LocalizedInput
                 value={footerText}
-                onChange={(e) => setFooterText(e.target.value)}
+                onChange={setFooterText}
+                locale={editingLocale}
+                multiline
                 rows={4}
-                className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-2 text-sm text-dark-100 outline-none focus:border-accent-500"
               />
             </div>
             <div>

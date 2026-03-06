@@ -77,8 +77,33 @@ export interface PurchaseStatus {
 }
 
 // ============================================================
+// Locale helpers
+// ============================================================
+
+/** Locale dict for multi-language text fields (admin API) */
+export type LocaleDict = Record<string, string>;
+
+/** Supported locales for the admin editor */
+export const SUPPORTED_LOCALES = ['ru', 'en', 'zh', 'fa'] as const;
+export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
+
+export const LOCALE_META: Record<SupportedLocale, { flag: string; name: string; rtl: boolean }> = {
+  ru: { flag: '\u{1F1F7}\u{1F1FA}', name: 'RU', rtl: false },
+  en: { flag: '\u{1F1EC}\u{1F1E7}', name: 'EN', rtl: false },
+  zh: { flag: '\u{1F1E8}\u{1F1F3}', name: 'ZH', rtl: false },
+  fa: { flag: '\u{1F1EE}\u{1F1F7}', name: 'FA', rtl: true },
+};
+
+// ============================================================
 // Admin types
 // ============================================================
+
+/** Admin feature type with localized title/description */
+export interface AdminLandingFeature {
+  icon: string;
+  title: LocaleDict;
+  description: LocaleDict;
+}
 
 export interface LandingListItem {
   id: number;
@@ -102,18 +127,18 @@ export interface LandingListItem {
 export interface LandingDetail {
   id: number;
   slug: string;
-  title: string;
-  subtitle: string | null;
+  title: LocaleDict;
+  subtitle: LocaleDict | null;
   is_active: boolean;
-  features: LandingFeature[];
-  footer_text: string | null;
+  features: AdminLandingFeature[];
+  footer_text: LocaleDict | null;
   allowed_tariff_ids: number[];
   allowed_periods: Record<string, number[]>;
   payment_methods: LandingPaymentMethod[];
   gift_enabled: boolean;
   custom_css: string | null;
-  meta_title: string | null;
-  meta_description: string | null;
+  meta_title: LocaleDict | null;
+  meta_description: LocaleDict | null;
   display_order: number;
   created_at: string | null;
   updated_at: string | null;
@@ -121,29 +146,44 @@ export interface LandingDetail {
 
 export interface LandingCreateRequest {
   slug: string;
-  title: string;
-  subtitle?: string;
+  title: LocaleDict;
+  subtitle?: LocaleDict;
   is_active?: boolean;
-  features?: LandingFeature[];
-  footer_text?: string;
+  features?: AdminLandingFeature[];
+  footer_text?: LocaleDict;
   allowed_tariff_ids?: number[];
   allowed_periods?: Record<string, number[]>;
   payment_methods?: LandingPaymentMethod[];
   gift_enabled?: boolean;
   custom_css?: string;
-  meta_title?: string;
-  meta_description?: string;
+  meta_title?: LocaleDict;
+  meta_description?: LocaleDict;
 }
 
 export type LandingUpdateRequest = Partial<LandingCreateRequest>;
+
+/**
+ * Normalize a value that might be a plain string (old API) or a LocaleDict.
+ * If it's a string, wraps it as `{ ru: value }`.
+ * If null/undefined, returns the fallback.
+ */
+export function toLocaleDict(
+  value: string | LocaleDict | null | undefined,
+  fallback: LocaleDict = {},
+): LocaleDict {
+  if (value === null || value === undefined) return fallback;
+  if (typeof value === 'string') return value ? { ru: value } : fallback;
+  return value;
+}
 
 // ============================================================
 // Public API
 // ============================================================
 
 export const landingApi = {
-  getConfig: async (slug: string): Promise<LandingConfig> => {
-    const response = await apiClient.get(`/cabinet/landing/${slug}`);
+  getConfig: async (slug: string, lang?: string): Promise<LandingConfig> => {
+    const params = lang ? `?lang=${lang}` : '';
+    const response = await apiClient.get(`/cabinet/landing/${slug}${params}`);
     return response.data;
   },
 
