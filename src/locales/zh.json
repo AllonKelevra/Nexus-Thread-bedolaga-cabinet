@@ -1381,13 +1381,17 @@
       "resetAllColors": "重置所有颜色",
       "statusColors": "状态颜色",
       "categories": {
-        "TELEGRAM_WIDGET": "Telegram Login Widget"
+        "TELEGRAM_WIDGET": "Telegram Login Widget",
+        "TELEGRAM_OIDC": "Telegram Login (OIDC)"
       },
       "settingNames": {
         "Telegram Widget Size": "小部件大小",
         "Telegram Widget Radius": "圆角半径",
         "Telegram Widget Userpic": "显示头像",
-        "Telegram Widget Request Access": "请求访问权限"
+        "Telegram Widget Request Access": "请求访问权限",
+        "telegramOidcEnabled": "启用 OIDC",
+        "telegramOidcClientId": "Client ID（机器人 ID）",
+        "telegramOidcClientSecret": "Client Secret"
       }
     },
     "buttons": {

@@ -2154,7 +2154,10 @@
         "External Admin Token": "Токен внешней админки",
         "External Admin Token Bot Id": "ID бота",
         "Bot Username": "Username бота",
-        "Debug": "Отладка"
+        "Debug": "Отладка",
+        "telegramOidcEnabled": "OIDC включён",
+        "telegramOidcClientId": "Client ID (ID бота)",
+        "telegramOidcClientSecret": "Client Secret"
       },
       "categories": {
         "PAYMENT": "Платежи",
@@ -2169,6 +2172,7 @@
         "WATA": "Wata",
         "TELEGRAM": "Telegram",
         "TELEGRAM_WIDGET": "Telegram Login Widget",
+        "TELEGRAM_OIDC": "Telegram Login (OIDC)",
         "SUBSCRIPTIONS_CORE": "Основные",
         "SIMPLE_SUBSCRIPTION": "Простая подписка",
         "PERIODS": "Периоды",

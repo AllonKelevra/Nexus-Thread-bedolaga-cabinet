@@ -1343,13 +1343,17 @@
       "resetAllColors": "بازنشانی همه رنگ‌ها",
       "statusColors": "رنگ‌های وضعیت",
       "categories": {
-        "TELEGRAM_WIDGET": "Telegram Login Widget"
+        "TELEGRAM_WIDGET": "Telegram Login Widget",
+        "TELEGRAM_OIDC": "Telegram Login (OIDC)"
       },
       "settingNames": {
         "Telegram Widget Size": "اندازه ویجت",
         "Telegram Widget Radius": "شعاع گوشه",
         "Telegram Widget Userpic": "نمایش تصویر کاربر",
-        "Telegram Widget Request Access": "درخواست دسترسی"
+        "Telegram Widget Request Access": "درخواست دسترسی",
+        "telegramOidcEnabled": "فعال‌سازی OIDC",
+        "telegramOidcClientId": "Client ID (شناسه ربات)",
+        "telegramOidcClientSecret": "Client Secret"
       }
     },
     "buttons": {

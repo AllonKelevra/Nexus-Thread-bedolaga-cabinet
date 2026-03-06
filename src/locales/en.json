@@ -1683,13 +1683,17 @@
       "resetAllColors": "Reset all colors",
       "statusColors": "Status colors",
       "categories": {
-        "TELEGRAM_WIDGET": "Telegram Login Widget"
+        "TELEGRAM_WIDGET": "Telegram Login Widget",
+        "TELEGRAM_OIDC": "Telegram Login (OIDC)"
       },
       "settingNames": {
         "Telegram Widget Size": "Widget Size",
         "Telegram Widget Radius": "Corner Radius",
         "Telegram Widget Userpic": "Show User Photo",
-        "Telegram Widget Request Access": "Request Access"
+        "Telegram Widget Request Access": "Request Access",
+        "telegramOidcEnabled": "OIDC Enabled",
+        "telegramOidcClientId": "Client ID (Bot ID)",
+        "telegramOidcClientSecret": "Client Secret"
       }
     },
     "theme": {
