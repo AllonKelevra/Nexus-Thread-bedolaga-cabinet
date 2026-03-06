@@ -160,7 +160,7 @@ function SortableLandingCard({
           </div>
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-dark-400">
             <span>
-              {landing.purchase_stats.paid} {t('admin.landings.purchases')}
+              {landing.purchase_stats.total} {t('admin.landings.purchases')}
             </span>
           </div>
         </div>

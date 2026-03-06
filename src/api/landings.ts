@@ -136,9 +136,12 @@ export interface LandingListItem {
   method_count: number;
   purchase_stats: {
     total: number;
-    paid: number;
     pending: number;
+    paid: number;
+    delivered: number;
+    pending_activation: number;
     failed: number;
+    expired: number;
   };
   created_at: string | null;
   updated_at: string | null;
