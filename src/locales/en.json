@@ -1681,7 +1681,16 @@
       "projectName": "Project name",
       "quickPresets": "Quick presets",
       "resetAllColors": "Reset all colors",
-      "statusColors": "Status colors"
+      "statusColors": "Status colors",
+      "categories": {
+        "TELEGRAM_WIDGET": "Telegram Login Widget"
+      },
+      "settingNames": {
+        "Telegram Widget Size": "Widget Size",
+        "Telegram Widget Radius": "Corner Radius",
+        "Telegram Widget Userpic": "Show User Photo",
+        "Telegram Widget Request Access": "Request Access"
+      }
     },
     "theme": {
       "accentColor": "Accent color",

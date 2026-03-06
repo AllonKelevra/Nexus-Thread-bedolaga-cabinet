@@ -1,42 +1,58 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
+import { brandingApi, type TelegramWidgetConfig } from '../api/branding';
 
 interface TelegramLoginButtonProps {
-  botUsername: string;
   referralCode?: string;
 }
 
-export default function TelegramLoginButton({
-  botUsername,
-  referralCode,
-}: TelegramLoginButtonProps) {
+export default function TelegramLoginButton({ referralCode }: TelegramLoginButtonProps) {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const { data: widgetConfig } = useQuery<TelegramWidgetConfig>({
+    queryKey: ['telegram-widget-config'],
+    queryFn: brandingApi.getTelegramWidgetConfig,
+    staleTime: 60000,
+  });
+
+  const botUsername =
+    widgetConfig?.bot_username || import.meta.env.VITE_TELEGRAM_BOT_USERNAME || '';
+
   // Load widget script
   useEffect(() => {
-    if (!containerRef.current || !botUsername) return;
+    if (!containerRef.current || !botUsername || !widgetConfig) return;
 
-    // Clear previous widget using safe DOM API
-    while (containerRef.current.firstChild) {
-      containerRef.current.removeChild(containerRef.current.firstChild);
+    const container = containerRef.current;
+
+    // Clear previous widget
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
     }
 
-    // Get current URL for redirect
     const redirectUrl = `${window.location.origin}/auth/telegram/callback`;
 
-    // Create script element for Telegram Login Widget
     const script = document.createElement('script');
-    script.src = 'https://telegram.org/js/telegram-widget.js?22';
+    script.src = 'https://telegram.org/js/telegram-widget.js?23';
     script.setAttribute('data-telegram-login', botUsername);
-    script.setAttribute('data-size', 'large');
-    script.setAttribute('data-radius', '8');
+    script.setAttribute('data-size', widgetConfig.size);
+    script.setAttribute('data-radius', String(widgetConfig.radius));
+    script.setAttribute('data-userpic', String(widgetConfig.userpic));
     script.setAttribute('data-auth-url', redirectUrl);
-    script.setAttribute('data-request-access', 'write');
+    if (widgetConfig.request_access) {
+      script.setAttribute('data-request-access', 'write');
+    }
     script.async = true;
 
-    containerRef.current.appendChild(script);
-  }, [botUsername]);
+    container.appendChild(script);
+
+    return () => {
+      while (container.firstChild) {
+        container.removeChild(container.firstChild);
+      }
+    };
+  }, [botUsername, widgetConfig]);
 
   if (!botUsername || botUsername === 'your_bot') {
     return (
@@ -48,10 +64,8 @@ export default function TelegramLoginButton({
 
   return (
     <div className="flex flex-col items-center space-y-4">
-      {/* Telegram Widget will be inserted here */}
       <div ref={containerRef} className="flex justify-center" />
 
-      {/* Fallback link for mobile */}
       <div className="text-center">
         <p className="mb-2 text-xs text-gray-500">{t('auth.orOpenInApp')}</p>
         <a

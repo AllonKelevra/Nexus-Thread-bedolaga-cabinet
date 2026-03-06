@@ -1341,7 +1341,16 @@
       "projectName": "نام پروژه",
       "quickPresets": "پیش‌تنظیم‌های سریع",
       "resetAllColors": "بازنشانی همه رنگ‌ها",
-      "statusColors": "رنگ‌های وضعیت"
+      "statusColors": "رنگ‌های وضعیت",
+      "categories": {
+        "TELEGRAM_WIDGET": "Telegram Login Widget"
+      },
+      "settingNames": {
+        "Telegram Widget Size": "اندازه ویجت",
+        "Telegram Widget Radius": "شعاع گوشه",
+        "Telegram Widget Userpic": "نمایش تصویر کاربر",
+        "Telegram Widget Request Access": "درخواست دسترسی"
+      }
     },
     "buttons": {
       "color": "رنگ دکمه",

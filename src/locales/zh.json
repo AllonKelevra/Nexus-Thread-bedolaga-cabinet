@@ -1379,7 +1379,16 @@
       "projectName": "项目名称",
       "quickPresets": "快速预设",
       "resetAllColors": "重置所有颜色",
-      "statusColors": "状态颜色"
+      "statusColors": "状态颜色",
+      "categories": {
+        "TELEGRAM_WIDGET": "Telegram Login Widget"
+      },
+      "settingNames": {
+        "Telegram Widget Size": "小部件大小",
+        "Telegram Widget Radius": "圆角半径",
+        "Telegram Widget Userpic": "显示头像",
+        "Telegram Widget Request Access": "请求访问权限"
+      }
     },
     "buttons": {
       "color": "按钮颜色",
