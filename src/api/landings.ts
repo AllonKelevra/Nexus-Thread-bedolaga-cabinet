@@ -37,6 +37,7 @@ export interface LandingPaymentMethod {
   max_amount_kopeks: number | null;
   currency: string | null;
   return_url: string | null;
+  sub_options: Record<string, boolean> | null;
 }
 
 /** Editable fields on a payment method in the landing editor */

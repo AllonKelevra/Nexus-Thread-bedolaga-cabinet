@@ -3192,6 +3192,7 @@
       "selectMethods": "Select available methods",
       "noSystemMethods": "No payment methods configured in the system",
       "methodOrder": "Drag to reorder",
+      "methodSubOptions": "Payment sub-options",
       "loadingPeriods": "Loading...",
       "periodDaySuffix": "d",
       "localeTab": "Language",

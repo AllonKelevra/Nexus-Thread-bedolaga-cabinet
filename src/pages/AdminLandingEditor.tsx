@@ -6,7 +6,6 @@ import {
   adminLandingsApi,
   type LandingCreateRequest,
   type AdminLandingFeature,
-  type LandingPaymentMethod,
   type EditableMethodField,
   type LocaleDict,
   type SupportedLocale,
@@ -16,10 +15,15 @@ import { tariffsApi, TariffListItem, PeriodPrice } from '../api/tariffs';
 import { formatPrice } from '../utils/format';
 import { adminPaymentMethodsApi } from '../api/adminPaymentMethods';
 import { Toggle, LocaleTabs, LocalizedInput } from '../components/admin';
+import { SortableFeatureItem, type FeatureWithId } from '../components/admin/SortableFeatureItem';
+import {
+  SortableSelectedMethodCard,
+  type MethodWithId,
+} from '../components/admin/SortableSelectedMethodCard';
 import { useNotify } from '@/platform';
 import { usePlatform } from '../platform/hooks/usePlatform';
 import { getApiErrorMessage } from '../utils/api-error';
-import { BackIcon, PlusIcon, TrashIcon, GripIcon } from '../components/icons/LandingIcons';
+import { BackIcon, PlusIcon } from '../components/icons/LandingIcons';
 import {
   DndContext,
   KeyboardSensor,
@@ -32,15 +36,10 @@ import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
-  useSortable,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import { cn } from '../lib/utils';
-
-// Types with stable IDs for DnD
-type FeatureWithId = AdminLandingFeature & { _id: string };
-type MethodWithId = LandingPaymentMethod & { _id: string };
+import type { PaymentMethodSubOptionInfo } from '../types';
 
 const ChevronDownIcon = ({ open }: { open: boolean }) => (
   <svg
@@ -53,255 +52,6 @@ const ChevronDownIcon = ({ open }: { open: boolean }) => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
   </svg>
 );
-
-// ============ Sortable Feature Item ============
-
-interface SortableFeatureProps {
-  feature: FeatureWithId;
-  index: number;
-  locale: SupportedLocale;
-  onUpdateIcon: (index: number, value: string) => void;
-  onUpdateLocalized: (index: number, field: 'title' | 'description', value: LocaleDict) => void;
-  onRemove: (index: number) => void;
-}
-
-function SortableFeatureItem({
-  feature,
-  index,
-  locale,
-  onUpdateIcon,
-  onUpdateLocalized,
-  onRemove,
-}: SortableFeatureProps) {
-  const { t } = useTranslation();
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: feature._id,
-  });
-
-  const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 50 : undefined,
-    position: isDragging ? 'relative' : undefined,
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={cn(
-        'flex items-start gap-2 rounded-lg border p-3',
-        isDragging ? 'border-accent-500/50 bg-dark-700' : 'border-dark-700 bg-dark-800/50',
-      )}
-    >
-      <button
-        {...attributes}
-        {...listeners}
-        className="mt-2 flex-shrink-0 cursor-grab touch-none text-dark-500 hover:text-dark-300 active:cursor-grabbing"
-      >
-        <GripIcon />
-      </button>
-      <div className="min-w-0 flex-1 space-y-2">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={feature.icon}
-            onChange={(e) => onUpdateIcon(index, e.target.value)}
-            placeholder={t('admin.landings.featureIcon')}
-            className="w-16 rounded-lg border border-dark-700 bg-dark-800 px-2 py-1.5 text-center text-sm text-dark-100 outline-none focus:border-accent-500"
-          />
-          <LocalizedInput
-            value={feature.title}
-            onChange={(v) => onUpdateLocalized(index, 'title', v)}
-            locale={locale}
-            placeholder={t('admin.landings.featureTitle')}
-            className="min-w-0 flex-1 rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
-          />
-        </div>
-        <LocalizedInput
-          value={feature.description}
-          onChange={(v) => onUpdateLocalized(index, 'description', v)}
-          locale={locale}
-          placeholder={t('admin.landings.featureDesc')}
-          className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
-        />
-      </div>
-      <button
-        onClick={() => onRemove(index)}
-        className="mt-2 flex-shrink-0 text-dark-500 hover:text-error-400"
-      >
-        <TrashIcon />
-      </button>
-    </div>
-  );
-}
-
-// ============ Sortable Selected Payment Method Card ============
-
-interface SortableSelectedMethodProps {
-  method: MethodWithId;
-  onUpdate: (methodId: string, field: EditableMethodField, value: string | number | null) => void;
-  onRemove: (methodId: string) => void;
-}
-
-function SortableSelectedMethodCard({ method, onUpdate, onRemove }: SortableSelectedMethodProps) {
-  const { t } = useTranslation();
-  const [expanded, setExpanded] = useState(false);
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: method._id,
-  });
-
-  const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 50 : undefined,
-    position: isDragging ? 'relative' : undefined,
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={cn(
-        'rounded-lg border',
-        isDragging ? 'border-accent-500/50 bg-dark-700' : 'border-dark-700 bg-dark-800/50',
-      )}
-    >
-      <div className="flex items-center gap-2 px-3 py-2">
-        <button
-          {...attributes}
-          {...listeners}
-          className="flex-shrink-0 cursor-grab touch-none text-dark-500 hover:text-dark-300 active:cursor-grabbing"
-        >
-          <GripIcon />
-        </button>
-        <button onClick={() => setExpanded((v) => !v)} className="min-w-0 flex-1 text-start">
-          <span className="truncate text-sm text-dark-100">{method.display_name}</span>
-        </button>
-        <button
-          onClick={() => setExpanded((v) => !v)}
-          className="flex-shrink-0 text-dark-500 hover:text-dark-300"
-        >
-          <ChevronDownIcon open={expanded} />
-        </button>
-        <button
-          onClick={() => onRemove(method.method_id)}
-          className="flex-shrink-0 text-dark-500 hover:text-error-400"
-        >
-          <TrashIcon />
-        </button>
-      </div>
-      {expanded && (
-        <div className="space-y-3 border-t border-dark-700 px-3 py-3">
-          <div>
-            <label className="mb-1 block text-xs text-dark-500">
-              {t('admin.landings.methodDisplayName', 'Display name')}
-            </label>
-            <input
-              type="text"
-              value={method.display_name}
-              onChange={(e) => onUpdate(method.method_id, 'display_name', e.target.value)}
-              className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs text-dark-500">
-              {t('admin.landings.methodDescription', 'Description')}
-            </label>
-            <input
-              type="text"
-              value={method.description ?? ''}
-              onChange={(e) => onUpdate(method.method_id, 'description', e.target.value || null)}
-              placeholder={t('admin.landings.methodDescPlaceholder', 'Optional description')}
-              className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs text-dark-500">
-              {t('admin.landings.methodIconUrl', 'Icon URL')}
-            </label>
-            <input
-              type="text"
-              value={method.icon_url ?? ''}
-              onChange={(e) => onUpdate(method.method_id, 'icon_url', e.target.value || null)}
-              placeholder="https://..."
-              className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="mb-1 block text-xs text-dark-500">
-                {t('admin.landings.methodMinAmount', 'Min amount (kopeks)')}
-              </label>
-              <input
-                type="number"
-                min={0}
-                step={1}
-                value={method.min_amount_kopeks ?? ''}
-                onChange={(e) =>
-                  onUpdate(
-                    method.method_id,
-                    'min_amount_kopeks',
-                    e.target.value ? Math.max(0, Math.floor(Number(e.target.value))) : null,
-                  )
-                }
-                placeholder="—"
-                className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs text-dark-500">
-                {t('admin.landings.methodMaxAmount', 'Max amount (kopeks)')}
-              </label>
-              <input
-                type="number"
-                min={0}
-                step={1}
-                value={method.max_amount_kopeks ?? ''}
-                onChange={(e) =>
-                  onUpdate(
-                    method.method_id,
-                    'max_amount_kopeks',
-                    e.target.value ? Math.max(0, Math.floor(Number(e.target.value))) : null,
-                  )
-                }
-                placeholder="—"
-                className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="mb-1 block text-xs text-dark-500">
-              {t('admin.landings.methodCurrency', 'Currency')}
-            </label>
-            <input
-              type="text"
-              value={method.currency ?? ''}
-              onChange={(e) => onUpdate(method.method_id, 'currency', e.target.value || null)}
-              placeholder="RUB"
-              className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs text-dark-500">
-              {t('admin.landings.methodReturnUrl', 'Return URL after payment')}
-            </label>
-            <input
-              type="text"
-              value={method.return_url ?? ''}
-              onChange={(e) => onUpdate(method.method_id, 'return_url', e.target.value || null)}
-              placeholder={t(
-                'admin.landings.methodReturnUrlPlaceholder',
-                'Default: cabinet success page. Use {token} for purchase token',
-              )}
-              className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
-            />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 // ============ Collapsible Section ============
 
@@ -397,6 +147,16 @@ export default function AdminLandingEditor() {
     [systemMethods],
   );
 
+  const subOptionsMap = useMemo(() => {
+    const map: Record<string, PaymentMethodSubOptionInfo[]> = {};
+    for (const m of availablePaymentMethods) {
+      if (m.available_sub_options && m.available_sub_options.length > 0) {
+        map[m.method_id] = m.available_sub_options;
+      }
+    }
+    return map;
+  }, [availablePaymentMethods]);
+
   // Fetch tariff details for period info
   const tariffDetailQueries = useQueries({
     queries: selectedTariffIds.map((tariffId) => ({
@@ -465,6 +225,7 @@ export default function AdminLandingEditor() {
         max_amount_kopeks: m.max_amount_kopeks ?? null,
         currency: m.currency ?? null,
         return_url: m.return_url ?? null,
+        sub_options: m.sub_options ?? null,
       })),
     );
     setGiftEnabled(landingData.gift_enabled);
@@ -543,6 +304,7 @@ export default function AdminLandingEditor() {
       max_amount_kopeks: rest.max_amount_kopeks ?? null,
       currency: rest.currency || null,
       return_url: rest.return_url || null,
+      sub_options: rest.sub_options ?? null,
     }));
 
     // Filter out empty period arrays and periods for non-selected tariffs
@@ -622,6 +384,14 @@ export default function AdminLandingEditor() {
         }
         const systemMethod = availablePaymentMethods.find((m) => m.method_id === methodId);
         if (!systemMethod) return prev;
+        // Seed sub_options from global config defaults; if no global overrides exist,
+        // explicitly set all available sub-options to enabled
+        const subOptions =
+          systemMethod.available_sub_options && systemMethod.available_sub_options.length > 0
+            ? systemMethod.sub_options
+              ? { ...systemMethod.sub_options }
+              : Object.fromEntries(systemMethod.available_sub_options.map((o) => [o.id, true]))
+            : null;
         return [
           ...prev,
           {
@@ -635,6 +405,7 @@ export default function AdminLandingEditor() {
             max_amount_kopeks: systemMethod.max_amount_kopeks ?? null,
             currency: null,
             return_url: null,
+            sub_options: subOptions,
           },
         ];
       });
@@ -650,6 +421,12 @@ export default function AdminLandingEditor() {
     },
     [],
   );
+
+  const updateSubOptions = useCallback((methodId: string, subOptions: Record<string, boolean>) => {
+    setPaymentMethods((prev) =>
+      prev.map((m) => (m.method_id === methodId ? { ...m, sub_options: subOptions } : m)),
+    );
+  }, []);
 
   const removePaymentMethod = useCallback((methodId: string) => {
     setPaymentMethods((prev) => prev.filter((m) => m.method_id !== methodId));
@@ -983,8 +760,14 @@ export default function AdminLandingEditor() {
                         onChange={() => togglePaymentMethod(sysMethod.method_id)}
                         className="h-4 w-4 rounded border-dark-600 bg-dark-700 text-accent-500"
                       />
-                      <span className="text-sm font-medium text-dark-100">
+                      <span className="flex items-center gap-2 text-sm font-medium text-dark-100">
                         {sysMethod.display_name ?? sysMethod.default_display_name}
+                        {sysMethod.available_sub_options &&
+                          sysMethod.available_sub_options.length > 0 && (
+                            <span className="rounded-full bg-dark-700 px-1.5 py-0.5 text-[10px] text-dark-400">
+                              {sysMethod.available_sub_options.map((o) => o.name).join(' / ')}
+                            </span>
+                          )}
                       </span>
                     </label>
                   );
@@ -1006,7 +789,9 @@ export default function AdminLandingEditor() {
                         <SortableSelectedMethodCard
                           key={method._id}
                           method={method}
+                          availableSubOptions={subOptionsMap[method.method_id] ?? null}
                           onUpdate={updatePaymentMethod}
+                          onSubOptionsChange={updateSubOptions}
                           onRemove={removePaymentMethod}
                         />
                       ))}

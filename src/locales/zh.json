@@ -2917,6 +2917,7 @@
       "selectMethods": "选择可用的支付方式",
       "noSystemMethods": "系统中未配置任何支付方式",
       "methodOrder": "拖动以调整顺序",
+      "methodSubOptions": "支付子选项",
       "loadingPeriods": "加载中...",
       "periodDaySuffix": "天",
       "localeTab": "语言",

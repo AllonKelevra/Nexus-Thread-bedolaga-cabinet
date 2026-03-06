@@ -3747,6 +3747,7 @@
       "selectMethods": "Выберите доступные методы",
       "noSystemMethods": "В системе не настроено ни одного способа оплаты",
       "methodOrder": "Перетащите для изменения порядка",
+      "methodSubOptions": "Варианты оплаты",
       "loadingPeriods": "Загрузка...",
       "periodDaySuffix": "д",
       "localeTab": "Язык",
