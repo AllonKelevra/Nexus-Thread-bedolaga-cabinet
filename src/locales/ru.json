@@ -4557,6 +4557,7 @@
     "credentialsSentToEmail": "Данные для входа отправлены на email",
     "giftSentSuccess": "Подарок отправлен!",
     "giftSentDesc": "Получатель получит уведомление на email",
+    "giftPendingActivationDesc": "У получателя уже есть активная подписка. Ему будет отправлена ссылка для активации подарка.",
     "autoLoginFailed": "Не удалось выполнить автоматический вход",
     "autoLoginProcessing": "Выполняется вход...",
     "periodLabels": {

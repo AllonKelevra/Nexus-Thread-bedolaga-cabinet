@@ -3549,6 +3549,7 @@
     "credentialsSentToEmail": "اطلاعات ورود به ایمیل شما ارسال شد",
     "giftSentSuccess": "هدیه ارسال شد!",
     "giftSentDesc": "گیرنده از طریق ایمیل مطلع خواهد شد",
+    "giftPendingActivationDesc": "گیرنده در حال حاضر اشتراک فعال دارد. لینک فعال‌سازی هدیه برای او ارسال خواهد شد.",
     "autoLoginFailed": "ورود خودکار ناموفق بود",
     "autoLoginProcessing": "در حال ورود...",
     "periodLabels": {

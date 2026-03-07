@@ -3998,6 +3998,7 @@
     "credentialsSentToEmail": "Login credentials sent to your email",
     "giftSentSuccess": "Gift sent!",
     "giftSentDesc": "Recipient will be notified by email",
+    "giftPendingActivationDesc": "The recipient already has an active subscription. They will receive a link to activate the gift.",
     "autoLoginFailed": "Auto-login failed",
     "autoLoginProcessing": "Signing in...",
     "periodLabels": {

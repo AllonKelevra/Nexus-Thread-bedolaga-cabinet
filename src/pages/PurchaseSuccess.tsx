@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router';
+import { useParams, useNavigate, useSearchParams } from 'react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
@@ -502,6 +502,76 @@ function PendingActivationState({
   );
 }
 
+function GiftPendingActivationState({
+  tariffName,
+  periodDays,
+  recipientContactValue,
+  giftMessage,
+}: {
+  tariffName: string | null;
+  periodDays: number | null;
+  recipientContactValue: string | null;
+  giftMessage: string | null;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="flex flex-col items-center gap-6 text-center"
+    >
+      {/* Animated checkmark */}
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
+        className="flex h-20 w-20 items-center justify-center rounded-full bg-success-500/10"
+      >
+        <motion.svg
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={{ pathLength: 1, opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+          className="h-10 w-10 text-success-500"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2.5}
+        >
+          <motion.path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M5 13l4 4L19 7"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+          />
+        </motion.svg>
+      </motion.div>
+
+      <div>
+        <h1 className="text-xl font-bold text-dark-50">{t('landing.giftSentSuccess')}</h1>
+        {tariffName && periodDays !== null && (
+          <p className="mt-1 text-sm text-dark-300">
+            {tariffName} — {periodDays} {t('landing.daysAccess')}
+          </p>
+        )}
+        {recipientContactValue && (
+          <p className="mt-2 text-sm text-dark-400">
+            {t('landing.giftSentTo', { contact: recipientContactValue })}
+          </p>
+        )}
+        <p className="mt-2 text-sm text-dark-400">{t('landing.giftPendingActivationDesc')}</p>
+        {giftMessage && (
+          <p className="mt-2 text-sm italic text-dark-400">
+            {t('landing.giftMessage')}: {giftMessage}
+          </p>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
 function FailedState() {
   const { t } = useTranslation();
 
@@ -583,6 +653,8 @@ function PollTimedOutState({ onRetry }: { onRetry: () => void }) {
 export default function PurchaseSuccess() {
   const { t } = useTranslation();
   const { token } = useParams<{ token: string }>();
+  const [searchParams] = useSearchParams();
+  const isActivateHint = searchParams.get('activate') === '1';
   const pollStart = useRef(Date.now());
   const [pollTimedOut, setPollTimedOut] = useState(false);
   const [isActivating, setIsActivating] = useState(false);
@@ -650,6 +722,10 @@ export default function PurchaseSuccess() {
   const isPendingActivation = purchaseStatus?.status === 'pending_activation';
   const isFailed = purchaseStatus?.status === 'failed' || purchaseStatus?.status === 'expired';
 
+  // Gift pending activation → buyer sees "gift sent" message, not the activate button.
+  // Recipient arrives via email link with ?activate=1 and sees the activate button instead.
+  const isGiftPendingActivation = isPendingActivation && purchaseStatus?.is_gift && !isActivateHint;
+
   // Email self-purchase delivered → show cabinet credentials
   const isEmailSelfPurchase =
     isSuccess &&
@@ -679,6 +755,13 @@ export default function PurchaseSuccess() {
             tariffName={purchaseStatus.tariff_name}
             periodDays={purchaseStatus.period_days}
             isGift={purchaseStatus.is_gift}
+            giftMessage={purchaseStatus.gift_message}
+          />
+        ) : isGiftPendingActivation ? (
+          <GiftPendingActivationState
+            tariffName={purchaseStatus.tariff_name}
+            periodDays={purchaseStatus.period_days}
+            recipientContactValue={purchaseStatus.recipient_contact_value}
             giftMessage={purchaseStatus.gift_message}
           />
         ) : isPendingActivation ? (
