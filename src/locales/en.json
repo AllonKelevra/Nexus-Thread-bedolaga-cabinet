@@ -3192,7 +3192,7 @@
       "metaDesc": "Meta Description",
       "active": "Active",
       "inactive": "Inactive",
-      "purchases": "purchases",
+      "purchaseCount": "purchases",
       "copyUrl": "Copy URL",
       "urlCopied": "URL copied",
       "deleteConfirm": "Delete landing \"{{title}}\"?",

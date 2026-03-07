@@ -3743,7 +3743,7 @@
       "metaDesc": "Meta Description",
       "active": "Активен",
       "inactive": "Неактивен",
-      "purchases": "покупок",
+      "purchaseCount": "покупок",
       "copyUrl": "Скопировать URL",
       "urlCopied": "URL скопирован",
       "deleteConfirm": "Удалить лендинг «{{title}}»?",
