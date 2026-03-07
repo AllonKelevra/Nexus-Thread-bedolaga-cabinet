@@ -3995,6 +3995,24 @@
     "giftSentSuccess": "Gift sent!",
     "giftSentDesc": "Recipient will be notified by email",
     "autoLoginFailed": "Auto-login failed",
-    "autoLoginProcessing": "Signing in..."
+    "autoLoginProcessing": "Signing in...",
+    "periodLabels": {
+      "d1": "1 day",
+      "d2": "2 days",
+      "d3": "3 days",
+      "d5": "5 days",
+      "d7": "1 week",
+      "d14": "2 weeks",
+      "d30": "1 month",
+      "d60": "2 months",
+      "d90": "3 months",
+      "d180": "6 months",
+      "d365": "1 year",
+      "d456": "1 year + 3 mo.",
+      "nDays_one": "{{count}} day",
+      "nDays_other": "{{count}} days",
+      "nMonths_one": "{{count}} month",
+      "nMonths_other": "{{count}} months"
+    }
   }
 }

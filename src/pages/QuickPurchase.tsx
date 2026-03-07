@@ -31,6 +31,22 @@ function isValidContact(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
 }
 
+function formatPeriodLabel(
+  days: number,
+  t: (key: string, options?: Record<string, unknown>) => string,
+): string {
+  const key = `landing.periodLabels.d${days}`;
+  const result = t(key);
+  if (result !== key) return result;
+
+  const months = Math.floor(days / 30);
+  const remainder = days % 30;
+  if (months > 0 && remainder === 0) {
+    return t('landing.periodLabels.nMonths', { count: months });
+  }
+  return t('landing.periodLabels.nDays', { count: days });
+}
+
 // ============================================================
 // Sub-components
 // ============================================================
@@ -82,21 +98,23 @@ function PeriodTabs({
   selectedDays: number;
   onSelect: (days: number) => void;
 }) {
+  const { t } = useTranslation();
+
   return (
-    <div className="scrollbar-none flex gap-2 overflow-x-auto pb-1">
+    <div className="flex flex-wrap gap-2">
       {periods.map((period) => (
         <button
           key={period.days}
           type="button"
           onClick={() => onSelect(period.days)}
           className={cn(
-            'whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-medium transition-all duration-200',
+            'whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-all duration-200',
             selectedDays === period.days
               ? 'bg-accent-500 text-white shadow-lg shadow-accent-500/25'
               : 'bg-dark-800/50 text-dark-300 hover:bg-dark-700/50 hover:text-dark-100',
           )}
         >
-          {period.label}
+          {formatPeriodLabel(period.days, t)}
         </button>
       ))}
     </div>
@@ -469,7 +487,9 @@ function SummaryCard({
             <p className="text-xs font-medium uppercase tracking-wider text-dark-500">
               {t('landing.period', 'Period')}
             </p>
-            <p className="mt-1 text-sm text-dark-200">{selectedPeriod.label}</p>
+            <p className="mt-1 text-sm text-dark-200">
+              {formatPeriodLabel(selectedPeriod.days, t)}
+            </p>
           </div>
         )}
         <div className="border-t border-dark-800/50 pt-4">
@@ -788,7 +808,7 @@ export default function QuickPurchase() {
   const showTariffCards = visibleTariffs.length > 1;
 
   return (
-    <div className="min-h-dvh bg-dark-950">
+    <div className="min-h-dvh overflow-x-hidden bg-dark-950">
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Language switcher */}
         <div className="mb-4 flex justify-end">

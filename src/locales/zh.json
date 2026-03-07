@@ -3545,6 +3545,22 @@
     "giftSentSuccess": "礼物已发送！",
     "giftSentDesc": "收件人将通过邮件收到通知",
     "autoLoginFailed": "自动登录失败",
-    "autoLoginProcessing": "正在登录..."
+    "autoLoginProcessing": "正在登录...",
+    "periodLabels": {
+      "d1": "1天",
+      "d2": "2天",
+      "d3": "3天",
+      "d5": "5天",
+      "d7": "1周",
+      "d14": "2周",
+      "d30": "1个月",
+      "d60": "2个月",
+      "d90": "3个月",
+      "d180": "6个月",
+      "d365": "1年",
+      "d456": "1年3个月",
+      "nDays": "{{count}}天",
+      "nMonths": "{{count}}个月"
+    }
   }
 }
