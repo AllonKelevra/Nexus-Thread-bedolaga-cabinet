@@ -37,7 +37,7 @@ export default function Connection() {
 
   const handleOpenQR = useCallback(() => {
     navigate('/connection/qr', {
-      replace: true,
+      replace: !isTelegramWebApp,
       state: {
         url: appConfig?.subscriptionUrl,
         hideLink: appConfig?.hideLink ?? false,
