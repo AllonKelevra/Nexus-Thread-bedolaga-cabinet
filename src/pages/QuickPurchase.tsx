@@ -963,7 +963,7 @@ export default function QuickPurchase() {
   const showTariffCards = visibleTariffs.length > 1;
 
   return (
-    <div className="min-h-dvh overflow-x-hidden bg-dark-950">
+    <div className={cn('min-h-dvh overflow-x-hidden', !config.background_config && 'bg-dark-950')}>
       {config.background_config && <StaticBackgroundRenderer config={config.background_config} />}
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Language switcher */}
