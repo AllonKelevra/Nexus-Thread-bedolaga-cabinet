@@ -2825,6 +2825,7 @@
       "filters": {
         "title": "筛选",
         "active": "已激活",
+        "user": "用户",
         "action": "操作",
         "actionPlaceholder": "按操作搜索...",
         "resource": "资源类型",

@@ -2826,6 +2826,7 @@
       "filters": {
         "title": "فیلترها",
         "active": "فعال",
+        "user": "کاربر",
         "action": "عملیات",
         "actionPlaceholder": "جستجو بر اساس عملیات...",
         "resource": "نوع منبع",

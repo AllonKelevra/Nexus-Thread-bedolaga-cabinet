@@ -3097,6 +3097,7 @@
       "filters": {
         "title": "Filters",
         "active": "Active",
+        "user": "User",
         "action": "Action",
         "actionPlaceholder": "Search by action...",
         "resource": "Resource type",

@@ -3645,6 +3645,7 @@
       "filters": {
         "title": "Фильтры",
         "active": "Активны",
+        "user": "Пользователь",
         "action": "Действие",
         "actionPlaceholder": "Поиск по действию...",
         "resource": "Тип ресурса",
