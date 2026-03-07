@@ -160,6 +160,11 @@ function SortableLandingCard({
                     <GiftIcon />
                   </span>
                 )}
+                {landing.has_active_discount && (
+                  <span className="rounded-full bg-accent-500/20 px-2 py-0.5 text-[10px] font-medium text-accent-400">
+                    {t('admin.landings.discountActive', 'Discount')}
+                  </span>
+                )}
               </div>
               <div className="text-sm text-dark-400">
                 <span>

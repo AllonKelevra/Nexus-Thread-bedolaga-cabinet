@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams } from 'react-router';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import DOMPurify from 'dompurify';
@@ -338,9 +338,24 @@ function TariffCard({
       {/* Price */}
       {selectedPeriod && (
         <div className="mt-3 border-t border-dark-800/30 pt-3">
-          <span className="text-lg font-bold text-accent-400">
-            {formatPrice(selectedPeriod.price_kopeks)}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-bold text-accent-400">
+              {formatPrice(selectedPeriod.price_kopeks)}
+            </span>
+            {selectedPeriod.original_price_kopeks != null &&
+              selectedPeriod.original_price_kopeks > selectedPeriod.price_kopeks && (
+                <>
+                  <span className="text-sm text-dark-500 line-through">
+                    {formatPrice(selectedPeriod.original_price_kopeks)}
+                  </span>
+                  {selectedPeriod.discount_percent != null && (
+                    <span className="rounded-full bg-accent-500/20 px-1.5 py-0.5 text-[10px] font-bold text-accent-400">
+                      -{selectedPeriod.discount_percent}%
+                    </span>
+                  )}
+                </>
+              )}
+          </div>
         </div>
       )}
     </button>
@@ -496,7 +511,22 @@ function SummaryCard({
           <p className="text-xs font-medium uppercase tracking-wider text-dark-500">
             {t('landing.total', 'Total')}
           </p>
-          <p className="mt-1 text-2xl font-bold text-accent-400">{formatPrice(currentPrice)}</p>
+          <div className="mt-1 flex items-center gap-2">
+            <span className="text-2xl font-bold text-accent-400">{formatPrice(currentPrice)}</span>
+            {selectedPeriod?.original_price_kopeks != null &&
+              selectedPeriod.original_price_kopeks > selectedPeriod.price_kopeks && (
+                <>
+                  <span className="text-base text-dark-500 line-through">
+                    {formatPrice(selectedPeriod.original_price_kopeks)}
+                  </span>
+                  {selectedPeriod.discount_percent != null && (
+                    <span className="rounded-full bg-accent-500/20 px-2 py-0.5 text-xs font-bold text-accent-400">
+                      -{selectedPeriod.discount_percent}%
+                    </span>
+                  )}
+                </>
+              )}
+          </div>
         </div>
       </div>
 
@@ -555,7 +585,14 @@ function SummaryCard({
           <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
         ) : (
           <>
-            {t('landing.pay', 'Pay')} {formatPrice(currentPrice)}
+            {t('landing.pay', 'Pay')}{' '}
+            {selectedPeriod?.original_price_kopeks != null &&
+              selectedPeriod.original_price_kopeks > selectedPeriod.price_kopeks && (
+                <span className="mr-1 text-sm font-normal text-white/50 line-through">
+                  {formatPrice(selectedPeriod.original_price_kopeks)}
+                </span>
+              )}
+            {formatPrice(currentPrice)}
           </>
         )}
       </button>
@@ -572,12 +609,117 @@ function SummaryCard({
 }
 
 // ============================================================
+// Discount Countdown
+// ============================================================
+
+function TimeUnit({ value, label }: { value: number; label: string }) {
+  return (
+    <div className="flex flex-col items-center">
+      <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-dark-800/80 text-lg font-bold tabular-nums text-dark-50 sm:h-12 sm:w-12 sm:text-xl">
+        {String(value).padStart(2, '0')}
+      </span>
+      <span className="mt-1 text-[10px] uppercase tracking-wider text-dark-500">{label}</span>
+    </div>
+  );
+}
+
+function calcTimeLeft(endTime: number) {
+  const diff = Math.max(0, endTime - Date.now());
+  return {
+    diff,
+    days: Math.floor(diff / 86_400_000),
+    hours: Math.floor((diff % 86_400_000) / 3_600_000),
+    minutes: Math.floor((diff % 3_600_000) / 60_000),
+    seconds: Math.floor((diff % 60_000) / 1_000),
+  };
+}
+
+function DiscountBanner({
+  discount,
+  onExpired,
+}: {
+  discount: { percent: number; ends_at: string; badge_text: string | null };
+  onExpired: () => void;
+}) {
+  const { t } = useTranslation();
+  const endTime = useMemo(() => new Date(discount.ends_at).getTime(), [discount.ends_at]);
+  const initial = useMemo(() => calcTimeLeft(endTime), [endTime]);
+  const [timeLeft, setTimeLeft] = useState(initial);
+  const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined);
+  const expiredRef = useRef(false);
+
+  useEffect(() => {
+    expiredRef.current = false;
+    const fresh = calcTimeLeft(endTime);
+    setTimeLeft(fresh);
+    if (fresh.diff === 0) {
+      if (!expiredRef.current) {
+        expiredRef.current = true;
+        onExpired();
+      }
+      return;
+    }
+
+    intervalRef.current = setInterval(() => {
+      const tl = calcTimeLeft(endTime);
+      setTimeLeft(tl);
+      if (tl.diff === 0) {
+        clearInterval(intervalRef.current);
+        if (!expiredRef.current) {
+          expiredRef.current = true;
+          onExpired();
+        }
+      }
+    }, 1000);
+
+    return () => clearInterval(intervalRef.current);
+  }, [endTime, onExpired]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      className="mb-8 overflow-hidden rounded-2xl border border-accent-500/30 bg-gradient-to-r from-accent-500/10 via-accent-500/5 to-transparent"
+    >
+      <div className="flex flex-col items-center gap-4 px-5 py-5 sm:flex-row sm:justify-between">
+        {/* Left: badge + text */}
+        <div className="flex items-center gap-3">
+          <span className="shrink-0 rounded-full bg-accent-500 px-3 py-1 text-sm font-bold text-white shadow-lg shadow-accent-500/25">
+            -{discount.percent}%
+          </span>
+          {discount.badge_text && (
+            <span className="text-sm font-medium text-dark-100">{discount.badge_text}</span>
+          )}
+        </div>
+
+        {/* Right: countdown */}
+        <div className="flex items-center gap-1.5">
+          {timeLeft.days > 0 && (
+            <>
+              <TimeUnit value={timeLeft.days} label={t('landing.discount.days', 'd')} />
+              <span className="text-lg font-bold text-dark-500">:</span>
+            </>
+          )}
+          <TimeUnit value={timeLeft.hours} label={t('landing.discount.hours', 'h')} />
+          <span className="text-lg font-bold text-dark-500">:</span>
+          <TimeUnit value={timeLeft.minutes} label={t('landing.discount.minutes', 'm')} />
+          <span className="text-lg font-bold text-dark-500">:</span>
+          <TimeUnit value={timeLeft.seconds} label={t('landing.discount.seconds', 's')} />
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ============================================================
 // Main Component
 // ============================================================
 
 export default function QuickPurchase() {
   const { slug } = useParams<{ slug: string }>();
   const { t, i18n } = useTranslation();
+  const queryClient = useQueryClient();
 
   // Fetch config
   const {
@@ -591,6 +733,18 @@ export default function QuickPurchase() {
     staleTime: 60_000,
     retry: 1,
   });
+
+  const [discountExpired, setDiscountExpired] = useState(false);
+
+  const handleDiscountExpired = useCallback(() => {
+    setDiscountExpired(true);
+    queryClient.invalidateQueries({ queryKey: ['landing-config', slug] });
+  }, [queryClient, slug]);
+
+  // Reset expired flag when config changes (e.g. new discount scheduled)
+  useEffect(() => {
+    if (config?.discount) setDiscountExpired(false);
+  }, [config?.discount]);
 
   // Selection state
   const [selectedTariffId, setSelectedTariffId] = useState<number | null>(null);
@@ -829,6 +983,13 @@ export default function QuickPurchase() {
             <p className="mt-3 text-base text-dark-300 sm:text-lg">{config.subtitle}</p>
           )}
         </motion.div>
+
+        {/* Discount banner */}
+        <AnimatePresence>
+          {config.discount && !discountExpired && (
+            <DiscountBanner discount={config.discount} onExpired={handleDiscountExpired} />
+          )}
+        </AnimatePresence>
 
         {/* Two-column layout */}
         <div className="grid gap-8 lg:grid-cols-[1fr_380px]">

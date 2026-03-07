@@ -41,6 +41,12 @@ import {
 import { cn } from '../lib/utils';
 import type { PaymentMethodSubOptionInfo } from '../types';
 
+function isoToDatetimeLocal(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
 const ChevronDownIcon = ({ open }: { open: boolean }) => (
   <svg
     className={cn('h-5 w-5 transition-transform', open && 'rotate-180')}
@@ -93,6 +99,7 @@ export default function AdminLandingEditor() {
     general: true,
     features: false,
     tariffs: false,
+    discount: false,
     methods: false,
     gifts: false,
     footer: false,
@@ -119,6 +126,13 @@ export default function AdminLandingEditor() {
   const [giftEnabled, setGiftEnabled] = useState(false);
   const [footerText, setFooterText] = useState<LocaleDict>({});
   const [customCss, setCustomCss] = useState('');
+
+  // Discount state
+  const [discountPercent, setDiscountPercent] = useState<number | null>(null);
+  const [discountOverrides, setDiscountOverrides] = useState<Record<string, number>>({});
+  const [discountStartsAt, setDiscountStartsAt] = useState('');
+  const [discountEndsAt, setDiscountEndsAt] = useState('');
+  const [discountBadgeText, setDiscountBadgeText] = useState<LocaleDict>({});
 
   // DnD sensors
   const sensors = useSensors(
@@ -231,6 +245,15 @@ export default function AdminLandingEditor() {
     setGiftEnabled(landingData.gift_enabled);
     setFooterText(toLocaleDict(landingData.footer_text));
     setCustomCss(landingData.custom_css ?? '');
+    setDiscountPercent(landingData.discount_percent ?? null);
+    setDiscountOverrides(landingData.discount_overrides ?? {});
+    setDiscountStartsAt(
+      landingData.discount_starts_at ? isoToDatetimeLocal(landingData.discount_starts_at) : '',
+    );
+    setDiscountEndsAt(
+      landingData.discount_ends_at ? isoToDatetimeLocal(landingData.discount_ends_at) : '',
+    );
+    setDiscountBadgeText(toLocaleDict(landingData.discount_badge_text));
   }, [landingData]);
 
   // Create mutation
@@ -328,6 +351,19 @@ export default function AdminLandingEditor() {
       custom_css: customCss || undefined,
       meta_title: nonEmptyDict(metaTitle),
       meta_description: nonEmptyDict(metaDescription),
+      discount_percent: discountPercent ?? null,
+      discount_overrides:
+        discountPercent !== null && Object.keys(discountOverrides).length > 0
+          ? discountOverrides
+          : null,
+      discount_starts_at:
+        discountPercent !== null && discountStartsAt
+          ? new Date(discountStartsAt).toISOString()
+          : null,
+      discount_ends_at:
+        discountPercent !== null && discountEndsAt ? new Date(discountEndsAt).toISOString() : null,
+      discount_badge_text:
+        discountPercent !== null ? (nonEmptyDict(discountBadgeText) ?? null) : null,
     };
 
     if (isEdit) {
@@ -448,11 +484,17 @@ export default function AdminLandingEditor() {
   const toggleTariff = (tariffId: number) => {
     setSelectedTariffIds((prev) => {
       if (prev.includes(tariffId)) {
-        // Clean up allowedPeriods for unchecked tariff
         const key = String(tariffId);
+        // Clean up allowedPeriods for unchecked tariff
         setAllowedPeriods((ap) => {
           if (!(key in ap)) return ap;
           const { [key]: _, ...rest } = ap;
+          return rest;
+        });
+        // Clean up discount override for unchecked tariff
+        setDiscountOverrides((overrides) => {
+          if (!(key in overrides)) return overrides;
+          const { [key]: _, ...rest } = overrides;
           return rest;
         });
         return prev.filter((id) => id !== tariffId);
@@ -537,6 +579,7 @@ export default function AdminLandingEditor() {
           metaTitle,
           metaDescription,
           footerText,
+          discountBadgeText,
           ...features.flatMap((f) => [f.title, f.description]),
         ]}
         className="mb-4"
@@ -726,6 +769,204 @@ export default function AdminLandingEditor() {
                 )}
               </div>
             ))}
+          </div>
+        </Section>
+
+        {/* Discount Section */}
+        <Section
+          title={t('admin.landings.discount', 'Discount')}
+          open={openSections.discount}
+          onToggle={() => toggleSection('discount')}
+        >
+          <div className="space-y-4">
+            {/* Enable/disable discount */}
+            <div className="flex items-center justify-between">
+              <label className="text-sm text-dark-400">
+                {t('admin.landings.discountEnabled', 'Enable discount')}
+              </label>
+              <Toggle
+                checked={discountPercent !== null}
+                onChange={() => {
+                  if (discountPercent !== null) {
+                    setDiscountPercent(null);
+                    setDiscountOverrides({});
+                    setDiscountStartsAt('');
+                    setDiscountEndsAt('');
+                    setDiscountBadgeText({});
+                  } else {
+                    setDiscountPercent(10);
+                  }
+                }}
+              />
+            </div>
+
+            {discountPercent !== null && (
+              <div className="space-y-4">
+                {/* Global percent */}
+                <div>
+                  <label className="mb-1 block text-sm text-dark-400">
+                    {t('admin.landings.discountPercent', 'Discount %')}
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min={1}
+                      max={99}
+                      value={discountPercent}
+                      onChange={(e) => setDiscountPercent(Number(e.target.value))}
+                      className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-dark-700 accent-accent-500"
+                    />
+                    <div className="flex w-20 items-center rounded-lg border border-dark-700 bg-dark-800">
+                      <input
+                        type="number"
+                        min={1}
+                        max={99}
+                        value={discountPercent}
+                        onChange={(e) => {
+                          const v = Math.min(99, Math.max(1, Number(e.target.value) || 1));
+                          setDiscountPercent(v);
+                        }}
+                        className="w-full bg-transparent px-2 py-1.5 text-center text-sm text-dark-100 outline-none"
+                      />
+                      <span className="pr-2 text-sm text-dark-400">%</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Date range */}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-sm text-dark-400">
+                      {t('admin.landings.discountStartsAt', 'Start date')}
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={discountStartsAt}
+                      onChange={(e) => setDiscountStartsAt(e.target.value)}
+                      className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-2 text-sm text-dark-100 outline-none focus:border-accent-500 [&::-webkit-calendar-picker-indicator]:invert"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm text-dark-400">
+                      {t('admin.landings.discountEndsAt', 'End date')}
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={discountEndsAt}
+                      onChange={(e) => setDiscountEndsAt(e.target.value)}
+                      className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-2 text-sm text-dark-100 outline-none focus:border-accent-500 [&::-webkit-calendar-picker-indicator]:invert"
+                    />
+                  </div>
+                </div>
+
+                {/* Badge text */}
+                <div>
+                  <label className="mb-1 block text-sm text-dark-400">
+                    {t('admin.landings.discountBadge', 'Banner text (optional)')}
+                  </label>
+                  <LocalizedInput
+                    value={discountBadgeText}
+                    onChange={setDiscountBadgeText}
+                    locale={editingLocale}
+                    placeholder={t('admin.landings.discountBadgePlaceholder', 'e.g. Spring sale!')}
+                  />
+                </div>
+
+                {/* Per-tariff overrides */}
+                {selectedTariffIds.length > 0 && (
+                  <div>
+                    <label className="mb-2 block text-sm text-dark-400">
+                      {t('admin.landings.discountOverrides', 'Per-tariff overrides')}
+                    </label>
+                    <p className="mb-2 text-xs text-dark-500">
+                      {t(
+                        'admin.landings.discountOverridesHint',
+                        'Leave empty to use global discount',
+                      )}
+                    </p>
+                    <div className="space-y-2">
+                      {selectedTariffIds.map((tariffId) => {
+                        const tariff = allTariffs.find((tr) => tr.id === tariffId);
+                        if (!tariff) return null;
+                        const override = discountOverrides[String(tariffId)];
+                        const hasOverride = override !== undefined;
+                        return (
+                          <div
+                            key={tariffId}
+                            className="flex items-center gap-3 rounded-lg border border-dark-700 bg-dark-800/50 px-3 py-2"
+                          >
+                            <span className="min-w-0 flex-1 truncate text-sm text-dark-200">
+                              {tariff.name}
+                            </span>
+                            <span className="text-xs text-dark-500">
+                              {hasOverride ? `${override}%` : `${discountPercent}%`}
+                            </span>
+                            <input
+                              type="number"
+                              min={1}
+                              max={99}
+                              value={hasOverride ? override : ''}
+                              placeholder={String(discountPercent)}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setDiscountOverrides((prev) => {
+                                  if (!val) {
+                                    const { [String(tariffId)]: _, ...rest } = prev;
+                                    return rest;
+                                  }
+                                  return {
+                                    ...prev,
+                                    [String(tariffId)]: Math.min(99, Math.max(1, Number(val))),
+                                  };
+                                });
+                              }}
+                              className="w-16 rounded border border-dark-600 bg-dark-700 px-2 py-1 text-center text-sm text-dark-100 outline-none focus:border-accent-500"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Preview */}
+                {selectedTariffIds.length > 0 && (
+                  <div className="rounded-lg border border-dark-600 bg-dark-800/30 p-3">
+                    <p className="mb-2 text-xs font-medium uppercase tracking-wider text-dark-500">
+                      {t('admin.landings.discountPreview', 'Preview')}
+                    </p>
+                    {selectedTariffIds.slice(0, 3).map((tariffId) => {
+                      const tariff = allTariffs.find((tr) => tr.id === tariffId);
+                      if (!tariff) return null;
+                      const override = discountOverrides[String(tariffId)];
+                      const pct = override ?? discountPercent ?? 0;
+                      const periods = tariffPeriodsMap[tariffId];
+                      if (!periods || periods.length === 0) return null;
+                      const firstPeriod = periods[0];
+                      const discounted = Math.max(
+                        1,
+                        firstPeriod.price_kopeks -
+                          Math.floor((firstPeriod.price_kopeks * pct) / 100),
+                      );
+                      return (
+                        <div key={tariffId} className="flex items-center gap-2 py-1">
+                          <span className="text-sm text-dark-300">{tariff.name}:</span>
+                          <span className="text-xs text-dark-500 line-through">
+                            {formatPrice(firstPeriod.price_kopeks)}
+                          </span>
+                          <span className="text-sm font-semibold text-accent-400">
+                            {formatPrice(discounted)}
+                          </span>
+                          <span className="rounded-full bg-accent-500/20 px-1.5 py-0.5 text-[10px] font-medium text-accent-400">
+                            -{pct}%
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </Section>
 

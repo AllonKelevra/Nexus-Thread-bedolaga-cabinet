@@ -15,6 +15,9 @@ export interface LandingTariffPeriod {
   label: string;
   price_kopeks: number;
   price_label: string;
+  original_price_kopeks: number | null;
+  original_price_label: string | null;
+  discount_percent: number | null;
 }
 
 export interface LandingTariff {
@@ -69,6 +72,12 @@ export type EditableMethodField =
   | 'currency'
   | 'return_url';
 
+export interface LandingDiscountInfo {
+  percent: number;
+  ends_at: string; // ISO datetime
+  badge_text: string | null;
+}
+
 export interface LandingConfig {
   slug: string;
   title: string;
@@ -81,6 +90,7 @@ export interface LandingConfig {
   custom_css: string | null;
   meta_title: string | null;
   meta_description: string | null;
+  discount: LandingDiscountInfo | null;
 }
 
 export interface PurchaseRequest {
@@ -165,6 +175,7 @@ export interface LandingListItem {
   };
   created_at: string | null;
   updated_at: string | null;
+  has_active_discount: boolean;
 }
 
 export interface LandingDetail {
@@ -185,6 +196,11 @@ export interface LandingDetail {
   display_order: number;
   created_at: string | null;
   updated_at: string | null;
+  discount_percent: number | null;
+  discount_overrides: Record<string, number> | null;
+  discount_starts_at: string | null;
+  discount_ends_at: string | null;
+  discount_badge_text: LocaleDict | null;
 }
 
 export interface LandingCreateRequest {
@@ -201,6 +217,11 @@ export interface LandingCreateRequest {
   custom_css?: string;
   meta_title?: LocaleDict;
   meta_description?: LocaleDict;
+  discount_percent?: number | null;
+  discount_overrides?: Record<string, number> | null;
+  discount_starts_at?: string | null;
+  discount_ends_at?: string | null;
+  discount_badge_text?: LocaleDict | null;
 }
 
 export type LandingUpdateRequest = Partial<LandingCreateRequest>;
@@ -278,12 +299,12 @@ export const adminLandingsApi = {
     return response.data;
   },
 
-  delete: async (id: number): Promise<{ message: string }> => {
+  delete: async (id: number): Promise<{ success: boolean }> => {
     const response = await apiClient.delete(`/cabinet/admin/landings/${id}`);
     return response.data;
   },
 
-  toggle: async (id: number): Promise<{ id: number; is_active: boolean; message: string }> => {
+  toggle: async (id: number): Promise<LandingDetail> => {
     const response = await apiClient.post(`/cabinet/admin/landings/${id}/toggle`);
     return response.data;
   },

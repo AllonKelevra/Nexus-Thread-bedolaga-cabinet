@@ -3766,7 +3766,18 @@
       "loadingPeriods": "Загрузка...",
       "periodDaySuffix": "д",
       "localeTab": "Язык",
-      "localeHint": "Переключите язык для редактирования текста на этом языке"
+      "localeHint": "Переключите язык для редактирования текста на этом языке",
+      "discount": "Скидка",
+      "discountEnabled": "Включить скидку",
+      "discountPercent": "Скидка %",
+      "discountStartsAt": "Дата начала",
+      "discountEndsAt": "Дата окончания",
+      "discountBadge": "Текст баннера (необязательно)",
+      "discountBadgePlaceholder": "напр. Весенняя распродажа!",
+      "discountOverrides": "Индивидуальные скидки по тарифам",
+      "discountOverridesHint": "Оставьте пустым для использования общей скидки",
+      "discountPreview": "Предпросмотр",
+      "discountActive": "Скидка"
     }
   },
   "adminUpdates": {
@@ -4562,6 +4573,12 @@
     "giftPendingActivationDesc": "У получателя уже есть активная подписка. Ему будет отправлена ссылка для активации подарка.",
     "autoLoginFailed": "Не удалось выполнить автоматический вход",
     "autoLoginProcessing": "Выполняется вход...",
+    "discount": {
+      "days": "д",
+      "hours": "ч",
+      "minutes": "м",
+      "seconds": "с"
+    },
     "periodLabels": {
       "d1": "1 день",
       "d2": "2 дня",

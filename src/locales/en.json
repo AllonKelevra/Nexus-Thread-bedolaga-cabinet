@@ -3215,7 +3215,18 @@
       "loadingPeriods": "Loading...",
       "periodDaySuffix": "d",
       "localeTab": "Language",
-      "localeHint": "Switch language to edit text in that language"
+      "localeHint": "Switch language to edit text in that language",
+      "discount": "Discount",
+      "discountEnabled": "Enable discount",
+      "discountPercent": "Discount %",
+      "discountStartsAt": "Start date",
+      "discountEndsAt": "End date",
+      "discountBadge": "Banner text (optional)",
+      "discountBadgePlaceholder": "e.g. Spring sale!",
+      "discountOverrides": "Per-tariff overrides",
+      "discountOverridesHint": "Leave empty to use global discount",
+      "discountPreview": "Preview",
+      "discountActive": "Discount"
     }
   },
   "adminUpdates": {
@@ -4003,6 +4014,12 @@
     "giftPendingActivationDesc": "The recipient already has an active subscription. They will receive a link to activate the gift.",
     "autoLoginFailed": "Auto-login failed",
     "autoLoginProcessing": "Signing in...",
+    "discount": {
+      "days": "d",
+      "hours": "h",
+      "minutes": "m",
+      "seconds": "s"
+    },
     "periodLabels": {
       "d1": "1 day",
       "d2": "2 days",
