@@ -3779,6 +3779,7 @@
       "discountOverridesHint": "Оставьте пустым для использования общей скидки",
       "discountPreview": "Предпросмотр",
       "discountActive": "Скидка",
+      "background": "Анимированный фон",
       "statistics": "Статистика",
       "stats": {
         "title": "Статистика лендинга",

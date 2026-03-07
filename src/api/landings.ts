@@ -1,4 +1,5 @@
 import apiClient from './client';
+import type { AnimationConfig } from '@/components/ui/backgrounds/types';
 
 // ============================================================
 // Public types
@@ -91,6 +92,7 @@ export interface LandingConfig {
   meta_title: string | null;
   meta_description: string | null;
   discount: LandingDiscountInfo | null;
+  background_config: AnimationConfig | null;
 }
 
 export interface PurchaseRequest {
@@ -201,6 +203,7 @@ export interface LandingDetail {
   discount_starts_at: string | null;
   discount_ends_at: string | null;
   discount_badge_text: LocaleDict | null;
+  background_config: AnimationConfig | null;
 }
 
 export interface LandingCreateRequest {
@@ -222,6 +225,7 @@ export interface LandingCreateRequest {
   discount_starts_at?: string | null;
   discount_ends_at?: string | null;
   discount_badge_text?: LocaleDict | null;
+  background_config?: AnimationConfig | null;
 }
 
 export type LandingUpdateRequest = Partial<LandingCreateRequest>;
