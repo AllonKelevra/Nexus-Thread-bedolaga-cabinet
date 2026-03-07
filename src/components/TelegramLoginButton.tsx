@@ -43,8 +43,12 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
       await loginWithTelegramOIDC(data.id_token);
       navigate('/');
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { detail?: string } } };
-      setOidcError(error.response?.data?.detail || t('common.error'));
+      let message = t('common.error');
+      if (err && typeof err === 'object' && 'response' in err) {
+        const resp = (err as { response?: { data?: { detail?: string } } }).response;
+        if (resp?.data?.detail) message = resp.data.detail;
+      }
+      setOidcError(message);
     } finally {
       setOidcLoading(false);
     }
@@ -61,7 +65,7 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
       if (window.Telegram?.Login) {
         window.Telegram.Login.init(
           {
-            client_id: widgetConfig.oidc_client_id,
+            client_id: Number(widgetConfig.oidc_client_id) || widgetConfig.oidc_client_id,
             request_access: widgetConfig.request_access ? ['write'] : undefined,
             lang: document.documentElement.lang || 'en',
           },

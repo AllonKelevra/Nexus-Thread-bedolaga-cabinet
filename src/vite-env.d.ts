@@ -23,7 +23,7 @@ interface TelegramWebAppGlobal {
 interface TelegramLoginGlobal {
   init: (
     options: {
-      client_id: string;
+      client_id: string | number;
       request_access?: string[];
       lang?: string;
     },
