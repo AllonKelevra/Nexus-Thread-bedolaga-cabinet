@@ -115,7 +115,7 @@ function SortableLandingCard({
       ref={setNodeRef}
       style={style}
       className={cn(
-        'rounded-xl border bg-dark-800 p-4 transition-colors',
+        'rounded-xl border bg-dark-800 p-3 transition-colors sm:p-4',
         isDragging
           ? 'border-accent-500/50 shadow-xl shadow-accent-500/20'
           : landing.is_active
@@ -123,99 +123,158 @@ function SortableLandingCard({
             : 'border-dark-700/50 opacity-60',
       )}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-2 sm:gap-3">
         {/* Drag handle */}
         <button
           {...attributes}
           {...listeners}
-          className="mt-1 flex-shrink-0 cursor-grab touch-none rounded-lg p-2.5 text-dark-500 hover:bg-dark-700/50 hover:text-dark-300 active:cursor-grabbing sm:p-1.5"
+          className="mt-0.5 flex-shrink-0 cursor-grab touch-none rounded-lg p-2 text-dark-500 hover:bg-dark-700/50 hover:text-dark-300 active:cursor-grabbing sm:mt-1 sm:p-1.5"
           title={t('admin.tariffs.dragToReorder')}
         >
           <GripIcon />
         </button>
 
-        {/* Content */}
+        {/* Content + Actions wrapper */}
         <div className="min-w-0 flex-1">
-          <div className="mb-1 flex items-center gap-2">
-            <h3 className="truncate font-medium text-dark-100">
-              {resolveLocaleDisplay(landing.title)}
-            </h3>
-            <span className="rounded bg-dark-800 px-2 py-0.5 text-xs text-dark-400">
-              {landing.slug}
-            </span>
-            {landing.is_active ? (
-              <span className="rounded bg-success-500/20 px-2 py-0.5 text-xs text-success-400">
-                {t('admin.landings.active')}
-              </span>
-            ) : (
-              <span className="rounded bg-dark-600 px-2 py-0.5 text-xs text-dark-400">
-                {t('admin.landings.inactive')}
-              </span>
-            )}
-            {landing.gift_enabled && (
-              <span className="rounded bg-accent-500/20 px-2 py-0.5 text-xs text-accent-400">
-                <GiftIcon />
-              </span>
-            )}
+          {/* Top row: title/slug + actions (desktop) */}
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <div className="mb-1 flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <h3 className="truncate font-medium text-dark-100">
+                  {resolveLocaleDisplay(landing.title)}
+                </h3>
+                <span className="shrink-0 rounded bg-dark-800 px-2 py-0.5 text-xs text-dark-400">
+                  {landing.slug}
+                </span>
+                {landing.is_active ? (
+                  <span className="shrink-0 rounded bg-success-500/20 px-2 py-0.5 text-xs text-success-400">
+                    {t('admin.landings.active')}
+                  </span>
+                ) : (
+                  <span className="shrink-0 rounded bg-dark-600 px-2 py-0.5 text-xs text-dark-400">
+                    {t('admin.landings.inactive')}
+                  </span>
+                )}
+                {landing.gift_enabled && (
+                  <span className="shrink-0 rounded bg-accent-500/20 px-1.5 py-0.5 text-xs text-accent-400">
+                    <GiftIcon />
+                  </span>
+                )}
+              </div>
+              <div className="text-sm text-dark-400">
+                <span>
+                  {landing.purchase_stats.total} {t('admin.landings.purchases')}
+                </span>
+              </div>
+            </div>
+
+            {/* Actions: hidden on mobile, shown on desktop */}
+            <div className="hidden shrink-0 items-center gap-1.5 sm:flex">
+              <button
+                onClick={onCopyUrl}
+                className="rounded-lg bg-dark-700 p-2 text-dark-300 transition-colors hover:bg-dark-600 hover:text-dark-100"
+                title={t('admin.landings.copyUrl')}
+              >
+                <CopyIcon />
+              </button>
+              <button
+                onClick={onToggle}
+                className={cn(
+                  'rounded-lg p-2 transition-colors',
+                  landing.is_active
+                    ? 'bg-success-500/20 text-success-400 hover:bg-success-500/30'
+                    : 'bg-dark-700 text-dark-400 hover:bg-dark-600',
+                )}
+                title={
+                  landing.is_active ? t('admin.landings.inactive') : t('admin.landings.active')
+                }
+              >
+                {landing.is_active ? <CheckIcon /> : <XIcon />}
+              </button>
+              <button
+                onClick={onEdit}
+                className="rounded-lg bg-dark-700 p-2 text-dark-300 transition-colors hover:bg-dark-600 hover:text-dark-100"
+                title={t('admin.landings.edit')}
+              >
+                <EditIcon />
+              </button>
+              <button
+                onClick={onDelete}
+                className={cn(
+                  'rounded-lg p-2 transition-colors',
+                  isPendingDelete
+                    ? 'bg-error-500/20 text-error-400 ring-1 ring-error-500/30'
+                    : 'bg-dark-700 text-dark-300 hover:bg-error-500/20 hover:text-error-400',
+                )}
+                title={
+                  isPendingDelete
+                    ? t('admin.landings.deleteConfirm', {
+                        title: resolveLocaleDisplay(landing.title),
+                      })
+                    : t('common.delete')
+                }
+              >
+                {isPendingDelete ? (
+                  <span className="px-1 text-xs font-medium">{t('common.delete')}?</span>
+                ) : (
+                  <TrashIcon />
+                )}
+              </button>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-dark-400">
-            <span>
-              {landing.purchase_stats.total} {t('admin.landings.purchases')}
-            </span>
+
+          {/* Actions: shown on mobile only */}
+          <div className="mt-2 flex items-center gap-1.5 sm:hidden">
+            <button
+              onClick={onCopyUrl}
+              className="rounded-lg bg-dark-700 p-2 text-dark-300 transition-colors hover:bg-dark-600 hover:text-dark-100"
+              title={t('admin.landings.copyUrl')}
+            >
+              <CopyIcon />
+            </button>
+            <button
+              onClick={onToggle}
+              className={cn(
+                'rounded-lg p-2 transition-colors',
+                landing.is_active
+                  ? 'bg-success-500/20 text-success-400 hover:bg-success-500/30'
+                  : 'bg-dark-700 text-dark-400 hover:bg-dark-600',
+              )}
+              title={landing.is_active ? t('admin.landings.inactive') : t('admin.landings.active')}
+            >
+              {landing.is_active ? <CheckIcon /> : <XIcon />}
+            </button>
+            <button
+              onClick={onEdit}
+              className="rounded-lg bg-dark-700 p-2 text-dark-300 transition-colors hover:bg-dark-600 hover:text-dark-100"
+              title={t('admin.landings.edit')}
+            >
+              <EditIcon />
+            </button>
+            <div className="flex-1" />
+            <button
+              onClick={onDelete}
+              className={cn(
+                'rounded-lg p-2 transition-colors',
+                isPendingDelete
+                  ? 'bg-error-500/20 text-error-400 ring-1 ring-error-500/30'
+                  : 'bg-dark-700 text-dark-300 hover:bg-error-500/20 hover:text-error-400',
+              )}
+              title={
+                isPendingDelete
+                  ? t('admin.landings.deleteConfirm', {
+                      title: resolveLocaleDisplay(landing.title),
+                    })
+                  : t('common.delete')
+              }
+            >
+              {isPendingDelete ? (
+                <span className="px-1 text-xs font-medium">{t('common.delete')}?</span>
+              ) : (
+                <TrashIcon />
+              )}
+            </button>
           </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onCopyUrl}
-            className="rounded-lg bg-dark-700 p-2 text-dark-300 transition-colors hover:bg-dark-600 hover:text-dark-100"
-            title={t('admin.landings.copyUrl')}
-          >
-            <CopyIcon />
-          </button>
-
-          <button
-            onClick={onToggle}
-            className={cn(
-              'rounded-lg p-2 transition-colors',
-              landing.is_active
-                ? 'bg-success-500/20 text-success-400 hover:bg-success-500/30'
-                : 'bg-dark-700 text-dark-400 hover:bg-dark-600',
-            )}
-            title={landing.is_active ? t('admin.landings.inactive') : t('admin.landings.active')}
-          >
-            {landing.is_active ? <CheckIcon /> : <XIcon />}
-          </button>
-
-          <button
-            onClick={onEdit}
-            className="rounded-lg bg-dark-700 p-2 text-dark-300 transition-colors hover:bg-dark-600 hover:text-dark-100"
-            title={t('admin.landings.edit')}
-          >
-            <EditIcon />
-          </button>
-
-          <button
-            onClick={onDelete}
-            className={cn(
-              'rounded-lg p-2 transition-colors',
-              isPendingDelete
-                ? 'bg-error-500/20 text-error-400 ring-1 ring-error-500/30'
-                : 'bg-dark-700 text-dark-300 hover:bg-error-500/20 hover:text-error-400',
-            )}
-            title={
-              isPendingDelete
-                ? t('admin.landings.deleteConfirm', { title: resolveLocaleDisplay(landing.title) })
-                : t('common.delete')
-            }
-          >
-            {isPendingDelete ? (
-              <span className="px-1 text-xs font-medium">{t('common.delete')}?</span>
-            ) : (
-              <TrashIcon />
-            )}
-          </button>
         </div>
       </div>
     </div>
