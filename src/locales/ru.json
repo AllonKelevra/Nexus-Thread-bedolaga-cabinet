@@ -3800,6 +3800,31 @@
         "funnel": "Воронка",
         "loadError": "Не удалось загрузить статистику",
         "noPurchases": "Нет покупок"
+      },
+      "purchases": {
+        "title": "Покупки",
+        "contact": "Контакт",
+        "recipient": "Получатель",
+        "tariff": "Тариф",
+        "period": "Период",
+        "days": "дн.",
+        "price": "Цена",
+        "method": "Метод",
+        "date": "Дата",
+        "gift": "Подарок",
+        "forSelf": "Для себя",
+        "allStatuses": "Все статусы",
+        "status_pending": "Ожидание",
+        "status_paid": "Оплачен",
+        "status_delivered": "Доставлен",
+        "status_pending_activation": "Ожидает активации",
+        "status_failed": "Ошибка",
+        "status_expired": "Истёк",
+        "noPurchases": "Нет покупок",
+        "showing": "Показано {{from}}\u2013{{to}} из {{total}}",
+        "page": "Стр. {{current}} из {{total}}",
+        "prev": "Назад",
+        "next": "Далее"
       }
     }
   },

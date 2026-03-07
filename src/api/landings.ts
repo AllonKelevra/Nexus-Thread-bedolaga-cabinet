@@ -306,6 +306,41 @@ export interface LandingStatsResponse {
 }
 
 // ============================================================
+// Admin purchase list types
+// ============================================================
+
+export type PurchaseItemStatus =
+  | 'pending'
+  | 'paid'
+  | 'delivered'
+  | 'pending_activation'
+  | 'failed'
+  | 'expired';
+
+export interface LandingPurchaseItem {
+  id: number;
+  token: string;
+  contact_type: 'email' | 'telegram';
+  contact_value: string;
+  is_gift: boolean;
+  gift_recipient_type: 'email' | 'telegram' | null;
+  gift_recipient_value: string | null;
+  tariff_name: string;
+  period_days: number;
+  amount_kopeks: number;
+  currency: string;
+  payment_method: string;
+  status: PurchaseItemStatus;
+  created_at: string;
+  paid_at: string | null;
+}
+
+export interface LandingPurchaseListResponse {
+  items: LandingPurchaseItem[];
+  total: number;
+}
+
+// ============================================================
 // Admin API
 // ============================================================
 
@@ -346,6 +381,18 @@ export const adminLandingsApi = {
 
   getStats: async (id: number): Promise<LandingStatsResponse> => {
     const response = await apiClient.get(`/cabinet/admin/landings/${id}/stats`);
+    return response.data;
+  },
+
+  getPurchases: async (
+    id: number,
+    offset: number,
+    limit: number,
+    status?: PurchaseItemStatus,
+  ): Promise<LandingPurchaseListResponse> => {
+    const params: Record<string, string | number> = { offset, limit };
+    if (status) params.status = status;
+    const response = await apiClient.get(`/cabinet/admin/landings/${id}/purchases`, { params });
     return response.data;
   },
 };
