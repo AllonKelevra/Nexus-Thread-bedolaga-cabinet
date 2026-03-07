@@ -2031,6 +2031,7 @@
       "subtitle": "Manage advertising links",
       "createButton": "Create",
       "noData": "No ad campaigns",
+      "loadMore": "Load more",
       "bonusType": {
         "balance": "Balance",
         "subscription": "Subscription",

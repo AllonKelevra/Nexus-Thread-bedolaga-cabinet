@@ -2545,6 +2545,7 @@
       "subtitle": "Управление рекламными ссылками",
       "createButton": "Создать",
       "noData": "Нет рекламных кампаний",
+      "loadMore": "Загрузить ещё",
       "bonusType": {
         "balance": "Баланс",
         "subscription": "Подписка",
