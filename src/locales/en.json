@@ -2885,6 +2885,7 @@
           "apps": "Apps",
           "email_templates": "Email templates",
           "pinned_messages": "Pinned messages",
+          "landings": "Landing pages",
           "updates": "Updates"
         },
         "permissionActions": {

@@ -2617,6 +2617,7 @@
           "apps": "应用",
           "email_templates": "邮件模板",
           "pinned_messages": "置顶消息",
+          "landings": "落地页",
           "updates": "更新"
         },
         "permissionActions": {

@@ -3429,6 +3429,7 @@
           "apps": "Приложения",
           "email_templates": "Шаблоны писем",
           "pinned_messages": "Закреплённые сообщения",
+          "landings": "Лендинги",
           "updates": "Обновления"
         },
         "permissionActions": {
