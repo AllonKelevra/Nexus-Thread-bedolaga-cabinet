@@ -15,6 +15,7 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
   const containerRef = useRef<HTMLDivElement>(null);
   const [oidcLoading, setOidcLoading] = useState(false);
   const [oidcError, setOidcError] = useState('');
+  const [scriptLoaded, setScriptLoaded] = useState(false);
   const loginWithTelegramOIDC = useAuthStore((s) => s.loginWithTelegramOIDC);
 
   const { data: widgetConfig } = useQuery<TelegramWidgetConfig>({
@@ -79,10 +80,17 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
       script.id = scriptId;
       script.src = 'https://oauth.telegram.org/js/telegram-login.js?3';
       script.async = true;
-      script.onload = initTelegramLogin;
+      script.onload = () => {
+        setScriptLoaded(true);
+        initTelegramLogin();
+      };
+      script.onerror = () => {
+        setOidcError(t('auth.loginFailed'));
+      };
       document.head.appendChild(script);
     } else {
       // Script already loaded, just re-init
+      setScriptLoaded(true);
       initTelegramLogin();
     }
   }, [isOIDC, widgetConfig?.oidc_client_id, widgetConfig?.request_access]);
@@ -136,11 +144,14 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
             type="button"
             onClick={() => {
               setOidcError('');
+              setOidcLoading(true);
               if (window.Telegram?.Login) {
                 window.Telegram.Login.open();
+              } else {
+                setOidcLoading(false);
               }
             }}
-            disabled={oidcLoading}
+            disabled={oidcLoading || !scriptLoaded}
             className="inline-flex items-center gap-2 rounded-lg bg-[#54a9eb] px-6 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#4a96d2] disabled:opacity-50"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
