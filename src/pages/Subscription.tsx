@@ -1074,28 +1074,7 @@ export default function Subscription() {
       {/* Purchase / Renewal CTA */}
       <PurchaseCTAButton subscription={subscription} />
 
-      {/* Device Manager */}
-      {subscription &&
-        subscription.is_active &&
-        !subscription.is_trial &&
-        subscription.device_limit !== 0 &&
-        (showDeviceManager ? (
-          <DeviceManager
-            subscription={subscription}
-            balanceKopeks={purchaseOptions?.balance_kopeks ?? 0}
-            isDark={isDark}
-            accentColor={zone.mainHex}
-            onClose={() => setShowDeviceManager(false)}
-          />
-        ) : (
-          <DeviceManagerTrigger
-            deviceLimit={subscription.device_limit}
-            isDark={isDark}
-            onClick={() => setShowDeviceManager(true)}
-          />
-        ))}
-
-      {/* Additional Options (Traffic, Servers) */}
+      {/* Additional Options (Devices, Traffic, Servers) */}
       {subscription && subscription.is_active && !subscription.is_trial && (
         <div
           className="relative overflow-hidden rounded-3xl"
@@ -1109,6 +1088,24 @@ export default function Subscription() {
           <h2 className="mb-4 text-base font-bold tracking-tight text-dark-50">
             {t('subscription.additionalOptions.title')}
           </h2>
+
+          {/* Device Manager */}
+          {subscription.device_limit !== 0 &&
+            (showDeviceManager ? (
+              <DeviceManager
+                subscription={subscription}
+                balanceKopeks={purchaseOptions?.balance_kopeks ?? 0}
+                isDark={isDark}
+                accentColor={zone.mainHex}
+                onClose={() => setShowDeviceManager(false)}
+              />
+            ) : (
+              <DeviceManagerTrigger
+                deviceLimit={subscription.device_limit}
+                isDark={isDark}
+                onClick={() => setShowDeviceManager(true)}
+              />
+            ))}
 
           {/* Buy Traffic */}
           {subscription.traffic_limit_gb > 0 && (

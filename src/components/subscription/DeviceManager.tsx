@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { subscriptionApi } from '@/api/subscription';
@@ -23,10 +23,11 @@ interface DeviceManagerProps {
 }
 
 // ─── DotStepSelector ───
+// Unified: bounded ranges show fixed dots, unbounded adds a "+" tail that grows
 
 interface DotStepSelectorProps {
   min: number;
-  max: number;
+  max: number | null; // null = unlimited
   current: number;
   selected: number;
   connectedCount: number;
@@ -45,12 +46,18 @@ function DotStepSelector({
   accentColor,
   isDark,
 }: DotStepSelectorProps) {
-  const total = max - min + 1;
+  const isUnlimited = max === null;
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // For unbounded: dots go from min to max(current, selected)
+  // For bounded: dots go from min to max
+  const upperBound = isUnlimited ? Math.max(current, selected) : max;
+  const total = upperBound - min + 1;
 
   if (total <= 0) return null;
 
-  // For large ranges (>15), show a compact slider-like view
-  if (total > 15) {
+  // For bounded large ranges (>15), show range input
+  if (!isUnlimited && total > 15) {
     return (
       <div className="px-2">
         <input
@@ -75,9 +82,30 @@ function DotStepSelector({
     );
   }
 
+  const dotSize = total <= 8 ? 32 : total <= 12 ? 24 : 20;
+  const innerSize = (isCurrent: boolean) =>
+    isCurrent ? (total <= 8 ? 16 : 12) : total <= 8 ? 10 : 8;
+
+  const handlePlusClick = () => {
+    onChange(selected + 1);
+    // Scroll to end after new dot appears
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({
+        left: scrollRef.current.scrollWidth,
+        behavior: 'smooth',
+      });
+    });
+  };
+
+  // Track width calculation for filled portion
+  const filledRatio = total > 1 ? (selected - min) / (upperBound - min) : 0;
+
   return (
-    <div className="flex items-center justify-center gap-0">
-      {/* Track background */}
+    <div
+      ref={scrollRef}
+      className="flex items-center justify-center gap-0 overflow-x-auto"
+      style={{ scrollbarWidth: 'none' }}
+    >
       <div
         className="relative flex items-center rounded-full p-1.5"
         style={{
@@ -88,7 +116,7 @@ function DotStepSelector({
         <div
           className="pointer-events-none absolute bottom-1.5 left-1.5 top-1.5 rounded-full transition-all duration-300 ease-out"
           style={{
-            width: `${((selected - min) / (max - min)) * 100}%`,
+            width: `${filledRatio * 100}%`,
             background: `linear-gradient(90deg, ${accentColor}40, ${accentColor}90)`,
           }}
         />
@@ -97,32 +125,30 @@ function DotStepSelector({
         {Array.from({ length: total }, (_, i) => {
           const value = min + i;
           const isFilled = value <= selected;
-          const isCurrent = value === current;
+          const isCur = value === current;
           const isLocked = value < connectedCount && value < selected;
-          const isDisabled = value < Math.max(min, connectedCount) && value < current;
+          const floorValue = Math.max(min, connectedCount);
+          const isDisabled = value < floorValue && value < current;
 
           return (
             <button
               key={value}
               type="button"
               onClick={() => {
-                if (value >= Math.max(min, connectedCount) || value > current) {
+                if (value >= floorValue || value > current) {
                   onChange(value);
                 }
               }}
-              disabled={isDisabled && value < connectedCount}
-              className="relative z-10 flex items-center justify-center transition-all duration-200"
-              style={{
-                width: total <= 8 ? 32 : total <= 12 ? 24 : 20,
-                height: total <= 8 ? 32 : total <= 12 ? 24 : 20,
-              }}
+              disabled={isDisabled}
+              className="relative z-10 flex shrink-0 items-center justify-center transition-all duration-200"
+              style={{ width: dotSize, height: dotSize }}
               aria-label={`${value}`}
             >
               <div
                 className="rounded-full transition-all duration-300"
                 style={{
-                  width: isCurrent ? (total <= 8 ? 16 : 12) : total <= 8 ? 10 : 8,
-                  height: isCurrent ? (total <= 8 ? 16 : 12) : total <= 8 ? 10 : 8,
+                  width: innerSize(isCur),
+                  height: innerSize(isCur),
                   background: isFilled
                     ? isLocked
                       ? isDark
@@ -132,8 +158,8 @@ function DotStepSelector({
                     : isDark
                       ? 'rgba(255,255,255,0.12)'
                       : 'rgba(0,0,0,0.12)',
-                  boxShadow: isCurrent && isFilled ? `0 0 8px ${accentColor}60` : 'none',
-                  border: isCurrent
+                  boxShadow: isCur && isFilled ? `0 0 8px ${accentColor}60` : 'none',
+                  border: isCur
                     ? `2px solid ${isFilled ? accentColor : isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.25)'}`
                     : 'none',
                 }}
@@ -141,6 +167,41 @@ function DotStepSelector({
             </button>
           );
         })}
+
+        {/* "+" tail for unlimited */}
+        {isUnlimited && (
+          <button
+            type="button"
+            onClick={handlePlusClick}
+            className="relative z-10 flex shrink-0 items-center justify-center transition-all duration-200"
+            style={{ width: dotSize, height: dotSize }}
+            aria-label="add"
+          >
+            <div
+              className="flex items-center justify-center rounded-full transition-all duration-300"
+              style={{
+                width: total <= 8 ? 16 : 12,
+                height: total <= 8 ? 16 : 12,
+                background: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)',
+                border: `1.5px dashed ${isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.25)'}`,
+              }}
+            >
+              <svg
+                width={total <= 8 ? 8 : 6}
+                height={total <= 8 ? 8 : 6}
+                viewBox="0 0 8 8"
+                fill="none"
+              >
+                <path
+                  d="M4 1v6M1 4h6"
+                  stroke={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)'}
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </div>
+          </button>
+        )}
       </div>
     </div>
   );
@@ -171,7 +232,7 @@ export default function DeviceManager({
   const mode: 'idle' | 'purchase' | 'reduce' =
     selectedLimit > currentLimit ? 'purchase' : selectedLimit < currentLimit ? 'reduce' : 'idle';
 
-  // Fetch initial range data (price info gives us max_device_limit)
+  // Fetch price data (gives us max_device_limit)
   const { data: priceData } = useQuery({
     queryKey: ['device-price', devicesToAdd || 1],
     queryFn: () => subscriptionApi.getDevicePrice(devicesToAdd || 1),
@@ -187,9 +248,13 @@ export default function DeviceManager({
   });
 
   const minLimit = reductionInfo?.min_device_limit ?? currentLimit;
-  const maxLimit = priceData?.max_device_limit ?? currentLimit;
+  // null/undefined max_device_limit = unlimited
+  const maxLimit = priceData?.max_device_limit ?? null;
   const connectedCount = reductionInfo?.connected_devices_count ?? 0;
   const isInitializing = !priceData || !reductionInfo;
+
+  // Can we show the selector? Need range > 0 or unlimited
+  const hasRange = maxLimit === null || maxLimit > minLimit;
 
   // Reset selectedLimit when currentLimit changes (after successful mutation)
   useEffect(() => {
@@ -258,30 +323,22 @@ export default function DeviceManager({
 
   return (
     <div
-      className="relative overflow-hidden rounded-3xl"
-      style={{
-        background: g.cardBg,
-        border: `1px solid ${g.cardBorder}`,
-        boxShadow: g.shadow,
-        padding: '24px 28px',
-      }}
+      className={`rounded-xl border p-5 ${isDark ? 'border-dark-700/50 bg-dark-800/50' : 'border-champagne-300/60 bg-champagne-200/40'}`}
     >
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-base font-bold tracking-tight text-dark-50">
-          {t('subscription.deviceManager.title')}
-        </h2>
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="font-medium text-dark-100">{t('subscription.deviceManager.title')}</h3>
         <button onClick={onClose} className="text-sm text-dark-400 hover:text-dark-200">
           ✕
         </button>
       </div>
 
       {isInitializing ? (
-        <div className="flex items-center justify-center py-8">
+        <div className="flex items-center justify-center py-6">
           <span className="h-5 w-5 animate-spin rounded-full border-2 border-accent-400/30 border-t-accent-400" />
         </div>
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-4">
           {/* Number badge + label */}
           <div className="flex items-center gap-3">
             <div
@@ -299,8 +356,8 @@ export default function DeviceManager({
             </span>
           </div>
 
-          {/* Dot selector */}
-          {maxLimit > minLimit && (
+          {/* Dot selector — unified for bounded and unbounded */}
+          {hasRange && (
             <DotStepSelector
               min={minLimit}
               max={maxLimit}
@@ -414,17 +471,23 @@ export default function DeviceManager({
             )}
 
           {/* Action button */}
-          <button onClick={handleSubmit} disabled={!canSubmit} className="btn-primary w-full py-3">
-            {isPending ? (
-              <span className="flex items-center justify-center gap-2">
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-              </span>
-            ) : mode === 'reduce' ? (
-              t('subscription.additionalOptions.reduce')
-            ) : (
-              t('subscription.additionalOptions.buy')
-            )}
-          </button>
+          {mode !== 'idle' && (
+            <button
+              onClick={handleSubmit}
+              disabled={!canSubmit}
+              className="btn-primary w-full py-3"
+            >
+              {isPending ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                </span>
+              ) : mode === 'reduce' ? (
+                t('subscription.additionalOptions.reduce')
+              ) : (
+                t('subscription.additionalOptions.buy')
+              )}
+            </button>
+          )}
 
           {/* Error */}
           {mutationError && (
@@ -438,7 +501,7 @@ export default function DeviceManager({
   );
 }
 
-// ─── Trigger Button ───
+// ─── Trigger Button (no card wrapper — renders inside parent card) ───
 
 interface DeviceManagerTriggerProps {
   deviceLimit: number;
@@ -448,43 +511,29 @@ interface DeviceManagerTriggerProps {
 
 export function DeviceManagerTrigger({ deviceLimit, isDark, onClick }: DeviceManagerTriggerProps) {
   const { t } = useTranslation();
-  const g = getGlassColors(isDark);
 
   return (
-    <div
-      className="relative overflow-hidden rounded-3xl"
-      style={{
-        background: g.cardBg,
-        border: `1px solid ${g.cardBorder}`,
-        boxShadow: g.shadow,
-        padding: '24px 28px',
-      }}
+    <button
+      onClick={onClick}
+      className={`w-full rounded-xl border p-4 text-left transition-colors ${isDark ? 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600' : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'}`}
     >
-      <h2 className="mb-4 text-base font-bold tracking-tight text-dark-50">
-        {t('subscription.additionalOptions.title')}
-      </h2>
-      <button
-        onClick={onClick}
-        className={`w-full rounded-xl border p-4 text-left transition-colors ${isDark ? 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600' : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'}`}
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="font-medium text-dark-100">{t('subscription.deviceManager.title')}</div>
-            <div className="mt-1 text-sm text-dark-400">
-              {t('subscription.additionalOptions.currentDeviceLimit', { count: deviceLimit })}
-            </div>
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="font-medium text-dark-100">{t('subscription.deviceManager.title')}</div>
+          <div className="mt-1 text-sm text-dark-400">
+            {t('subscription.additionalOptions.currentDeviceLimit', { count: deviceLimit })}
           </div>
-          <svg
-            className="h-5 w-5 text-dark-400"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-          </svg>
         </div>
-      </button>
-    </div>
+        <svg
+          className="h-5 w-5 text-dark-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </div>
+    </button>
   );
 }
