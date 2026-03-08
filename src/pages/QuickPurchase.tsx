@@ -462,7 +462,9 @@ function SanitizedHtml({ html, className }: { html: string; className?: string }
     return container.innerHTML;
   }, [html]);
 
-  return <div className={className} dangerouslySetInnerHTML={{ __html: sanitized }} />;
+  return (
+    <div className={cn('break-words', className)} dangerouslySetInnerHTML={{ __html: sanitized }} />
+  );
 }
 
 function SummaryCard({
@@ -1000,7 +1002,7 @@ export default function QuickPurchase() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="space-y-6"
+            className="min-w-0 space-y-6"
           >
             {/* Period tabs */}
             {allPeriods.length > 0 && (
@@ -1104,7 +1106,7 @@ export default function QuickPurchase() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="lg:sticky lg:top-8 lg:self-start"
+            className="min-w-0 lg:sticky lg:top-8 lg:self-start"
           >
             <SummaryCard
               config={config}
