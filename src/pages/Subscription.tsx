@@ -276,6 +276,7 @@ export default function Subscription() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription'] });
       queryClient.invalidateQueries({ queryKey: ['devices'] });
+      queryClient.invalidateQueries({ queryKey: ['device-price'] });
       setShowDeviceTopup(false);
       setDevicesToAdd(1);
     },
@@ -1196,7 +1197,7 @@ export default function Subscription() {
                 </div>
 
                 {/* Check if completely unavailable (no subscription, price not set, etc.) */}
-                {devicePriceData?.available === false && !devicePriceData?.max_device_limit ? (
+                {devicePriceData?.available === false ? (
                   <div className="py-4 text-center text-sm text-dark-400">
                     {devicePriceData.reason ||
                       t('subscription.additionalOptions.devicesUnavailable')}
@@ -1242,13 +1243,6 @@ export default function Subscription() {
                         {t('subscription.additionalOptions.maxDevices', {
                           count: devicePriceData.max_device_limit,
                         })}
-                      </div>
-                    )}
-
-                    {/* Show reason if can't add requested amount */}
-                    {devicePriceData?.available === false && devicePriceData?.reason && (
-                      <div className="rounded-lg bg-warning-500/10 p-3 text-center text-sm text-warning-400">
-                        {devicePriceData.reason}
                       </div>
                     )}
 
