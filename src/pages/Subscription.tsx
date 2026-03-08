@@ -250,6 +250,7 @@ export default function Subscription() {
     mutationFn: () => subscriptionApi.togglePause(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription'] });
+      queryClient.invalidateQueries({ queryKey: ['balance'] });
     },
   });
 
@@ -525,7 +526,9 @@ export default function Subscription() {
                     ? subscription.is_trial
                       ? t('subscription.trialStatus')
                       : t('subscription.active')
-                    : t('subscription.expired')}
+                    : subscription.status === 'disabled'
+                      ? t('subscription.pause.suspended')
+                      : t('subscription.expired')}
                 </span>
               </div>
 
@@ -982,9 +985,11 @@ export default function Subscription() {
                 {t('subscription.pause.title')}
               </h2>
               <div className="mt-1 text-[12px] text-dark-50/35">
-                {subscription.is_daily_paused
-                  ? t('subscription.pause.paused')
-                  : t('subscription.pause.active')}
+                {subscription.status === 'disabled'
+                  ? t('subscription.pause.suspended')
+                  : subscription.is_daily_paused
+                    ? t('subscription.pause.paused')
+                    : t('subscription.pause.active')}
               </div>
             </div>
             <button
@@ -992,20 +997,25 @@ export default function Subscription() {
               disabled={pauseMutation.isPending}
               className="rounded-[10px] px-4 py-2 text-sm font-semibold transition-colors duration-300"
               style={{
-                background: subscription.is_daily_paused
-                  ? 'rgba(var(--color-accent-400), 0.12)'
-                  : 'rgba(255,184,0,0.12)',
-                border: subscription.is_daily_paused
-                  ? '1px solid rgba(var(--color-accent-400), 0.2)'
-                  : '1px solid rgba(255,184,0,0.2)',
-                color: subscription.is_daily_paused ? 'rgb(var(--color-accent-400))' : '#FFB800',
+                background:
+                  subscription.is_daily_paused || subscription.status === 'disabled'
+                    ? 'rgba(var(--color-accent-400), 0.12)'
+                    : 'rgba(255,184,0,0.12)',
+                border:
+                  subscription.is_daily_paused || subscription.status === 'disabled'
+                    ? '1px solid rgba(var(--color-accent-400), 0.2)'
+                    : '1px solid rgba(255,184,0,0.2)',
+                color:
+                  subscription.is_daily_paused || subscription.status === 'disabled'
+                    ? 'rgb(var(--color-accent-400))'
+                    : '#FFB800',
               }}
             >
               {pauseMutation.isPending ? (
                 <span className="flex items-center gap-2">
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                 </span>
-              ) : subscription.is_daily_paused ? (
+              ) : subscription.is_daily_paused || subscription.status === 'disabled' ? (
                 t('subscription.pause.resumeBtn')
               ) : (
                 t('subscription.pause.pauseBtn')
