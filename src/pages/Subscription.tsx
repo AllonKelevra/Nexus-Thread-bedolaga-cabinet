@@ -211,6 +211,8 @@ export default function Subscription() {
   const { data: purchaseOptions } = useQuery({
     queryKey: ['purchase-options'],
     queryFn: subscriptionApi.getPurchaseOptions,
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 
   const isTariffsMode = purchaseOptions?.sales_mode === 'tariffs';
