@@ -425,21 +425,25 @@ function App() {
         <Route
           path="/gift"
           element={
-            <ProtectedRoute>
-              <LazyPage>
-                <GiftSubscription />
-              </LazyPage>
-            </ProtectedRoute>
+            <ErrorBoundary level="app">
+              <ProtectedRoute>
+                <LazyPage>
+                  <GiftSubscription />
+                </LazyPage>
+              </ProtectedRoute>
+            </ErrorBoundary>
           }
         />
         <Route
           path="/gift/result"
           element={
-            <ProtectedRoute>
-              <LazyPage>
-                <GiftResult />
-              </LazyPage>
-            </ProtectedRoute>
+            <ErrorBoundary level="app">
+              <ProtectedRoute>
+                <LazyPage>
+                  <GiftResult />
+                </LazyPage>
+              </ProtectedRoute>
+            </ErrorBoundary>
           }
         />
         <Route

@@ -3646,13 +3646,26 @@
     "tryAgain": "重试",
     "pollTimeout": "处理时间超出预期",
     "pollTimeoutDesc": "请稍后再查看状态",
+    "pollErrorTitle": "无法检查礼物状态",
+    "pollErrorDesc": "您的购买已成功。请在仪表板上查看详情。",
     "retry": "再次检查",
+    "notFound": "未找到礼物配置",
     "noToken": "无效链接",
+    "noTokenDesc": "此礼物链接无效或已过期。",
+    "days": "天",
     "tariff": "套餐",
     "period": "时长",
     "giftMessageLabel": "消息",
     "recipientLabel": "收件人",
     "featureDisabled": "礼物功能暂时不可用",
-    "redirecting": "正在跳转..."
+    "redirecting": "正在跳转...",
+    "pending": {
+      "title": "您收到了一份礼物！",
+      "from": "来自 {{sender}}",
+      "activate": "激活"
+    },
+    "warning": {
+      "telegram_unresolvable": "无法验证此 Telegram 用户名。收件人可能不会收到礼物通知。"
+    }
   }
 }

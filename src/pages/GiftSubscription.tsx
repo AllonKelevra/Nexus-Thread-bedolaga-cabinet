@@ -27,8 +27,10 @@ function detectContactType(value: string): 'email' | 'telegram' {
 function isValidContact(value: string): boolean {
   const trimmed = value.trim();
   if (!trimmed) return false;
-  if (trimmed.startsWith('@')) return trimmed.length >= 4;
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
+  if (trimmed.startsWith('@')) {
+    return /^@[a-zA-Z][a-zA-Z0-9_]{4,31}$/.test(trimmed);
+  }
+  return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(trimmed);
 }
 
 function formatPeriodLabel(
@@ -82,7 +84,7 @@ function ErrorState({ message }: { message: string }) {
             />
           </svg>
         </div>
-        <h2 className="text-lg font-semibold text-dark-50">{t('gift.error', 'Error')}</h2>
+        <h2 className="text-lg font-semibold text-dark-50">{t('gift.failedTitle', 'Error')}</h2>
         <p className="text-sm text-dark-300">{message}</p>
       </div>
     </div>
@@ -117,11 +119,9 @@ function DisabledState() {
           </svg>
         </div>
         <h2 className="text-lg font-semibold text-dark-50">
-          {t('gift.disabled', 'Gift subscriptions are currently unavailable')}
+          {t('gift.featureDisabled', 'Gift subscriptions are currently unavailable')}
         </h2>
-        <p className="text-sm text-dark-300">
-          {t('gift.disabledRedirect', 'Redirecting to dashboard...')}
-        </p>
+        <p className="text-sm text-dark-300">{t('gift.redirecting', 'Redirecting...')}</p>
       </div>
     </div>
   );
@@ -512,7 +512,7 @@ function GiftSummaryCard({
         {selectedTariff && (
           <div className="mb-3">
             <p className="text-xs font-medium uppercase tracking-wider text-dark-500">
-              {t('gift.selectedTariff', 'Tariff')}
+              {t('gift.tariff', 'Tariff')}
             </p>
             <p className="mt-1 text-sm font-semibold text-dark-50">{selectedTariff.name}</p>
           </div>
@@ -577,7 +577,7 @@ function GiftSummaryCard({
                 to="/balance"
                 className="font-medium text-accent-400 underline underline-offset-2"
               >
-                {t('gift.topUp', 'Top up')}
+                {t('gift.topUpBalance', 'Top up balance')}
               </Link>
             </p>
           </motion.div>
@@ -650,7 +650,6 @@ export default function GiftSubscription() {
   const [paymentMode, setPaymentMode] = useState<'balance' | 'gateway'>('balance');
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [selectedSubOption, setSelectedSubOption] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Collect ALL unique periods across ALL tariffs
@@ -749,24 +748,27 @@ export default function GiftSubscription() {
         // Balance mode - show success
         queryClient.invalidateQueries({ queryKey: ['balance'] });
         queryClient.invalidateQueries({ queryKey: ['gift-config'] });
-        navigate('/gift/result?token=' + result.purchase_token + '&mode=balance');
+        const params = new URLSearchParams({ token: result.purchase_token, mode: 'balance' });
+        if (result.warning) {
+          params.set('warning', result.warning);
+        }
+        navigate('/gift/result?' + params.toString());
       }
     },
     onError: (err) => {
       const msg = getApiErrorMessage(
         err,
-        t('gift.purchaseError', 'Something went wrong. Please try again.'),
+        t('gift.failedDesc', 'Something went wrong. Please try again.'),
       );
       setSubmitError(msg);
-      setIsSubmitting(false);
     },
   });
 
   // Submit handler
   const handleSubmit = () => {
-    if (!canSubmit || isSubmitting) return;
+    if (!selectedTariffId || !selectedPeriodDays || !canSubmit || purchaseMutation.isPending)
+      return;
 
-    setIsSubmitting(true);
     setSubmitError(null);
 
     let paymentMethod: string | undefined;
@@ -778,8 +780,8 @@ export default function GiftSubscription() {
     }
 
     const data: GiftPurchaseRequest = {
-      tariff_id: selectedTariffId!,
-      period_days: selectedPeriodDays!,
+      tariff_id: selectedTariffId,
+      period_days: selectedPeriodDays,
       recipient_type: detectContactType(recipientValue),
       recipient_value: recipientValue.trim(),
       gift_message: giftMessage.trim() || undefined,
@@ -885,7 +887,7 @@ export default function GiftSubscription() {
             {/* Recipient */}
             <div>
               <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-dark-400">
-                {t('gift.recipientSection', 'Recipient')}
+                {t('gift.recipientLabel', 'Recipient')}
               </h2>
               <RecipientSection
                 value={recipientValue}
@@ -899,7 +901,7 @@ export default function GiftSubscription() {
             {/* Gift message */}
             <div>
               <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-dark-400">
-                {t('gift.messageSection', 'Personal message')}
+                {t('gift.giftMessageLabel', 'Message')}
               </h2>
               <GiftMessageSection value={giftMessage} onChange={setGiftMessage} />
             </div>
@@ -907,7 +909,7 @@ export default function GiftSubscription() {
             {/* Payment mode toggle */}
             <div>
               <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-dark-400">
-                {t('gift.paymentModeSection', 'Payment method')}
+                {t('gift.paymentMode', 'Payment method')}
               </h2>
               <PaymentModeToggle
                 mode={paymentMode}
@@ -969,7 +971,7 @@ export default function GiftSubscription() {
               selectedPeriod={selectedPeriod}
               currentPrice={currentPrice}
               paymentMode={paymentMode}
-              isSubmitting={isSubmitting}
+              isSubmitting={purchaseMutation.isPending}
               canSubmit={canSubmit}
               submitError={submitError}
               insufficientBalance={insufficientBalance}

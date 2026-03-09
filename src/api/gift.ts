@@ -53,18 +53,36 @@ export interface GiftPurchaseRequest {
 }
 
 export interface GiftPurchaseResponse {
-  status: string;
+  status: 'ok' | 'created' | 'paid';
   purchase_token: string;
   payment_url: string | null;
+  warning: string | null;
 }
 
+export type GiftPurchaseStatusValue =
+  | 'pending'
+  | 'paid'
+  | 'delivered'
+  | 'pending_activation'
+  | 'failed'
+  | 'expired';
+
 export interface GiftPurchaseStatus {
-  status: string;
+  status: GiftPurchaseStatusValue;
   is_gift: boolean;
   recipient_contact_value: string | null;
   gift_message: string | null;
   tariff_name: string | null;
   period_days: number | null;
+}
+
+export interface PendingGift {
+  token: string;
+  tariff_name: string | null;
+  period_days: number;
+  gift_message: string | null;
+  sender_display: string | null;
+  created_at: string | null;
 }
 
 // API
@@ -82,6 +100,11 @@ export const giftApi = {
 
   getPurchaseStatus: async (token: string): Promise<GiftPurchaseStatus> => {
     const { data } = await apiClient.get<GiftPurchaseStatus>(`/cabinet/gift/purchase/${token}`);
+    return data;
+  },
+
+  getPendingGifts: async (): Promise<PendingGift[]> => {
+    const { data } = await apiClient.get<PendingGift[]>('/cabinet/gift/pending');
     return data;
   },
 };

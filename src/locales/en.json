@@ -4152,13 +4152,26 @@
     "tryAgain": "Try again",
     "pollTimeout": "Processing is taking longer than usual",
     "pollTimeoutDesc": "Try checking the status later",
+    "pollErrorTitle": "Could not check gift status",
+    "pollErrorDesc": "Your purchase was successful. Check your dashboard for details.",
     "retry": "Check again",
+    "notFound": "Gift configuration not found",
     "noToken": "Invalid link",
+    "noTokenDesc": "This gift link is invalid or has expired.",
+    "days": "days",
     "tariff": "Tariff",
     "period": "Period",
     "giftMessageLabel": "Message",
     "recipientLabel": "Recipient",
     "featureDisabled": "Gift feature is temporarily unavailable",
-    "redirecting": "Redirecting..."
+    "redirecting": "Redirecting...",
+    "pending": {
+      "title": "You received a gift!",
+      "from": "from {{sender}}",
+      "activate": "Activate"
+    },
+    "warning": {
+      "telegram_unresolvable": "Could not verify this Telegram username. The recipient may not receive a notification about the gift."
+    }
   }
 }

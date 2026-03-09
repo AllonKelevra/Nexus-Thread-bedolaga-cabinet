@@ -10,6 +10,8 @@ import { AnimatedCrossmark } from '@/components/ui/AnimatedCrossmark';
 
 const MAX_POLL_MS = 10 * 60 * 1000; // 10 minutes
 
+const KNOWN_WARNINGS = new Set(['telegram_unresolvable']);
+
 // ============================================================
 // Sub-components
 // ============================================================
@@ -29,7 +31,7 @@ function PendingState() {
           {t('gift.processing', 'Processing your gift...')}
         </h1>
         <p className="mt-2 text-sm text-dark-400">
-          {t('gift.processingDesc', 'Please wait while we process your payment')}
+          {t('gift.pendingDesc', 'Please wait while we process your payment')}
         </p>
       </div>
     </motion.div>
@@ -41,11 +43,13 @@ function DeliveredState({
   tariffName,
   periodDays,
   giftMessage,
+  warning,
 }: {
   recipientContact: string | null;
   tariffName: string | null;
   periodDays: number | null;
   giftMessage: string | null;
+  warning: string | null;
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -59,7 +63,7 @@ function DeliveredState({
       <AnimatedCheckmark />
 
       <div>
-        <h1 className="text-xl font-bold text-dark-50">{t('gift.sent', 'Gift sent!')}</h1>
+        <h1 className="text-xl font-bold text-dark-50">{t('gift.successTitle', 'Gift sent!')}</h1>
         {tariffName && periodDays !== null && (
           <p className="mt-1 text-sm text-dark-300">
             {tariffName} — {periodDays} {t('gift.days', 'days')}
@@ -67,7 +71,7 @@ function DeliveredState({
         )}
         {recipientContact && (
           <p className="mt-2 text-sm text-dark-400">
-            {t('gift.sentTo', {
+            {t('gift.successDesc', {
               contact: recipientContact,
               defaultValue: `Sent to ${recipientContact}`,
             })}
@@ -77,6 +81,12 @@ function DeliveredState({
           <p className="mt-2 text-sm italic text-dark-400">&ldquo;{giftMessage}&rdquo;</p>
         )}
       </div>
+
+      {warning && (
+        <div className="w-full rounded-xl border border-warning-500/20 bg-warning-500/5 p-3">
+          <p className="text-sm text-warning-400">{t(`gift.warning.${warning}`)}</p>
+        </div>
+      )}
 
       <button
         type="button"
@@ -93,10 +103,12 @@ function PendingActivationState({
   recipientContact,
   tariffName,
   periodDays,
+  warning,
 }: {
   recipientContact: string | null;
   tariffName: string | null;
   periodDays: number | null;
+  warning: string | null;
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -126,7 +138,7 @@ function PendingActivationState({
 
       <div>
         <h1 className="text-xl font-bold text-dark-50">
-          {t('gift.pendingActivation', 'Gift pending activation')}
+          {t('gift.pendingActivationTitle', 'Gift pending activation')}
         </h1>
         {tariffName && periodDays !== null && (
           <p className="mt-1 text-sm text-dark-300">
@@ -135,7 +147,7 @@ function PendingActivationState({
         )}
         {recipientContact && (
           <p className="mt-2 text-sm text-dark-400">
-            {t('gift.sentTo', {
+            {t('gift.successDesc', {
               contact: recipientContact,
               defaultValue: `Sent to ${recipientContact}`,
             })}
@@ -148,6 +160,12 @@ function PendingActivationState({
           )}
         </p>
       </div>
+
+      {warning && (
+        <div className="w-full rounded-xl border border-warning-500/20 bg-warning-500/5 p-3">
+          <p className="text-sm text-warning-400">{t(`gift.warning.${warning}`)}</p>
+        </div>
+      )}
 
       <button
         type="button"
@@ -174,7 +192,7 @@ function FailedState() {
 
       <div>
         <h1 className="text-xl font-bold text-dark-50">
-          {t('gift.failed', 'Something went wrong')}
+          {t('gift.failedTitle', 'Something went wrong')}
         </h1>
         <p className="mt-2 text-sm text-dark-400">
           {t('gift.failedDesc', 'Your gift could not be processed. Please try again.')}
@@ -187,6 +205,55 @@ function FailedState() {
         className="flex w-full items-center justify-center rounded-xl bg-accent-500 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-accent-400"
       >
         {t('gift.tryAgain', 'Try again')}
+      </button>
+    </motion.div>
+  );
+}
+
+function PollErrorState() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="flex flex-col items-center gap-6 text-center"
+    >
+      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-warning-500/10">
+        <svg
+          className="h-10 w-10 text-warning-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+          />
+        </svg>
+      </div>
+
+      <div>
+        <h1 className="text-xl font-bold text-dark-50">
+          {t('gift.pollErrorTitle', 'Could not check gift status')}
+        </h1>
+        <p className="mt-2 text-sm text-dark-400">
+          {t(
+            'gift.pollErrorDesc',
+            'Your purchase was successful. Check your dashboard for details.',
+          )}
+        </p>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => navigate('/')}
+        className="flex w-full items-center justify-center rounded-xl bg-accent-500 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-accent-400"
+      >
+        {t('gift.backToDashboard', 'Back to dashboard')}
       </button>
     </motion.div>
   );
@@ -218,11 +285,11 @@ function PollTimedOutState({ onRetry }: { onRetry: () => void }) {
       </div>
       <div>
         <h1 className="text-xl font-bold text-dark-50">
-          {t('gift.pollTimedOut', 'Taking longer than expected')}
+          {t('gift.pollTimeout', 'Taking longer than expected')}
         </h1>
         <p className="mt-2 text-sm text-dark-400">
           {t(
-            'gift.pollTimedOutDesc',
+            'gift.pollTimeoutDesc',
             'Payment processing is taking longer than usual. You can try checking again.',
           )}
         </p>
@@ -232,7 +299,7 @@ function PollTimedOutState({ onRetry }: { onRetry: () => void }) {
         onClick={onRetry}
         className="rounded-xl bg-accent-500 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-accent-400"
       >
-        {t('common.retry', 'Retry')}
+        {t('gift.retry', 'Retry')}
       </button>
     </motion.div>
   );
@@ -264,9 +331,9 @@ function NoTokenState() {
         </svg>
       </div>
       <div>
-        <h1 className="text-xl font-bold text-dark-50">{t('gift.invalidLink', 'Invalid link')}</h1>
+        <h1 className="text-xl font-bold text-dark-50">{t('gift.noToken', 'Invalid link')}</h1>
         <p className="mt-2 text-sm text-dark-400">
-          {t('gift.invalidLinkDesc', 'This gift link is invalid or has expired.')}
+          {t('gift.noTokenDesc', 'This gift link is invalid or has expired.')}
         </p>
       </div>
       <button
@@ -274,7 +341,7 @@ function NoTokenState() {
         onClick={() => navigate('/gift')}
         className="rounded-xl bg-accent-500 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-accent-400"
       >
-        {t('gift.giftNewSubscription', 'Gift a subscription')}
+        {t('gift.backToGift', 'Go back')}
       </button>
     </motion.div>
   );
@@ -288,6 +355,8 @@ export default function GiftResult() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
   const mode = searchParams.get('mode');
+  const rawWarning = searchParams.get('warning');
+  const warning = rawWarning && KNOWN_WARNINGS.has(rawWarning) ? rawWarning : null;
 
   const pollStart = useRef(Date.now());
   const [pollTimedOut, setPollTimedOut] = useState(false);
@@ -307,7 +376,8 @@ export default function GiftResult() {
       if (isBalanceMode) return false;
 
       const s = query.state.data?.status;
-      if (s === 'delivered' || s === 'failed' || s === 'pending_activation') return false;
+      if (s === 'delivered' || s === 'failed' || s === 'pending_activation' || s === 'expired')
+        return false;
 
       // Check poll timeout
       if (Date.now() - pollStart.current > MAX_POLL_MS) {
@@ -343,7 +413,7 @@ export default function GiftResult() {
 
   const isDelivered = status?.status === 'delivered';
   const isPendingActivation = status?.status === 'pending_activation';
-  const isFailed = status?.status === 'failed';
+  const isFailed = status?.status === 'failed' || status?.status === 'expired';
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-dark-950 px-4">
@@ -352,7 +422,9 @@ export default function GiftResult() {
         aria-live="polite"
         aria-atomic="true"
       >
-        {isError ? (
+        {isError && isBalanceMode ? (
+          <PollErrorState />
+        ) : isError ? (
           <FailedState />
         ) : isDelivered ? (
           <DeliveredState
@@ -360,12 +432,14 @@ export default function GiftResult() {
             tariffName={status.tariff_name}
             periodDays={status.period_days}
             giftMessage={status.gift_message}
+            warning={warning}
           />
         ) : isPendingActivation ? (
           <PendingActivationState
             recipientContact={status.recipient_contact_value}
             tariffName={status.tariff_name}
             periodDays={status.period_days}
+            warning={warning}
           />
         ) : isFailed ? (
           <FailedState />
