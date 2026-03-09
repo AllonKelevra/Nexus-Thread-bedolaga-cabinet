@@ -74,6 +74,7 @@ export interface GiftPurchaseStatus {
   gift_message: string | null;
   tariff_name: string | null;
   period_days: number | null;
+  warning: string | null;
 }
 
 export interface PendingGift {

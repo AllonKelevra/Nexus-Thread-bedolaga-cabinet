@@ -355,8 +355,8 @@ export default function GiftResult() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
   const mode = searchParams.get('mode');
-  const rawWarning = searchParams.get('warning');
-  const warning = rawWarning && KNOWN_WARNINGS.has(rawWarning) ? rawWarning : null;
+  const rawUrlWarning = searchParams.get('warning');
+  const urlWarning = rawUrlWarning && KNOWN_WARNINGS.has(rawUrlWarning) ? rawUrlWarning : null;
 
   const pollStart = useRef(Date.now());
   const [pollTimedOut, setPollTimedOut] = useState(false);
@@ -415,6 +415,11 @@ export default function GiftResult() {
   const isPendingActivation = status?.status === 'pending_activation';
   const isFailed = status?.status === 'failed' || status?.status === 'expired';
 
+  // Warning from status response (persisted on purchase) takes priority over URL param
+  const statusWarning =
+    status?.warning && KNOWN_WARNINGS.has(status.warning) ? status.warning : null;
+  const warning = statusWarning ?? urlWarning;
+
   return (
     <div className="flex min-h-dvh items-center justify-center px-4">
       <div
@@ -422,10 +427,8 @@ export default function GiftResult() {
         aria-live="polite"
         aria-atomic="true"
       >
-        {isError && isBalanceMode ? (
+        {isError ? (
           <PollErrorState />
-        ) : isError ? (
-          <FailedState />
         ) : isDelivered ? (
           <DeliveredState
             recipientContact={status.recipient_contact_value}
