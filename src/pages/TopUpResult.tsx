@@ -226,6 +226,9 @@ export default function TopUpResult() {
   // Load saved payment info from sessionStorage (once on mount)
   const [pendingInfo] = useState(() => loadTopUpPendingInfo());
 
+  // Fallback: read method from query params (for external browser redirects where sessionStorage is unavailable)
+  const methodFromUrl = searchParams.get('method');
+
   // Detect if user arrived via redirect with success param (no polling needed)
   const redirectStatus = searchParams.get('status') || searchParams.get('payment');
   const isRedirectSuccess = redirectStatus
@@ -233,28 +236,30 @@ export default function TopUpResult() {
     : searchParams.get('success') === 'true';
   const isRedirectFailed = redirectStatus ? isFailedStatus(redirectStatus) : false;
 
-  // Determine if we can poll (need method + numeric payment_id)
+  // Determine if we can poll by specific payment_id (need method + numeric payment_id)
   const parsedPaymentId = pendingInfo?.payment_id ? parseInt(pendingInfo.payment_id, 10) : NaN;
-  const canPoll =
+  const canPollById =
     !!(pendingInfo?.method_id && !isNaN(parsedPaymentId)) &&
     !isRedirectSuccess &&
     !isRedirectFailed;
 
-  // Poll payment status
+  // Fallback: poll by method via /latest endpoint when no sessionStorage data
+  const canPollByMethod =
+    !canPollById && !!methodFromUrl && !isRedirectSuccess && !isRedirectFailed;
+
+  // Poll payment status by specific ID (primary path — sessionStorage available)
   const { data: paymentStatus, refetch } = useQuery({
     queryKey: ['topup-status', pendingInfo?.method_id, parsedPaymentId],
     queryFn: () => balanceApi.getPendingPayment(pendingInfo!.method_id, parsedPaymentId),
-    enabled: canPoll && !pollTimedOut,
+    enabled: canPollById && !pollTimedOut,
     refetchInterval: (query) => {
       const payment = query.state.data;
       if (!payment) return POLL_INTERVAL_MS;
 
-      // Stop polling if paid or failed
       if (payment.is_paid || isPaidStatus(payment.status) || isFailedStatus(payment.status)) {
         return false;
       }
 
-      // Check timeout
       if (Date.now() - pollStart.current > MAX_POLL_MS) {
         setPollTimedOut(true);
         return false;
@@ -265,34 +270,64 @@ export default function TopUpResult() {
     retry: 2,
   });
 
+  // Poll payment status by method latest (fallback — external browser, no sessionStorage)
+  const { data: latestPayment, refetch: refetchLatest } = useQuery({
+    queryKey: ['topup-status-latest', methodFromUrl],
+    queryFn: () => balanceApi.getLatestPayment(methodFromUrl!),
+    enabled: canPollByMethod && !pollTimedOut,
+    refetchInterval: (query) => {
+      const payment = query.state.data;
+      if (!payment) return POLL_INTERVAL_MS;
+
+      if (payment.is_paid || isPaidStatus(payment.status) || isFailedStatus(payment.status)) {
+        return false;
+      }
+
+      if (Date.now() - pollStart.current > MAX_POLL_MS) {
+        setPollTimedOut(true);
+        return false;
+      }
+
+      return POLL_INTERVAL_MS;
+    },
+    retry: 2,
+  });
+
+  // Merge both polling sources
+  const effectivePayment = paymentStatus ?? latestPayment;
+
   const handleRetryPoll = useCallback(() => {
     pollStart.current = Date.now();
     setPollTimedOut(false);
-    refetch();
-  }, [setPollTimedOut, refetch]);
+    if (canPollById) {
+      refetch();
+    } else {
+      refetchLatest();
+    }
+  }, [canPollById, setPollTimedOut, refetch, refetchLatest]);
 
   const handleGoBack = useCallback(() => {
     clearTopUpPendingInfo();
     navigate('/balance', { replace: true });
   }, [navigate]);
 
-  // Redirect to balance if no data at all
+  // Redirect to balance if absolutely no data source available
   useEffect(() => {
-    if (!pendingInfo && !redirectStatus) {
+    if (!pendingInfo && !redirectStatus && !methodFromUrl) {
       navigate('/balance', { replace: true });
     }
-  }, [pendingInfo, redirectStatus, navigate]);
+  }, [pendingInfo, redirectStatus, methodFromUrl, navigate]);
 
   // Determine current visual state
-  const amountKopeks = paymentStatus?.amount_kopeks ?? pendingInfo?.amount_kopeks ?? null;
+  const amountKopeks = effectivePayment?.amount_kopeks ?? pendingInfo?.amount_kopeks ?? null;
 
   const resolvedPaid =
     isRedirectSuccess ||
-    paymentStatus?.is_paid ||
-    (paymentStatus && isPaidStatus(paymentStatus.status));
+    effectivePayment?.is_paid ||
+    (effectivePayment && isPaidStatus(effectivePayment.status));
 
   const resolvedFailed =
-    isRedirectFailed || (paymentStatus && isFailedStatus(paymentStatus.status));
+    isRedirectFailed || (effectivePayment && isFailedStatus(effectivePayment.status));
 
   // Clean up sessionStorage and invalidate queries when payment resolves
   useEffect(() => {
