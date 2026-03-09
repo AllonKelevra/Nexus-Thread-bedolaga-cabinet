@@ -86,6 +86,30 @@ const LinkIcon = () => (
   </svg>
 );
 
+const ArrowUpIcon = () => (
+  <svg
+    className="h-3.5 w-3.5"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={2}
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+  </svg>
+);
+
+const ArrowDownIcon = () => (
+  <svg
+    className="h-3.5 w-3.5"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={2}
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+  </svg>
+);
+
 // ============ Helpers ============
 
 function generateId(): string {
@@ -137,6 +161,8 @@ interface ButtonChipProps {
   onToggleExpand: () => void;
   onUpdate: (updates: Partial<MenuButtonConfig>) => void;
   onRemove: () => void;
+  onMoveUp: (() => void) | null;
+  onMoveDown: (() => void) | null;
   isBuiltin: boolean;
 }
 
@@ -146,6 +172,8 @@ function ButtonChip({
   onToggleExpand,
   onUpdate,
   onRemove,
+  onMoveUp,
+  onMoveDown,
   isBuiltin,
 }: ButtonChipProps) {
   const { t } = useTranslation();
@@ -168,6 +196,32 @@ function ButtonChip({
     >
       {/* Collapsed header */}
       <div className="flex items-center gap-2 px-3 py-2.5">
+        <div className="flex shrink-0 flex-col">
+          <button
+            onClick={onMoveUp ?? undefined}
+            disabled={!onMoveUp}
+            aria-label={t('admin.menuEditor.moveUp')}
+            className={`rounded-lg p-1.5 transition-colors ${
+              onMoveUp
+                ? 'text-dark-400 hover:bg-dark-700/50 hover:text-dark-300'
+                : 'cursor-default text-dark-700'
+            }`}
+          >
+            <ArrowUpIcon />
+          </button>
+          <button
+            onClick={onMoveDown ?? undefined}
+            disabled={!onMoveDown}
+            aria-label={t('admin.menuEditor.moveDown')}
+            className={`rounded-lg p-1.5 transition-colors ${
+              onMoveDown
+                ? 'text-dark-400 hover:bg-dark-700/50 hover:text-dark-300'
+                : 'cursor-default text-dark-700'
+            }`}
+          >
+            <ArrowDownIcon />
+          </button>
+        </div>
         <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${colorDotClass}`} />
         <span className="min-w-0 flex-1 truncate text-sm font-medium text-dark-100">
           {displayName}
@@ -288,24 +342,30 @@ interface SortableRowProps {
   row: MenuRowConfig;
   rowIndex: number;
   expandedButtons: Set<string>;
+  usedBuiltinIds: Set<string>;
   onToggleExpand: (buttonId: string) => void;
   onUpdateRow: (rowId: string, updates: Partial<MenuRowConfig>) => void;
   onRemoveRow: (rowId: string) => void;
   onUpdateButton: (rowId: string, buttonId: string, updates: Partial<MenuButtonConfig>) => void;
   onRemoveButton: (rowId: string, buttonId: string) => void;
-  onAddButtonClick: (rowId: string) => void;
+  onAddBuiltin: (rowId: string, sectionId: string) => void;
+  onAddCustom: (rowId: string) => void;
+  onReorderButton: (rowId: string, buttonIndex: number, direction: 'up' | 'down') => void;
 }
 
 function SortableRow({
   row,
   rowIndex,
   expandedButtons,
+  usedBuiltinIds,
   onToggleExpand,
   onUpdateRow,
   onRemoveRow,
   onUpdateButton,
   onRemoveButton,
-  onAddButtonClick,
+  onAddBuiltin,
+  onAddCustom,
+  onReorderButton,
 }: SortableRowProps) {
   const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -359,7 +419,7 @@ function SortableRow({
 
       {/* Row body */}
       <div className="space-y-2 p-3">
-        {row.buttons.map((button) => (
+        {row.buttons.map((button, btnIndex) => (
           <ButtonChip
             key={button.id}
             button={button}
@@ -367,105 +427,93 @@ function SortableRow({
             onToggleExpand={() => onToggleExpand(button.id)}
             onUpdate={(updates) => onUpdateButton(row.id, button.id, updates)}
             onRemove={() => onRemoveButton(row.id, button.id)}
+            onMoveUp={btnIndex > 0 ? () => onReorderButton(row.id, btnIndex, 'up') : null}
+            onMoveDown={
+              btnIndex < row.buttons.length - 1
+                ? () => onReorderButton(row.id, btnIndex, 'down')
+                : null
+            }
             isBuiltin={button.type === 'builtin'}
           />
         ))}
 
-        {/* Add button */}
-        <button
-          onClick={() => onAddButtonClick(row.id)}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-dark-700/50 py-2.5 text-sm text-dark-500 transition-colors hover:border-dark-600 hover:text-dark-400"
-        >
-          <PlusIcon />
-          {t('admin.menuEditor.addButton')}
-        </button>
+        {/* Inline add button panel */}
+        <InlineAddPanel
+          rowId={row.id}
+          usedBuiltinIds={usedBuiltinIds}
+          onAddBuiltin={onAddBuiltin}
+          onAddCustom={onAddCustom}
+        />
       </div>
     </div>
   );
 }
 
-// ============ AddButtonDialog ============
+// ============ InlineAddPanel ============
 
-interface AddButtonDialogProps {
+interface InlineAddPanelProps {
+  rowId: string;
   usedBuiltinIds: Set<string>;
-  onAddBuiltin: (sectionId: string) => void;
-  onAddCustom: () => void;
-  onClose: () => void;
+  onAddBuiltin: (rowId: string, sectionId: string) => void;
+  onAddCustom: (rowId: string) => void;
 }
 
-function AddButtonDialog({
-  usedBuiltinIds,
-  onAddBuiltin,
-  onAddCustom,
-  onClose,
-}: AddButtonDialogProps) {
+function InlineAddPanel({ rowId, usedBuiltinIds, onAddBuiltin, onAddCustom }: InlineAddPanelProps) {
   const { t } = useTranslation();
+  const [isOpen, setIsOpen] = useState(false);
 
   const availableBuiltins = BUILTIN_SECTIONS.filter((id) => !usedBuiltinIds.has(id));
 
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-sm overflow-hidden rounded-2xl border border-dark-700/50 bg-dark-800 shadow-xl"
-        onClick={(e) => e.stopPropagation()}
+  if (!isOpen) {
+    return (
+      <button
+        onClick={() => setIsOpen(true)}
+        className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-dark-700/50 py-2.5 text-sm text-dark-500 transition-colors hover:border-dark-600 hover:text-dark-400"
       >
-        <div className="flex items-center justify-between border-b border-dark-700/30 px-4 py-3">
-          <h3 className="text-sm font-semibold text-dark-100">{t('admin.menuEditor.addButton')}</h3>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1 text-dark-400 transition-colors hover:bg-dark-700/50 hover:text-dark-300"
-          >
-            <svg
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
+        <PlusIcon />
+        {t('admin.menuEditor.addButton')}
+      </button>
+    );
+  }
+
+  return (
+    <div className="space-y-1 rounded-xl border border-dark-700/50 bg-dark-900/30 p-2">
+      {availableBuiltins.length > 0 && (
+        <>
+          <p className="px-2 pb-0.5 text-xs font-medium text-dark-500">
+            {t('admin.menuEditor.builtinButtons')}
+          </p>
+          {availableBuiltins.map((id) => (
+            <button
+              key={id}
+              onClick={() => {
+                onAddBuiltin(rowId, id);
+                setIsOpen(false);
+              }}
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-dark-200 transition-colors hover:bg-dark-700/50"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="max-h-72 space-y-1 overflow-y-auto p-3">
-          {/* Available builtins */}
-          {availableBuiltins.length > 0 && (
-            <>
-              <p className="px-2 pb-1 text-xs font-medium text-dark-500">
-                {t('admin.menuEditor.builtinButtons')}
-              </p>
-              {availableBuiltins.map((id) => (
-                <button
-                  key={id}
-                  onClick={() => {
-                    onAddBuiltin(id);
-                    onClose();
-                  }}
-                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm text-dark-200 transition-colors hover:bg-dark-700/50"
-                >
-                  {t(`admin.buttons.sections.${id}`)}
-                </button>
-              ))}
-              <div className="my-2 border-t border-dark-700/30" />
-            </>
-          )}
-
-          {/* Custom URL button */}
-          <button
-            onClick={() => {
-              onAddCustom();
-              onClose();
-            }}
-            className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm text-dark-200 transition-colors hover:bg-dark-700/50"
-          >
-            <LinkIcon />
-            {t('admin.menuEditor.addUrlButton')}
-          </button>
-        </div>
-      </div>
+              {t(`admin.buttons.sections.${id}`)}
+            </button>
+          ))}
+          <div className="my-1 border-t border-dark-700/30" />
+        </>
+      )}
+      <button
+        onClick={() => {
+          onAddCustom(rowId);
+          setIsOpen(false);
+        }}
+        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-dark-200 transition-colors hover:bg-dark-700/50"
+      >
+        <LinkIcon />
+        {t('admin.menuEditor.addUrlButton')}
+      </button>
+      <button
+        onClick={() => setIsOpen(false)}
+        className="flex w-full items-center justify-center rounded-lg py-1.5 text-xs text-dark-500 transition-colors hover:text-dark-400"
+      >
+        {t('common.cancel')}
+      </button>
     </div>
   );
 }
@@ -490,7 +538,6 @@ export function MenuEditorTab() {
   // Draft state
   const [draftConfig, setDraftConfig] = useState<MenuConfig>(DEFAULT_CONFIG);
   const [expandedButtons, setExpandedButtons] = useState<Set<string>>(new Set());
-  const [addingToRow, setAddingToRow] = useState<string | null>(null);
   const savedConfigRef = useRef<MenuConfig>(DEFAULT_CONFIG);
   const draftConfigRef = useRef(draftConfig);
   draftConfigRef.current = draftConfig;
@@ -645,9 +692,20 @@ export function MenuEditorTab() {
     }));
   }, []);
 
-  const handleAddButtonClick = useCallback((rowId: string) => {
-    setAddingToRow(rowId);
-  }, []);
+  const reorderButton = useCallback(
+    (rowId: string, buttonIndex: number, direction: 'up' | 'down') => {
+      setDraftConfig((prev) => ({
+        ...prev,
+        rows: prev.rows.map((r) => {
+          if (r.id !== rowId) return r;
+          const newIndex = direction === 'up' ? buttonIndex - 1 : buttonIndex + 1;
+          if (newIndex < 0 || newIndex >= r.buttons.length) return r;
+          return { ...r, buttons: arrayMove(r.buttons, buttonIndex, newIndex) };
+        }),
+      }));
+    },
+    [],
+  );
 
   // Expand/collapse
   const toggleExpand = useCallback((buttonId: string) => {
@@ -746,12 +804,15 @@ export function MenuEditorTab() {
                 row={row}
                 rowIndex={index}
                 expandedButtons={expandedButtons}
+                usedBuiltinIds={usedBuiltinIds}
                 onToggleExpand={toggleExpand}
                 onUpdateRow={updateRow}
                 onRemoveRow={removeRow}
                 onUpdateButton={updateButton}
                 onRemoveButton={removeButton}
-                onAddButtonClick={handleAddButtonClick}
+                onAddBuiltin={addBuiltinButton}
+                onAddCustom={addCustomButton}
+                onReorderButton={reorderButton}
               />
             ))}
           </div>
@@ -801,16 +862,6 @@ export function MenuEditorTab() {
           {t('admin.buttons.resetAll')}
         </button>
       </div>
-
-      {/* Add button dialog */}
-      {addingToRow && (
-        <AddButtonDialog
-          usedBuiltinIds={usedBuiltinIds}
-          onAddBuiltin={(sectionId) => addBuiltinButton(addingToRow, sectionId)}
-          onAddCustom={() => addCustomButton(addingToRow)}
-          onClose={() => setAddingToRow(null)}
-        />
-      )}
     </div>
   );
 }

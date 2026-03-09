@@ -1479,6 +1479,8 @@
       "resetConfirm": "将菜单重置为默认设置？所有更改将丢失。",
       "buttonTextPlaceholder": "按钮文本",
       "customLabelsHint": "每种语言的按钮文本",
+      "moveUp": "上移",
+      "moveDown": "下移",
       "invalidUrl": "请为所有自定义按钮提供有效的URL（http:// 或 https://）"
     },
     "apps": {

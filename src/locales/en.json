@@ -1779,6 +1779,8 @@
       "resetConfirm": "Reset menu layout to defaults?",
       "buttonTextPlaceholder": "Custom button text",
       "customLabelsHint": "Empty = default label",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
       "invalidUrl": "Please provide a valid URL (http:// or https://) for all custom buttons"
     },
     "apps": {
