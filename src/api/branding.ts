@@ -23,6 +23,10 @@ export interface EmailAuthEnabled {
   enabled: boolean;
 }
 
+export interface GiftEnabled {
+  enabled: boolean;
+}
+
 export interface TelegramWidgetConfig {
   bot_username: string;
   size: 'large' | 'medium' | 'small';
@@ -249,6 +253,16 @@ export const brandingApi = {
       enabled,
     });
     return response.data;
+  },
+
+  // Get gift enabled (public, no auth required)
+  getGiftEnabled: async (): Promise<GiftEnabled> => {
+    try {
+      const response = await apiClient.get<GiftEnabled>('/cabinet/branding/gift-enabled');
+      return response.data;
+    } catch {
+      return { enabled: false };
+    }
   },
 
   // Get analytics counters (public, no auth required)
