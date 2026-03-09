@@ -183,6 +183,7 @@ const PAID_STATUSES = new Set([
   'success',
   'paid',
   'paid_over',
+  'overpaid',
   'completed',
   'confirmed',
   'closed',
@@ -197,6 +198,8 @@ const FAILED_STATUSES = new Set([
   'declined',
   'expired',
   'cancel',
+  'system_fail',
+  'refund_paid',
 ]);
 
 function isPaidStatus(status: string): boolean {

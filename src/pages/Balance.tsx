@@ -64,14 +64,32 @@ export default function Balance() {
     if (paymentHandledRef.current) return;
 
     const paymentStatus = searchParams.get('payment') || searchParams.get('status');
-    const isSuccess =
-      paymentStatus === 'success' ||
-      paymentStatus === 'paid' ||
-      paymentStatus === 'completed' ||
-      searchParams.get('success') === 'true';
+    const paidSet = new Set([
+      'succeeded',
+      'success',
+      'paid',
+      'paid_over',
+      'overpaid',
+      'completed',
+      'confirmed',
+      'closed',
+    ]);
+    const failedSet = new Set([
+      'fail',
+      'failed',
+      'error',
+      'canceled',
+      'cancelled',
+      'declined',
+      'expired',
+      'cancel',
+      'system_fail',
+      'refund_paid',
+    ]);
 
-    const isFailed =
-      paymentStatus === 'failed' || paymentStatus === 'error' || paymentStatus === 'canceled';
+    const normalised = paymentStatus?.toLowerCase() ?? '';
+    const isSuccess = paidSet.has(normalised) || searchParams.get('success') === 'true';
+    const isFailed = failedSet.has(normalised);
 
     if (isSuccess) {
       paymentHandledRef.current = true;
