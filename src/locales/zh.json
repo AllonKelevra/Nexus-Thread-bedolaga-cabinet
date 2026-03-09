@@ -1448,7 +1448,8 @@
         "referral": "推荐",
         "support": "支持",
         "info": "信息",
-        "admin": "管理面板"
+        "admin": "管理面板",
+        "language": "语言"
       },
       "descriptions": {
         "home": "个人中心按钮",
@@ -1457,7 +1458,8 @@
         "referral": "推荐计划",
         "support": "支持工单",
         "info": "信息板块",
-        "admin": "网页管理面板"
+        "admin": "网页管理面板",
+        "language": "机器人语言选择"
       },
       "styles": {
         "default": "无颜色",
@@ -1465,6 +1467,19 @@
         "success": "绿色",
         "danger": "红色"
       }
+    },
+    "menuEditor": {
+      "dragHint": "拖拽行以重新排序",
+      "dragToReorder": "拖拽排序",
+      "row": "行",
+      "addRow": "添加行",
+      "addButton": "添加按钮",
+      "addUrlButton": "URL按钮（链接）",
+      "builtinButtons": "内置栏目",
+      "resetConfirm": "将菜单重置为默认设置？所有更改将丢失。",
+      "buttonTextPlaceholder": "按钮文本",
+      "customLabelsHint": "每种语言的按钮文本",
+      "invalidUrl": "请为所有自定义按钮提供有效的URL（http:// 或 https://）"
     },
     "apps": {
       "title": "应用管理",

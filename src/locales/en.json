@@ -1748,7 +1748,8 @@
         "referral": "Referrals",
         "support": "Support",
         "info": "Info",
-        "admin": "Admin Panel"
+        "admin": "Admin Panel",
+        "language": "Language"
       },
       "descriptions": {
         "home": "Personal cabinet button",
@@ -1757,7 +1758,8 @@
         "referral": "Referral program",
         "support": "Support tickets",
         "info": "Information section",
-        "admin": "Web admin panel"
+        "admin": "Web admin panel",
+        "language": "Language selection"
       },
       "styles": {
         "default": "No color",
@@ -1765,6 +1767,19 @@
         "success": "Green",
         "danger": "Red"
       }
+    },
+    "menuEditor": {
+      "dragHint": "Drag rows to reorder them",
+      "dragToReorder": "Drag to reorder",
+      "row": "Row",
+      "addRow": "Add row",
+      "addButton": "Add button",
+      "addUrlButton": "URL button (link)",
+      "builtinButtons": "Built-in buttons",
+      "resetConfirm": "Reset menu layout to defaults?",
+      "buttonTextPlaceholder": "Custom button text",
+      "customLabelsHint": "Empty = default label",
+      "invalidUrl": "Please provide a valid URL (http:// or https://) for all custom buttons"
     },
     "apps": {
       "title": "App Management",
