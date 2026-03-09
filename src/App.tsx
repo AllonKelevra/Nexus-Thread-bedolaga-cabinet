@@ -36,6 +36,8 @@ const Contests = lazy(() => import('./pages/Contests'));
 const Polls = lazy(() => import('./pages/Polls'));
 const Info = lazy(() => import('./pages/Info'));
 const Wheel = lazy(() => import('./pages/Wheel'));
+const GiftSubscription = lazy(() => import('./pages/GiftSubscription'));
+const GiftResult = lazy(() => import('./pages/GiftResult'));
 const Connection = lazy(() => import('./pages/Connection'));
 const ConnectionQR = lazy(() => import('./pages/ConnectionQR'));
 const QuickPurchase = lazy(() => import('./pages/QuickPurchase'));
@@ -416,6 +418,26 @@ function App() {
             <ProtectedRoute>
               <LazyPage>
                 <Wheel />
+              </LazyPage>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/gift"
+          element={
+            <ProtectedRoute>
+              <LazyPage>
+                <GiftSubscription />
+              </LazyPage>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/gift/result"
+          element={
+            <ProtectedRoute>
+              <LazyPage>
+                <GiftResult />
               </LazyPage>
             </ProtectedRoute>
           }

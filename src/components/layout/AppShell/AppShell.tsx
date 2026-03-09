@@ -20,7 +20,7 @@ import CampaignBonusNotifier from '@/components/CampaignBonusNotifier';
 import SuccessNotificationModal from '@/components/SuccessNotificationModal';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import TicketNotificationBell from '@/components/TicketNotificationBell';
-import { SubscriptionIcon } from '@/components/icons';
+import { SubscriptionIcon, GiftIcon } from '@/components/icons';
 
 import { MobileBottomNav } from './MobileBottomNav';
 import { AppHeader } from './AppHeader';
@@ -203,7 +203,7 @@ export function AppShell({ children }: AppShellProps) {
 
   // Extracted hooks
   const { appName, logoLetter, hasCustomLogo, logoUrl } = useBranding();
-  const { referralEnabled, wheelEnabled, hasContests, hasPolls } = useFeatureFlags();
+  const { referralEnabled, wheelEnabled, hasContests, hasPolls, giftEnabled } = useFeatureFlags();
   useScrollRestoration();
 
   // Theme toggle visibility
@@ -349,6 +349,21 @@ export function AppShell({ children }: AppShellProps) {
                 <span>{t('nav.referral')}</span>
               </Link>
             )}
+            {giftEnabled && (
+              <Link
+                to="/gift"
+                onClick={handleNavClick}
+                className={cn(
+                  'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                  isActive('/gift')
+                    ? 'bg-dark-800 text-dark-50'
+                    : 'text-dark-400 hover:bg-dark-800/50 hover:text-dark-200',
+                )}
+              >
+                <GiftIcon className="h-4 w-4" />
+                <span>{t('nav.gift')}</span>
+              </Link>
+            )}
             {isAdmin && (
               <>
                 {/* Separator before admin */}
@@ -415,6 +430,7 @@ export function AppShell({ children }: AppShellProps) {
         referralEnabled={referralEnabled}
         hasContests={hasContests}
         hasPolls={hasPolls}
+        giftEnabled={giftEnabled}
       />
 
       {/* Desktop spacer */}
