@@ -55,7 +55,7 @@ function formatPeriodLabel(
 
 function LoadingSkeleton() {
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-dark-950">
+    <div className="flex min-h-dvh items-center justify-center">
       <div className="flex flex-col items-center gap-4">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-dark-600 border-t-accent-500" />
       </div>
@@ -67,7 +67,7 @@ function ErrorState({ message }: { message: string }) {
   const { t } = useTranslation();
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-dark-950 px-4">
+    <div className="flex min-h-dvh items-center justify-center px-4">
       <div className="flex max-w-sm flex-col items-center gap-4 text-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-error-500/10">
           <svg
@@ -101,7 +101,7 @@ function DisabledState() {
   }, [navigate]);
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-dark-950 px-4">
+    <div className="flex min-h-dvh items-center justify-center px-4">
       <div className="flex max-w-sm flex-col items-center gap-4 text-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-dark-800/50">
           <svg
@@ -817,7 +817,7 @@ export default function GiftSubscription() {
   const showTariffCards = visibleTariffs.length > 1;
 
   return (
-    <div className="min-h-dvh bg-dark-950">
+    <div className="min-h-dvh">
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div

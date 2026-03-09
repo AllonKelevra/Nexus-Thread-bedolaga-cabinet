@@ -399,7 +399,7 @@ export default function GiftResult() {
   // No token
   if (!token) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-dark-950 px-4">
+      <div className="flex min-h-dvh items-center justify-center px-4">
         <div
           className="w-full max-w-md rounded-2xl border border-dark-800/50 bg-dark-900/50 p-8"
           aria-live="polite"
@@ -416,7 +416,7 @@ export default function GiftResult() {
   const isFailed = status?.status === 'failed' || status?.status === 'expired';
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-dark-950 px-4">
+    <div className="flex min-h-dvh items-center justify-center px-4">
       <div
         className="w-full max-w-md rounded-2xl border border-dark-800/50 bg-dark-900/50 p-8"
         aria-live="polite"
