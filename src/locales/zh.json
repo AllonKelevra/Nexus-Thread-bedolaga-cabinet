@@ -532,6 +532,19 @@
     "paymentSuccess": {
       "title": "支付成功",
       "message": "您的余额已成功充值，资金现已可用。"
+    },
+    "topUpResult": {
+      "awaitingPayment": "等待付款",
+      "awaitingPaymentDesc": "我们正在等待您的付款确认。这可能需要几分钟。",
+      "topUpAmount": "充值金额",
+      "success": "充值成功！",
+      "successDesc": "您的余额已成功充值，资金现已可用。",
+      "failed": "付款失败",
+      "failedDesc": "很遗憾，付款未完成。请重试或选择其他付款方式。",
+      "timeout": "处理时间较长",
+      "timeoutDesc": "付款处理时间比平时长。您可以再次检查状态。",
+      "goToBalance": "查看余额",
+      "tryAgain": "重试"
     }
   },
   "referral": {

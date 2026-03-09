@@ -8,7 +8,6 @@ import { useAuthStore } from '../store/auth';
 import { balanceApi } from '../api/balance';
 import { useCurrency } from '../hooks/useCurrency';
 import { API } from '../config/constants';
-import { useToast } from '../components/Toast';
 import type { PaginatedResponse, Transaction } from '../types';
 
 import { Card } from '@/components/data-display/Card';
@@ -45,7 +44,6 @@ export default function Balance() {
   const { formatAmount, currencySymbol } = useCurrency();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { showToast } = useToast();
   const paymentHandledRef = useRef(false);
 
   // Fetch balance from API
@@ -72,25 +70,17 @@ export default function Balance() {
       paymentStatus === 'completed' ||
       searchParams.get('success') === 'true';
 
+    const isFailed =
+      paymentStatus === 'failed' || paymentStatus === 'error' || paymentStatus === 'canceled';
+
     if (isSuccess) {
       paymentHandledRef.current = true;
-
-      refetchBalance();
-      refreshUser();
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['subscription'] });
-      queryClient.invalidateQueries({ queryKey: ['purchase-options'] });
-
-      showToast({
-        type: 'success',
-        title: t('balance.paymentSuccess.title'),
-        message: t('balance.paymentSuccess.message'),
-        duration: 6000,
-      });
-
-      navigate('/balance', { replace: true });
+      navigate('/balance/top-up/result?status=success', { replace: true });
+    } else if (isFailed) {
+      paymentHandledRef.current = true;
+      navigate('/balance/top-up/result?status=failed', { replace: true });
     }
-  }, [searchParams, navigate, refetchBalance, refreshUser, queryClient, showToast, t]);
+  }, [searchParams, navigate]);
 
   const [promocode, setPromocode] = useState('');
   const [promocodeLoading, setPromocodeLoading] = useState(false);
