@@ -70,6 +70,8 @@ export type GiftPurchaseStatusValue =
 export interface GiftPurchaseStatus {
   status: GiftPurchaseStatusValue;
   is_gift: boolean;
+  is_code_only: boolean;
+  purchase_token: string | null;
   recipient_contact_value: string | null;
   gift_message: string | null;
   tariff_name: string | null;

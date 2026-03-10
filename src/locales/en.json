@@ -4233,9 +4233,21 @@
     "codeCopied": "Code copied!",
     "shareGift": "SHARE",
     "shareText": "I have a gift for you! Activate it here:",
+    "codeReadyTitle": "Gift code is ready!",
+    "codeLabel": "Gift code",
+    "sharePreview": "Message to share",
+    "copyMessage": "Copy",
     "activatedBy": "Activated by {{username}}",
     "sentTo": "Sent to {{recipient}}",
     "daysShort": "days",
-    "devicesShort": "dev."
+    "devicesShort": "dev.",
+    "gbShort": "GB",
+    "unlimitedTraffic": "Unlimited",
+    "shareModalTitle": "Share gift",
+    "shareModalDesc": "Send this message to the gift recipient",
+    "shareModalActivateVia": "Activate via bot:",
+    "shareModalActivateViaCabinet": "Or via website:",
+    "shareModalCopyAll": "Copy message",
+    "shareModalCopied": "Copied!"
   }
 }

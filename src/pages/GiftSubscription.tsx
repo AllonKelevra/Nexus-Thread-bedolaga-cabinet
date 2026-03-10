@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router';
+import { useNavigate, useSearchParams, Link } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -329,6 +329,10 @@ function TariffCard({
             isSelected ? 'text-accent-400' : 'text-dark-400',
           )}
         >
+          {tariff.traffic_limit_gb > 0
+            ? `${tariff.traffic_limit_gb} ${t('gift.gbShort')}`
+            : t('gift.unlimitedTraffic')}
+          {' \u2022 '}
           {t('gift.deviceCount', { count: tariff.device_limit })}
         </p>
       </div>
@@ -699,6 +703,13 @@ function BuyTabContent({
         </div>
       )}
 
+      {/* Selected tariff description */}
+      {selectedTariff?.description && (
+        <div className="rounded-xl border border-dark-800/30 bg-dark-800/20 px-4 py-3">
+          <p className="text-sm text-dark-300">{selectedTariff.description}</p>
+        </div>
+      )}
+
       {/* Period selection */}
       {periodsForDisplay.length > 0 && (
         <div>
@@ -839,10 +850,15 @@ function BuyTabContent({
 // Sub-components: Activate Tab
 // ============================================================
 
-function ActivateTabContent() {
+function ActivateTabContent({ initialCode }: { initialCode?: string | null }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState(initialCode?.toUpperCase() ?? '');
+
+  // Sync when initialCode changes (e.g. URL param update while tab is active)
+  useEffect(() => {
+    if (initialCode) setCode(initialCode.toUpperCase());
+  }, [initialCode]);
   const [activateError, setActivateError] = useState<string | null>(null);
 
   const activateMutation = useMutation({
@@ -949,9 +965,153 @@ function ActivateTabContent() {
 // Sub-components: My Gifts Tab
 // ============================================================
 
-function SentGiftCard({ gift }: { gift: SentGift }) {
+function ShareModal({ gift, onClose }: { gift: SentGift; onClose: () => void }) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
+
+  const botUsername = import.meta.env.VITE_BOT_USERNAME as string | undefined;
+  const botLink = botUsername ? `https://t.me/${botUsername}?start=GIFTCODE_${gift.token}` : null;
+  const cabinetLink = `${window.location.origin}/gift?tab=activate&code=${gift.token}`;
+
+  const fullMessage = [
+    t('gift.shareText'),
+    '',
+    botLink ? `${t('gift.shareModalActivateVia')} ${botLink}` : null,
+    `${t('gift.shareModalActivateViaCabinet')} ${cabinetLink}`,
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  const handleCopyAll = async () => {
+    try {
+      await navigator.clipboard.writeText(fullMessage);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // fallback
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-6 sm:items-center sm:pb-0"
+      onClick={onClose}
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+
+      {/* Modal content */}
+      <motion.div
+        initial={{ opacity: 0, y: 40, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 40, scale: 0.95 }}
+        transition={{ duration: 0.25, ease: 'easeOut' }}
+        className="relative w-full max-w-md overflow-hidden rounded-2xl border border-dark-700/50 bg-dark-900 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-dark-800/50 px-5 py-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-500/20">
+              <ShareIcon className="h-4.5 w-4.5 text-accent-400" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-dark-50">{t('gift.shareModalTitle')}</h3>
+              <p className="text-xs text-dark-400">{t('gift.shareModalDesc')}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-dark-400 transition-colors hover:bg-dark-800 hover:text-dark-200"
+            aria-label={t('common.cancel')}
+          >
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Message preview */}
+        <div className="px-5 py-4">
+          <div className="rounded-xl border border-dark-700/30 bg-dark-800/40 p-4">
+            <p className="mb-3 text-sm font-medium text-dark-100">{t('gift.shareText')}</p>
+
+            {botLink && (
+              <div className="mb-2">
+                <p className="mb-1 text-xs font-medium text-dark-400">
+                  {t('gift.shareModalActivateVia')}
+                </p>
+                <a
+                  href={botLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block truncate rounded-lg bg-dark-900/60 px-3 py-2 text-sm text-accent-400 transition-colors hover:bg-dark-900"
+                >
+                  {botLink}
+                </a>
+              </div>
+            )}
+
+            <div>
+              <p className="mb-1 text-xs font-medium text-dark-400">
+                {t('gift.shareModalActivateViaCabinet')}
+              </p>
+              <a
+                href={cabinetLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block truncate rounded-lg bg-dark-900/60 px-3 py-2 text-sm text-accent-400 transition-colors hover:bg-dark-900"
+              >
+                {cabinetLink}
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="border-t border-dark-800/50 px-5 py-4">
+          <button
+            type="button"
+            onClick={handleCopyAll}
+            className={cn(
+              'flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-bold transition-all duration-200 active:scale-[0.98]',
+              copied
+                ? 'bg-success-500/20 text-success-400'
+                : 'bg-accent-500 text-white shadow-lg shadow-accent-500/25 hover:bg-accent-400',
+            )}
+          >
+            {copied ? (
+              <>
+                <CheckIcon className="h-4 w-4" />
+                {t('gift.shareModalCopied')}
+              </>
+            ) : (
+              <>
+                <CopyIcon className="h-4 w-4" />
+                {t('gift.shareModalCopyAll')}
+              </>
+            )}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function SentGiftCard({ gift }: { gift: SentGift }) {
+  const { t } = useTranslation();
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const giftCode = `GIFT-${gift.token.slice(0, 12).toUpperCase()}`;
   const isActivated = isGiftActivated(gift);
@@ -962,40 +1122,6 @@ function SentGiftCard({ gift }: { gift: SentGift }) {
     : isAvailable
       ? t('gift.statusAvailable')
       : t(getGiftStatusKey(gift.status));
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(gift.token);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Clipboard API not available
-    }
-  };
-
-  const handleShare = async () => {
-    const botUsername = import.meta.env.VITE_BOT_USERNAME as string | undefined;
-    if (!botUsername) return;
-    const shareUrl = `https://t.me/${botUsername}?start=GIFTCODE_${gift.token}`;
-    const shareText = t('gift.shareText');
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          text: `${shareText} ${shareUrl}`,
-        });
-        return;
-      } catch {
-        // User cancelled or not available — fallback to clipboard
-      }
-    }
-
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-    } catch {
-      // Clipboard API not available
-    }
-  };
 
   return (
     <div className="rounded-2xl border border-dark-800/50 bg-dark-900/50 p-4">
@@ -1022,7 +1148,7 @@ function SentGiftCard({ gift }: { gift: SentGift }) {
         {' \u2022 '}
         {gift.period_days} {t('gift.daysShort')}
         {' \u2022 '}
-        {gift.device_limit} {t('gift.devicesShort')}
+        {gift.device_limit} {t('gift.devicesShort', { count: gift.device_limit })}
       </p>
 
       {/* Gift code + actions (only when not activated) */}
@@ -1035,20 +1161,10 @@ function SentGiftCard({ gift }: { gift: SentGift }) {
             </p>
           </div>
 
-          {/* Copy button */}
+          {/* Share button — opens modal */}
           <button
             type="button"
-            onClick={handleCopy}
-            className="mb-2 flex w-full items-center justify-center gap-2 rounded-xl border border-dark-700/50 bg-dark-800/50 px-4 py-3 text-sm font-bold uppercase tracking-wider text-dark-200 transition-colors hover:bg-dark-700/50"
-          >
-            <CopyIcon className="h-4 w-4" />
-            {copied ? t('gift.codeCopied') : t('gift.copyCode')}
-          </button>
-
-          {/* Share button */}
-          <button
-            type="button"
-            onClick={handleShare}
+            onClick={() => setShowShareModal(true)}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent-500 px-4 py-3 text-sm font-bold uppercase tracking-wider text-white transition-colors hover:bg-accent-400 active:scale-[0.98]"
           >
             <ShareIcon className="h-4 w-4" />
@@ -1070,6 +1186,11 @@ function SentGiftCard({ gift }: { gift: SentGift }) {
           {t('gift.sentTo', { recipient: gift.gift_recipient_value })}
         </p>
       )}
+
+      {/* Share modal */}
+      <AnimatePresence>
+        {showShareModal && <ShareModal gift={gift} onClose={() => setShowShareModal(false)} />}
+      </AnimatePresence>
     </div>
   );
 }
@@ -1096,7 +1217,7 @@ function ReceivedGiftCard({ gift }: { gift: ReceivedGift }) {
         {' \u2022 '}
         {gift.period_days} {t('gift.daysShort')}
         {' \u2022 '}
-        {gift.device_limit} {t('gift.devicesShort')}
+        {gift.device_limit} {t('gift.devicesShort', { count: gift.device_limit })}
       </p>
 
       {/* Sender */}
@@ -1221,8 +1342,14 @@ const tabContentVariants = {
 
 export default function GiftSubscription() {
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
 
-  const [activeTab, setActiveTab] = useState<TabId>('buy');
+  // URL params: ?tab=activate&code=TOKEN for auto-activation
+  const urlTab = searchParams.get('tab') as TabId | null;
+  const urlCode = searchParams.get('code');
+  const [activeTab, setActiveTab] = useState<TabId>(
+    urlTab === 'activate' || urlTab === 'myGifts' ? urlTab : 'buy',
+  );
 
   // Fetch config
   const {
@@ -1319,7 +1446,7 @@ export default function GiftSubscription() {
             {activeTab === 'buy' && (
               <BuyTabContent config={config} onPurchaseComplete={() => setActiveTab('myGifts')} />
             )}
-            {activeTab === 'activate' && <ActivateTabContent />}
+            {activeTab === 'activate' && <ActivateTabContent initialCode={urlCode} />}
             {activeTab === 'myGifts' && <MyGiftsTabContent />}
           </motion.div>
         </AnimatePresence>
