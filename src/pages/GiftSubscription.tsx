@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useSearchParams, Link } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -953,43 +954,26 @@ function ActivateTabContent({ initialCode }: { initialCode?: string | null }) {
 // Sub-components: My Gifts Tab
 // ============================================================
 
-function ShareToast({ message, onDismiss }: { message: string; onDismiss: () => void }) {
+function CopiedToast({ onDismiss }: { onDismiss: () => void }) {
   const { t } = useTranslation();
-  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
-    timerRef.current = setTimeout(onDismiss, 5000);
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
+    const timer = setTimeout(onDismiss, 2000);
+    return () => clearTimeout(timer);
   }, [onDismiss]);
-
-  const handleClick = useCallback(async () => {
-    await copyToClipboard(message);
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(onDismiss, 2000);
-  }, [message, onDismiss]);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 60 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 60 }}
-      transition={{ duration: 0.25, ease: 'easeOut' }}
-      className="fixed inset-x-0 bottom-6 z-50 mx-auto w-[calc(100%-2rem)] max-w-md px-1"
+      exit={{ opacity: 0, y: 20 }}
+      transition={{ duration: 0.2, ease: 'easeOut' }}
+      className="fixed inset-x-0 bottom-6 z-50 flex justify-center"
     >
-      <button
-        type="button"
-        onClick={handleClick}
-        className="w-full rounded-2xl border border-dark-700/50 bg-dark-900/95 p-4 text-left shadow-2xl shadow-black/40 backdrop-blur-md transition-colors active:bg-dark-800/95"
-      >
-        <div className="mb-2 flex items-center gap-2">
-          <CheckIcon className="h-4 w-4 text-success-400" />
-          <span className="text-xs font-bold text-success-400">{t('gift.shareToastCopied')}</span>
-          <span className="ml-auto text-xs text-dark-500">{t('gift.shareToastTapCopy')}</span>
-        </div>
-        <p className="line-clamp-4 whitespace-pre-line text-xs text-dark-300">{message}</p>
-      </button>
+      <div className="flex items-center gap-2 rounded-full border border-dark-700/50 bg-dark-900/95 px-5 py-2.5 shadow-2xl shadow-black/40 backdrop-blur-md">
+        <CheckIcon className="h-4 w-4 text-success-400" />
+        <span className="text-sm font-medium text-success-400">{t('gift.shareToastCopied')}</span>
+      </div>
     </motion.div>
   );
 }
@@ -1095,10 +1079,13 @@ function SentGiftCard({ gift }: { gift: SentGift }) {
         </p>
       )}
 
-      {/* Share toast */}
-      <AnimatePresence>
-        {showToast && <ShareToast message={buildShareMessage()} onDismiss={handleDismissToast} />}
-      </AnimatePresence>
+      {/* Copied toast — portal to escape motion.div transform context */}
+      {createPortal(
+        <AnimatePresence>
+          {showToast && <CopiedToast onDismiss={handleDismissToast} />}
+        </AnimatePresence>,
+        document.body,
+      )}
     </div>
   );
 }

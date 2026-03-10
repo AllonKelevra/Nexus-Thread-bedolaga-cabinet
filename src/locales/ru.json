@@ -4816,7 +4816,6 @@
     "shareModalActivateVia": "Активировать через бота:",
     "shareModalActivateViaCabinet": "Или через сайт:",
     "copyMessage": "Скопировать сообщение",
-    "shareToastCopied": "Сообщение скопировано",
-    "shareToastTapCopy": "нажмите чтобы скопировать ещё раз"
+    "shareToastCopied": "Сообщение скопировано"
   }
 }
