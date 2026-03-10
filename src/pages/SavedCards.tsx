@@ -10,7 +10,7 @@ import { useDestructiveConfirm } from '../platform/hooks/useNativeDialog';
 
 import { Card } from '@/components/data-display/Card';
 import { Button } from '@/components/primitives/Button';
-import { ArrowLeftIcon } from '@/components/icons';
+import { BackIcon } from '@/components/icons';
 import { staggerContainer, staggerItem } from '@/components/motion/transitions';
 
 function formatCardDate(dateStr: string): string {
@@ -30,7 +30,11 @@ export default function SavedCards() {
   const { showToast } = useToast();
   const confirmDelete = useDestructiveConfirm();
 
-  const { data: savedCardsData, isLoading } = useQuery({
+  const {
+    data: savedCardsData,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ['saved-cards'],
     queryFn: balanceApi.getSavedCards,
   });
@@ -55,7 +59,8 @@ export default function SavedCards() {
         message: '',
         duration: 3000,
       });
-    } catch {
+    } catch (error) {
+      console.error('Failed to unlink card:', error);
       showToast({
         type: 'error',
         title: t('balance.savedCards.unlinkError'),
@@ -80,7 +85,7 @@ export default function SavedCards() {
           onClick={() => navigate('/balance')}
           className="flex h-10 w-10 items-center justify-center rounded-linear border border-dark-700/30 bg-dark-800/50 text-dark-300 transition-colors hover:bg-dark-700/50 hover:text-dark-100"
         >
-          <ArrowLeftIcon className="h-5 w-5" />
+          <BackIcon className="h-5 w-5" />
         </button>
         <h1 className="text-2xl font-bold text-dark-50 sm:text-3xl">
           {t('balance.savedCards.pageTitle')}
@@ -112,8 +117,19 @@ export default function SavedCards() {
         </motion.div>
       )}
 
+      {/* Error state */}
+      {isError && (
+        <motion.div variants={staggerItem}>
+          <Card>
+            <div className="py-12 text-center">
+              <div className="text-error-400">{t('balance.savedCards.loadError')}</div>
+            </div>
+          </Card>
+        </motion.div>
+      )}
+
       {/* Cards List */}
-      {!isLoading && savedCards && savedCards.length > 0 ? (
+      {!isLoading && !isError && savedCards && savedCards.length > 0 ? (
         <motion.div variants={staggerItem}>
           <Card>
             <div className="space-y-3">
@@ -150,7 +166,7 @@ export default function SavedCards() {
             </div>
           </Card>
         </motion.div>
-      ) : !isLoading && savedCards ? (
+      ) : !isLoading && !isError && savedCards ? (
         /* Empty state - only show when data loaded and empty */
         <motion.div variants={staggerItem}>
           <Card>

@@ -686,7 +686,8 @@
       "noCards": "Card will be saved automatically on next top-up",
       "pageTitle": "Saved Cards",
       "backToBalance": "Back",
-      "empty": "No saved cards. A card will be saved automatically on your next top-up."
+      "empty": "No saved cards. A card will be saved automatically on your next top-up.",
+      "loadError": "Failed to load saved cards. Please try again later."
     },
     "paymentReady": "Payment link is ready",
     "clickToOpenPayment": "Click the button below to open the payment page in a new tab",
@@ -2759,7 +2760,8 @@
           "trafficAdded": "Traffic package added",
           "expired": "expired",
           "daysLeft": "d left",
-          "deviceLimitUpdated": "Device limit updated"
+          "deviceLimitUpdated": "Device limit updated",
+          "invalidDays": "Please enter a valid number of days (greater than 0)"
         },
         "balance": {
           "current": "Current balance",

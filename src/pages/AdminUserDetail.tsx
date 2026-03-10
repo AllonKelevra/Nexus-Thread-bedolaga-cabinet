@@ -431,7 +431,10 @@ export default function AdminUserDetail() {
   const handleUpdateSubscription = async (overrideAction?: string) => {
     if (!userId) return;
     const action = overrideAction || subAction;
-    if ((action === 'extend' || action === 'shorten') && toNumber(subDays, 0) <= 0) return;
+    if ((action === 'extend' || action === 'shorten') && toNumber(subDays, 0) <= 0) {
+      notify.error(t('admin.users.detail.subscription.invalidDays'));
+      return;
+    }
     setActionLoading(true);
     try {
       const data: UpdateSubscriptionRequest = {

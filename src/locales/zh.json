@@ -550,7 +550,8 @@
       "noCards": "银行卡将在下次充值时自动保存",
       "pageTitle": "已保存的银行卡",
       "backToBalance": "返回",
-      "empty": "暂无已保存的银行卡。银行卡将在下次充值时自动保存。"
+      "empty": "暂无已保存的银行卡。银行卡将在下次充值时自动保存。",
+      "loadError": "加载银行卡失败，请稍后重试。"
     },
     "paymentSuccess": {
       "title": "支付成功",
@@ -2392,7 +2393,8 @@
           "trafficAdded": "流量包已添加",
           "expired": "已过期",
           "daysLeft": "天剩余",
-          "deviceLimitUpdated": "设备限制已更新"
+          "deviceLimitUpdated": "设备限制已更新",
+          "invalidDays": "请输入有效天数（大于0）"
         },
         "balance": {
           "current": "当前余额",
