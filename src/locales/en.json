@@ -4218,6 +4218,7 @@
     "activateSuccess": "Gift activated!",
     "activateSuccessDesc": "{{tariff}} — {{days}} days added to your subscription",
     "activateError": "Failed to activate gift",
+    "activateSelfError": "You cannot activate your own gift",
     "myGiftsEmpty": "No gifts yet",
     "myGiftsEmptyDesc": "Buy a gift for a friend or activate a received code",
     "sentGiftsTitle": "Sent",

@@ -4782,6 +4782,7 @@
     "activateSuccess": "Подарок активирован!",
     "activateSuccessDesc": "{{tariff}} — {{days}} дн. добавлено к вашей подписке",
     "activateError": "Не удалось активировать подарок",
+    "activateSelfError": "Нельзя активировать свой собственный подарок",
     "myGiftsEmpty": "У вас пока нет подарков",
     "myGiftsEmptyDesc": "Купите подарок для друга или активируйте полученный код",
     "sentGiftsTitle": "Отправленные",

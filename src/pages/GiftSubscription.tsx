@@ -869,7 +869,11 @@ function ActivateTabContent({ initialCode }: { initialCode?: string | null }) {
       queryClient.invalidateQueries({ queryKey: ['balance'] });
     },
     onError: (err) => {
-      const msg = getApiErrorMessage(err, t('gift.activateError'));
+      const raw = getApiErrorMessage(err, '');
+      const msg =
+        raw === 'Cannot activate your own gift'
+          ? t('gift.activateSelfError')
+          : raw || t('gift.activateError');
       setActivateError(msg);
     },
   });
