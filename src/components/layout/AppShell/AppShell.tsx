@@ -317,72 +317,76 @@ export function AppShell({ children }: AppShellProps) {
           </Link>
 
           {/* Center Navigation */}
-          <nav className="flex min-w-0 items-center gap-0.5">
+          <nav className="flex min-w-0 items-center gap-1">
             {desktopNavItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
                 onClick={handleNavClick}
-                title={item.label}
                 className={cn(
-                  'flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors',
+                  'group flex items-center rounded-xl px-2.5 py-2 transition-all duration-200',
                   isActive(item.path)
                     ? 'bg-dark-800 text-dark-50'
                     : 'text-dark-400 hover:bg-dark-800/50 hover:text-dark-200',
                 )}
               >
-                <item.icon className="h-3.5 w-3.5 shrink-0" />
-                <span className="sr-only">{item.label}</span>
+                <item.icon className="h-[18px] w-[18px] shrink-0" />
+                <span className="max-w-0 overflow-hidden whitespace-nowrap text-xs font-medium opacity-0 transition-all duration-200 group-hover:ml-2 group-hover:max-w-40 group-hover:opacity-100">
+                  {item.label}
+                </span>
               </Link>
             ))}
             {referralEnabled && (
               <Link
                 to="/referral"
                 onClick={handleNavClick}
-                title={t('nav.referral')}
                 className={cn(
-                  'flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors',
+                  'group flex items-center rounded-xl px-2.5 py-2 transition-all duration-200',
                   isActive('/referral')
                     ? 'bg-dark-800 text-dark-50'
                     : 'text-dark-400 hover:bg-dark-800/50 hover:text-dark-200',
                 )}
               >
-                <UsersIcon className="h-3.5 w-3.5 shrink-0" />
-                <span className="sr-only">{t('nav.referral')}</span>
+                <UsersIcon className="h-[18px] w-[18px] shrink-0" />
+                <span className="max-w-0 overflow-hidden whitespace-nowrap text-xs font-medium opacity-0 transition-all duration-200 group-hover:ml-2 group-hover:max-w-40 group-hover:opacity-100">
+                  {t('nav.referral')}
+                </span>
               </Link>
             )}
             {giftEnabled && (
               <Link
                 to="/gift"
                 onClick={handleNavClick}
-                title={t('nav.gift')}
                 className={cn(
-                  'flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors',
+                  'group flex items-center rounded-xl px-2.5 py-2 transition-all duration-200',
                   isActive('/gift')
                     ? 'bg-dark-800 text-dark-50'
                     : 'text-dark-400 hover:bg-dark-800/50 hover:text-dark-200',
                 )}
               >
-                <GiftIcon className="h-3.5 w-3.5 shrink-0" />
-                <span className="sr-only">{t('nav.gift')}</span>
+                <GiftIcon className="h-[18px] w-[18px] shrink-0" />
+                <span className="max-w-0 overflow-hidden whitespace-nowrap text-xs font-medium opacity-0 transition-all duration-200 group-hover:ml-2 group-hover:max-w-40 group-hover:opacity-100">
+                  {t('nav.gift')}
+                </span>
               </Link>
             )}
             {isAdmin && (
               <>
-                <div className="mx-1 h-4 w-px shrink-0 bg-dark-700" />
+                <div className="mx-1 h-5 w-px shrink-0 bg-dark-700" />
                 <Link
                   to="/admin"
                   onClick={handleNavClick}
-                  title={t('admin.nav.title')}
                   className={cn(
-                    'flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors',
+                    'group flex items-center rounded-xl px-2.5 py-2 transition-all duration-200',
                     location.pathname.startsWith('/admin')
                       ? 'bg-warning-500/10 text-warning-400'
                       : 'text-warning-500/70 hover:bg-warning-500/10 hover:text-warning-400',
                   )}
                 >
-                  <ShieldIcon className="h-3.5 w-3.5 shrink-0" />
-                  <span className="sr-only">{t('admin.nav.title')}</span>
+                  <ShieldIcon className="h-[18px] w-[18px] shrink-0" />
+                  <span className="max-w-0 overflow-hidden whitespace-nowrap text-xs font-medium opacity-0 transition-all duration-200 group-hover:ml-2 group-hover:max-w-40 group-hover:opacity-100">
+                    {t('admin.nav.title')}
+                  </span>
                 </Link>
               </>
             )}
