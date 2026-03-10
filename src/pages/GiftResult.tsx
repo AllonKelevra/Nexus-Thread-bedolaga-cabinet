@@ -562,7 +562,8 @@ export default function GiftResult() {
     );
   }
 
-  const isCodeOnlyPaid = status?.status === 'paid' && status?.is_code_only;
+  const isCodeOnlyPaid =
+    status?.status === 'paid' && status?.is_code_only && status?.purchase_token != null;
   const isDelivered = status?.status === 'delivered';
   const isPendingActivation = status?.status === 'pending_activation';
   const isFailed = status?.status === 'failed' || status?.status === 'expired';
