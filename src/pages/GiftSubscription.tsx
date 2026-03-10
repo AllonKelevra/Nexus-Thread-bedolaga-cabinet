@@ -982,9 +982,10 @@ function ShareModal({ gift, onClose }: { gift: SentGift; onClose: () => void }) 
     };
   }, [onClose]);
 
+  const shortCode = gift.token.slice(0, 12);
   const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string | undefined;
-  const botLink = botUsername ? `https://t.me/${botUsername}?start=GIFTCODE_${gift.token}` : null;
-  const cabinetLink = `${window.location.origin}/gift?tab=activate&code=${gift.token}`;
+  const botLink = botUsername ? `https://t.me/${botUsername}?start=GIFTCODE_${shortCode}` : null;
+  const cabinetLink = `${window.location.origin}/gift?tab=activate&code=${shortCode}`;
 
   const fullMessage = [
     t('gift.shareText'),

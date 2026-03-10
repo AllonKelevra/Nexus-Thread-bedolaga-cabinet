@@ -9,10 +9,6 @@ import { AnimatedCheckmark } from '@/components/ui/AnimatedCheckmark';
 import { AnimatedCrossmark } from '@/components/ui/AnimatedCrossmark';
 import { cn } from '@/lib/utils';
 
-function formatGiftCode(token: string): string {
-  return `GIFT-${token.slice(0, 12)}`;
-}
-
 const MAX_POLL_MS = 10 * 60 * 1000; // 10 minutes
 
 const KNOWN_WARNINGS = new Set(['telegram_unresolvable']);
@@ -56,12 +52,11 @@ function CodeOnlySuccessState({
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
 
-  const giftCode = formatGiftCode(purchaseToken);
+  const shortCode = purchaseToken.slice(0, 12);
+  const giftCode = `GIFT-${shortCode}`;
   const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string | undefined;
-  const botLink = botUsername
-    ? `https://t.me/${botUsername}?start=GIFTCODE_${purchaseToken}`
-    : null;
-  const cabinetLink = `${window.location.origin}/gift?tab=activate&code=${purchaseToken}`;
+  const botLink = botUsername ? `https://t.me/${botUsername}?start=GIFTCODE_${shortCode}` : null;
+  const cabinetLink = `${window.location.origin}/gift?tab=activate&code=${shortCode}`;
 
   const fullMessage = [
     t('gift.shareText', 'I have a gift for you! Activate it here:'),
