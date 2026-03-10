@@ -6,7 +6,7 @@ import type {
   PaginatedResponse,
   PendingPayment,
   ManualCheckResponse,
-  SavedCard,
+  SavedCardsResponse,
 } from '../types';
 
 export const balanceApi = {
@@ -124,10 +124,8 @@ export const balanceApi = {
   },
 
   // Get saved payment methods (cards) for recurrent payments
-  getSavedCards: async (): Promise<{ cards: SavedCard[]; recurrent_enabled: boolean }> => {
-    const response = await apiClient.get<{ cards: SavedCard[]; recurrent_enabled: boolean }>(
-      '/cabinet/balance/saved-cards',
-    );
+  getSavedCards: async (): Promise<SavedCardsResponse> => {
+    const response = await apiClient.get<SavedCardsResponse>('/cabinet/balance/saved-cards');
     return response.data;
   },
 

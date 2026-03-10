@@ -6,24 +6,31 @@ import { motion } from 'framer-motion';
 
 import { balanceApi } from '../api/balance';
 import { useToast } from '../components/Toast';
+import { useDestructiveConfirm } from '../platform/hooks/useNativeDialog';
 
 import { Card } from '@/components/data-display/Card';
 import { Button } from '@/components/primitives/Button';
+import { ArrowLeftIcon } from '@/components/icons';
 import { staggerContainer, staggerItem } from '@/components/motion/transitions';
 
-const ArrowLeftIcon = ({ className = 'h-5 w-5' }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-  </svg>
-);
+function formatCardDate(dateStr: string): string {
+  try {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+    return date.toLocaleDateString();
+  } catch {
+    return dateStr;
+  }
+}
 
 export default function SavedCards() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { showToast } = useToast();
+  const confirmDelete = useDestructiveConfirm();
 
-  const { data: savedCardsData, refetch: refetchSavedCards } = useQuery({
+  const { data: savedCardsData, isLoading } = useQuery({
     queryKey: ['saved-cards'],
     queryFn: balanceApi.getSavedCards,
   });
@@ -32,12 +39,16 @@ export default function SavedCards() {
   const [deletingCardId, setDeletingCardId] = useState<number | null>(null);
 
   const handleDeleteCard = async (cardId: number) => {
-    if (!confirm(t('balance.savedCards.confirmUnlink'))) return;
+    if (deletingCardId !== null) return;
+    const confirmed = await confirmDelete(
+      t('balance.savedCards.confirmUnlink'),
+      t('balance.savedCards.unlink'),
+    );
+    if (!confirmed) return;
     setDeletingCardId(cardId);
     try {
       await balanceApi.deleteSavedCard(cardId);
-      await refetchSavedCards();
-      queryClient.invalidateQueries({ queryKey: ['saved-cards'] });
+      await queryClient.invalidateQueries({ queryKey: ['saved-cards'] });
       showToast({
         type: 'success',
         title: t('balance.savedCards.unlinkSuccess'),
@@ -76,8 +87,33 @@ export default function SavedCards() {
         </h1>
       </motion.div>
 
+      {/* Loading state */}
+      {isLoading && (
+        <motion.div variants={staggerItem}>
+          <Card>
+            <div className="space-y-3">
+              {[1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between rounded-linear border border-dark-700/30 bg-dark-800/30 p-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-6 w-6 animate-pulse rounded bg-dark-700" />
+                    <div className="space-y-2">
+                      <div className="h-4 w-32 animate-pulse rounded bg-dark-700" />
+                      <div className="h-3 w-24 animate-pulse rounded bg-dark-700" />
+                    </div>
+                  </div>
+                  <div className="h-8 w-20 animate-pulse rounded bg-dark-700" />
+                </div>
+              ))}
+            </div>
+          </Card>
+        </motion.div>
+      )}
+
       {/* Cards List */}
-      {savedCards && savedCards.length > 0 ? (
+      {!isLoading && savedCards && savedCards.length > 0 ? (
         <motion.div variants={staggerItem}>
           <Card>
             <div className="space-y-3">
@@ -95,7 +131,7 @@ export default function SavedCards() {
                       </div>
                       <div className="text-xs text-dark-500">
                         {t('balance.savedCards.linkedAt', {
-                          date: new Date(card.created_at).toLocaleDateString(),
+                          date: formatCardDate(card.created_at),
                         })}
                       </div>
                     </div>
@@ -114,7 +150,7 @@ export default function SavedCards() {
             </div>
           </Card>
         </motion.div>
-      ) : savedCards ? (
+      ) : !isLoading && savedCards ? (
         /* Empty state - only show when data loaded and empty */
         <motion.div variants={staggerItem}>
           <Card>

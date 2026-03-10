@@ -430,9 +430,10 @@ export default function AdminUserDetail() {
 
   const handleUpdateSubscription = async (overrideAction?: string) => {
     if (!userId) return;
+    const action = overrideAction || subAction;
+    if ((action === 'extend' || action === 'shorten') && toNumber(subDays, 0) <= 0) return;
     setActionLoading(true);
     try {
-      const action = overrideAction || subAction;
       const data: UpdateSubscriptionRequest = {
         action: action as UpdateSubscriptionRequest['action'],
         ...(action === 'extend' || action === 'shorten' ? { days: toNumber(subDays, 30) } : {}),

@@ -586,6 +586,11 @@ export interface SavedCard {
   created_at: string;
 }
 
+export interface SavedCardsResponse {
+  cards: SavedCard[];
+  recurrent_enabled: boolean;
+}
+
 // Ticket notifications types
 export interface TicketNotification {
   id: number;
