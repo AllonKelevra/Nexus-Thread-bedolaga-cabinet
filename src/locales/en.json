@@ -4221,6 +4221,8 @@
     "myGiftsEmpty": "No gifts yet",
     "myGiftsEmptyDesc": "Buy a gift for a friend or activate a received code",
     "sentGiftsTitle": "Sent",
+    "activeGiftsTitle": "Active gifts",
+    "activatedGiftsTitle": "Activated",
     "receivedGiftsTitle": "Received",
     "statusAvailable": "AVAILABLE",
     "statusActivated": "ACTIVATED",

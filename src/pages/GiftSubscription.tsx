@@ -1280,9 +1280,21 @@ function MyGiftsTabContent() {
   });
 
   const isLoading = sentLoading || receivedLoading;
-  const hasSent = sentGifts && sentGifts.length > 0;
+
+  // Split sent gifts into active (awaiting activation) and activated
+  const activeGifts = useMemo(
+    () => (sentGifts ?? []).filter((g) => !isGiftActivated(g)),
+    [sentGifts],
+  );
+  const activatedGifts = useMemo(
+    () => (sentGifts ?? []).filter((g) => isGiftActivated(g)),
+    [sentGifts],
+  );
+
+  const hasActive = activeGifts.length > 0;
+  const hasActivated = activatedGifts.length > 0;
   const hasReceived = receivedGifts && receivedGifts.length > 0;
-  const isEmpty = !hasSent && !hasReceived;
+  const isEmpty = !hasActive && !hasActivated && !hasReceived;
 
   if (isLoading) {
     return (
@@ -1314,14 +1326,28 @@ function MyGiftsTabContent() {
 
   return (
     <div className="space-y-6">
-      {/* Sent gifts */}
-      {hasSent && (
+      {/* Active gifts (awaiting activation) */}
+      {hasActive && (
         <div>
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-dark-400">
-            {t('gift.sentGiftsTitle')}
+            {t('gift.activeGiftsTitle')}
           </h2>
           <div className="space-y-3">
-            {sentGifts!.map((gift) => (
+            {activeGifts.map((gift) => (
+              <SentGiftCard key={gift.token} gift={gift} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Activated gifts */}
+      {hasActivated && (
+        <div>
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-dark-400">
+            {t('gift.activatedGiftsTitle')}
+          </h2>
+          <div className="space-y-3">
+            {activatedGifts.map((gift) => (
               <SentGiftCard key={gift.token} gift={gift} />
             ))}
           </div>

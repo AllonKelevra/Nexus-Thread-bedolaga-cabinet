@@ -4785,6 +4785,8 @@
     "myGiftsEmpty": "У вас пока нет подарков",
     "myGiftsEmptyDesc": "Купите подарок для друга или активируйте полученный код",
     "sentGiftsTitle": "Отправленные",
+    "activeGiftsTitle": "Активные подарки",
+    "activatedGiftsTitle": "Активированные",
     "receivedGiftsTitle": "Полученные",
     "statusAvailable": "ДОСТУПЕН",
     "statusActivated": "АКТИВИРОВАН",
