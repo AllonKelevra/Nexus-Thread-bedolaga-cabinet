@@ -10,7 +10,7 @@ import { AnimatedCrossmark } from '@/components/ui/AnimatedCrossmark';
 import { cn } from '@/lib/utils';
 
 function formatGiftCode(token: string): string {
-  return `GIFT-${token.slice(0, 12).toUpperCase()}`;
+  return `GIFT-${token.slice(0, 12)}`;
 }
 
 const MAX_POLL_MS = 10 * 60 * 1000; // 10 minutes

@@ -1015,7 +1015,7 @@ function ShareModal({ gift, onClose }: { gift: SentGift; onClose: () => void }) 
       onClick={onClose}
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-dark-900/40 backdrop-blur-sm" />
 
       {/* Modal content */}
       <motion.div
@@ -1131,7 +1131,7 @@ function SentGiftCard({ gift }: { gift: SentGift }) {
   const { t } = useTranslation();
   const [showShareModal, setShowShareModal] = useState(false);
 
-  const giftCode = `GIFT-${gift.token.slice(0, 12).toUpperCase()}`;
+  const giftCode = `GIFT-${gift.token.slice(0, 12)}`;
   const isActivated = isGiftActivated(gift);
   const isAvailable = !isActivated && isGiftAvailable(gift.status);
 
