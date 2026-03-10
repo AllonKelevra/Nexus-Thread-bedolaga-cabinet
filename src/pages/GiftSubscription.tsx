@@ -1015,7 +1015,7 @@ function ShareModal({ gift, onClose }: { gift: SentGift; onClose: () => void }) 
       onClick={onClose}
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-dark-900/40 backdrop-blur-sm" />
+      <div className="absolute inset-0 backdrop-blur-sm" />
 
       {/* Modal content */}
       <motion.div
