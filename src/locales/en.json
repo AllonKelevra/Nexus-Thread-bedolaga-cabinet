@@ -4248,6 +4248,7 @@
     "unlimitedTraffic": "Unlimited",
     "shareModalActivateVia": "Activate via bot:",
     "shareModalActivateViaCabinet": "Or via website:",
+    "copyMessage": "Copy message",
     "shareToastCopied": "Message copied",
     "shareToastTapCopy": "tap to copy again"
   }

@@ -153,7 +153,7 @@ function CodeOnlySuccessState({
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
-            {t('gift.shareModalCopied', 'Copied!')}
+            {t('common.copied', 'Copied!')}
           </>
         ) : (
           <>
@@ -170,7 +170,7 @@ function CodeOnlySuccessState({
                 d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
               />
             </svg>
-            {t('gift.shareModalCopyAll', 'Copy message')}
+            {t('gift.copyMessage', 'Copy message')}
           </>
         )}
       </button>
