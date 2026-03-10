@@ -4255,7 +4255,6 @@
     "codeReadyTitle": "Gift code is ready!",
     "codeLabel": "Gift code",
     "sharePreview": "Message to share",
-    "copyMessage": "Copy",
     "activatedBy": "Activated by {{username}}",
     "sentTo": "Sent to {{recipient}}",
     "daysShort": "days",

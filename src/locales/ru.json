@@ -4819,7 +4819,6 @@
     "codeReadyTitle": "Код подарка готов!",
     "codeLabel": "Код подарка",
     "sharePreview": "Сообщение для отправки",
-    "copyMessage": "Копировать",
     "activatedBy": "Активирован пользователем {{username}}",
     "sentTo": "Отправлен {{recipient}}",
     "daysShort": "дн.",
