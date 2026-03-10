@@ -8,13 +8,13 @@ import { useAuthStore } from '../store/auth';
 import { balanceApi } from '../api/balance';
 import { useCurrency } from '../hooks/useCurrency';
 import { API } from '../config/constants';
-import { useToast } from '../components/Toast';
 import type { PaginatedResponse, Transaction } from '../types';
 
 import { Card } from '@/components/data-display/Card';
 import { Button } from '@/components/primitives/Button';
 import { ChevronDownIcon, ChevronRightIcon } from '@/components/icons';
 import { staggerContainer, staggerItem } from '@/components/motion/transitions';
+import { isPaidStatus, isFailedStatus } from '../utils/paymentStatus';
 
 const WalletIcon = ({ className = 'h-8 w-8' }: { className?: string }) => (
   <svg
@@ -39,7 +39,6 @@ export default function Balance() {
   const { formatAmount, currencySymbol } = useCurrency();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { showToast } = useToast();
   const paymentHandledRef = useRef(false);
 
   // Fetch balance from API
@@ -60,30 +59,19 @@ export default function Balance() {
     if (paymentHandledRef.current) return;
 
     const paymentStatus = searchParams.get('payment') || searchParams.get('status');
-    const isSuccess =
-      paymentStatus === 'success' ||
-      paymentStatus === 'paid' ||
-      paymentStatus === 'completed' ||
-      searchParams.get('success') === 'true';
+
+    const normalised = paymentStatus?.toLowerCase() ?? '';
+    const isSuccess = isPaidStatus(normalised) || searchParams.get('success') === 'true';
+    const isFailed = isFailedStatus(normalised);
 
     if (isSuccess) {
       paymentHandledRef.current = true;
-
-      refetchBalance();
-      refreshUser();
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['subscription'] });
-
-      showToast({
-        type: 'success',
-        title: t('balance.paymentSuccess.title'),
-        message: t('balance.paymentSuccess.message'),
-        duration: 6000,
-      });
-
-      navigate('/balance', { replace: true });
+      navigate('/balance/top-up/result?status=success', { replace: true });
+    } else if (isFailed) {
+      paymentHandledRef.current = true;
+      navigate('/balance/top-up/result?status=failed', { replace: true });
     }
-  }, [searchParams, navigate, refetchBalance, refreshUser, queryClient, showToast, t]);
+  }, [searchParams, navigate]);
 
   const [promocode, setPromocode] = useState('');
   const [promocodeLoading, setPromocodeLoading] = useState(false);
@@ -163,6 +151,7 @@ export default function Balance() {
         await refetchBalance();
         await refreshUser();
         queryClient.invalidateQueries({ queryKey: ['transactions'] });
+        queryClient.invalidateQueries({ queryKey: ['purchase-options'] });
       }
     } catch (error: unknown) {
       const axiosError = error as { response?: { data?: { detail?: string } } };
