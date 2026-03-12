@@ -1705,6 +1705,9 @@
       "statusTitle": "وضعیت تعرفه",
       "isActiveLabel": "فعال",
       "isActiveHint": "تعرفه‌های غیرفعال به کاربران نمایش داده نمی‌شوند",
+      "showInGiftLabel": "نمایش در هدایا",
+      "showInGiftHint": "تعرفه برای خرید در بخش هدایا در دسترس خواهد بود",
+      "giftBadge": "هدیه",
       "isTrialLabel": "تعرفه آزمایشی",
       "isTrialHint": "برای دوره آزمایشی رایگان در دسترس است",
       "validation": {
