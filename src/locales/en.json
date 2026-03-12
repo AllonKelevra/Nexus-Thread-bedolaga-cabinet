@@ -2044,6 +2044,9 @@
       "statusTitle": "Tariff Status",
       "isActiveLabel": "Active",
       "isActiveHint": "Inactive tariffs are not shown to users",
+      "showInGiftLabel": "Show in gifts",
+      "showInGiftHint": "Tariff will be available for purchase in the gifts section",
+      "giftBadge": "Gift",
       "isTrialLabel": "Trial tariff",
       "isTrialHint": "Available for free trial period",
       "validation": {

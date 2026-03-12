@@ -1742,6 +1742,9 @@
       "statusTitle": "套餐状态",
       "isActiveLabel": "已激活",
       "isActiveHint": "未激活的套餐不会显示给用户",
+      "showInGiftLabel": "在礼物中显示",
+      "showInGiftHint": "套餐将在礼物区域中可供购买",
+      "giftBadge": "礼物",
       "isTrialLabel": "试用套餐",
       "isTrialHint": "可用于免费试用期",
       "validation": {

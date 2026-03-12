@@ -19,6 +19,7 @@ import { cn } from '../lib/utils';
 import { copyToClipboard } from '../utils/clipboard';
 import { getApiErrorMessage } from '../utils/api-error';
 import { formatPrice } from '../utils/format';
+import { usePlatform, useHaptic } from '@/platform';
 
 // ============================================================
 // SVG Icons
@@ -524,6 +525,8 @@ function BuyTabContent({
 }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { openInvoice, capabilities } = usePlatform();
+  const haptic = useHaptic();
 
   // Selection state
   const [selectedTariffId, setSelectedTariffId] = useState<number | null>(null);
@@ -610,8 +613,29 @@ function BuyTabContent({
   // Purchase mutation
   const purchaseMutation = useMutation({
     mutationFn: (data: GiftPurchaseRequest) => giftApi.createPurchase(data),
-    onSuccess: (result) => {
+    onSuccess: async (result) => {
       if (result.payment_url) {
+        // Telegram Stars: open invoice natively instead of redirect
+        const isStars = selectedMethod === 'telegram_stars';
+        if (isStars && capabilities.hasInvoice) {
+          try {
+            const status = await openInvoice(result.payment_url);
+            if (status === 'paid') {
+              haptic.notification('success');
+              queryClient.invalidateQueries({ queryKey: ['balance'] });
+              queryClient.invalidateQueries({ queryKey: ['gift-config'] });
+              queryClient.invalidateQueries({ queryKey: ['gift-sent'] });
+              onPurchaseComplete();
+            } else if (status === 'failed') {
+              haptic.notification('error');
+              setSubmitError(t('gift.failedDesc'));
+            }
+            // 'cancelled' — user closed the invoice, do nothing
+          } catch (e) {
+            setSubmitError(t('gift.failedDesc'));
+          }
+          return;
+        }
         window.location.href = result.payment_url;
       } else {
         // Balance purchase: switch to MyGifts tab so the new code is visible
