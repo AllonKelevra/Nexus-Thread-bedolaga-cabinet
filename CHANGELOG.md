@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.33.1](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/compare/v1.33.0...v1.33.1) (2026-03-13)
+
+
+### Bug Fixes
+
+* correct locale loader type to support nested translation objects ([ab03947](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/ab0394776ad5f23778f45618e283fb319e4c688c))
+* correct locale loader type to support nested translation objects ([682b6b7](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/682b6b70dc65e14e8dc6c68c59501d5ca1a2171a))
+
 ## [1.33.0](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/compare/v1.32.0...v1.33.0) (2026-03-13)
 
 
