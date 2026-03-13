@@ -43,7 +43,7 @@ export default function Connection() {
         hideLink: appConfig?.hideLink ?? false,
       },
     });
-  }, [navigate, appConfig?.subscriptionUrl, appConfig?.hideLink]);
+  }, [navigate, appConfig?.subscriptionUrl, appConfig?.hideLink, isTelegramWebApp]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

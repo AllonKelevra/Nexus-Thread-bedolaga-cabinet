@@ -611,7 +611,7 @@ function BuyTabContent({
               setSubmitError(t('gift.failedDesc'));
             }
             // 'cancelled' — user closed the invoice, do nothing
-          } catch (e) {
+          } catch {
             setSubmitError(t('gift.failedDesc'));
           }
           return;

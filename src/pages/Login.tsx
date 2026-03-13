@@ -21,7 +21,7 @@ import { closeMiniApp } from '@telegram-apps/sdk-react';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import TelegramLoginButton from '../components/TelegramLoginButton';
 import OAuthProviderIcon from '../components/OAuthProviderIcon';
-import { saveOAuthState } from './OAuthCallback';
+import { saveOAuthState } from '../utils/oauth';
 import { consumeReferralCode, getPendingReferralCode } from '../utils/referral';
 
 export default function Login() {

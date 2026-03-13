@@ -30,7 +30,10 @@ export default tseslint.config(
       'react-hooks/variables': 'off',
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' },
+      ],
       'no-empty': ['warn', { allowEmptyCatch: true }],
       'no-eval': 'error',
       'no-implied-eval': 'error',
