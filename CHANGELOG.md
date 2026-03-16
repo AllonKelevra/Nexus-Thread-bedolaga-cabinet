@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.34.1](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/compare/v1.34.0...v1.34.1) (2026-03-16)
+
+
+### Bug Fixes
+
+* поддержка режима «both» — показ кнопки контакта вместе с тикетами ([f960d5f](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/f960d5fc0bc627f523d06d442f0f6efb6adc2d5a))
+
 ## [1.34.0](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/compare/v1.33.2...v1.34.0) (2026-03-14)
 
 
