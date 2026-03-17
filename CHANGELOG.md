@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.35.0](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/compare/v1.34.1...v1.35.0) (2026-03-17)
+
+
+### Features
+
+* deep link авторизация при блокировке oauth.telegram.org ([6a1a9f5](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/6a1a9f5db7c3a2aa553e8965c1d6e7d65a40dc6e))
+
+
+### Bug Fixes
+
+* deep link auth timer cleanup and reliability ([3d95025](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/3d950252b70b59a6a0f49976aeb87686e850d0e9))
+* recursive setTimeout, Strict Mode guard, isAxiosError ([b350003](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/b35000367bbfb0041d33b3852f1eddb083b2e9a3))
+* скрыть плашку верификации email при выключенной верификации ([11e8191](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/11e81917af4b950d3b33dd9362424a295c9c2cbd))
+
 ## [1.34.1](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/compare/v1.34.0...v1.34.1) (2026-03-16)
 
 
