@@ -29,6 +29,7 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
   const [deepLinkPolling, setDeepLinkPolling] = useState(false);
   const [deepLinkError, setDeepLinkError] = useState('');
   const pollIntervalRef = useRef<ReturnType<typeof setInterval>>(null);
+  const expireTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
 
   const loginWithDeepLink = useAuthStore((s) => s.loginWithDeepLink);
 
@@ -54,11 +55,14 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
     };
   }, []);
 
-  // Cleanup polling on unmount
+  // Cleanup polling and expire timeout on unmount
   useEffect(() => {
     return () => {
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
+      }
+      if (expireTimeoutRef.current) {
+        clearTimeout(expireTimeoutRef.current);
       }
     };
   }, []);
@@ -223,8 +227,20 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
   // Deep link auth: request token and start polling
   const startDeepLinkAuth = useCallback(async () => {
     setDeepLinkError('');
+
+    // Clear any previous timers
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
+    if (expireTimeoutRef.current) {
+      clearTimeout(expireTimeoutRef.current);
+      expireTimeoutRef.current = null;
+    }
+
     try {
-      const { token, bot_username } = await authApi.requestDeepLinkToken();
+      const response = await authApi.requestDeepLinkToken();
+      const { token, bot_username, expires_in } = response;
       setDeepLinkToken(token);
       setDeepLinkBotUsername(bot_username || botUsername);
       setDeepLinkPolling(true);
@@ -239,6 +255,10 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
           await loginWithDeepLink(token);
           // Success - auth store is updated, navigate
           clearInterval(intervalId);
+          if (expireTimeoutRef.current) {
+            clearTimeout(expireTimeoutRef.current);
+            expireTimeoutRef.current = null;
+          }
           if (mountedRef.current) {
             setDeepLinkPolling(false);
             navigate('/');
@@ -270,17 +290,23 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
 
       pollIntervalRef.current = intervalId;
 
-      // Auto-expire after token TTL
-      setTimeout(
+      // Auto-expire after server-provided TTL
+      const expireId = setTimeout(
         () => {
-          clearInterval(intervalId);
+          if (pollIntervalRef.current) {
+            clearInterval(pollIntervalRef.current);
+            pollIntervalRef.current = null;
+          }
           if (mountedRef.current && !useAuthStore.getState().isAuthenticated) {
             setDeepLinkPolling(false);
             setDeepLinkToken(null);
+            setDeepLinkError(t('auth.deepLinkExpired'));
           }
         },
-        5 * 60 * 1000,
-      ); // 5 minutes
+        (expires_in || 300) * 1000,
+      );
+
+      expireTimeoutRef.current = expireId;
     } catch {
       setDeepLinkError(t('common.error'));
     }

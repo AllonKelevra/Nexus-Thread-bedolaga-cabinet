@@ -320,6 +320,8 @@ export const useAuthStore = create<AuthState>()(
       },
 
       loginWithDeepLink: async (token) => {
+        consumeCampaignSlug();
+        consumeReferralCode();
         const response = await authApi.pollDeepLinkToken(token);
         tokenStorage.setTokens(response.access_token, response.refresh_token);
         set({
