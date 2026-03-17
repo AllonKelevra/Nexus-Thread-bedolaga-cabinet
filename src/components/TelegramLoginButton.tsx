@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
+import { isAxiosError } from 'axios';
 import { brandingApi, type TelegramWidgetConfig } from '../api/branding';
 import { authApi } from '../api/auth';
 import { useAuthStore } from '../store/auth';
@@ -28,7 +29,7 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
   const [deepLinkBotUsername, setDeepLinkBotUsername] = useState<string>('');
   const [deepLinkPolling, setDeepLinkPolling] = useState(false);
   const [deepLinkError, setDeepLinkError] = useState('');
-  const pollIntervalRef = useRef<ReturnType<typeof setInterval>>(null);
+  const pollTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
   const expireTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
 
   const loginWithDeepLink = useAuthStore((s) => s.loginWithDeepLink);
@@ -58,8 +59,8 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
   // Cleanup polling and expire timeout on unmount
   useEffect(() => {
     return () => {
-      if (pollIntervalRef.current) {
-        clearInterval(pollIntervalRef.current);
+      if (pollTimeoutRef.current) {
+        clearTimeout(pollTimeoutRef.current);
       }
       if (expireTimeoutRef.current) {
         clearTimeout(expireTimeoutRef.current);
@@ -82,9 +83,8 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
     } catch (err: unknown) {
       if (!mountedRef.current) return;
       let message = t('common.error');
-      if (err && typeof err === 'object' && 'response' in err) {
-        const resp = (err as { response?: { data?: { detail?: string } } }).response;
-        if (resp?.data?.detail) message = resp.data.detail;
+      if (isAxiosError(err) && err.response?.data?.detail) {
+        message = err.response.data.detail;
       }
       setOidcError(message);
     } finally {
@@ -224,14 +224,14 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
     };
   }, [isOIDC, botUsername, widgetConfig, loginWithTelegramWidget, navigate, handleScriptFailed]);
 
-  // Deep link auth: request token and start polling
+  // Deep link auth: request token and start polling with recursive setTimeout
   const startDeepLinkAuth = useCallback(async () => {
     setDeepLinkError('');
 
     // Clear any previous timers
-    if (pollIntervalRef.current) {
-      clearInterval(pollIntervalRef.current);
-      pollIntervalRef.current = null;
+    if (pollTimeoutRef.current) {
+      clearTimeout(pollTimeoutRef.current);
+      pollTimeoutRef.current = null;
     }
     if (expireTimeoutRef.current) {
       clearTimeout(expireTimeoutRef.current);
@@ -245,16 +245,12 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
       setDeepLinkBotUsername(bot_username || botUsername);
       setDeepLinkPolling(true);
 
-      // Start polling
-      const intervalId = setInterval(async () => {
-        if (!mountedRef.current) {
-          clearInterval(intervalId);
-          return;
-        }
+      // Recursive setTimeout prevents overlapping async calls
+      const poll = async () => {
+        if (!mountedRef.current) return;
         try {
           await loginWithDeepLink(token);
-          // Success - auth store is updated, navigate
-          clearInterval(intervalId);
+          // Success — auth store is updated, navigate
           if (expireTimeoutRef.current) {
             clearTimeout(expireTimeoutRef.current);
             expireTimeoutRef.current = null;
@@ -264,38 +260,36 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
             navigate('/');
           }
         } catch (err: unknown) {
-          const error = err as { response?: { status?: number } };
-          if (error.response?.status === 202) {
-            // Still pending, continue polling
-            return;
-          }
-          if (error.response?.status === 410) {
-            // Token expired
-            clearInterval(intervalId);
-            if (mountedRef.current) {
+          if (!mountedRef.current) return;
+          if (isAxiosError(err)) {
+            if (err.response?.status === 202) {
+              // Still pending — schedule next poll
+              pollTimeoutRef.current = setTimeout(poll, DEEPLINK_POLL_INTERVAL_MS);
+              return;
+            }
+            if (err.response?.status === 410) {
+              // Token expired
               setDeepLinkPolling(false);
               setDeepLinkToken(null);
               setDeepLinkError(t('auth.deepLinkExpired'));
+              return;
             }
-            return;
           }
-          // Other error - stop polling
-          clearInterval(intervalId);
-          if (mountedRef.current) {
-            setDeepLinkPolling(false);
-            setDeepLinkError(t('common.error'));
-          }
+          // Other error — stop polling
+          setDeepLinkPolling(false);
+          setDeepLinkError(t('common.error'));
         }
-      }, DEEPLINK_POLL_INTERVAL_MS);
+      };
 
-      pollIntervalRef.current = intervalId;
+      // Start first poll
+      pollTimeoutRef.current = setTimeout(poll, DEEPLINK_POLL_INTERVAL_MS);
 
       // Auto-expire after server-provided TTL
-      const expireId = setTimeout(
+      expireTimeoutRef.current = setTimeout(
         () => {
-          if (pollIntervalRef.current) {
-            clearInterval(pollIntervalRef.current);
-            pollIntervalRef.current = null;
+          if (pollTimeoutRef.current) {
+            clearTimeout(pollTimeoutRef.current);
+            pollTimeoutRef.current = null;
           }
           if (mountedRef.current && !useAuthStore.getState().isAuthenticated) {
             setDeepLinkPolling(false);
@@ -305,17 +299,22 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
         },
         (expires_in || 300) * 1000,
       );
-
-      expireTimeoutRef.current = expireId;
     } catch {
       setDeepLinkError(t('common.error'));
     }
   }, [botUsername, loginWithDeepLink, navigate, t]);
 
-  // Auto-start deep link auth when script fails
+  // Auto-start deep link auth when script fails (with cancellation for Strict Mode)
   useEffect(() => {
     if (scriptFailed && !deepLinkToken && !deepLinkPolling) {
-      startDeepLinkAuth();
+      let cancelled = false;
+      const start = async () => {
+        if (!cancelled) await startDeepLinkAuth();
+      };
+      start();
+      return () => {
+        cancelled = true;
+      };
     }
   }, [scriptFailed, deepLinkToken, deepLinkPolling, startDeepLinkAuth]);
 
