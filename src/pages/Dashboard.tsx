@@ -235,11 +235,11 @@ export default function Dashboard() {
         <h1 className="text-2xl font-bold text-dark-50 sm:text-3xl">
           {t('dashboard.welcome', { name: user?.first_name || user?.username || '' })}
         </h1>
-        <div className="mt-1 flex items-center gap-2">
+        <div className="mt-1 flex flex-wrap items-center gap-2">
           <p className="text-dark-400">{t('dashboard.yourSubscription')}</p>
           {promoGroupData?.group_name && (
             <span
-              className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
+              className="inline-flex max-w-[160px] items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
               style={{
                 background: 'rgba(var(--color-accent-400), 0.1)',
                 border: '1px solid rgba(var(--color-accent-400), 0.2)',
@@ -247,6 +247,7 @@ export default function Dashboard() {
               }}
             >
               <svg
+                className="shrink-0"
                 width="10"
                 height="10"
                 viewBox="0 0 24 24"
@@ -255,7 +256,7 @@ export default function Dashboard() {
               >
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
               </svg>
-              {promoGroupData.group_name}
+              <span className="truncate">{promoGroupData.group_name}</span>
             </span>
           )}
         </div>
