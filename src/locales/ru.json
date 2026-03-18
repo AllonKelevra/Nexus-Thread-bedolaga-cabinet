@@ -966,6 +966,7 @@
     "days_many": "{{count}} дней",
     "subscriptionDays": "Дни подписки",
     "day": "День",
+    "spinCost": "Стоимость вращения",
     "spin": "КРУТИТЬ!",
     "spinning": "Крутится...",
     "history": "История",

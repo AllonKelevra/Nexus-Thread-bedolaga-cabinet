@@ -779,6 +779,7 @@
     "days_other": "{{count}} 天",
     "subscriptionDays": "订阅天数",
     "day": "天",
+    "spinCost": "抽奖费用",
     "spin": "开始抽奖！",
     "spinning": "抽奖中...",
     "history": "历史",

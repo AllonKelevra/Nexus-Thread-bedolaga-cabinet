@@ -937,6 +937,7 @@
     "days_other": "{{count}} days",
     "subscriptionDays": "Subscription days",
     "day": "Day",
+    "spinCost": "Spin cost",
     "spin": "SPIN!",
     "spinning": "Spinning...",
     "history": "History",
