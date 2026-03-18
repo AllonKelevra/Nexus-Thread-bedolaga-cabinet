@@ -1000,7 +1000,8 @@
         "newTrials": "آزمایشی جدید",
         "conversion": "تبدیل",
         "renewals": "تمدید",
-        "addonRevenue": "درآمد خدمات اضافی"
+        "addonRevenue": "درآمد خدمات اضافی",
+        "manualTopup": "شارژ دستی"
       },
       "trials": {
         "total": "کل آزمایشی",
