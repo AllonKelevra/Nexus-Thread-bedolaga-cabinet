@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { referralNetworkApi } from '@/api/referralNetwork';
@@ -28,7 +29,7 @@ export function ReferralNetwork() {
 
   const isPanelOpen = selectedNode !== null;
 
-  return (
+  return createPortal(
     <div
       id="referral-network-container"
       className="fixed inset-x-0 bottom-0 top-16 z-40 grid grid-rows-[auto_1fr] bg-[#0a0a0f] lg:top-14"
@@ -103,6 +104,7 @@ export function ReferralNetwork() {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

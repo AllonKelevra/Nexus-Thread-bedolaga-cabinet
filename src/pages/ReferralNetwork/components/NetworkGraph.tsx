@@ -21,7 +21,7 @@ function buildFullGraph(graphData: NetworkGraphData): Graph {
       label: campaign.name,
       x: Math.random() * 100,
       y: Math.random() * 100,
-      size: 24,
+      size: 16,
       color: getCampaignColor(index),
       type: 'circle',
       nodeType: 'campaign',
@@ -53,8 +53,8 @@ function buildFullGraph(graphData: NetworkGraphData): Graph {
       const edgeKey = `${edge.source}->${edge.target}`;
       if (!graph.hasEdge(edgeKey)) {
         graph.addEdgeWithKey(edgeKey, edge.source, edge.target, {
-          color: edge.type === 'campaign' ? 'rgba(77, 217, 192, 0.12)' : 'rgba(255,255,255,0.06)',
-          size: 0.5,
+          color: edge.type === 'campaign' ? 'rgba(77, 217, 192, 0.06)' : 'rgba(255,255,255,0.03)',
+          size: 0.3,
           edgeType: edge.type,
         });
       }
@@ -183,14 +183,14 @@ export function NetworkGraph({ data, className }: NetworkGraphProps) {
 
       const sigma = new Sigma(graph, container, {
         renderEdgeLabels: false,
-        labelDensity: 0.5,
-        labelRenderedSizeThreshold: 6,
+        labelDensity: 0.12,
+        labelRenderedSizeThreshold: 14,
         zIndex: true,
-        defaultEdgeColor: '#ffffff10',
+        defaultEdgeColor: '#ffffff06',
         defaultNodeColor: '#6b7280',
         labelColor: { color: '#e8e6f0' },
         labelFont: 'Inter, system-ui, sans-serif',
-        labelSize: 12,
+        labelSize: 11,
         stagePadding: 40,
         nodeReducer: (node, attrs) => {
           const res = { ...attrs };
