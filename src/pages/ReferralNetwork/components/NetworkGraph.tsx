@@ -128,172 +128,184 @@ export function NetworkGraph({ data, className }: NetworkGraphProps) {
   useEffect(() => {
     if (!containerRef.current || !data) return;
 
-    // Cleanup previous instance
-    killFA2();
-    if (sigmaRef.current) {
-      sigmaRef.current.kill();
-      sigmaRef.current = null;
-    }
+    const container = containerRef.current;
 
-    const graph = buildFullGraph(data);
-    graphRef.current = graph;
+    // Defer initialization to next frame so the browser computes layout first.
+    // Without this, container.offsetHeight is 0 and Sigma throws.
+    const rafId = requestAnimationFrame(() => {
+      if (!container.isConnected) return;
 
-    // Compute initial hidden set from current filters
-    const initialFilters = useReferralNetworkStore.getState().filters;
-    hiddenNodesRef.current = computeHiddenNodes(graph, initialFilters);
+      // Cleanup previous instance
+      killFA2();
+      if (sigmaRef.current) {
+        sigmaRef.current.kill();
+        sigmaRef.current = null;
+      }
 
-    const sigma = new Sigma(graph, containerRef.current, {
-      renderEdgeLabels: false,
-      labelDensity: 0.5,
-      labelRenderedSizeThreshold: 6,
-      zIndex: true,
-      defaultEdgeColor: '#ffffff10',
-      defaultNodeColor: '#6b7280',
-      labelColor: { color: '#e8e6f0' },
-      labelFont: 'Inter, system-ui, sans-serif',
-      labelSize: 12,
-      stagePadding: 40,
-      nodeReducer: (node, attrs) => {
-        const res = { ...attrs };
+      const graph = buildFullGraph(data);
+      graphRef.current = graph;
 
-        // Filter visibility (read from pre-computed set)
-        if (hiddenNodesRef.current.has(node)) {
-          res.hidden = true;
-          return res;
-        }
+      // Compute initial hidden set from current filters
+      const initialFilters = useReferralNetworkStore.getState().filters;
+      hiddenNodesRef.current = computeHiddenNodes(graph, initialFilters);
 
-        const store = useReferralNetworkStore.getState();
-        const hovered = store.hoveredNodeId;
-        const highlighted = store.highlightedNodes;
+      const sigma = new Sigma(graph, container, {
+        allowInvalidContainer: true,
+        renderEdgeLabels: false,
+        labelDensity: 0.5,
+        labelRenderedSizeThreshold: 6,
+        zIndex: true,
+        defaultEdgeColor: '#ffffff10',
+        defaultNodeColor: '#6b7280',
+        labelColor: { color: '#e8e6f0' },
+        labelFont: 'Inter, system-ui, sans-serif',
+        labelSize: 12,
+        stagePadding: 40,
+        nodeReducer: (node, attrs) => {
+          const res = { ...attrs };
 
-        // Search highlighting
-        if (highlighted.size > 0) {
-          if (highlighted.has(node)) {
-            res.highlighted = true;
-            res.zIndex = 2;
-          } else {
-            res.color = `${attrs.color}33`;
-            res.label = '';
-            res.zIndex = 0;
-          }
-        }
-
-        // Hover highlighting
-        if (hovered) {
-          if (node === hovered) {
-            res.highlighted = true;
-            res.zIndex = 2;
-          } else if (graph.hasNode(hovered) && graph.areNeighbors(node, hovered)) {
-            res.highlighted = true;
-            res.zIndex = 1;
-          } else if (!highlighted.has(node)) {
-            res.color = `${attrs.color}33`;
-            res.label = '';
-            res.zIndex = 0;
-          }
-        }
-
-        return res;
-      },
-      edgeReducer: (edge, attrs) => {
-        const res = { ...attrs };
-
-        // Hide edges connected to filtered-out nodes
-        const [source, target] = graph.extremities(edge);
-        if (hiddenNodesRef.current.has(source) || hiddenNodesRef.current.has(target)) {
-          res.hidden = true;
-          return res;
-        }
-
-        const store = useReferralNetworkStore.getState();
-        const hovered = store.hoveredNodeId;
-        const highlighted = store.highlightedNodes;
-
-        if (hovered && graph.hasNode(hovered)) {
-          if (!graph.hasExtremity(edge, hovered)) {
+          // Filter visibility (read from pre-computed set)
+          if (hiddenNodesRef.current.has(node)) {
             res.hidden = true;
-          } else {
-            res.color = '#ffffff30';
-            res.size = 1;
+            return res;
           }
-        } else if (highlighted.size > 0) {
-          if (!highlighted.has(source) && !highlighted.has(target)) {
+
+          const store = useReferralNetworkStore.getState();
+          const hovered = store.hoveredNodeId;
+          const highlighted = store.highlightedNodes;
+
+          // Search highlighting
+          if (highlighted.size > 0) {
+            if (highlighted.has(node)) {
+              res.highlighted = true;
+              res.zIndex = 2;
+            } else {
+              res.color = `${attrs.color}33`;
+              res.label = '';
+              res.zIndex = 0;
+            }
+          }
+
+          // Hover highlighting
+          if (hovered) {
+            if (node === hovered) {
+              res.highlighted = true;
+              res.zIndex = 2;
+            } else if (graph.hasNode(hovered) && graph.areNeighbors(node, hovered)) {
+              res.highlighted = true;
+              res.zIndex = 1;
+            } else if (!highlighted.has(node)) {
+              res.color = `${attrs.color}33`;
+              res.label = '';
+              res.zIndex = 0;
+            }
+          }
+
+          return res;
+        },
+        edgeReducer: (edge, attrs) => {
+          const res = { ...attrs };
+
+          // Hide edges connected to filtered-out nodes
+          const [source, target] = graph.extremities(edge);
+          if (hiddenNodesRef.current.has(source) || hiddenNodesRef.current.has(target)) {
             res.hidden = true;
+            return res;
           }
-        }
 
-        return res;
-      },
-    });
+          const store = useReferralNetworkStore.getState();
+          const hovered = store.hoveredNodeId;
+          const highlighted = store.highlightedNodes;
 
-    sigmaRef.current = sigma;
+          if (hovered && graph.hasNode(hovered)) {
+            if (!graph.hasExtremity(edge, hovered)) {
+              res.hidden = true;
+            } else {
+              res.color = '#ffffff30';
+              res.size = 1;
+            }
+          } else if (highlighted.size > 0) {
+            if (!highlighted.has(source) && !highlighted.has(target)) {
+              res.hidden = true;
+            }
+          }
 
-    // Expose to module-level globals for search/controls
-    setSigmaInstance(sigma);
-    setGraphInstance(graph);
-
-    // Start ForceAtlas2 in a web worker (non-blocking)
-    if (graph.order > 0) {
-      const supervisor = new FA2LayoutSupervisor(graph, {
-        settings: {
-          gravity: 0.5,
-          scalingRatio: 10,
-          barnesHutOptimize: true,
-          slowDown: 2,
+          return res;
         },
       });
-      fa2Ref.current = supervisor;
-      supervisor.start();
 
-      // Kill after a fixed duration to free the web worker thread
-      fa2TimerRef.current = setTimeout(() => {
-        if (fa2Ref.current === supervisor) {
-          supervisor.kill();
-          fa2Ref.current = null;
+      sigmaRef.current = sigma;
+
+      // Expose to module-level globals for search/controls
+      setSigmaInstance(sigma);
+      setGraphInstance(graph);
+
+      // Start ForceAtlas2 in a web worker (non-blocking)
+      if (graph.order > 0) {
+        const supervisor = new FA2LayoutSupervisor(graph, {
+          settings: {
+            gravity: 0.5,
+            scalingRatio: 10,
+            barnesHutOptimize: true,
+            slowDown: 2,
+          },
+        });
+        fa2Ref.current = supervisor;
+        supervisor.start();
+
+        // Kill after a fixed duration to free the web worker thread
+        fa2TimerRef.current = setTimeout(() => {
+          if (fa2Ref.current === supervisor) {
+            supervisor.kill();
+            fa2Ref.current = null;
+          }
+          fa2TimerRef.current = null;
+        }, FA2_DURATION_MS);
+      }
+
+      // Click handler
+      sigma.on('clickNode', ({ node }) => {
+        const attrs = graph.getNodeAttributes(node);
+        const nodeType = attrs.nodeType;
+        const nodeId = attrs.nodeId;
+
+        if (typeof nodeId !== 'number') return;
+
+        if (nodeType === 'user') {
+          setSelectedNode({ type: 'user', id: nodeId });
+        } else if (nodeType === 'campaign') {
+          setSelectedNode({ type: 'campaign', id: nodeId });
         }
-        fa2TimerRef.current = null;
-      }, FA2_DURATION_MS);
-    }
+      });
 
-    // Click handler
-    sigma.on('clickNode', ({ node }) => {
-      const attrs = graph.getNodeAttributes(node);
-      const nodeType = attrs.nodeType;
-      const nodeId = attrs.nodeId;
+      // Click on stage deselects
+      sigma.on('clickStage', () => {
+        setSelectedNode(null);
+      });
 
-      if (typeof nodeId !== 'number') return;
+      // Hover handler
+      sigma.on('enterNode', ({ node }) => {
+        setHoveredNode(node);
+        if (containerRef.current) {
+          containerRef.current.style.cursor = 'pointer';
+        }
+      });
 
-      if (nodeType === 'user') {
-        setSelectedNode({ type: 'user', id: nodeId });
-      } else if (nodeType === 'campaign') {
-        setSelectedNode({ type: 'campaign', id: nodeId });
-      }
-    });
-
-    // Click on stage deselects
-    sigma.on('clickStage', () => {
-      setSelectedNode(null);
-    });
-
-    // Hover handler
-    sigma.on('enterNode', ({ node }) => {
-      setHoveredNode(node);
-      if (containerRef.current) {
-        containerRef.current.style.cursor = 'pointer';
-      }
-    });
-
-    sigma.on('leaveNode', () => {
-      setHoveredNode(null);
-      if (containerRef.current) {
-        containerRef.current.style.cursor = 'default';
-      }
-    });
+      sigma.on('leaveNode', () => {
+        setHoveredNode(null);
+        if (containerRef.current) {
+          containerRef.current.style.cursor = 'default';
+        }
+      });
+    }); // end requestAnimationFrame
 
     return () => {
+      cancelAnimationFrame(rafId);
       killFA2();
-      sigma.kill();
-      sigmaRef.current = null;
+      if (sigmaRef.current) {
+        sigmaRef.current.kill();
+        sigmaRef.current = null;
+      }
       graphRef.current = null;
       setSigmaInstance(null);
       setGraphInstance(null);
