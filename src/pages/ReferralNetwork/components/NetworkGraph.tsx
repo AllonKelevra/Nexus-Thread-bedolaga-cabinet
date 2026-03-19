@@ -236,9 +236,10 @@ export function NetworkGraph({ data, className }: NetworkGraphProps) {
     if (graph.order > 0) {
       const supervisor = new FA2LayoutSupervisor(graph, {
         settings: {
-          gravity: 1,
-          scalingRatio: 2,
+          gravity: 0.5,
+          scalingRatio: 10,
           barnesHutOptimize: true,
+          slowDown: 2,
         },
       });
       fa2Ref.current = supervisor;

@@ -31,7 +31,7 @@ export function ReferralNetwork() {
   return (
     <div
       id="referral-network-container"
-      className="relative flex h-[calc(100vh-64px)] flex-col overflow-hidden bg-[#0a0a0f]"
+      className="relative flex h-[calc(100dvh-64px)] flex-col overflow-hidden bg-[#0a0a0f]"
     >
       {/* Top bar */}
       <div className="relative z-20 flex shrink-0 items-center gap-3 border-b border-dark-700/50 bg-dark-900/90 px-4 py-3 backdrop-blur-md">
@@ -86,13 +86,13 @@ export function ReferralNetwork() {
               <NetworkStats data={networkData} />
             </div>
 
-            {/* Bottom-right: legend */}
-            <div className="absolute bottom-4 right-4 z-10">
+            {/* Bottom-right: legend (hidden on mobile to avoid overlap) */}
+            <div className="absolute bottom-4 right-4 z-10 hidden sm:block">
               <NetworkLegend />
             </div>
 
-            {/* Bottom-center: controls */}
-            <div className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2">
+            {/* Bottom-right on mobile, bottom-center on desktop: controls */}
+            <div className="absolute bottom-4 right-4 z-10 sm:left-1/2 sm:right-auto sm:-translate-x-1/2">
               <NetworkControls />
             </div>
           </>
