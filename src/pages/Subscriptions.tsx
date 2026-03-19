@@ -42,19 +42,20 @@ function SubscriptionCard({
   subscription: SubscriptionListItem;
   onClick: () => void;
 }) {
-  const { theme } = useTheme();
-  const glass = getGlassColors(theme);
-  const haptic = useHaptic();
+  const { isDark } = useTheme();
+  const g = getGlassColors(isDark);
+  const { impact } = useHaptic();
 
   const handleClick = () => {
-    haptic?.();
+    impact('light');
     onClick();
   };
 
   return (
     <button
       onClick={handleClick}
-      className={`w-full rounded-2xl p-4 text-left transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] ${glass.card} ${glass.border} border`}
+      className="bento-card w-full text-left transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
+      style={{ background: g.cardBg, borderColor: g.cardBorder }}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -101,11 +102,8 @@ function SubscriptionCard({
 }
 
 function EmptyState({ onBuy }: { onBuy: () => void }) {
-  const { theme } = useTheme();
-  const glass = getGlassColors(theme);
-
   return (
-    <div className={`rounded-2xl p-6 text-center ${glass.card} ${glass.border} border`}>
+    <div className="bento-card p-6 text-center">
       <div className="mb-3 text-4xl">📋</div>
       <h3 className="mb-1 text-lg font-semibold">Нет подписок</h3>
       <p className="mb-4 text-sm opacity-60">У вас пока нет активных подписок</p>
