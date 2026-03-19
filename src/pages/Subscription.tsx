@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import { subscriptionApi } from '../api/subscription';
 import TrafficProgressBar from '../components/dashboard/TrafficProgressBar';
 import { HoverBorderGradient } from '../components/ui/hover-border-gradient';
@@ -168,6 +168,8 @@ export default function Subscription() {
   const queryClient = useQueryClient();
   const { formatAmount, currencySymbol } = useCurrency();
   const navigate = useNavigate();
+  const { subscriptionId: subIdParam } = useParams<{ subscriptionId?: string }>();
+  const subscriptionId = subIdParam ? parseInt(subIdParam, 10) : undefined;
   const { isDark } = useTheme();
   const g = getGlassColors(isDark);
   const haptic = useHaptic();
@@ -195,10 +197,10 @@ export default function Subscription() {
   } | null>(null);
 
   const { data: subscriptionResponse, isLoading } = useQuery({
-    queryKey: ['subscription'],
-    queryFn: subscriptionApi.getSubscription,
+    queryKey: ['subscription', subscriptionId],
+    queryFn: () => subscriptionApi.getSubscription(subscriptionId),
     retry: false,
-    staleTime: 0, // Always refetch to get latest data
+    staleTime: 0,
     refetchOnMount: 'always',
   });
 
@@ -211,8 +213,8 @@ export default function Subscription() {
 
   // Purchase options (needed for balance_kopeks in device/traffic/server management)
   const { data: purchaseOptions } = useQuery({
-    queryKey: ['purchase-options'],
-    queryFn: subscriptionApi.getPurchaseOptions,
+    queryKey: ['purchase-options', subscriptionId],
+    queryFn: () => subscriptionApi.getPurchaseOptions(subscriptionId),
     staleTime: 0,
     refetchOnMount: 'always',
   });
@@ -220,40 +222,41 @@ export default function Subscription() {
   const isTariffsMode = purchaseOptions?.sales_mode === 'tariffs';
 
   const autopayMutation = useMutation({
-    mutationFn: (enabled: boolean) => subscriptionApi.updateAutopay(enabled),
+    mutationFn: (enabled: boolean) =>
+      subscriptionApi.updateAutopay(enabled, undefined, subscriptionId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['subscription'] });
+      queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
     },
   });
 
   // Devices query
   const { data: devicesData, isLoading: devicesLoading } = useQuery({
-    queryKey: ['devices'],
-    queryFn: subscriptionApi.getDevices,
+    queryKey: ['devices', subscriptionId],
+    queryFn: () => subscriptionApi.getDevices(subscriptionId),
     enabled: !!subscription,
   });
 
   // Delete device mutation
   const deleteDeviceMutation = useMutation({
-    mutationFn: (hwid: string) => subscriptionApi.deleteDevice(hwid),
+    mutationFn: (hwid: string) => subscriptionApi.deleteDevice(hwid, subscriptionId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['devices'] });
+      queryClient.invalidateQueries({ queryKey: ['devices', subscriptionId] });
     },
   });
 
   // Delete all devices mutation
   const deleteAllDevicesMutation = useMutation({
-    mutationFn: () => subscriptionApi.deleteAllDevices(),
+    mutationFn: () => subscriptionApi.deleteAllDevices(subscriptionId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['devices'] });
+      queryClient.invalidateQueries({ queryKey: ['devices', subscriptionId] });
     },
   });
 
   // Pause subscription mutation
   const pauseMutation = useMutation({
-    mutationFn: () => subscriptionApi.togglePause(),
+    mutationFn: () => subscriptionApi.togglePause(subscriptionId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['subscription'] });
+      queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
       queryClient.invalidateQueries({ queryKey: ['balance'] });
     },
   });
@@ -269,17 +272,17 @@ export default function Subscription() {
 
   // Device price query
   const { data: devicePriceData } = useQuery({
-    queryKey: ['device-price', devicesToAdd],
-    queryFn: () => subscriptionApi.getDevicePrice(devicesToAdd),
+    queryKey: ['device-price', devicesToAdd, subscriptionId],
+    queryFn: () => subscriptionApi.getDevicePrice(devicesToAdd, subscriptionId),
     enabled: showDeviceTopup && !!subscription,
   });
 
   // Device purchase mutation
   const devicePurchaseMutation = useMutation({
-    mutationFn: () => subscriptionApi.purchaseDevices(devicesToAdd),
+    mutationFn: () => subscriptionApi.purchaseDevices(devicesToAdd, subscriptionId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['subscription'] });
-      queryClient.invalidateQueries({ queryKey: ['devices'] });
+      queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
+      queryClient.invalidateQueries({ queryKey: ['devices', subscriptionId] });
       queryClient.invalidateQueries({ queryKey: ['device-price'] });
       setShowDeviceTopup(false);
       setDevicesToAdd(1);
@@ -288,8 +291,8 @@ export default function Subscription() {
 
   // Device reduction info query
   const { data: deviceReductionInfo } = useQuery({
-    queryKey: ['device-reduction-info'],
-    queryFn: subscriptionApi.getDeviceReductionInfo,
+    queryKey: ['device-reduction-info', subscriptionId],
+    queryFn: () => subscriptionApi.getDeviceReductionInfo(subscriptionId),
     enabled: showDeviceReduction && !!subscription,
   });
 
@@ -307,27 +310,27 @@ export default function Subscription() {
 
   // Device reduction mutation
   const deviceReductionMutation = useMutation({
-    mutationFn: () => subscriptionApi.reduceDevices(targetDeviceLimit),
+    mutationFn: () => subscriptionApi.reduceDevices(targetDeviceLimit, subscriptionId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['subscription'] });
-      queryClient.invalidateQueries({ queryKey: ['devices'] });
-      queryClient.invalidateQueries({ queryKey: ['device-reduction-info'] });
+      queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
+      queryClient.invalidateQueries({ queryKey: ['devices', subscriptionId] });
+      queryClient.invalidateQueries({ queryKey: ['device-reduction-info', subscriptionId] });
       setShowDeviceReduction(false);
     },
   });
 
   // Traffic packages query
   const { data: trafficPackages } = useQuery({
-    queryKey: ['traffic-packages'],
-    queryFn: subscriptionApi.getTrafficPackages,
+    queryKey: ['traffic-packages', subscriptionId],
+    queryFn: () => subscriptionApi.getTrafficPackages(subscriptionId),
     enabled: showTrafficTopup && !!subscription,
   });
 
   // Traffic purchase mutation
   const trafficPurchaseMutation = useMutation({
-    mutationFn: (gb: number) => subscriptionApi.purchaseTraffic(gb),
+    mutationFn: (gb: number) => subscriptionApi.purchaseTraffic(gb, subscriptionId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['subscription'] });
+      queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
       setShowTrafficTopup(false);
       setSelectedTrafficPackage(null);
     },
@@ -335,8 +338,8 @@ export default function Subscription() {
 
   // Countries/servers query
   const { data: countriesData, isLoading: countriesLoading } = useQuery({
-    queryKey: ['countries'],
-    queryFn: subscriptionApi.getCountries,
+    queryKey: ['countries', subscriptionId],
+    queryFn: () => subscriptionApi.getCountries(subscriptionId),
     enabled: showServerManagement && !!subscription && !subscription.is_trial,
   });
 
@@ -350,17 +353,17 @@ export default function Subscription() {
 
   // Countries update mutation
   const updateCountriesMutation = useMutation({
-    mutationFn: (countries: string[]) => subscriptionApi.updateCountries(countries),
+    mutationFn: (countries: string[]) => subscriptionApi.updateCountries(countries, subscriptionId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['subscription'] });
-      queryClient.invalidateQueries({ queryKey: ['countries'] });
+      queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
+      queryClient.invalidateQueries({ queryKey: ['countries', subscriptionId] });
       setShowServerManagement(false);
     },
   });
 
   // Traffic refresh mutation
   const refreshTrafficMutation = useMutation({
-    mutationFn: subscriptionApi.refreshTraffic,
+    mutationFn: () => subscriptionApi.refreshTraffic(subscriptionId),
     onSuccess: (data) => {
       setTrafficData({
         traffic_used_gb: data.traffic_used_gb,
@@ -1381,7 +1384,7 @@ export default function Subscription() {
                           }
                           compact
                           onBeforeTopUp={async () => {
-                            await subscriptionApi.saveDevicesCart(devicesToAdd);
+                            await subscriptionApi.saveDevicesCart(devicesToAdd, subscriptionId);
                           }}
                         />
                       )}
@@ -1721,7 +1724,10 @@ export default function Subscription() {
                                     compact
                                     className="mb-3"
                                     onBeforeTopUp={async () => {
-                                      await subscriptionApi.saveTrafficCart(selectedTrafficPackage);
+                                      await subscriptionApi.saveTrafficCart(
+                                        selectedTrafficPackage,
+                                        subscriptionId,
+                                      );
                                     }}
                                   />
                                 )}

@@ -57,12 +57,12 @@ export default function SubscriptionCardExpired({
     try {
       if (isDisabledDaily) {
         // Resume daily subscription via toggle pause endpoint
-        await subscriptionApi.togglePause();
+        await subscriptionApi.togglePause(subscription.id);
       } else if (isDaily && subscription.tariff_id) {
         // Expired daily tariff — purchase for 1 day
         await subscriptionApi.purchaseTariff(subscription.tariff_id, 1);
       } else {
-        await subscriptionApi.renewSubscription(30);
+        await subscriptionApi.renewSubscription(30, subscription.id);
       }
       haptic.success();
       queryClient.invalidateQueries({ queryKey: ['subscription'] });

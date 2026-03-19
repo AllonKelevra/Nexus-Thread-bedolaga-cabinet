@@ -51,7 +51,7 @@ export default function Dashboard() {
 
   const { data: subscriptionResponse, isLoading: subLoading } = useQuery({
     queryKey: ['subscription'],
-    queryFn: subscriptionApi.getSubscription,
+    queryFn: () => subscriptionApi.getSubscription(),
     retry: false,
     staleTime: API.BALANCE_STALE_TIME_MS,
     refetchOnMount: 'always',
@@ -59,15 +59,24 @@ export default function Dashboard() {
 
   const subscription = subscriptionResponse?.subscription ?? null;
 
+  // Multi-tariff: check if user has multiple subscriptions
+  const { data: multiSubData } = useQuery({
+    queryKey: ['subscriptions-list'],
+    queryFn: () => subscriptionApi.getSubscriptions(),
+    staleTime: 60_000,
+  });
+  const isMultiTariff = multiSubData?.multi_tariff_enabled ?? false;
+  const multiSubCount = multiSubData?.subscriptions?.length ?? 0;
+
   const { data: trialInfo, isLoading: trialLoading } = useQuery({
     queryKey: ['trial-info'],
-    queryFn: subscriptionApi.getTrialInfo,
+    queryFn: () => subscriptionApi.getTrialInfo(),
     enabled: !subscription && !subLoading,
   });
 
   const { data: devicesData } = useQuery({
     queryKey: ['devices'],
-    queryFn: subscriptionApi.getDevices,
+    queryFn: () => subscriptionApi.getDevices(),
     enabled: !!subscription,
     staleTime: API.BALANCE_STALE_TIME_MS,
   });
@@ -99,7 +108,7 @@ export default function Dashboard() {
   });
 
   const activateTrialMutation = useMutation({
-    mutationFn: subscriptionApi.activateTrial,
+    mutationFn: () => subscriptionApi.activateTrial(),
     onSuccess: () => {
       setTrialError(null);
       queryClient.invalidateQueries({ queryKey: ['subscription'] });
@@ -122,7 +131,7 @@ export default function Dashboard() {
   } | null>(null);
 
   const refreshTrafficMutation = useMutation({
-    mutationFn: subscriptionApi.refreshTraffic,
+    mutationFn: () => subscriptionApi.refreshTraffic(),
     onSuccess: (data) => {
       setTrafficData({
         traffic_used_gb: data.traffic_used_gb,
@@ -265,6 +274,21 @@ export default function Dashboard() {
 
       {/* Pending Gift Activations */}
       {pendingGifts && pendingGifts.length > 0 && <PendingGiftCard gifts={pendingGifts} />}
+
+      {/* Multi-tariff: show link to subscriptions list */}
+      {isMultiTariff && multiSubCount > 1 && (
+        <Link to="/subscriptions" className="bento-card flex items-center justify-between">
+          <div>
+            <div className="text-sm font-medium opacity-60">
+              {t('dashboard.subscriptions', 'Подписки')}
+            </div>
+            <div className="text-lg font-bold">
+              {multiSubCount} {t('dashboard.activeTariffs', 'активных тарифов')}
+            </div>
+          </div>
+          <ChevronRightIcon />
+        </Link>
+      )}
 
       {/* Subscription Status Card */}
       {subLoading ? (

@@ -110,6 +110,29 @@ export interface SubscriptionStatusResponse {
   subscription: Subscription | null;
 }
 
+// Multi-tariff subscription list item (from GET /cabinet/subscriptions)
+export interface SubscriptionListItem {
+  id: number;
+  status: string;
+  tariff_id: number | null;
+  tariff_name: string | null;
+  traffic_limit_gb: number;
+  traffic_used_gb: number;
+  device_limit: number;
+  end_date: string | null;
+  subscription_url: string | null;
+  subscription_crypto_link: string | null;
+  is_trial: boolean;
+  autopay_enabled: boolean;
+  connected_squads: string[] | null;
+}
+
+// Response from GET /cabinet/subscriptions (multi-tariff)
+export interface SubscriptionsListResponse {
+  subscriptions: SubscriptionListItem[];
+  multi_tariff_enabled: boolean;
+}
+
 // Device types
 export interface Device {
   hwid: string;
