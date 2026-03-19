@@ -13,10 +13,6 @@ interface NetworkGraphProps {
   className?: string;
 }
 
-/**
- * Build the full graph from data (no filter logic).
- * Stores filter-relevant attributes on nodes so reducers can check them.
- */
 function buildFullGraph(graphData: NetworkGraphData): Graph {
   const graph = new Graph();
 
@@ -25,7 +21,7 @@ function buildFullGraph(graphData: NetworkGraphData): Graph {
       label: campaign.name,
       x: Math.random() * 100,
       y: Math.random() * 100,
-      size: 18,
+      size: 24,
       color: getCampaignColor(index),
       type: 'circle',
       nodeType: 'campaign',
@@ -68,9 +64,6 @@ function buildFullGraph(graphData: NetworkGraphData): Graph {
   return graph;
 }
 
-/**
- * Compute set of node keys that should be hidden based on current filters.
- */
 function computeHiddenNodes(graph: Graph, filters: NetworkFilters): Set<string> {
   const hidden = new Set<string>();
   const filterCampaignSet = new Set(filters.campaigns);
@@ -99,7 +92,43 @@ function computeHiddenNodes(graph: Graph, filters: NetworkFilters): Set<string> 
   return hidden;
 }
 
-const FA2_DURATION_MS = 5000;
+const FA2_DURATION_MS = 3000;
+
+function clampOutlierPositions(graph: Graph): void {
+  const xs: number[] = [];
+  const ys: number[] = [];
+
+  graph.forEachNode((_, attrs) => {
+    xs.push(attrs.x as number);
+    ys.push(attrs.y as number);
+  });
+
+  if (xs.length < 2) return;
+
+  const meanX = xs.reduce((a, b) => a + b, 0) / xs.length;
+  const meanY = ys.reduce((a, b) => a + b, 0) / ys.length;
+
+  const stdX = Math.sqrt(xs.reduce((sum, x) => sum + (x - meanX) ** 2, 0) / xs.length) || 1;
+  const stdY = Math.sqrt(ys.reduce((sum, y) => sum + (y - meanY) ** 2, 0) / ys.length) || 1;
+
+  const MAX_STD = 3;
+  const minX = meanX - MAX_STD * stdX;
+  const maxX = meanX + MAX_STD * stdX;
+  const minY = meanY - MAX_STD * stdY;
+  const maxY = meanY + MAX_STD * stdY;
+
+  graph.forEachNode((node, attrs) => {
+    const x = attrs.x as number;
+    const y = attrs.y as number;
+    const clampedX = Math.max(minX, Math.min(maxX, x));
+    const clampedY = Math.max(minY, Math.min(maxY, y));
+
+    if (clampedX !== x || clampedY !== y) {
+      graph.setNodeAttribute(node, 'x', clampedX);
+      graph.setNodeAttribute(node, 'y', clampedY);
+    }
+  });
+}
 
 export function NetworkGraph({ data, className }: NetworkGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -114,6 +143,7 @@ export function NetworkGraph({ data, className }: NetworkGraphProps) {
   const hoveredNodeId = useReferralNetworkStore((s) => s.hoveredNodeId);
   const highlightedNodes = useReferralNetworkStore((s) => s.highlightedNodes);
   const filters = useReferralNetworkStore((s) => s.filters);
+
   const killFA2 = useCallback(() => {
     if (fa2TimerRef.current !== null) {
       clearTimeout(fa2TimerRef.current);
@@ -125,7 +155,6 @@ export function NetworkGraph({ data, className }: NetworkGraphProps) {
     }
   }, []);
 
-  // Initialize sigma — only re-runs when data changes (NOT on filter changes)
   useEffect(() => {
     if (!containerRef.current || !data) return;
 
@@ -133,7 +162,6 @@ export function NetworkGraph({ data, className }: NetworkGraphProps) {
     let rafId: number;
     let cancelled = false;
 
-    // Poll until container has real dimensions (browser needs a frame to compute layout)
     function tryInit() {
       if (cancelled || !container.isConnected) return;
       if (container.offsetWidth === 0 || container.offsetHeight === 0) {
@@ -141,7 +169,6 @@ export function NetworkGraph({ data, className }: NetworkGraphProps) {
         return;
       }
 
-      // Cleanup previous instance
       killFA2();
       if (sigmaRef.current) {
         sigmaRef.current.kill();
@@ -151,7 +178,6 @@ export function NetworkGraph({ data, className }: NetworkGraphProps) {
       const graph = buildFullGraph(data);
       graphRef.current = graph;
 
-      // Compute initial hidden set from current filters
       const initialFilters = useReferralNetworkStore.getState().filters;
       hiddenNodesRef.current = computeHiddenNodes(graph, initialFilters);
 
@@ -169,7 +195,6 @@ export function NetworkGraph({ data, className }: NetworkGraphProps) {
         nodeReducer: (node, attrs) => {
           const res = { ...attrs };
 
-          // Filter visibility (read from pre-computed set)
           if (hiddenNodesRef.current.has(node)) {
             res.hidden = true;
             return res;
@@ -179,7 +204,6 @@ export function NetworkGraph({ data, className }: NetworkGraphProps) {
           const hovered = store.hoveredNodeId;
           const highlighted = store.highlightedNodes;
 
-          // Search highlighting
           if (highlighted.size > 0) {
             if (highlighted.has(node)) {
               res.highlighted = true;
@@ -191,7 +215,6 @@ export function NetworkGraph({ data, className }: NetworkGraphProps) {
             }
           }
 
-          // Hover highlighting
           if (hovered) {
             if (node === hovered) {
               res.highlighted = true;
@@ -211,7 +234,6 @@ export function NetworkGraph({ data, className }: NetworkGraphProps) {
         edgeReducer: (edge, attrs) => {
           const res = { ...attrs };
 
-          // Hide edges connected to filtered-out nodes
           const [source, target] = graph.extremities(edge);
           if (hiddenNodesRef.current.has(source) || hiddenNodesRef.current.has(target)) {
             res.hidden = true;
@@ -240,12 +262,9 @@ export function NetworkGraph({ data, className }: NetworkGraphProps) {
       });
 
       sigmaRef.current = sigma;
-
-      // Expose to module-level globals for search/controls
       setSigmaInstance(sigma);
       setGraphInstance(graph);
 
-      // Start ForceAtlas2 in a web worker (non-blocking)
       if (graph.order > 0) {
         const inferred = inferSettings(graph);
         const supervisor = new FA2LayoutSupervisor(graph, {
@@ -254,13 +273,13 @@ export function NetworkGraph({ data, className }: NetworkGraphProps) {
             linLogMode: true,
             adjustSizes: true,
             barnesHutOptimize: graph.order > 100,
-            slowDown: 5,
+            gravity: 1,
+            slowDown: 2,
           },
         });
         fa2Ref.current = supervisor;
         supervisor.start();
 
-        // Kill after a fixed duration, then fit camera to all nodes
         fa2TimerRef.current = setTimeout(() => {
           if (fa2Ref.current === supervisor) {
             supervisor.kill();
@@ -268,14 +287,17 @@ export function NetworkGraph({ data, className }: NetworkGraphProps) {
           }
           fa2TimerRef.current = null;
 
-          // Fit camera to show all nodes after layout settles
+          if (graphRef.current) {
+            clampOutlierPositions(graphRef.current);
+          }
+
           if (sigmaRef.current) {
+            sigmaRef.current.resize();
             sigmaRef.current.getCamera().animatedReset({ duration: 400 });
           }
         }, FA2_DURATION_MS);
       }
 
-      // Click handler
       sigma.on('clickNode', ({ node }) => {
         const attrs = graph.getNodeAttributes(node);
         const nodeType = attrs.nodeType;
@@ -290,12 +312,10 @@ export function NetworkGraph({ data, className }: NetworkGraphProps) {
         }
       });
 
-      // Click on stage deselects
       sigma.on('clickStage', () => {
         setSelectedNode(null);
       });
 
-      // Hover handler
       sigma.on('enterNode', ({ node }) => {
         setHoveredNode(node);
         if (containerRef.current) {
@@ -327,15 +347,26 @@ export function NetworkGraph({ data, className }: NetworkGraphProps) {
     };
   }, [data, setSelectedNode, setHoveredNode, killFA2]);
 
-  // Recompute hidden nodes when filters change, then refresh sigma
-  // (no graph rebuild — positions and Sigma instance preserved)
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new ResizeObserver(() => {
+      if (sigmaRef.current) {
+        sigmaRef.current.resize();
+      }
+    });
+
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
+
   useEffect(() => {
     if (!graphRef.current || !sigmaRef.current) return;
     hiddenNodesRef.current = computeHiddenNodes(graphRef.current, filters);
     sigmaRef.current.refresh();
   }, [filters]);
 
-  // Refresh sigma on hover/highlight changes
   useEffect(() => {
     if (sigmaRef.current) {
       sigmaRef.current.refresh();

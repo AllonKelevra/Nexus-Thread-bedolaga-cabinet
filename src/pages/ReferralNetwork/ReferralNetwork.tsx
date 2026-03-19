@@ -31,9 +31,8 @@ export function ReferralNetwork() {
   return (
     <div
       id="referral-network-container"
-      className="fixed inset-x-0 bottom-0 top-16 z-40 grid grid-rows-[auto_1fr] bg-[#0a0a0f] sm:top-14"
+      className="fixed inset-x-0 bottom-0 top-16 z-40 grid grid-rows-[auto_1fr] bg-[#0a0a0f] lg:top-14"
     >
-      {/* Top bar */}
       <div className="z-20 border-b border-dark-700/50 bg-dark-900/90 backdrop-blur-md">
         <div className="flex items-center gap-2 px-3 py-2 sm:gap-3 sm:px-4 sm:py-3">
           <AdminBackButton />
@@ -45,9 +44,7 @@ export function ReferralNetwork() {
         </div>
       </div>
 
-      {/* Main content area — grid row takes all remaining space */}
       <div className="relative overflow-hidden">
-        {/* Loading state */}
         {isLoading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center">
             <div className="text-center">
@@ -57,43 +54,36 @@ export function ReferralNetwork() {
           </div>
         )}
 
-        {/* Error state */}
         {isError && (
           <div className="absolute inset-0 z-10 flex items-center justify-center">
             <p className="text-sm text-error-400">{t('admin.referralNetwork.error')}</p>
           </div>
         )}
 
-        {/* Empty state */}
         {networkData && networkData.users.length === 0 && networkData.campaigns.length === 0 && (
           <div className="absolute inset-0 z-10 flex items-center justify-center">
             <p className="text-sm text-dark-500">{t('admin.referralNetwork.empty')}</p>
           </div>
         )}
 
-        {/* Graph — fills entire content area */}
         {networkData && (networkData.users.length > 0 || networkData.campaigns.length > 0) && (
           <>
             <NetworkGraph data={networkData} className="absolute inset-0 h-full w-full" />
 
-            {/* Bottom-left: stats overlay */}
             <div className="absolute bottom-3 left-3 z-10 sm:bottom-4 sm:left-4">
               <NetworkStats data={networkData} />
             </div>
 
-            {/* Bottom-right: legend (hidden on mobile to avoid overlap) */}
             <div className="absolute bottom-3 right-3 z-10 hidden sm:bottom-4 sm:right-4 sm:block">
               <NetworkLegend />
             </div>
 
-            {/* Bottom-center: controls */}
             <div className="absolute bottom-3 left-1/2 z-10 -translate-x-1/2 sm:bottom-4">
               <NetworkControls />
             </div>
           </>
         )}
 
-        {/* Right side panel */}
         <div
           className={`absolute right-0 top-0 z-30 flex h-full w-full flex-col border-l border-dark-700/50 bg-dark-900/95 backdrop-blur-md transition-transform duration-300 ease-in-out sm:w-[400px] ${
             isPanelOpen ? 'translate-x-0' : 'translate-x-full'
