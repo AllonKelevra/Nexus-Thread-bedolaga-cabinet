@@ -46,8 +46,8 @@ export function getUserNodeColor(
  * Size is proportional to direct_referrals, clamped between min and max.
  */
 export function getUserNodeSize(directReferrals: number): number {
-  const MIN_SIZE = 4;
-  const MAX_SIZE = 30;
+  const MIN_SIZE = 8;
+  const MAX_SIZE = 40;
   if (directReferrals === 0) return MIN_SIZE;
-  return Math.min(MAX_SIZE, MIN_SIZE + Math.sqrt(directReferrals) * 4);
+  return Math.min(MAX_SIZE, MIN_SIZE + Math.sqrt(directReferrals) * 5);
 }

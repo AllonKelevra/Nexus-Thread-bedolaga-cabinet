@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import Graph from 'graphology';
 import Sigma from 'sigma';
 import FA2LayoutSupervisor from 'graphology-layout-forceatlas2/worker';
+import { inferSettings } from 'graphology-layout-forceatlas2';
 import { useReferralNetworkStore } from '@/store/referralNetwork';
 import type { NetworkGraphData, NetworkFilters } from '@/types/referralNetwork';
 import { getUserNodeColor, getUserNodeSize, getCampaignColor } from '../utils';
@@ -246,24 +247,31 @@ export function NetworkGraph({ data, className }: NetworkGraphProps) {
 
       // Start ForceAtlas2 in a web worker (non-blocking)
       if (graph.order > 0) {
+        const inferred = inferSettings(graph);
         const supervisor = new FA2LayoutSupervisor(graph, {
           settings: {
-            gravity: 0.5,
-            scalingRatio: 10,
-            barnesHutOptimize: true,
-            slowDown: 2,
+            ...inferred,
+            linLogMode: true,
+            adjustSizes: true,
+            barnesHutOptimize: graph.order > 100,
+            slowDown: 5,
           },
         });
         fa2Ref.current = supervisor;
         supervisor.start();
 
-        // Kill after a fixed duration to free the web worker thread
+        // Kill after a fixed duration, then fit camera to all nodes
         fa2TimerRef.current = setTimeout(() => {
           if (fa2Ref.current === supervisor) {
             supervisor.kill();
             fa2Ref.current = null;
           }
           fa2TimerRef.current = null;
+
+          // Fit camera to show all nodes after layout settles
+          if (sigmaRef.current) {
+            sigmaRef.current.getCamera().animatedReset({ duration: 400 });
+          }
         }, FA2_DURATION_MS);
       }
 
