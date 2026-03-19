@@ -292,37 +292,41 @@ export default function Dashboard() {
         </Link>
       )}
 
-      {/* Subscription Status Card */}
-      {subLoading ? (
-        <div className="bento-card">
-          <div className="mb-4 flex items-center justify-between">
-            <div className="skeleton h-5 w-20" />
-            <div className="skeleton h-6 w-16 rounded-full" />
-          </div>
-          <div className="skeleton mb-3 h-10 w-32" />
-          <div className="skeleton mb-3 h-4 w-40" />
-          <div className="skeleton h-3 w-full rounded-full" />
-          <div className="mt-5">
-            <div className="skeleton h-12 w-full rounded-xl" />
-          </div>
-        </div>
-      ) : subscription?.is_expired ||
-        subscription?.status === 'disabled' ||
-        subscription?.is_limited ? (
-        <SubscriptionCardExpired
-          subscription={subscription}
-          balanceKopeks={balanceData?.balance_kopeks ?? 0}
-          balanceRubles={balanceData?.balance_rubles ?? 0}
-        />
-      ) : subscription ? (
-        <SubscriptionCardActive
-          subscription={subscription}
-          trafficData={trafficData}
-          refreshTrafficMutation={refreshTrafficMutation}
-          trafficRefreshCooldown={trafficRefreshCooldown}
-          connectedDevices={devicesData?.total ?? 0}
-        />
-      ) : null}
+      {/* Subscription Status Card — hidden in multi-tariff (managed via /subscriptions) */}
+      {!isMultiTariff && (
+        <>
+          {subLoading ? (
+            <div className="bento-card">
+              <div className="mb-4 flex items-center justify-between">
+                <div className="skeleton h-5 w-20" />
+                <div className="skeleton h-6 w-16 rounded-full" />
+              </div>
+              <div className="skeleton mb-3 h-10 w-32" />
+              <div className="skeleton mb-3 h-4 w-40" />
+              <div className="skeleton h-3 w-full rounded-full" />
+              <div className="mt-5">
+                <div className="skeleton h-12 w-full rounded-xl" />
+              </div>
+            </div>
+          ) : subscription?.is_expired ||
+            subscription?.status === 'disabled' ||
+            subscription?.is_limited ? (
+            <SubscriptionCardExpired
+              subscription={subscription}
+              balanceKopeks={balanceData?.balance_kopeks ?? 0}
+              balanceRubles={balanceData?.balance_rubles ?? 0}
+            />
+          ) : subscription ? (
+            <SubscriptionCardActive
+              subscription={subscription}
+              trafficData={trafficData}
+              refreshTrafficMutation={refreshTrafficMutation}
+              trafficRefreshCooldown={trafficRefreshCooldown}
+              connectedDevices={devicesData?.total ?? 0}
+            />
+          ) : null}
+        </>
+      )}
 
       {/* Trial Activation */}
       {hasNoSubscription && !trialLoading && trialInfo?.is_available && (
