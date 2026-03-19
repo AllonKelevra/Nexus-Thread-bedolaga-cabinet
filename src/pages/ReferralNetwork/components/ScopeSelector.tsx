@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { referralNetworkApi } from '@/api/referralNetwork';
+import { MAX_SCOPE_ITEMS } from '@/store/referralNetwork';
 import type { ScopeSelection, ScopeType } from '@/types/referralNetwork';
 
 interface ScopeSelectorProps {
@@ -20,6 +21,82 @@ const CHIP_COLORS: Record<ScopeType, string> = {
   user: 'bg-accent-500/20 text-accent-400',
 };
 
+// Reuse CHIP_COLORS for avatar backgrounds (same palette)
+const AVATAR_COLORS = CHIP_COLORS;
+
+const AVATAR_LETTERS: Record<ScopeType, string> = {
+  campaign: 'C',
+  partner: 'P',
+  user: 'U',
+};
+
+function CheckIcon() {
+  return (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+    </svg>
+  );
+}
+
+function CloseIcon({ className = 'h-3 w-3' }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  );
+}
+
+function Spinner({ size = 'h-5 w-5' }: { size?: string }) {
+  return (
+    <div
+      className={`${size} animate-spin rounded-full border-2 border-dark-600 border-t-accent-400`}
+    />
+  );
+}
+
+function EmptyMessage({ text }: { text: string }) {
+  return <div className="px-4 py-3 text-center text-sm text-dark-500">{text}</div>;
+}
+
+interface ScopeListItemProps {
+  type: ScopeType;
+  selected: boolean;
+  onClick: () => void;
+  title: string;
+  subtitle: string;
+  badge?: React.ReactNode;
+}
+
+function ScopeListItem({ type, selected, onClick, title, subtitle, badge }: ScopeListItemProps) {
+  return (
+    <button
+      role="option"
+      aria-selected={selected}
+      onClick={onClick}
+      className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-dark-700/50 focus-visible:bg-dark-700/50 focus-visible:outline-none ${
+        selected ? 'bg-dark-700/30' : ''
+      }`}
+    >
+      <div
+        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-medium ${AVATAR_COLORS[type]}`}
+      >
+        {selected ? <CheckIcon /> : AVATAR_LETTERS[type]}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium text-dark-100">{title}</p>
+        <p className="truncate text-xs text-dark-500">{subtitle}</p>
+      </div>
+      {badge}
+    </button>
+  );
+}
+
 export function ScopeSelector({ value, onAdd, onRemove, onClear, className }: ScopeSelectorProps) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<ScopeType>('campaign');
@@ -28,6 +105,8 @@ export function ScopeSelector({ value, onAdd, onRemove, onClear, className }: Sc
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const isMaxReached = value.length >= MAX_SCOPE_ITEMS;
 
   const { data: scopeOptions, isLoading: isScopeLoading } = useQuery({
     queryKey: ['referral-network', 'scope-options'],
@@ -51,8 +130,16 @@ export function ScopeSelector({ value, onAdd, onRemove, onClear, className }: Sc
     staleTime: 30_000,
   });
 
-  // Close dropdown on outside click or Escape key
+  // Focus input when dropdown opens
   useEffect(() => {
+    if (isDropdownOpen) {
+      inputRef.current?.focus();
+    }
+  }, [isDropdownOpen]);
+
+  // Close dropdown on outside click or Escape key (only when open)
+  useEffect(() => {
+    if (!isDropdownOpen) return;
     function handleClickOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsDropdownOpen(false);
@@ -69,11 +156,14 @@ export function ScopeSelector({ value, onAdd, onRemove, onClear, className }: Sc
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscape);
     };
-  }, []);
+  }, [isDropdownOpen]);
 
-  // Check if item is already selected
-  const isSelected = (type: ScopeType, id: number): boolean =>
-    value.some((s) => s.type === type && s.id === id);
+  const selectedSet = useMemo(() => new Set(value.map((s) => `${s.type}:${s.id}`)), [value]);
+
+  const isSelected = useCallback(
+    (type: ScopeType, id: number): boolean => selectedSet.has(`${type}:${id}`),
+    [selectedSet],
+  );
 
   // Filter campaigns/partners by local search input
   const filteredCampaigns = useMemo(() => {
@@ -104,49 +194,42 @@ export function ScopeSelector({ value, onAdd, onRemove, onClear, className }: Sc
     inputRef.current?.focus();
   }
 
-  function handleSelectCampaign(campaign: { id: number; name: string }) {
-    if (isSelected('campaign', campaign.id)) {
-      onRemove('campaign', campaign.id);
+  function handleToggle(type: ScopeType, id: number, label: string) {
+    if (isSelected(type, id)) {
+      onRemove(type, id);
     } else {
-      onAdd({ type: 'campaign', id: campaign.id, label: campaign.name });
+      if (isMaxReached) return;
+      onAdd({ type, id, label });
+      if (type === 'user') {
+        setSearchInput('');
+        setDebouncedUserQuery('');
+      }
     }
   }
 
-  function handleSelectPartner(partner: { id: number; display_name: string }) {
-    if (isSelected('partner', partner.id)) {
-      onRemove('partner', partner.id);
-    } else {
-      onAdd({ type: 'partner', id: partner.id, label: partner.display_name });
-    }
-  }
+  const tabLabels = useMemo<Record<ScopeType, string>>(
+    () => ({
+      campaign: t('admin.referralNetwork.scope.campaign'),
+      partner: t('admin.referralNetwork.scope.partner'),
+      user: t('admin.referralNetwork.scope.user'),
+    }),
+    [t],
+  );
 
-  function handleSelectUser(user: { id: number; display_name: string }) {
-    if (isSelected('user', user.id)) {
-      onRemove('user', user.id);
-    } else {
-      onAdd({ type: 'user', id: user.id, label: user.display_name });
-    }
-    setSearchInput('');
-    setDebouncedUserQuery('');
-  }
-
-  const tabLabels: Record<ScopeType, string> = {
-    campaign: t('admin.referralNetwork.scope.campaign'),
-    partner: t('admin.referralNetwork.scope.partner'),
-    user: t('admin.referralNetwork.scope.user'),
-  };
-
-  const placeholders: Record<ScopeType, string> = {
-    campaign: t('admin.referralNetwork.scope.selectCampaign'),
-    partner: t('admin.referralNetwork.scope.selectPartner'),
-    user: t('admin.referralNetwork.scope.selectUser'),
-  };
+  const placeholders = useMemo<Record<ScopeType, string>>(
+    () => ({
+      campaign: t('admin.referralNetwork.scope.selectCampaign'),
+      partner: t('admin.referralNetwork.scope.selectPartner'),
+      user: t('admin.referralNetwork.scope.selectUser'),
+    }),
+    [t],
+  );
 
   const isLoading = activeTab === 'user' ? isUserSearching : isScopeLoading;
 
   return (
     <div ref={containerRef} className={`relative ${className ?? ''}`}>
-      {/* Chips row + search trigger */}
+      {/* Chips row + add trigger */}
       <div className="flex items-center gap-1.5">
         {/* Selected chips */}
         {value.length > 0 && (
@@ -162,49 +245,33 @@ export function ScopeSelector({ value, onAdd, onRemove, onClear, className }: Sc
                   aria-label={t('admin.referralNetwork.scope.removeItem', { label: item.label })}
                   className="ml-0.5 rounded-sm p-0.5 transition-colors hover:bg-white/10"
                 >
-                  <svg
-                    className="h-3 w-3"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <CloseIcon />
                 </button>
               </span>
             ))}
-            {/* Clear all */}
-            <button
-              onClick={onClear}
-              aria-label={t('admin.referralNetwork.scope.clearAll')}
-              className="shrink-0 rounded-md p-1 text-dark-500 transition-colors hover:bg-dark-800 hover:text-dark-300"
-            >
-              <svg
-                className="h-3.5 w-3.5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
+            {/* Clear all (only when 2+ items) */}
+            {value.length > 1 && (
+              <button
+                onClick={onClear}
+                aria-label={t('admin.referralNetwork.scope.clearAll')}
+                className="shrink-0 rounded-md p-1 text-dark-500 transition-colors hover:bg-dark-800 hover:text-dark-300"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+                <CloseIcon className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
         )}
 
-        {/* Add button (always visible) */}
+        {/* Add button */}
         <button
-          onClick={() => {
-            setIsDropdownOpen((prev) => {
-              if (!prev) {
-                setTimeout(() => inputRef.current?.focus(), 0);
-              }
-              return !prev;
-            });
-          }}
+          onClick={() => setIsDropdownOpen((prev) => !prev)}
           aria-label={t('admin.referralNetwork.scope.addScope')}
-          className="shrink-0 rounded-lg border border-dark-700/50 bg-dark-800 p-1.5 text-dark-400 transition-colors hover:border-accent-500/50 hover:text-accent-400"
+          aria-expanded={isDropdownOpen}
+          aria-haspopup="listbox"
+          className={`shrink-0 rounded-lg border border-dark-700/50 bg-dark-800 p-1.5 transition-colors hover:border-accent-500/50 hover:text-accent-400 ${
+            isMaxReached ? 'cursor-not-allowed text-dark-600 opacity-50' : 'text-dark-400'
+          }`}
+          disabled={isMaxReached && !isDropdownOpen}
         >
           <svg
             className="h-4 w-4"
@@ -220,13 +287,29 @@ export function ScopeSelector({ value, onAdd, onRemove, onClear, className }: Sc
 
       {/* Dropdown */}
       {isDropdownOpen && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-xl border border-dark-700/50 bg-dark-800 shadow-xl backdrop-blur-md">
+        <div
+          className="absolute left-0 right-0 top-full z-50 mt-1 rounded-xl border border-dark-700/50 bg-dark-800 shadow-xl backdrop-blur-md"
+          role="dialog"
+          aria-label={t('admin.referralNetwork.scope.addScope')}
+        >
+          {/* Max reached banner */}
+          {isMaxReached && (
+            <div className="border-b border-dark-700/50 px-3 py-1.5 text-center text-xs text-warning-400">
+              {t('admin.referralNetwork.scope.maxReached', { max: MAX_SCOPE_ITEMS })}
+            </div>
+          )}
+
           {/* Tab bar + search input */}
           <div className="flex items-center gap-2 border-b border-dark-700/50 px-3 py-2">
-            <div className="flex shrink-0 rounded-lg border border-dark-700/50 bg-dark-900 p-0.5">
+            <div
+              className="flex shrink-0 rounded-lg border border-dark-700/50 bg-dark-900 p-0.5"
+              role="tablist"
+            >
               {SCOPE_TABS.map((tab) => (
                 <button
                   key={tab}
+                  role="tab"
+                  aria-selected={activeTab === tab}
                   onClick={() => handleTabChange(tab)}
                   className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                     activeTab === tab
@@ -264,14 +347,14 @@ export function ScopeSelector({ value, onAdd, onRemove, onClear, className }: Sc
               />
               {isLoading && (
                 <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
-                  <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-dark-600 border-t-accent-400" />
+                  <Spinner size="h-3.5 w-3.5" />
                 </div>
               )}
             </div>
           </div>
 
           {/* List */}
-          <div className="max-h-64 overflow-y-auto">
+          <div className="max-h-64 overflow-y-auto" role="listbox" aria-multiselectable="true">
             {activeTab === 'campaign' && renderCampaignList()}
             {activeTab === 'partner' && renderPartnerList()}
             {activeTab === 'user' && renderUserList()}
@@ -285,52 +368,24 @@ export function ScopeSelector({ value, onAdd, onRemove, onClear, className }: Sc
     if (isScopeLoading) {
       return (
         <div className="flex items-center justify-center px-4 py-6">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-dark-600 border-t-accent-400" />
+          <Spinner />
         </div>
       );
     }
 
     if (filteredCampaigns.length === 0) {
-      return (
-        <div className="px-4 py-3 text-center text-sm text-dark-500">
-          {t('admin.referralNetwork.scope.noResults')}
-        </div>
-      );
+      return <EmptyMessage text={t('admin.referralNetwork.scope.noResults')} />;
     }
 
-    return filteredCampaigns.map((campaign) => {
-      const selected = isSelected('campaign', campaign.id);
-      return (
-        <button
-          key={campaign.id}
-          onClick={() => handleSelectCampaign(campaign)}
-          className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-dark-700/50 ${
-            selected ? 'bg-dark-700/30' : ''
-          }`}
-        >
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-success-500/20 text-xs font-medium text-success-400">
-            {selected ? (
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-              </svg>
-            ) : (
-              'C'
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-dark-100">{campaign.name}</p>
-            <p className="truncate text-xs text-dark-500">
-              {campaign.start_parameter}
-              {' / '}
-              {campaign.direct_users} {t('admin.referralNetwork.scope.users')}
-            </p>
-          </div>
+    return filteredCampaigns.map((campaign) => (
+      <ScopeListItem
+        key={campaign.id}
+        type="campaign"
+        selected={isSelected('campaign', campaign.id)}
+        onClick={() => handleToggle('campaign', campaign.id, campaign.name)}
+        title={campaign.name}
+        subtitle={`${campaign.start_parameter} / ${campaign.direct_users} ${t('admin.referralNetwork.scope.users')}`}
+        badge={
           <span
             className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium ${
               campaign.is_active
@@ -342,79 +397,45 @@ export function ScopeSelector({ value, onAdd, onRemove, onClear, className }: Sc
               ? t('admin.referralNetwork.scope.active')
               : t('admin.referralNetwork.scope.inactive')}
           </span>
-        </button>
-      );
-    });
+        }
+      />
+    ));
   }
 
   function renderPartnerList() {
     if (isScopeLoading) {
       return (
         <div className="flex items-center justify-center px-4 py-6">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-dark-600 border-t-accent-400" />
+          <Spinner />
         </div>
       );
     }
 
     if (filteredPartners.length === 0) {
-      return (
-        <div className="px-4 py-3 text-center text-sm text-dark-500">
-          {t('admin.referralNetwork.scope.noResults')}
-        </div>
-      );
+      return <EmptyMessage text={t('admin.referralNetwork.scope.noResults')} />;
     }
 
-    return filteredPartners.map((partner) => {
-      const selected = isSelected('partner', partner.id);
-      return (
-        <button
-          key={partner.id}
-          onClick={() => handleSelectPartner(partner)}
-          className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-dark-700/50 ${
-            selected ? 'bg-dark-700/30' : ''
-          }`}
-        >
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-warning-500/20 text-xs font-medium text-warning-400">
-            {selected ? (
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-              </svg>
-            ) : (
-              'P'
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-dark-100">{partner.display_name}</p>
-            <p className="truncate text-xs text-dark-500">
-              {partner.username ? `@${partner.username}` : ''}
-              {partner.username ? ' / ' : ''}
-              {partner.campaign_count} {t('admin.referralNetwork.scope.campaigns')}
-            </p>
-          </div>
-        </button>
-      );
-    });
+    return filteredPartners.map((partner) => (
+      <ScopeListItem
+        key={partner.id}
+        type="partner"
+        selected={isSelected('partner', partner.id)}
+        onClick={() => handleToggle('partner', partner.id, partner.display_name)}
+        title={partner.display_name}
+        subtitle={`${partner.username ? `@${partner.username} / ` : ''}${partner.campaign_count} ${t('admin.referralNetwork.scope.campaigns')}`}
+      />
+    ));
   }
 
   function renderUserList() {
     if (debouncedUserQuery.length < 2) {
-      return (
-        <div className="px-4 py-3 text-center text-sm text-dark-500">
-          {t('admin.referralNetwork.scope.selectUser')}
-        </div>
-      );
+      return <EmptyMessage text={t('admin.referralNetwork.scope.selectUser')} />;
     }
 
     if (isUserSearching) {
       return (
         <div className="flex items-center justify-center px-4 py-6">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-dark-600 border-t-accent-400" />
+          <Spinner />
         </div>
       );
     }
@@ -422,52 +443,25 @@ export function ScopeSelector({ value, onAdd, onRemove, onClear, className }: Sc
     const users = userSearchResults?.users ?? [];
 
     if (users.length === 0) {
-      return (
-        <div className="px-4 py-3 text-center text-sm text-dark-500">
-          {t('admin.referralNetwork.scope.noResults')}
-        </div>
-      );
+      return <EmptyMessage text={t('admin.referralNetwork.scope.noResults')} />;
     }
 
-    return users.map((user) => {
-      const selected = isSelected('user', user.id);
-      return (
-        <button
-          key={user.id}
-          onClick={() => handleSelectUser(user)}
-          className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-dark-700/50 ${
-            selected ? 'bg-dark-700/30' : ''
-          }`}
-        >
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-500/20 text-xs font-medium text-accent-400">
-            {selected ? (
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-              </svg>
-            ) : (
-              'U'
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-dark-100">{user.display_name}</p>
-            <p className="truncate text-xs text-dark-500">
-              {user.username ? `@${user.username}` : ''}
-              {user.tg_id ? ` #${user.tg_id}` : ''}
-            </p>
-          </div>
-          {user.is_partner && (
+    return users.map((user) => (
+      <ScopeListItem
+        key={user.id}
+        type="user"
+        selected={isSelected('user', user.id)}
+        onClick={() => handleToggle('user', user.id, user.display_name)}
+        title={user.display_name}
+        subtitle={`${user.username ? `@${user.username}` : ''}${user.tg_id ? ` #${user.tg_id}` : ''}`}
+        badge={
+          user.is_partner ? (
             <span className="shrink-0 rounded bg-warning-500/20 px-1.5 py-0.5 text-[10px] font-medium text-warning-400">
               {t('admin.referralNetwork.user.partner')}
             </span>
-          )}
-        </button>
-      );
-    });
+          ) : undefined
+        }
+      />
+    ));
   }
 }

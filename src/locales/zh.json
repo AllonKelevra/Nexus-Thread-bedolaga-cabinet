@@ -1143,7 +1143,8 @@
         "noResults": "未找到",
         "removeItem": "移除 {{label}}",
         "clearAll": "清除所有选择",
-        "addScope": "添加范围"
+        "addScope": "添加范围",
+        "maxReached": "最多 {{max}} 个项目"
       },
       "loading": "加载图表...",
       "error": "加载网络数据失败",

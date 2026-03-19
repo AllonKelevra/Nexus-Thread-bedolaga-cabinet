@@ -1309,7 +1309,8 @@
         "noResults": "Nothing found",
         "removeItem": "Remove {{label}}",
         "clearAll": "Clear all selections",
-        "addScope": "Add scope"
+        "addScope": "Add scope",
+        "maxReached": "Maximum {{max}} items"
       },
       "loading": "Loading graph...",
       "error": "Failed to load network data",

@@ -1,13 +1,22 @@
 import { create } from 'zustand';
 import type { SelectedNode, NetworkFilters, ScopeSelection } from '@/types/referralNetwork';
 
-const MAX_SCOPE_ITEMS = 50;
+export const MAX_SCOPE_ITEMS = 50;
 
 const DEFAULT_FILTERS: NetworkFilters = {
   campaigns: [],
   partnersOnly: false,
   minReferrals: 0,
 };
+
+function resetGraphState() {
+  return {
+    selectedNode: null as SelectedNode,
+    hoveredNodeId: null as string | null,
+    highlightedNodes: new Set<string>(),
+    filters: { ...DEFAULT_FILTERS },
+  };
+}
 
 interface ReferralNetworkState {
   selectedNode: SelectedNode;
@@ -51,28 +60,22 @@ export const useReferralNetworkStore = create<ReferralNetworkState>()((set) => (
       if (state.scope.length >= MAX_SCOPE_ITEMS) return state;
       return {
         scope: [...state.scope, item],
-        selectedNode: null,
-        hoveredNodeId: null,
-        highlightedNodes: new Set<string>(),
-        filters: { ...DEFAULT_FILTERS },
+        ...resetGraphState(),
       };
     }),
 
   removeScope: (type, id) =>
-    set((state) => ({
-      scope: state.scope.filter((s) => !(s.type === type && s.id === id)),
-      selectedNode: null,
-      hoveredNodeId: null,
-      highlightedNodes: new Set<string>(),
-      filters: { ...DEFAULT_FILTERS },
-    })),
+    set((state) => {
+      const next = state.scope.filter((s) => !(s.type === type && s.id === id));
+      if (next.length === 0) {
+        return { scope: next, ...resetGraphState() };
+      }
+      return { scope: next };
+    }),
 
   clearScope: () =>
     set({
       scope: [],
-      selectedNode: null,
-      hoveredNodeId: null,
-      highlightedNodes: new Set<string>(),
-      filters: { ...DEFAULT_FILTERS },
+      ...resetGraphState(),
     }),
 }));
