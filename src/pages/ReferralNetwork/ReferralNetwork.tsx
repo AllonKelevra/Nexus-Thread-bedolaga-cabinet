@@ -29,33 +29,19 @@ export function ReferralNetwork() {
   const isPanelOpen = selectedNode !== null;
 
   return (
-    <div
-      id="referral-network-container"
-      className="relative flex h-[calc(100dvh-64px)] flex-col overflow-hidden bg-[#0a0a0f]"
-    >
+    <div id="referral-network-container" className="fixed inset-0 z-40 flex flex-col bg-[#0a0a0f]">
       {/* Top bar */}
       <div className="relative z-20 shrink-0 border-b border-dark-700/50 bg-dark-900/90 backdrop-blur-md">
-        {/* Row 1: Back + Title + (desktop: search + filter) + (mobile: filter icon) */}
-        <div className="flex items-center gap-3 px-3 py-2 sm:px-4 sm:py-3">
+        {/* Row 1: Back + Title + Search + Filter */}
+        <div className="flex items-center gap-2 px-3 py-2 sm:gap-3 sm:px-4 sm:py-3">
           <AdminBackButton />
-          <h1 className="min-w-0 truncate text-sm font-bold text-dark-100 sm:text-lg">
+          <h1 className="shrink-0 text-sm font-bold text-dark-100 sm:text-base">
             {t('admin.referralNetwork.title')}
           </h1>
-          {/* Desktop: search + filter inline */}
-          <div className="hidden flex-1 items-center gap-2 sm:flex">
-            <NetworkSearch className="max-w-md flex-1" />
-            {networkData && <NetworkFilters data={networkData} />}
-          </div>
-          {/* Mobile: filter icon only */}
-          {networkData && (
-            <div className="ml-auto sm:hidden">
-              <NetworkFilters data={networkData} />
-            </div>
-          )}
-        </div>
-        {/* Row 2 (mobile only): full-width search */}
-        <div className="px-3 pb-2 sm:hidden">
-          <NetworkSearch className="w-full" />
+          {/* Search — always visible */}
+          <NetworkSearch className="min-w-0 flex-1 sm:max-w-md" />
+          {/* Filter button */}
+          {networkData && <NetworkFilters data={networkData} />}
         </div>
       </div>
 

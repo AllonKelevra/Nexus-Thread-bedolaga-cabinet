@@ -41,36 +41,6 @@ export function NetworkFilters({ data, className }: NetworkFiltersProps) {
     updateFilters({ campaigns: next });
   }
 
-  // Trigger button
-  if (!isOpen) {
-    return (
-      <button
-        onClick={() => setIsOpen(true)}
-        aria-label={t('admin.referralNetwork.filters.title')}
-        className={`relative flex shrink-0 items-center gap-2 rounded-lg border border-dark-700/50 bg-dark-800/80 px-2.5 py-2 text-sm text-dark-300 transition-colors hover:border-dark-600 hover:text-dark-100 ${className ?? ''}`}
-      >
-        <svg
-          className="h-4 w-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={1.5}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"
-          />
-        </svg>
-        <span className="hidden sm:inline">{t('admin.referralNetwork.filters.title')}</span>
-        {hasActiveFilters && (
-          <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-accent-500" />
-        )}
-      </button>
-    );
-  }
-
-  // Filter panel content (shared between mobile/desktop)
   const panelContent = (
     <div className="space-y-4">
       {/* Campaigns */}
@@ -136,63 +106,94 @@ export function NetworkFilters({ data, className }: NetworkFiltersProps) {
   );
 
   return (
-    <div ref={panelRef} className={className}>
-      {/* Desktop: inline dropdown */}
-      <div className="hidden sm:block">
-        <div className="w-64 rounded-xl border border-dark-700/50 bg-dark-900/95 p-4 backdrop-blur-md">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-dark-100">
-              {t('admin.referralNetwork.filters.title')}
-            </h3>
-            <button
-              onClick={() => setIsOpen(false)}
-              aria-label={t('common.close')}
-              className="text-dark-500 transition-colors hover:text-dark-300"
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          {panelContent}
-        </div>
-      </div>
+    <div ref={panelRef} className={`relative shrink-0 ${className ?? ''}`}>
+      {/* Trigger button — always rendered */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        aria-label={t('admin.referralNetwork.filters.title')}
+        className={`relative flex items-center gap-2 rounded-lg border px-2.5 py-2 text-sm transition-colors ${
+          isOpen
+            ? 'border-accent-500/50 bg-dark-800 text-dark-100'
+            : 'border-dark-700/50 bg-dark-800/80 text-dark-300 hover:border-dark-600 hover:text-dark-100'
+        }`}
+      >
+        <svg
+          className="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"
+          />
+        </svg>
+        <span className="hidden sm:inline">{t('admin.referralNetwork.filters.title')}</span>
+        {hasActiveFilters && (
+          <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-accent-500" />
+        )}
+      </button>
 
-      {/* Mobile: full-width overlay below top bar */}
-      <div className="fixed inset-x-0 top-0 z-50 sm:hidden">
-        {/* Backdrop */}
-        <div className="fixed inset-0 bg-black/60" onClick={() => setIsOpen(false)} />
-        {/* Panel */}
-        <div className="relative mx-3 mt-3 rounded-xl border border-dark-700/50 bg-dark-900/95 p-4 backdrop-blur-md">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-dark-100">
-              {t('admin.referralNetwork.filters.title')}
-            </h3>
-            <button
-              onClick={() => setIsOpen(false)}
-              aria-label={t('common.close')}
-              className="rounded-lg p-1 text-dark-500 transition-colors hover:bg-dark-800 hover:text-dark-300"
-            >
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
+      {/* Desktop: absolute dropdown below button */}
+      {isOpen && (
+        <div className="absolute right-0 top-full z-50 mt-2 hidden sm:block">
+          <div className="w-64 rounded-xl border border-dark-700/50 bg-dark-900/95 p-4 shadow-xl backdrop-blur-md">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-dark-100">
+                {t('admin.referralNetwork.filters.title')}
+              </h3>
+              <button
+                onClick={() => setIsOpen(false)}
+                aria-label={t('common.close')}
+                className="text-dark-500 transition-colors hover:text-dark-300"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            {panelContent}
           </div>
-          {panelContent}
         </div>
-      </div>
+      )}
+
+      {/* Mobile: full-screen overlay */}
+      {isOpen && (
+        <div className="fixed inset-x-0 top-0 z-50 sm:hidden">
+          <div className="fixed inset-0 bg-black/60" onClick={() => setIsOpen(false)} />
+          <div className="relative mx-3 mt-3 rounded-xl border border-dark-700/50 bg-dark-900/95 p-4 backdrop-blur-md">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-dark-100">
+                {t('admin.referralNetwork.filters.title')}
+              </h3>
+              <button
+                onClick={() => setIsOpen(false)}
+                aria-label={t('common.close')}
+                className="rounded-lg p-1 text-dark-500 transition-colors hover:bg-dark-800 hover:text-dark-300"
+              >
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            {panelContent}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
