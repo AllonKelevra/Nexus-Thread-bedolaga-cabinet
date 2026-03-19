@@ -74,6 +74,14 @@ export default function SubscriptionPurchase() {
   const tariffs =
     isTariffsMode && purchaseOptions && 'tariffs' in purchaseOptions ? purchaseOptions.tariffs : [];
 
+  // Multi-tariff: check via subscriptions list query
+  const { data: multiSubData } = useQuery({
+    queryKey: ['subscriptions-list'],
+    queryFn: () => subscriptionApi.getSubscriptions(),
+    staleTime: 60_000,
+  });
+  const isMultiTariff = multiSubData?.multi_tariff_enabled ?? false;
+
   // Helper to apply promo discount
   const applyPromoDiscount = (
     priceKopeks: number,
@@ -451,11 +459,13 @@ export default function SubscriptionPurchase() {
           </svg>
         </button>
         <h1 className="text-2xl font-bold text-dark-50 sm:text-3xl">
-          {subscription?.is_daily && !subscription?.is_trial
-            ? t('subscription.switchTariff.title')
-            : subscription && !subscription.is_trial
-              ? t('subscription.extend')
-              : t('subscription.getSubscription')}
+          {isMultiTariff && !subscriptionId
+            ? t('subscription.buyTariff', 'Купить тариф')
+            : subscription?.is_daily && !subscription?.is_trial
+              ? t('subscription.switchTariff.title')
+              : subscription && !subscription.is_trial
+                ? t('subscription.extend')
+                : t('subscription.getSubscription')}
         </h1>
       </div>
 
@@ -776,6 +786,7 @@ export default function SubscriptionPurchase() {
                       'subscription_is_expired' in purchaseOptions &&
                       purchaseOptions.subscription_is_expired === true;
                     const canSwitch =
+                      !isMultiTariff &&
                       subscription &&
                       subscription.tariff_id &&
                       !isCurrentTariff &&
