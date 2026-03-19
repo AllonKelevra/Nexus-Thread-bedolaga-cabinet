@@ -275,21 +275,60 @@ export default function Dashboard() {
       {/* Pending Gift Activations */}
       {pendingGifts && pendingGifts.length > 0 && <PendingGiftCard gifts={pendingGifts} />}
 
-      {/* Multi-tariff: show link to subscriptions list */}
-      {isMultiTariff && (
-        <Link to="/subscriptions" className="bento-card flex items-center justify-between">
-          <div>
-            <div className="text-sm font-medium opacity-60">
+      {/* Multi-tariff: show mini-cards for each subscription */}
+      {isMultiTariff && multiSubData?.subscriptions && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-sm font-medium opacity-60">
               {t('dashboard.subscriptions', 'Подписки')}
-            </div>
-            <div className="text-lg font-bold">
-              {multiSubCount > 1
-                ? `${multiSubCount} ${t('dashboard.activeTariffs', 'активных тарифов')}`
-                : t('dashboard.manageSubscriptions', 'Управление подписками')}
-            </div>
+            </span>
+            <Link to="/subscriptions" className="text-xs text-accent-400 hover:underline">
+              {t('dashboard.manageAll', 'Управление')} →
+            </Link>
           </div>
-          <ChevronRightIcon />
-        </Link>
+          {multiSubData.subscriptions.map((sub) => {
+            const isActive = sub.status === 'active' || sub.status === 'trial';
+            const trafficDisplay =
+              sub.traffic_limit_gb === 0
+                ? '∞'
+                : `${sub.traffic_used_gb.toFixed(1)} / ${sub.traffic_limit_gb} ГБ`;
+            const endDate = sub.end_date
+              ? new Date(sub.end_date).toLocaleDateString('ru-RU', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                })
+              : '—';
+            return (
+              <Link
+                key={sub.id}
+                to={`/subscription/${sub.id}`}
+                className="bento-card flex items-center justify-between p-4 transition-all hover:scale-[1.01]"
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`inline-block h-2 w-2 rounded-full ${isActive ? 'bg-emerald-400' : 'bg-red-400'}`}
+                    />
+                    <span className="font-semibold">{sub.tariff_name || 'Подписка'}</span>
+                  </div>
+                  <div className="mt-1.5 flex gap-4 text-xs opacity-50">
+                    <span>📊 {trafficDisplay}</span>
+                    <span>📱 {sub.device_limit}</span>
+                    <span>📅 {endDate}</span>
+                  </div>
+                </div>
+                <ChevronRightIcon />
+              </Link>
+            );
+          })}
+          <Link
+            to="/subscription/purchase"
+            className="flex w-full items-center justify-center gap-1.5 rounded-2xl border border-dashed border-white/15 p-3 text-xs opacity-50 transition-opacity hover:opacity-80"
+          >
+            <span>+</span> {t('subscriptions.buyAnother', 'Купить ещё тариф')}
+          </Link>
+        </div>
       )}
 
       {/* Subscription Status Card — hidden in multi-tariff (managed via /subscriptions) */}
