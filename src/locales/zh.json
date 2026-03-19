@@ -1140,7 +1140,10 @@
         "campaigns": "活动",
         "active": "活跃",
         "inactive": "非活跃",
-        "noResults": "未找到"
+        "noResults": "未找到",
+        "removeItem": "移除 {{label}}",
+        "clearAll": "清除所有选择",
+        "addScope": "添加范围"
       },
       "loading": "加载图表...",
       "error": "加载网络数据失败",

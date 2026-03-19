@@ -1306,7 +1306,10 @@
         "campaigns": "campaigns",
         "active": "Active",
         "inactive": "Inactive",
-        "noResults": "Nothing found"
+        "noResults": "Nothing found",
+        "removeItem": "Remove {{label}}",
+        "clearAll": "Clear all selections",
+        "addScope": "Add scope"
       },
       "loading": "Loading graph...",
       "error": "Failed to load network data",

@@ -5,6 +5,7 @@ import type {
   NetworkCampaignDetail,
   NetworkSearchResult,
   ScopeOptionsData,
+  ScopeSelection,
 } from '@/types/referralNetwork';
 
 export const referralNetworkApi = {
@@ -13,9 +14,20 @@ export const referralNetworkApi = {
     return response.data;
   },
 
-  getScopedGraph: async (scope: string, id: number): Promise<NetworkGraphData> => {
+  getScopedGraph: async (selections: ScopeSelection[]): Promise<NetworkGraphData> => {
+    const campaignIds = selections.filter((s) => s.type === 'campaign').map((s) => s.id);
+    const partnerIds = selections.filter((s) => s.type === 'partner').map((s) => s.id);
+    const userIds = selections.filter((s) => s.type === 'user').map((s) => s.id);
+
     const response = await apiClient.get('/cabinet/admin/referral-network/scoped', {
-      params: { scope, id },
+      params: {
+        campaign_ids: campaignIds,
+        partner_ids: partnerIds,
+        user_ids: userIds,
+      },
+      paramsSerializer: {
+        indexes: null,
+      },
     });
     return response.data;
   },

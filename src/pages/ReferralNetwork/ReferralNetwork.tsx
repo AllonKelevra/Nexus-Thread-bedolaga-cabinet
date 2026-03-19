@@ -16,16 +16,20 @@ export function ReferralNetwork() {
   const { t } = useTranslation();
   const selectedNode = useReferralNetworkStore((s) => s.selectedNode);
   const scope = useReferralNetworkStore((s) => s.scope);
-  const setScope = useReferralNetworkStore((s) => s.setScope);
+  const addScope = useReferralNetworkStore((s) => s.addScope);
+  const removeScope = useReferralNetworkStore((s) => s.removeScope);
+  const clearScope = useReferralNetworkStore((s) => s.clearScope);
+
+  const hasScope = scope.length > 0;
 
   const {
     data: networkData,
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ['referral-network', 'scoped', scope?.type, scope?.id],
-    queryFn: () => referralNetworkApi.getScopedGraph(scope!.type, scope!.id),
-    enabled: scope !== null,
+    queryKey: ['referral-network', 'scoped', scope.map((s) => `${s.type}:${s.id}`).sort()],
+    queryFn: () => referralNetworkApi.getScopedGraph(scope),
+    enabled: hasScope,
     staleTime: 120_000,
   });
 
@@ -42,13 +46,19 @@ export function ReferralNetwork() {
           <h1 className="shrink-0 text-sm font-bold text-dark-100 sm:text-base">
             {t('admin.referralNetwork.title')}
           </h1>
-          <ScopeSelector value={scope} onSelect={setScope} className="min-w-0 flex-1 sm:max-w-xl" />
+          <ScopeSelector
+            value={scope}
+            onAdd={addScope}
+            onRemove={removeScope}
+            onClear={clearScope}
+            className="min-w-0 flex-1 sm:max-w-xl"
+          />
         </div>
       </div>
 
       <div className="relative overflow-hidden">
         {/* Empty state: no scope selected */}
-        {!scope && (
+        {!hasScope && (
           <div className="absolute inset-0 z-10 flex items-center justify-center">
             <div className="text-center">
               <svg
@@ -72,7 +82,7 @@ export function ReferralNetwork() {
         )}
 
         {/* Loading state */}
-        {scope && isLoading && (
+        {hasScope && isLoading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center">
             <div className="text-center">
               <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-dark-600 border-t-accent-400" />
@@ -82,14 +92,14 @@ export function ReferralNetwork() {
         )}
 
         {/* Error state */}
-        {scope && isError && (
+        {hasScope && isError && (
           <div className="absolute inset-0 z-10 flex items-center justify-center">
             <p className="text-sm text-error-400">{t('admin.referralNetwork.error')}</p>
           </div>
         )}
 
         {/* Empty data */}
-        {scope &&
+        {hasScope &&
           networkData &&
           networkData.users.length === 0 &&
           networkData.campaigns.length === 0 && (
@@ -99,7 +109,7 @@ export function ReferralNetwork() {
           )}
 
         {/* Graph + overlays */}
-        {scope &&
+        {hasScope &&
           networkData &&
           (networkData.users.length > 0 || networkData.campaigns.length > 0) && (
             <>

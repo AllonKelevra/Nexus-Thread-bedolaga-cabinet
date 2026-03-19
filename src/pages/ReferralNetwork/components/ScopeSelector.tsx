@@ -5,16 +5,24 @@ import { referralNetworkApi } from '@/api/referralNetwork';
 import type { ScopeSelection, ScopeType } from '@/types/referralNetwork';
 
 interface ScopeSelectorProps {
-  value: ScopeSelection | null;
-  onSelect: (selection: ScopeSelection | null) => void;
+  value: ScopeSelection[];
+  onAdd: (selection: ScopeSelection) => void;
+  onRemove: (type: ScopeSelection['type'], id: number) => void;
+  onClear: () => void;
   className?: string;
 }
 
 const SCOPE_TABS: ScopeType[] = ['campaign', 'partner', 'user'];
 
-export function ScopeSelector({ value, onSelect, className }: ScopeSelectorProps) {
+const CHIP_COLORS: Record<ScopeType, string> = {
+  campaign: 'bg-success-500/20 text-success-400',
+  partner: 'bg-warning-500/20 text-warning-400',
+  user: 'bg-accent-500/20 text-accent-400',
+};
+
+export function ScopeSelector({ value, onAdd, onRemove, onClear, className }: ScopeSelectorProps) {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<ScopeType>(value?.type ?? 'campaign');
+  const [activeTab, setActiveTab] = useState<ScopeType>('campaign');
   const [searchInput, setSearchInput] = useState('');
   const [debouncedUserQuery, setDebouncedUserQuery] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -43,16 +51,29 @@ export function ScopeSelector({ value, onSelect, className }: ScopeSelectorProps
     staleTime: 30_000,
   });
 
-  // Close dropdown on outside click
+  // Close dropdown on outside click or Escape key
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsDropdownOpen(false);
       }
     }
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setIsDropdownOpen(false);
+      }
+    }
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
   }, []);
+
+  // Check if item is already selected
+  const isSelected = (type: ScopeType, id: number): boolean =>
+    value.some((s) => s.type === type && s.id === id);
 
   // Filter campaigns/partners by local search input
   const filteredCampaigns = useMemo(() => {
@@ -84,28 +105,29 @@ export function ScopeSelector({ value, onSelect, className }: ScopeSelectorProps
   }
 
   function handleSelectCampaign(campaign: { id: number; name: string }) {
-    onSelect({ type: 'campaign', id: campaign.id, label: campaign.name });
-    setIsDropdownOpen(false);
-    setSearchInput('');
+    if (isSelected('campaign', campaign.id)) {
+      onRemove('campaign', campaign.id);
+    } else {
+      onAdd({ type: 'campaign', id: campaign.id, label: campaign.name });
+    }
   }
 
   function handleSelectPartner(partner: { id: number; display_name: string }) {
-    onSelect({ type: 'partner', id: partner.id, label: partner.display_name });
-    setIsDropdownOpen(false);
-    setSearchInput('');
+    if (isSelected('partner', partner.id)) {
+      onRemove('partner', partner.id);
+    } else {
+      onAdd({ type: 'partner', id: partner.id, label: partner.display_name });
+    }
   }
 
   function handleSelectUser(user: { id: number; display_name: string }) {
-    onSelect({ type: 'user', id: user.id, label: user.display_name });
-    setIsDropdownOpen(false);
-    setSearchInput('');
-  }
-
-  function handleClear() {
-    onSelect(null);
+    if (isSelected('user', user.id)) {
+      onRemove('user', user.id);
+    } else {
+      onAdd({ type: 'user', id: user.id, label: user.display_name });
+    }
     setSearchInput('');
     setDebouncedUserQuery('');
-    setIsDropdownOpen(false);
   }
 
   const tabLabels: Record<ScopeType, string> = {
@@ -120,18 +142,69 @@ export function ScopeSelector({ value, onSelect, className }: ScopeSelectorProps
     user: t('admin.referralNetwork.scope.selectUser'),
   };
 
-  // When scope is selected, show compact display
-  if (value) {
-    return (
-      <div className={`flex items-center gap-2 ${className ?? ''}`}>
-        <span className="rounded-md bg-accent-500/20 px-2 py-1 text-xs font-medium text-accent-400">
-          {tabLabels[value.type]}
-        </span>
-        <span className="truncate text-sm font-medium text-dark-100">{value.label}</span>
+  const isLoading = activeTab === 'user' ? isUserSearching : isScopeLoading;
+
+  return (
+    <div ref={containerRef} className={`relative ${className ?? ''}`}>
+      {/* Chips row + search trigger */}
+      <div className="flex items-center gap-1.5">
+        {/* Selected chips */}
+        {value.length > 0 && (
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
+            {value.map((item) => (
+              <span
+                key={`${item.type}:${item.id}`}
+                className={`inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium ${CHIP_COLORS[item.type]}`}
+              >
+                <span className="max-w-[120px] truncate">{item.label}</span>
+                <button
+                  onClick={() => onRemove(item.type, item.id)}
+                  aria-label={t('admin.referralNetwork.scope.removeItem', { label: item.label })}
+                  className="ml-0.5 rounded-sm p-0.5 transition-colors hover:bg-white/10"
+                >
+                  <svg
+                    className="h-3 w-3"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </span>
+            ))}
+            {/* Clear all */}
+            <button
+              onClick={onClear}
+              aria-label={t('admin.referralNetwork.scope.clearAll')}
+              className="shrink-0 rounded-md p-1 text-dark-500 transition-colors hover:bg-dark-800 hover:text-dark-300"
+            >
+              <svg
+                className="h-3.5 w-3.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {/* Add button (always visible) */}
         <button
-          onClick={handleClear}
-          aria-label={t('admin.referralNetwork.search.clear')}
-          className="shrink-0 rounded-md p-1 text-dark-500 transition-colors hover:bg-dark-800 hover:text-dark-300"
+          onClick={() => {
+            setIsDropdownOpen((prev) => {
+              if (!prev) {
+                setTimeout(() => inputRef.current?.focus(), 0);
+              }
+              return !prev;
+            });
+          }}
+          aria-label={t('admin.referralNetwork.scope.addScope')}
+          className="shrink-0 rounded-lg border border-dark-700/50 bg-dark-800 p-1.5 text-dark-400 transition-colors hover:border-accent-500/50 hover:text-accent-400"
         >
           <svg
             className="h-4 w-4"
@@ -140,78 +213,69 @@ export function ScopeSelector({ value, onSelect, className }: ScopeSelectorProps
             stroke="currentColor"
             strokeWidth={2}
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
         </button>
-      </div>
-    );
-  }
-
-  const isLoading = activeTab === 'user' ? isUserSearching : isScopeLoading;
-
-  return (
-    <div ref={containerRef} className={`relative ${className ?? ''}`}>
-      {/* Tab bar + search input row */}
-      <div className="flex items-center gap-2">
-        {/* Tabs */}
-        <div className="flex shrink-0 rounded-lg border border-dark-700/50 bg-dark-800 p-0.5">
-          {SCOPE_TABS.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => handleTabChange(tab)}
-              className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-                activeTab === tab
-                  ? 'bg-accent-500/20 text-accent-400'
-                  : 'text-dark-400 hover:text-dark-200'
-              }`}
-            >
-              {tabLabels[tab]}
-            </button>
-          ))}
-        </div>
-
-        {/* Search input */}
-        <div className="relative min-w-0 flex-1">
-          <svg
-            className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-dark-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.5}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-            />
-          </svg>
-          <input
-            ref={inputRef}
-            type="text"
-            value={searchInput}
-            maxLength={200}
-            onChange={(e) => {
-              setSearchInput(e.target.value);
-              if (!isDropdownOpen) setIsDropdownOpen(true);
-            }}
-            onFocus={() => setIsDropdownOpen(true)}
-            placeholder={placeholders[activeTab]}
-            className="w-full rounded-lg border border-dark-700/50 bg-dark-800/50 py-1.5 pl-8 pr-8 text-sm text-dark-100 placeholder-dark-500 outline-none transition-colors focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/30"
-          />
-          {isLoading && (
-            <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
-              <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-dark-600 border-t-accent-400" />
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Dropdown */}
       {isDropdownOpen && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-72 overflow-y-auto rounded-xl border border-dark-700/50 bg-dark-800 shadow-xl backdrop-blur-md">
-          {activeTab === 'campaign' && renderCampaignList()}
-          {activeTab === 'partner' && renderPartnerList()}
-          {activeTab === 'user' && renderUserList()}
+        <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-xl border border-dark-700/50 bg-dark-800 shadow-xl backdrop-blur-md">
+          {/* Tab bar + search input */}
+          <div className="flex items-center gap-2 border-b border-dark-700/50 px-3 py-2">
+            <div className="flex shrink-0 rounded-lg border border-dark-700/50 bg-dark-900 p-0.5">
+              {SCOPE_TABS.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => handleTabChange(tab)}
+                  className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                    activeTab === tab
+                      ? 'bg-accent-500/20 text-accent-400'
+                      : 'text-dark-400 hover:text-dark-200'
+                  }`}
+                >
+                  {tabLabels[tab]}
+                </button>
+              ))}
+            </div>
+
+            <div className="relative min-w-0 flex-1">
+              <svg
+                className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-dark-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+                />
+              </svg>
+              <input
+                ref={inputRef}
+                type="text"
+                value={searchInput}
+                maxLength={200}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder={placeholders[activeTab]}
+                className="w-full rounded-lg border border-dark-700/50 bg-dark-900/50 py-1.5 pl-8 pr-8 text-sm text-dark-100 placeholder-dark-500 outline-none transition-colors focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/30"
+              />
+              {isLoading && (
+                <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                  <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-dark-600 border-t-accent-400" />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* List */}
+          <div className="max-h-64 overflow-y-auto">
+            {activeTab === 'campaign' && renderCampaignList()}
+            {activeTab === 'partner' && renderPartnerList()}
+            {activeTab === 'user' && renderUserList()}
+          </div>
         </div>
       )}
     </div>
@@ -234,36 +298,53 @@ export function ScopeSelector({ value, onSelect, className }: ScopeSelectorProps
       );
     }
 
-    return filteredCampaigns.map((campaign) => (
-      <button
-        key={campaign.id}
-        onClick={() => handleSelectCampaign(campaign)}
-        className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-dark-700/50"
-      >
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-success-500/20 text-xs font-medium text-success-400">
-          C
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-dark-100">{campaign.name}</p>
-          <p className="truncate text-xs text-dark-500">
-            {campaign.start_parameter}
-            {' / '}
-            {campaign.direct_users} {t('admin.referralNetwork.scope.users')}
-          </p>
-        </div>
-        <span
-          className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium ${
-            campaign.is_active
-              ? 'bg-success-500/20 text-success-400'
-              : 'bg-dark-700/50 text-dark-400'
+    return filteredCampaigns.map((campaign) => {
+      const selected = isSelected('campaign', campaign.id);
+      return (
+        <button
+          key={campaign.id}
+          onClick={() => handleSelectCampaign(campaign)}
+          className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-dark-700/50 ${
+            selected ? 'bg-dark-700/30' : ''
           }`}
         >
-          {campaign.is_active
-            ? t('admin.referralNetwork.scope.active')
-            : t('admin.referralNetwork.scope.inactive')}
-        </span>
-      </button>
-    ));
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-success-500/20 text-xs font-medium text-success-400">
+            {selected ? (
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+            ) : (
+              'C'
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-dark-100">{campaign.name}</p>
+            <p className="truncate text-xs text-dark-500">
+              {campaign.start_parameter}
+              {' / '}
+              {campaign.direct_users} {t('admin.referralNetwork.scope.users')}
+            </p>
+          </div>
+          <span
+            className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium ${
+              campaign.is_active
+                ? 'bg-success-500/20 text-success-400'
+                : 'bg-dark-700/50 text-dark-400'
+            }`}
+          >
+            {campaign.is_active
+              ? t('admin.referralNetwork.scope.active')
+              : t('admin.referralNetwork.scope.inactive')}
+          </span>
+        </button>
+      );
+    });
   }
 
   function renderPartnerList() {
@@ -283,25 +364,42 @@ export function ScopeSelector({ value, onSelect, className }: ScopeSelectorProps
       );
     }
 
-    return filteredPartners.map((partner) => (
-      <button
-        key={partner.id}
-        onClick={() => handleSelectPartner(partner)}
-        className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-dark-700/50"
-      >
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-warning-500/20 text-xs font-medium text-warning-400">
-          P
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-dark-100">{partner.display_name}</p>
-          <p className="truncate text-xs text-dark-500">
-            {partner.username ? `@${partner.username}` : ''}
-            {partner.username ? ' / ' : ''}
-            {partner.campaign_count} {t('admin.referralNetwork.scope.campaigns')}
-          </p>
-        </div>
-      </button>
-    ));
+    return filteredPartners.map((partner) => {
+      const selected = isSelected('partner', partner.id);
+      return (
+        <button
+          key={partner.id}
+          onClick={() => handleSelectPartner(partner)}
+          className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-dark-700/50 ${
+            selected ? 'bg-dark-700/30' : ''
+          }`}
+        >
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-warning-500/20 text-xs font-medium text-warning-400">
+            {selected ? (
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+            ) : (
+              'P'
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-dark-100">{partner.display_name}</p>
+            <p className="truncate text-xs text-dark-500">
+              {partner.username ? `@${partner.username}` : ''}
+              {partner.username ? ' / ' : ''}
+              {partner.campaign_count} {t('admin.referralNetwork.scope.campaigns')}
+            </p>
+          </div>
+        </button>
+      );
+    });
   }
 
   function renderUserList() {
@@ -331,28 +429,45 @@ export function ScopeSelector({ value, onSelect, className }: ScopeSelectorProps
       );
     }
 
-    return users.map((user) => (
-      <button
-        key={user.id}
-        onClick={() => handleSelectUser(user)}
-        className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-dark-700/50"
-      >
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-500/20 text-xs font-medium text-accent-400">
-          U
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-dark-100">{user.display_name}</p>
-          <p className="truncate text-xs text-dark-500">
-            {user.username ? `@${user.username}` : ''}
-            {user.tg_id ? ` #${user.tg_id}` : ''}
-          </p>
-        </div>
-        {user.is_partner && (
-          <span className="shrink-0 rounded bg-warning-500/20 px-1.5 py-0.5 text-[10px] font-medium text-warning-400">
-            {t('admin.referralNetwork.user.partner')}
-          </span>
-        )}
-      </button>
-    ));
+    return users.map((user) => {
+      const selected = isSelected('user', user.id);
+      return (
+        <button
+          key={user.id}
+          onClick={() => handleSelectUser(user)}
+          className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-dark-700/50 ${
+            selected ? 'bg-dark-700/30' : ''
+          }`}
+        >
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-500/20 text-xs font-medium text-accent-400">
+            {selected ? (
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+            ) : (
+              'U'
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-dark-100">{user.display_name}</p>
+            <p className="truncate text-xs text-dark-500">
+              {user.username ? `@${user.username}` : ''}
+              {user.tg_id ? ` #${user.tg_id}` : ''}
+            </p>
+          </div>
+          {user.is_partner && (
+            <span className="shrink-0 rounded bg-warning-500/20 px-1.5 py-0.5 text-[10px] font-medium text-warning-400">
+              {t('admin.referralNetwork.user.partner')}
+            </span>
+          )}
+        </button>
+      );
+    });
   }
 }
