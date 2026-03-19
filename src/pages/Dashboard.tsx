@@ -276,14 +276,16 @@ export default function Dashboard() {
       {pendingGifts && pendingGifts.length > 0 && <PendingGiftCard gifts={pendingGifts} />}
 
       {/* Multi-tariff: show link to subscriptions list */}
-      {isMultiTariff && multiSubCount > 1 && (
+      {isMultiTariff && (
         <Link to="/subscriptions" className="bento-card flex items-center justify-between">
           <div>
             <div className="text-sm font-medium opacity-60">
               {t('dashboard.subscriptions', 'Подписки')}
             </div>
             <div className="text-lg font-bold">
-              {multiSubCount} {t('dashboard.activeTariffs', 'активных тарифов')}
+              {multiSubCount > 1
+                ? `${multiSubCount} ${t('dashboard.activeTariffs', 'активных тарифов')}`
+                : t('dashboard.manageSubscriptions', 'Управление подписками')}
             </div>
           </div>
           <ChevronRightIcon />
