@@ -1292,6 +1292,22 @@
         "resetZoom": "Reset zoom",
         "fullscreen": "Fullscreen"
       },
+      "scope": {
+        "title": "Scope",
+        "campaign": "Campaign",
+        "partner": "Partner",
+        "user": "User",
+        "searchPlaceholder": "Search...",
+        "selectCampaign": "Select campaign",
+        "selectPartner": "Select partner",
+        "selectUser": "Search user",
+        "emptyState": "Select a campaign, partner, or user to view their network",
+        "users": "users",
+        "campaigns": "campaigns",
+        "active": "Active",
+        "inactive": "Inactive",
+        "noResults": "Nothing found"
+      },
       "loading": "Loading graph...",
       "error": "Failed to load network data",
       "empty": "No data to display"

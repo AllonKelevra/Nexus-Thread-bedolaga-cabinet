@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { SelectedNode, NetworkFilters } from '@/types/referralNetwork';
+import type { SelectedNode, NetworkFilters, ScopeSelection } from '@/types/referralNetwork';
 
 const DEFAULT_FILTERS: NetworkFilters = {
   campaigns: [],
@@ -12,14 +12,14 @@ interface ReferralNetworkState {
   hoveredNodeId: string | null;
   highlightedNodes: Set<string>;
   filters: NetworkFilters;
-  isFiltersOpen: boolean;
+  scope: ScopeSelection | null;
 
   setSelectedNode: (node: SelectedNode) => void;
   setHoveredNode: (id: string | null) => void;
   setHighlightedNodes: (nodes: Set<string>) => void;
   updateFilters: (filters: Partial<NetworkFilters>) => void;
   resetFilters: () => void;
-  setIsFiltersOpen: (open: boolean) => void;
+  setScope: (scope: ScopeSelection | null) => void;
 }
 
 export const useReferralNetworkStore = create<ReferralNetworkState>()((set) => ({
@@ -27,7 +27,7 @@ export const useReferralNetworkStore = create<ReferralNetworkState>()((set) => (
   hoveredNodeId: null,
   highlightedNodes: new Set<string>(),
   filters: { ...DEFAULT_FILTERS },
-  isFiltersOpen: false,
+  scope: null,
 
   setSelectedNode: (node) => set({ selectedNode: node }),
 
@@ -42,5 +42,12 @@ export const useReferralNetworkStore = create<ReferralNetworkState>()((set) => (
 
   resetFilters: () => set({ filters: { ...DEFAULT_FILTERS } }),
 
-  setIsFiltersOpen: (open) => set({ isFiltersOpen: open }),
+  setScope: (scope) =>
+    set({
+      scope,
+      selectedNode: null,
+      hoveredNodeId: null,
+      highlightedNodes: new Set<string>(),
+      filters: { ...DEFAULT_FILTERS },
+    }),
 }));

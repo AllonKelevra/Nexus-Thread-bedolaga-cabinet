@@ -1126,6 +1126,22 @@
         "resetZoom": "بازنشانی زوم",
         "fullscreen": "تمام‌صفحه"
       },
+      "scope": {
+        "title": "محدوده",
+        "campaign": "کمپین",
+        "partner": "شریک",
+        "user": "کاربر",
+        "searchPlaceholder": "جستجو...",
+        "selectCampaign": "انتخاب کمپین",
+        "selectPartner": "انتخاب شریک",
+        "selectUser": "جستجوی کاربر",
+        "emptyState": "یک کمپین، شریک یا کاربر را برای مشاهده شبکه انتخاب کنید",
+        "users": "کاربران",
+        "campaigns": "کمپین‌ها",
+        "active": "فعال",
+        "inactive": "غیرفعال",
+        "noResults": "نتیجه‌ای یافت نشد"
+      },
       "loading": "بارگذاری گراف...",
       "error": "خطا در بارگذاری داده‌های شبکه",
       "empty": "داده‌ای برای نمایش وجود ندارد"

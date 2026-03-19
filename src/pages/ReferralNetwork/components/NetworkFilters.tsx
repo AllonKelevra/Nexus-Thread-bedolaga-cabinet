@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useReferralNetworkStore } from '@/store/referralNetwork';
 import type { NetworkGraphData } from '@/types/referralNetwork';
@@ -8,6 +8,10 @@ interface NetworkFiltersProps {
   className?: string;
 }
 
+/**
+ * @deprecated No longer used in the main page — replaced by ScopeSelector.
+ * Kept for potential future reuse.
+ */
 export function NetworkFilters({ data, className }: NetworkFiltersProps) {
   const { t } = useTranslation();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -15,8 +19,7 @@ export function NetworkFilters({ data, className }: NetworkFiltersProps) {
   const filters = useReferralNetworkStore((s) => s.filters);
   const updateFilters = useReferralNetworkStore((s) => s.updateFilters);
   const resetFilters = useReferralNetworkStore((s) => s.resetFilters);
-  const isOpen = useReferralNetworkStore((s) => s.isFiltersOpen);
-  const setIsOpen = useReferralNetworkStore((s) => s.setIsFiltersOpen);
+  const [isOpen, setIsOpen] = useState(false);
 
   const hasActiveFilters =
     filters.campaigns.length > 0 || filters.partnersOnly || filters.minReferrals > 0;

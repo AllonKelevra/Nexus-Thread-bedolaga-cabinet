@@ -4,11 +4,19 @@ import type {
   NetworkUserDetail,
   NetworkCampaignDetail,
   NetworkSearchResult,
+  ScopeOptionsData,
 } from '@/types/referralNetwork';
 
 export const referralNetworkApi = {
-  getNetworkGraph: async (): Promise<NetworkGraphData> => {
-    const response = await apiClient.get('/cabinet/admin/referral-network/');
+  getScopeOptions: async (): Promise<ScopeOptionsData> => {
+    const response = await apiClient.get('/cabinet/admin/referral-network/scope-options');
+    return response.data;
+  },
+
+  getScopedGraph: async (scope: string, id: number): Promise<NetworkGraphData> => {
+    const response = await apiClient.get('/cabinet/admin/referral-network/scoped', {
+      params: { scope, id },
+    });
     return response.data;
   },
 

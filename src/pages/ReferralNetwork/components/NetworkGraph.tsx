@@ -6,7 +6,7 @@ import { inferSettings } from 'graphology-layout-forceatlas2';
 import { useReferralNetworkStore } from '@/store/referralNetwork';
 import type { NetworkGraphData, NetworkFilters } from '@/types/referralNetwork';
 import { getUserNodeColor, getUserNodeSize, getCampaignColor } from '../utils';
-import { setSigmaInstance, setGraphInstance } from '../sigmaGlobals';
+import { setSigmaInstance } from '../sigmaGlobals';
 
 interface NetworkGraphProps {
   data: NetworkGraphData;
@@ -145,6 +145,7 @@ export function NetworkGraph({ data, className }: NetworkGraphProps) {
 
   const setSelectedNode = useReferralNetworkStore((s) => s.setSelectedNode);
   const setHoveredNode = useReferralNetworkStore((s) => s.setHoveredNode);
+  const setHighlightedNodes = useReferralNetworkStore((s) => s.setHighlightedNodes);
   const hoveredNodeId = useReferralNetworkStore((s) => s.hoveredNodeId);
   const highlightedNodes = useReferralNetworkStore((s) => s.highlightedNodes);
   const filters = useReferralNetworkStore((s) => s.filters);
@@ -268,7 +269,6 @@ export function NetworkGraph({ data, className }: NetworkGraphProps) {
 
       sigmaRef.current = sigma;
       setSigmaInstance(sigma);
-      setGraphInstance(graph);
 
       if (graph.order > 0) {
         const inferred = inferSettings(graph);
@@ -348,9 +348,11 @@ export function NetworkGraph({ data, className }: NetworkGraphProps) {
       }
       graphRef.current = null;
       setSigmaInstance(null);
-      setGraphInstance(null);
+
+      setHoveredNode(null);
+      setHighlightedNodes(new Set());
     };
-  }, [data, setSelectedNode, setHoveredNode, killFA2]);
+  }, [data, setSelectedNode, setHoveredNode, setHighlightedNodes, killFA2]);
 
   useEffect(() => {
     const container = containerRef.current;

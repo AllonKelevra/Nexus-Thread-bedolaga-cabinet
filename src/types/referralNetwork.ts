@@ -100,3 +100,31 @@ export interface NetworkFilters {
   partnersOnly: boolean;
   minReferrals: number;
 }
+
+export interface CampaignOption {
+  id: number;
+  name: string;
+  start_parameter: string;
+  is_active: boolean;
+  direct_users: number;
+}
+
+export interface PartnerOption {
+  id: number;
+  display_name: string;
+  username: string | null;
+  campaign_count: number;
+}
+
+export interface ScopeOptionsData {
+  campaigns: CampaignOption[];
+  partners: PartnerOption[];
+}
+
+export type ScopeType = 'campaign' | 'partner' | 'user';
+
+export interface ScopeSelection {
+  type: ScopeType;
+  id: number;
+  label: string;
+}

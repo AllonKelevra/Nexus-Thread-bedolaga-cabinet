@@ -1126,6 +1126,22 @@
         "resetZoom": "重置缩放",
         "fullscreen": "全屏"
       },
+      "scope": {
+        "title": "范围",
+        "campaign": "活动",
+        "partner": "合作伙伴",
+        "user": "用户",
+        "searchPlaceholder": "搜索...",
+        "selectCampaign": "选择活动",
+        "selectPartner": "选择合作伙伴",
+        "selectUser": "搜索用户",
+        "emptyState": "选择活动、合作伙伴或用户以查看其网络",
+        "users": "用户",
+        "campaigns": "活动",
+        "active": "活跃",
+        "inactive": "非活跃",
+        "noResults": "未找到"
+      },
       "loading": "加载图表...",
       "error": "加载网络数据失败",
       "empty": "无数据显示"
