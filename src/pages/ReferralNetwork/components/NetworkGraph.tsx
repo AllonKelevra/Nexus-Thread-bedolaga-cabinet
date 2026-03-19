@@ -53,8 +53,13 @@ function buildFullGraph(graphData: NetworkGraphData): Graph {
       const edgeKey = `${edge.source}->${edge.target}`;
       if (!graph.hasEdge(edgeKey)) {
         graph.addEdgeWithKey(edgeKey, edge.source, edge.target, {
-          color: edge.type === 'campaign' ? 'rgba(77, 217, 192, 0.06)' : 'rgba(255,255,255,0.03)',
-          size: 0.3,
+          color:
+            edge.type === 'partner_campaign'
+              ? 'rgba(255, 138, 101, 0.5)'
+              : edge.type === 'campaign'
+                ? 'rgba(77, 217, 192, 0.06)'
+                : 'rgba(255,255,255,0.03)',
+          size: edge.type === 'partner_campaign' ? 1.5 : 0.3,
           edgeType: edge.type,
         });
       }

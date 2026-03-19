@@ -37,7 +37,7 @@ export interface NetworkCampaignNode {
 export interface NetworkEdge {
   source: string;
   target: string;
-  type: 'referral' | 'campaign';
+  type: 'referral' | 'campaign' | 'partner_campaign';
 }
 
 export interface NetworkGraphData {

@@ -1274,6 +1274,7 @@
         "partner": "Партнёр",
         "topReferrer": "Топ-реферер (10+)",
         "campaignUser": "Из кампании",
+        "partnerCampaignEdge": "Партнёр → РК",
         "campaignNode": "Рекламная кампания"
       },
       "user": {

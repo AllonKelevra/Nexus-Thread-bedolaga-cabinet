@@ -1253,6 +1253,7 @@
         "partner": "Partner",
         "topReferrer": "Top referrer (10+)",
         "campaignUser": "From campaign",
+        "partnerCampaignEdge": "Partner → Campaign",
         "campaignNode": "Ad campaign"
       },
       "user": {

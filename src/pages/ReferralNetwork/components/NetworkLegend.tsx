@@ -38,6 +38,13 @@ export function NetworkLegend({ className }: NetworkLegendProps) {
             <span className="text-xs text-dark-300">{t(item.labelKey)}</span>
           </div>
         ))}
+        {/* Partner → Campaign edge */}
+        <div className="flex items-center gap-2">
+          <div className="h-0.5 w-4 shrink-0 rounded-full" style={{ backgroundColor: '#ff8a65' }} />
+          <span className="text-xs text-dark-300">
+            {t('admin.referralNetwork.legend.partnerCampaignEdge')}
+          </span>
+        </div>
         {/* Campaign node with gradient to represent varying colors */}
         <div className="flex items-center gap-2">
           <div className="h-2.5 w-2.5 shrink-0 rounded-full" style={gradientStyle} />

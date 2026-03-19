@@ -1087,6 +1087,7 @@
         "partner": "合作伙伴",
         "topReferrer": "顶级推荐人 (10+)",
         "campaignUser": "来自活动",
+        "partnerCampaignEdge": "合作伙伴 → 活动",
         "campaignNode": "广告活动"
       },
       "user": {

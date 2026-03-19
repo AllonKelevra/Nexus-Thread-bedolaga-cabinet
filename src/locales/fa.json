@@ -1087,6 +1087,7 @@
         "partner": "شریک",
         "topReferrer": "ارجاع‌دهنده برتر (+۱۰)",
         "campaignUser": "از کمپین",
+        "partnerCampaignEdge": "شریک → کمپین",
         "campaignNode": "کمپین تبلیغاتی"
       },
       "user": {
