@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { referralNetworkApi } from '@/api/referralNetwork';
 import { useReferralNetworkStore } from '@/store/referralNetwork';
+import { useHeaderHeight } from '@/hooks/useHeaderHeight';
 import { AdminBackButton } from '@/components/admin/AdminBackButton';
 import { NetworkGraph } from './components/NetworkGraph';
 import { ScopeSelector } from './components/ScopeSelector';
@@ -19,6 +20,8 @@ export function ReferralNetwork() {
   const addScope = useReferralNetworkStore((s) => s.addScope);
   const removeScope = useReferralNetworkStore((s) => s.removeScope);
   const clearScope = useReferralNetworkStore((s) => s.clearScope);
+
+  const { mobile: mobileHeaderHeight } = useHeaderHeight();
 
   const hasScope = scope.length > 0;
 
@@ -38,14 +41,18 @@ export function ReferralNetwork() {
   return createPortal(
     <div
       id="referral-network-container"
-      className="fixed inset-x-0 bottom-0 top-16 z-40 grid grid-rows-[auto_1fr] bg-[#0a0a0f] lg:top-14"
+      className="fixed inset-x-0 bottom-0 z-40 grid grid-rows-[auto_1fr] bg-[#0a0a0f] lg:!top-14"
+      style={{ top: mobileHeaderHeight }}
     >
       <div className="z-20 border-b border-dark-700/50 bg-dark-900/90 backdrop-blur-md">
-        <div className="flex items-center gap-2 px-3 py-2 sm:gap-3 sm:px-4 sm:py-3">
-          <AdminBackButton />
-          <h1 className="shrink-0 text-sm font-bold text-dark-100 sm:text-base">
-            {t('admin.referralNetwork.title')}
-          </h1>
+        {/* Mobile: two rows — title on top, selector below */}
+        <div className="flex flex-col gap-1.5 px-3 py-2 sm:flex-row sm:items-center sm:gap-3 sm:px-4 sm:py-3">
+          <div className="flex items-center gap-2">
+            <AdminBackButton />
+            <h1 className="shrink-0 text-sm font-bold text-dark-100 sm:text-base">
+              {t('admin.referralNetwork.title')}
+            </h1>
+          </div>
           <ScopeSelector
             value={scope}
             onAdd={addScope}
