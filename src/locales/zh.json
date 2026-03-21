@@ -1410,7 +1410,14 @@
       "enableEmail": "Email",
       "sendingBoth": "将创建2个群发",
       "bothCreated": "群发已创建",
-      "atLeastOneChannel": "请至少选择一个渠道"
+      "atLeastOneChannel": "请至少选择一个渠道",
+      "customButtons": "自定义按钮",
+      "addCustomButton": "添加按钮",
+      "customButtonLabelPlaceholder": "按钮文字",
+      "customButtonTypeCallback": "回调",
+      "customButtonTypeUrl": "链接",
+      "customButtonCallbackPlaceholder": "callback_data（例如 back_to_menu）",
+      "customButtonUrlPlaceholder": "https://example.com"
     },
     "pinnedMessages": {
       "title": "置顶消息",

@@ -1726,7 +1726,14 @@
       "enableEmail": "Email",
       "sendingBoth": "Будет создано 2 рассылки",
       "bothCreated": "Рассылки созданы",
-      "atLeastOneChannel": "Выберите хотя бы один канал"
+      "atLeastOneChannel": "Выберите хотя бы один канал",
+      "customButtons": "Кастомные кнопки",
+      "addCustomButton": "Добавить кнопку",
+      "customButtonLabelPlaceholder": "Текст кнопки",
+      "customButtonTypeCallback": "Callback",
+      "customButtonTypeUrl": "Ссылка",
+      "customButtonCallbackPlaceholder": "callback_data (например, back_to_menu)",
+      "customButtonUrlPlaceholder": "https://example.com"
     },
     "pinnedMessages": {
       "title": "Закреплённые сообщения",
