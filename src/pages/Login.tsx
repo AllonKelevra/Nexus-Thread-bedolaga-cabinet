@@ -22,7 +22,7 @@ import LanguageSwitcher from '../components/LanguageSwitcher';
 import TelegramLoginButton from '../components/TelegramLoginButton';
 import OAuthProviderIcon from '../components/OAuthProviderIcon';
 import { saveOAuthState } from '../utils/oauth';
-import { consumeReferralCode, getPendingReferralCode } from '../utils/referral';
+import { getPendingReferralCode } from '../utils/referral';
 
 export default function Login() {
   const { t } = useTranslation();
@@ -145,16 +145,6 @@ export default function Login() {
       setOauthLoading(null);
     }
   };
-
-  const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || '';
-
-  // If email auth is disabled but user came with ref param, redirect to bot
-  useEffect(() => {
-    if (referralCode && emailAuthConfig?.enabled === false && botUsername) {
-      consumeReferralCode();
-      window.location.href = `https://t.me/${botUsername}?start=${encodeURIComponent(referralCode)}`;
-    }
-  }, [referralCode, emailAuthConfig, botUsername]);
 
   const appName = branding ? branding.name : import.meta.env.VITE_APP_NAME || 'VPN';
   const appLogo = branding?.logo_letter || import.meta.env.VITE_APP_LOGO || 'V';

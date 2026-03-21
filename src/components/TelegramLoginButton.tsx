@@ -6,6 +6,7 @@ import { brandingApi, type TelegramWidgetConfig } from '../api/branding';
 import { authApi } from '../api/auth';
 import { useAuthStore } from '../store/auth';
 import { useNavigate } from 'react-router';
+import { consumeCampaignSlug } from '../utils/campaign';
 
 interface TelegramLoginButtonProps {
   referralCode?: string;
@@ -33,6 +34,10 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
   const expireTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
 
   const loginWithDeepLink = useAuthStore((s) => s.loginWithDeepLink);
+
+  // Capture campaign slug once on mount (before any retry clears it)
+  const capturedCampaignRef = useRef<string | null>(null);
+  const codesConsumedRef = useRef(false);
 
   const { data: widgetConfig } = useQuery<TelegramWidgetConfig>({
     queryKey: ['telegram-widget-config'],
@@ -239,6 +244,17 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
     }
 
     try {
+      // Consume campaign slug ONCE (first call only).
+      // Clears localStorage on first call, so subsequent retries reuse the ref.
+      // Note: referral code is NOT consumed here — deep link auth is for existing
+      // bot users where referrals don't apply. Leaving it in localStorage allows
+      // other auth methods (OIDC, widget) to pick it up if the user switches paths.
+      if (!codesConsumedRef.current) {
+        capturedCampaignRef.current = consumeCampaignSlug();
+        codesConsumedRef.current = true;
+      }
+      const capturedCampaign = capturedCampaignRef.current;
+
       const response = await authApi.requestDeepLinkToken();
       const { token, bot_username, expires_in } = response;
       setDeepLinkToken(token);
@@ -249,7 +265,8 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
       const poll = async () => {
         if (!mountedRef.current) return;
         try {
-          await loginWithDeepLink(token);
+          // Deep link auth is for existing bot users — only campaign_slug applies
+          await loginWithDeepLink(token, capturedCampaign);
           // Success — auth store is updated, navigate
           if (expireTimeoutRef.current) {
             clearTimeout(expireTimeoutRef.current);
