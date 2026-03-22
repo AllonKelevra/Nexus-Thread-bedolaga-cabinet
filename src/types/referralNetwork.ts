@@ -51,6 +51,7 @@ export interface NetworkGraphData {
   total_referrers: number;
   total_campaigns: number;
   total_earnings_kopeks: number;
+  total_subscription_revenue_kopeks: number;
 }
 
 export interface NetworkUserDetail {

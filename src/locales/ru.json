@@ -1268,7 +1268,8 @@
         "totalUsers": "Пользователей",
         "totalReferrers": "Рефереров",
         "totalCampaigns": "Кампаний",
-        "totalEarnings": "Общий доход"
+        "subscriptionRevenue": "Доход с подписок",
+        "totalEarnings": "Реф. доход"
       },
       "legend": {
         "title": "Легенда",

@@ -1247,7 +1247,8 @@
         "totalUsers": "Users",
         "totalReferrers": "Referrers",
         "totalCampaigns": "Campaigns",
-        "totalEarnings": "Total earnings"
+        "subscriptionRevenue": "Subscription revenue",
+        "totalEarnings": "Ref. earnings"
       },
       "legend": {
         "title": "Legend",

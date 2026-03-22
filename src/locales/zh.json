@@ -1081,7 +1081,8 @@
         "totalUsers": "用户",
         "totalReferrers": "推荐人",
         "totalCampaigns": "活动",
-        "totalEarnings": "总收入"
+        "subscriptionRevenue": "订阅收入",
+        "totalEarnings": "推荐收入"
       },
       "legend": {
         "title": "图例",

@@ -1081,7 +1081,8 @@
         "totalUsers": "کاربران",
         "totalReferrers": "ارجاع‌دهندگان",
         "totalCampaigns": "کمپین‌ها",
-        "totalEarnings": "درآمد کل"
+        "subscriptionRevenue": "درآمد اشتراک",
+        "totalEarnings": "درآمد ارجاع"
       },
       "legend": {
         "title": "راهنما",
