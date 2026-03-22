@@ -1268,17 +1268,24 @@
         "totalUsers": "Пользователей",
         "totalReferrers": "Рефереров",
         "totalCampaigns": "Кампаний",
-        "totalEarnings": "Общий доход"
+        "subscriptionRevenue": "Доход с подписок",
+        "totalEarnings": "Реф. доход"
       },
       "legend": {
         "title": "Легенда",
-        "regularUser": "Обычный",
+        "fillTitle": "Подписка",
+        "borderTitle": "Роль реферера",
+        "regularUser": "Без подписки",
         "activeReferrer": "Активный реферер",
         "partner": "Партнёр",
         "topReferrer": "Топ-реферер (10+)",
         "campaignUser": "Из кампании",
         "partnerCampaignEdge": "Партнёр → РК",
-        "campaignNode": "Рекламная кампания"
+        "campaignNode": "Рекламная кампания",
+        "paidActive": "Платная подписка",
+        "trialActive": "Триал",
+        "paidExpired": "Платная истекла",
+        "trialExpired": "Триал истёк"
       },
       "user": {
         "tgId": "TG ID",
@@ -1297,7 +1304,13 @@
         "source": "Источник",
         "referredBy": "Пришёл от",
         "fromCampaign": "РК",
-        "organic": "Органический"
+        "organic": "Органический",
+        "subscriptionStatus": {
+          "trial_active": "Триал",
+          "paid_active": "Платная",
+          "trial_expired": "Триал истёк",
+          "paid_expired": "Платная истекла"
+        }
       },
       "campaign": {
         "startParam": "Параметр",
@@ -3773,6 +3786,7 @@
       "system": "Система",
       "permanent": "Бессрочно",
       "expired": "истекло",
+      "envManaged": "Управляется через ADMIN_IDS / ADMIN_EMAILS в env",
       "revoke": "Отозвать",
       "revokeAriaLabel": "Отозвать роль {{role}} у {{user}}",
       "table": {
