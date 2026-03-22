@@ -342,7 +342,7 @@ export function NetworkGraph({ data, className }: NetworkGraphProps) {
         defaultNodeColor: NODE_COLORS.regular,
         nodeProgramClasses: { bordered: BorderedNodeProgram },
         defaultNodeType: 'bordered',
-        labelColor: { color: '#111827' },
+        labelColor: { color: '#e5e7eb' },
         labelFont: 'Inter, system-ui, sans-serif',
         labelSize: 11,
         stagePadding: 40,
