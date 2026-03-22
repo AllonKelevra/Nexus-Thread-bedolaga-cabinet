@@ -15,7 +15,7 @@ import {
   type BrandingInfo,
   type EmailAuthEnabled,
 } from '../api/branding';
-import { getAndClearReturnUrl } from '../utils/token';
+import { getAndClearReturnUrl, tokenStorage } from '../utils/token';
 import { isInTelegramWebApp, getTelegramInitData, useTelegramSDK } from '../hooks/useTelegramSDK';
 import { closeMiniApp } from '@telegram-apps/sdk-react';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -205,11 +205,18 @@ export default function Login() {
   }, [isAuthInitializing, loginWithTelegram, navigate, t, getReturnUrl]);
 
   const handleRetryTelegramAuth = () => {
+    // Clear ALL cached auth state to prevent stale token/initData loops
+    tokenStorage.clearTokens();
+    sessionStorage.removeItem('tapps/launchParams');
+    sessionStorage.removeItem('telegram_init_data');
+    localStorage.removeItem('cabinet-auth');
+    localStorage.removeItem('tg_user_id');
+
     try {
-      sessionStorage.removeItem('tapps/launchParams');
-      sessionStorage.removeItem('telegram_init_data');
+      // Close miniapp — Telegram will provide fresh initData on reopen
       closeMiniApp();
     } catch {
+      // If closeMiniApp fails, force a clean page reload
       window.location.reload();
     }
   };
