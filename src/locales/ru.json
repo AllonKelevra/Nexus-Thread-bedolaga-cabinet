@@ -1274,7 +1274,7 @@
         "title": "Легенда",
         "fillTitle": "Подписка",
         "borderTitle": "Роль реферера",
-        "regularUser": "Обычный",
+        "regularUser": "Без подписки",
         "activeReferrer": "Активный реферер",
         "partner": "Партнёр",
         "topReferrer": "Топ-реферер (10+)",

@@ -1087,7 +1087,7 @@
         "title": "图例",
         "fillTitle": "订阅状态",
         "borderTitle": "推荐角色",
-        "regularUser": "普通用户",
+        "regularUser": "无订阅",
         "activeReferrer": "活跃推荐人",
         "partner": "合作伙伴",
         "topReferrer": "顶级推荐人 (10+)",

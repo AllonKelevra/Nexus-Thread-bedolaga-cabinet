@@ -1253,7 +1253,7 @@
         "title": "Legend",
         "fillTitle": "Subscription",
         "borderTitle": "Referral role",
-        "regularUser": "Regular user",
+        "regularUser": "No subscription",
         "activeReferrer": "Active referrer",
         "partner": "Partner",
         "topReferrer": "Top referrer (10+)",
