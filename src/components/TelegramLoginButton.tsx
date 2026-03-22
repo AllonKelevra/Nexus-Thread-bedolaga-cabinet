@@ -36,6 +36,7 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
   const pollTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
   const expireTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
   const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const pollInFlightRef = useRef(false);
 
   const loginWithDeepLink = useAuthStore((s) => s.loginWithDeepLink);
 
@@ -264,7 +265,8 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
 
       // Recursive setTimeout prevents overlapping async calls
       const poll = async () => {
-        if (!mountedRef.current) return;
+        if (!mountedRef.current || pollInFlightRef.current) return;
+        pollInFlightRef.current = true;
         try {
           // Deep link auth is for existing bot users — only campaign_slug applies
           await loginWithDeepLink(token, capturedCampaign);
@@ -296,6 +298,8 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
           // Other error — stop polling
           setDeepLinkPolling(false);
           setDeepLinkError(t('common.error'));
+        } finally {
+          pollInFlightRef.current = false;
         }
       };
 
@@ -348,9 +352,12 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
           clearTimeout(pollTimeoutRef.current);
           pollTimeoutRef.current = null;
         }
+        // Skip if another poll is already in-flight to prevent race conditions
+        if (pollInFlightRef.current) return;
         const capturedCampaign = capturedCampaignRef.current;
         const immediatePoll = async () => {
-          if (!mountedRef.current) return;
+          if (!mountedRef.current || pollInFlightRef.current) return;
+          pollInFlightRef.current = true;
           try {
             await loginWithDeepLink(deepLinkToken, capturedCampaign);
             if (expireTimeoutRef.current) {
@@ -377,6 +384,8 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
             }
             setDeepLinkPolling(false);
             setDeepLinkError(t('common.error'));
+          } finally {
+            pollInFlightRef.current = false;
           }
         };
         immediatePoll();
