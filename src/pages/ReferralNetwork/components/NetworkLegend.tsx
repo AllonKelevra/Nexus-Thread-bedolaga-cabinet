@@ -5,13 +5,7 @@ interface NetworkLegendProps {
   className?: string;
 }
 
-const CAMPAIGN_GRADIENT_COLORS = [
-  NODE_COLORS.campaignUser,
-  NODE_COLORS.partner,
-  NODE_COLORS.topReferrer,
-  '#6b9fff',
-  '#b97aff',
-];
+const CAMPAIGN_GRADIENT_COLORS = ['#4dd9c0', '#f0c261', '#e85d9a', '#6b9fff', '#b97aff'];
 
 const FILL_ITEMS = [
   { color: NODE_COLORS.paidActive, labelKey: 'admin.referralNetwork.legend.paidActive' },

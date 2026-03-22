@@ -18,8 +18,8 @@ export const NODE_COLORS = {
   trialActive: '#38bdf8',
   paidExpired: '#ef4444',
   trialExpired: '#fb923c',
-  campaignUser: '#4dd9c0',
-  regular: '#6b7280',
+  campaignUser: '#fbbf24',
+  regular: '#94a3b8',
 } as const;
 
 /**

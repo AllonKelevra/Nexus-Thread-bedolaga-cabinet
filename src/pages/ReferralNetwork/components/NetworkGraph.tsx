@@ -6,7 +6,13 @@ import { inferSettings } from 'graphology-layout-forceatlas2';
 import { useReferralNetworkStore } from '@/store/referralNetwork';
 import type { NetworkGraphData, NetworkFilters } from '@/types/referralNetwork';
 import { createNodeBorderProgram } from '@sigma/node-border';
-import { getNodeFillColor, getNodeBorderColor, getUserNodeSize, getCampaignColor } from '../utils';
+import {
+  getNodeFillColor,
+  getNodeBorderColor,
+  getUserNodeSize,
+  getCampaignColor,
+  NODE_COLORS,
+} from '../utils';
 import { setSigmaInstance } from '../sigmaGlobals';
 
 interface NetworkGraphProps {
@@ -198,7 +204,7 @@ function buildFullGraph(graphData: NetworkGraphData): Graph {
             edge.type === 'partner_campaign'
               ? 'rgba(255, 138, 101, 0.5)'
               : edge.type === 'campaign'
-                ? 'rgba(77, 217, 192, 0.06)'
+                ? 'rgba(251, 191, 36, 0.06)'
                 : 'rgba(255,255,255,0.03)',
           size: edge.type === 'partner_campaign' ? 1.5 : 0.3,
           edgeType: edge.type,
@@ -334,7 +340,7 @@ export function NetworkGraph({ data, className }: NetworkGraphProps) {
         labelRenderedSizeThreshold: 14,
         zIndex: true,
         defaultEdgeColor: '#ffffff06',
-        defaultNodeColor: '#6b7280',
+        defaultNodeColor: NODE_COLORS.regular,
         nodeProgramClasses: { bordered: BorderedNodeProgram },
         defaultNodeType: 'bordered',
         labelColor: { color: '#111827' },
