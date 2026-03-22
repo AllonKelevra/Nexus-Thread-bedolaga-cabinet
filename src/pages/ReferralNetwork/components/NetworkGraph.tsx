@@ -342,7 +342,7 @@ export function NetworkGraph({ data, className }: NetworkGraphProps) {
         defaultNodeColor: NODE_COLORS.regular,
         nodeProgramClasses: { bordered: BorderedNodeProgram },
         defaultNodeType: 'bordered',
-        labelColor: { color: '#e5e7eb' },
+        labelColor: { attribute: 'labelColor', color: '#e5e7eb' },
         labelFont: 'Inter, system-ui, sans-serif',
         labelSize: 11,
         stagePadding: 40,
@@ -361,6 +361,7 @@ export function NetworkGraph({ data, className }: NetworkGraphProps) {
           if (highlighted.size > 0) {
             if (highlighted.has(node)) {
               res.highlighted = true;
+              res.labelColor = '#111827';
               res.zIndex = 2;
             } else {
               res.color = `${attrs.color}33`;
@@ -372,9 +373,11 @@ export function NetworkGraph({ data, className }: NetworkGraphProps) {
           if (hovered) {
             if (node === hovered) {
               res.highlighted = true;
+              res.labelColor = '#111827';
               res.zIndex = 2;
             } else if (graph.hasNode(hovered) && graph.areNeighbors(node, hovered)) {
               res.highlighted = true;
+              res.labelColor = '#111827';
               res.zIndex = 1;
             } else if (!highlighted.has(node)) {
               res.color = `${attrs.color}33`;
