@@ -1091,7 +1091,11 @@
         "topReferrer": "ارجاع‌دهنده برتر (+۱۰)",
         "campaignUser": "از کمپین",
         "partnerCampaignEdge": "شریک → کمپین",
-        "campaignNode": "کمپین تبلیغاتی"
+        "campaignNode": "کمپین تبلیغاتی",
+        "paidActive": "اشتراک پرداختی",
+        "trialActive": "آزمایشی",
+        "paidExpired": "اشتراک پرداختی منقضی",
+        "trialExpired": "آزمایشی منقضی"
       },
       "user": {
         "tgId": "شناسه TG",
@@ -1110,7 +1114,13 @@
         "source": "منبع",
         "referredBy": "معرفی شده توسط",
         "fromCampaign": "کمپین",
-        "organic": "طبیعی"
+        "organic": "طبیعی",
+        "subscriptionStatus": {
+          "trial_active": "آزمایشی",
+          "paid_active": "پرداختی",
+          "trial_expired": "آزمایشی منقضی",
+          "paid_expired": "پرداختی منقضی"
+        }
       },
       "campaign": {
         "startParam": "پارامتر",

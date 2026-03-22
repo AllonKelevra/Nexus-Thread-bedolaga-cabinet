@@ -1,17 +1,28 @@
 import { useTranslation } from 'react-i18next';
+import { NODE_COLORS } from '../utils';
 
 interface NetworkLegendProps {
   className?: string;
 }
 
-const CAMPAIGN_GRADIENT_COLORS = ['#4dd9c0', '#f0c261', '#e85d9a', '#6b9fff', '#b97aff'];
+const CAMPAIGN_GRADIENT_COLORS = [
+  NODE_COLORS.campaignUser,
+  NODE_COLORS.partner,
+  NODE_COLORS.topReferrer,
+  '#6b9fff',
+  '#b97aff',
+];
 
 const USER_LEGEND_ITEMS = [
-  { colorKey: '#6b7280', labelKey: 'admin.referralNetwork.legend.regularUser' },
-  { colorKey: '#7c6aef', labelKey: 'admin.referralNetwork.legend.activeReferrer' },
-  { colorKey: '#f0c261', labelKey: 'admin.referralNetwork.legend.partner' },
-  { colorKey: '#e85d9a', labelKey: 'admin.referralNetwork.legend.topReferrer' },
-  { colorKey: '#4dd9c0', labelKey: 'admin.referralNetwork.legend.campaignUser' },
+  { colorKey: NODE_COLORS.regular, labelKey: 'admin.referralNetwork.legend.regularUser' },
+  { colorKey: NODE_COLORS.activeReferrer, labelKey: 'admin.referralNetwork.legend.activeReferrer' },
+  { colorKey: NODE_COLORS.partner, labelKey: 'admin.referralNetwork.legend.partner' },
+  { colorKey: NODE_COLORS.topReferrer, labelKey: 'admin.referralNetwork.legend.topReferrer' },
+  { colorKey: NODE_COLORS.campaignUser, labelKey: 'admin.referralNetwork.legend.campaignUser' },
+  { colorKey: NODE_COLORS.paidActive, labelKey: 'admin.referralNetwork.legend.paidActive' },
+  { colorKey: NODE_COLORS.trialActive, labelKey: 'admin.referralNetwork.legend.trialActive' },
+  { colorKey: NODE_COLORS.paidExpired, labelKey: 'admin.referralNetwork.legend.paidExpired' },
+  { colorKey: NODE_COLORS.trialExpired, labelKey: 'admin.referralNetwork.legend.trialExpired' },
 ];
 
 export function NetworkLegend({ className }: NetworkLegendProps) {

@@ -1091,7 +1091,11 @@
         "topReferrer": "顶级推荐人 (10+)",
         "campaignUser": "来自活动",
         "partnerCampaignEdge": "合作伙伴 → 活动",
-        "campaignNode": "广告活动"
+        "campaignNode": "广告活动",
+        "paidActive": "付费订阅",
+        "trialActive": "试用",
+        "paidExpired": "付费已过期",
+        "trialExpired": "试用已过期"
       },
       "user": {
         "tgId": "TG ID",
@@ -1110,7 +1114,13 @@
         "source": "来源",
         "referredBy": "由...推荐",
         "fromCampaign": "活动",
-        "organic": "自然流量"
+        "organic": "自然流量",
+        "subscriptionStatus": {
+          "trial_active": "试用",
+          "paid_active": "付费",
+          "trial_expired": "试用已过期",
+          "paid_expired": "付费已过期"
+        }
       },
       "campaign": {
         "startParam": "参数",

@@ -1,8 +1,39 @@
+import type { SubscriptionStatus } from '@/types/referralNetwork';
+
 /**
  * Format kopeks to a human-readable ruble string.
  */
 export function formatKopeksToRubles(kopeks: number): string {
   return `${(kopeks / 100).toLocaleString('ru-RU')}`;
+}
+
+/**
+ * Single source of truth for user node colors.
+ */
+export const NODE_COLORS = {
+  partner: '#f0c261',
+  topReferrer: '#e85d9a',
+  activeReferrer: '#7c6aef',
+  paidActive: '#22c55e',
+  trialActive: '#38bdf8',
+  paidExpired: '#ef4444',
+  trialExpired: '#fb923c',
+  campaignUser: '#4dd9c0',
+  regular: '#6b7280',
+} as const;
+
+/**
+ * Map subscription status to its node color.
+ */
+const SUBSCRIPTION_STATUS_COLOR: Record<SubscriptionStatus, string> = {
+  paid_active: NODE_COLORS.paidActive,
+  trial_active: NODE_COLORS.trialActive,
+  paid_expired: NODE_COLORS.paidExpired,
+  trial_expired: NODE_COLORS.trialExpired,
+};
+
+export function getSubscriptionStatusColor(status: SubscriptionStatus): string {
+  return SUBSCRIPTION_STATUS_COLOR[status];
 }
 
 /**
@@ -28,17 +59,20 @@ export function getCampaignColor(index: number): string {
 
 /**
  * Determine the visual color for a user node.
+ * Priority: partner > top referrer > active referrer > subscription status > campaign > regular.
  */
 export function getUserNodeColor(
   directReferrals: number,
   isPartner: boolean,
   campaignId: number | null,
+  subscriptionStatus: SubscriptionStatus | null,
 ): string {
-  if (isPartner) return '#f0c261';
-  if (directReferrals >= 10) return '#e85d9a';
-  if (directReferrals >= 1) return '#7c6aef';
-  if (campaignId !== null) return '#4dd9c0';
-  return '#6b7280';
+  if (isPartner) return NODE_COLORS.partner;
+  if (directReferrals >= 10) return NODE_COLORS.topReferrer;
+  if (directReferrals >= 1) return NODE_COLORS.activeReferrer;
+  if (subscriptionStatus) return SUBSCRIPTION_STATUS_COLOR[subscriptionStatus];
+  if (campaignId !== null) return NODE_COLORS.campaignUser;
+  return NODE_COLORS.regular;
 }
 
 /**

@@ -1278,7 +1278,11 @@
         "topReferrer": "Топ-реферер (10+)",
         "campaignUser": "Из кампании",
         "partnerCampaignEdge": "Партнёр → РК",
-        "campaignNode": "Рекламная кампания"
+        "campaignNode": "Рекламная кампания",
+        "paidActive": "Платная подписка",
+        "trialActive": "Триал",
+        "paidExpired": "Платная истекла",
+        "trialExpired": "Триал истёк"
       },
       "user": {
         "tgId": "TG ID",
@@ -1297,7 +1301,13 @@
         "source": "Источник",
         "referredBy": "Пришёл от",
         "fromCampaign": "РК",
-        "organic": "Органический"
+        "organic": "Органический",
+        "subscriptionStatus": {
+          "trial_active": "Триал",
+          "paid_active": "Платная",
+          "trial_expired": "Триал истёк",
+          "paid_expired": "Платная истекла"
+        }
       },
       "campaign": {
         "startParam": "Параметр",

@@ -30,7 +30,12 @@ function buildFullGraph(graphData: NetworkGraphData): Graph {
   });
 
   graphData.users.forEach((user) => {
-    const color = getUserNodeColor(user.direct_referrals, user.is_partner, user.campaign_id);
+    const color = getUserNodeColor(
+      user.direct_referrals,
+      user.is_partner,
+      user.campaign_id,
+      user.subscription_status,
+    );
     const size = getUserNodeSize(user.direct_referrals);
 
     graph.addNode(`user_${user.id}`, {
@@ -45,6 +50,7 @@ function buildFullGraph(graphData: NetworkGraphData): Graph {
       isPartner: user.is_partner,
       directReferrals: user.direct_referrals,
       campaignId: user.campaign_id,
+      subscriptionStatus: user.subscription_status,
     });
   });
 

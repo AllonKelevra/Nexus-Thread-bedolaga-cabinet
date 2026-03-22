@@ -1257,7 +1257,11 @@
         "topReferrer": "Top referrer (10+)",
         "campaignUser": "From campaign",
         "partnerCampaignEdge": "Partner → Campaign",
-        "campaignNode": "Ad campaign"
+        "campaignNode": "Ad campaign",
+        "paidActive": "Paid subscription",
+        "trialActive": "Trial",
+        "paidExpired": "Paid expired",
+        "trialExpired": "Trial expired"
       },
       "user": {
         "tgId": "TG ID",
@@ -1276,7 +1280,13 @@
         "source": "Source",
         "referredBy": "Referred by",
         "fromCampaign": "Campaign",
-        "organic": "Organic"
+        "organic": "Organic",
+        "subscriptionStatus": {
+          "trial_active": "Trial",
+          "paid_active": "Paid",
+          "trial_expired": "Trial expired",
+          "paid_expired": "Paid expired"
+        }
       },
       "campaign": {
         "startParam": "Parameter",
