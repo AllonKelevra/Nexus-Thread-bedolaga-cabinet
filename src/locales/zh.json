@@ -2967,6 +2967,7 @@
       "system": "系统",
       "permanent": "永久",
       "expired": "已过期",
+      "envManaged": "通过 ADMIN_IDS / ADMIN_EMAILS 环境变量管理",
       "revoke": "撤销",
       "revokeAriaLabel": "撤销 {{user}} 的角色 {{role}}",
       "table": {

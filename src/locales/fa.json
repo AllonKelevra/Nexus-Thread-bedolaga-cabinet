@@ -2968,6 +2968,7 @@
       "system": "سیستم",
       "permanent": "دائمی",
       "expired": "منقضی شده",
+      "envManaged": "مدیریت از طریق ADMIN_IDS / ADMIN_EMAILS در env",
       "revoke": "لغو",
       "revokeAriaLabel": "لغو نقش {{role}} از {{user}}",
       "table": {

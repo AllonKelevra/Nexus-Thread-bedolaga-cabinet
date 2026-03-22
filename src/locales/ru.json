@@ -3773,6 +3773,7 @@
       "system": "Система",
       "permanent": "Бессрочно",
       "expired": "истекло",
+      "envManaged": "Управляется через ADMIN_IDS / ADMIN_EMAILS в env",
       "revoke": "Отозвать",
       "revokeAriaLabel": "Отозвать роль {{role}} у {{user}}",
       "table": {
