@@ -154,7 +154,12 @@ function buildFullGraph(graphData: NetworkGraphData): Graph {
   });
 
   graphData.users.forEach((user) => {
-    const fillColor = getNodeFillColor(user.subscription_status, user.campaign_id);
+    const fillColor = getNodeFillColor(
+      user.subscription_status,
+      user.campaign_id,
+      user.direct_referrals,
+      user.is_partner,
+    );
     const borderColor = getNodeBorderColor(user.direct_referrals, user.is_partner);
     const size = getUserNodeSize(user.direct_referrals);
     const pos = positions.get(`user_${user.id}`) ?? {
@@ -176,7 +181,7 @@ function buildFullGraph(graphData: NetworkGraphData): Graph {
       campaignId: user.campaign_id,
       subscriptionStatus: user.subscription_status,
       borderColor: borderColor ?? fillColor,
-      borderSize: borderColor ? 0.25 : 0,
+      borderSize: borderColor ? 0.35 : 0,
     });
   });
 

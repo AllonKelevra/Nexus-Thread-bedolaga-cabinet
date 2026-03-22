@@ -18,14 +18,11 @@ const FILL_ITEMS = [
   { color: NODE_COLORS.trialActive, labelKey: 'admin.referralNetwork.legend.trialActive' },
   { color: NODE_COLORS.paidExpired, labelKey: 'admin.referralNetwork.legend.paidExpired' },
   { color: NODE_COLORS.trialExpired, labelKey: 'admin.referralNetwork.legend.trialExpired' },
-  { color: NODE_COLORS.campaignUser, labelKey: 'admin.referralNetwork.legend.campaignUser' },
-  { color: NODE_COLORS.regular, labelKey: 'admin.referralNetwork.legend.regularUser' },
-];
-
-const BORDER_ITEMS = [
   { color: NODE_COLORS.partner, labelKey: 'admin.referralNetwork.legend.partner' },
   { color: NODE_COLORS.topReferrer, labelKey: 'admin.referralNetwork.legend.topReferrer' },
   { color: NODE_COLORS.activeReferrer, labelKey: 'admin.referralNetwork.legend.activeReferrer' },
+  { color: NODE_COLORS.campaignUser, labelKey: 'admin.referralNetwork.legend.campaignUser' },
+  { color: NODE_COLORS.regular, labelKey: 'admin.referralNetwork.legend.regularUser' },
 ];
 
 export function NetworkLegend({ className }: NetworkLegendProps) {
@@ -49,22 +46,6 @@ export function NetworkLegend({ className }: NetworkLegendProps) {
             <div
               className="h-2.5 w-2.5 shrink-0 rounded-full"
               style={{ backgroundColor: item.color }}
-            />
-            <span className="text-xs text-dark-300">{t(item.labelKey)}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Border = Referral role */}
-      <h4 className="mb-1.5 mt-2.5 text-[10px] font-medium uppercase tracking-wider text-dark-500">
-        {t('admin.referralNetwork.legend.borderTitle')}
-      </h4>
-      <div className="space-y-1">
-        {BORDER_ITEMS.map((item) => (
-          <div key={item.labelKey} className="flex items-center gap-2">
-            <div
-              className="h-2.5 w-2.5 shrink-0 rounded-full border-2"
-              style={{ borderColor: item.color, backgroundColor: 'transparent' }}
             />
             <span className="text-xs text-dark-300">{t(item.labelKey)}</span>
           </div>
