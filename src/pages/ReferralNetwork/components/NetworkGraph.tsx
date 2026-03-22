@@ -204,7 +204,7 @@ function buildFullGraph(graphData: NetworkGraphData): Graph {
             edge.type === 'partner_campaign'
               ? 'rgba(255, 138, 101, 0.5)'
               : edge.type === 'campaign'
-                ? 'rgba(251, 191, 36, 0.06)'
+                ? 'rgba(255, 255, 255, 0.06)'
                 : 'rgba(255,255,255,0.03)',
           size: edge.type === 'partner_campaign' ? 1.5 : 0.3,
           edgeType: edge.type,
