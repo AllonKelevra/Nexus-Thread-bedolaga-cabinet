@@ -4522,7 +4522,8 @@
         "searchOrCreate": "Search or create...",
         "noItems": "Nothing found",
         "placeholder": "Select...",
-        "clear": "Clear"
+        "clear": "Clear",
+        "delete": "Delete {{name}}"
       },
       "toolbar": {
         "bold": "Bold",

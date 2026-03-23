@@ -445,6 +445,22 @@ export default function AdminNewsCreate() {
     [queryClient],
   );
 
+  const handleDeleteCategory = useCallback(
+    async (item: { id: number }) => {
+      await newsApi.deleteCategory(item.id);
+      await queryClient.invalidateQueries({ queryKey: ['admin', 'news', 'categories'] });
+    },
+    [queryClient],
+  );
+
+  const handleDeleteTag = useCallback(
+    async (item: { id: number }) => {
+      await newsApi.deleteTag(item.id);
+      await queryClient.invalidateQueries({ queryKey: ['admin', 'news', 'tags'] });
+    },
+    [queryClient],
+  );
+
   // Fetch article for editing
   const { data: articleData, isLoading: isLoadingArticle } = useQuery({
     queryKey: ['admin', 'news', 'article', articleId],
@@ -626,6 +642,7 @@ export default function AdminNewsCreate() {
               value={selectedCategory}
               onChange={setSelectedCategory}
               onCreateNew={handleCreateCategory}
+              onDelete={handleDeleteCategory}
               placeholder={t('news.admin.combobox.selectCategory')}
             />
           </div>
@@ -636,6 +653,7 @@ export default function AdminNewsCreate() {
               value={selectedTag}
               onChange={setSelectedTag}
               onCreateNew={handleCreateTag}
+              onDelete={handleDeleteTag}
               placeholder={t('news.admin.combobox.selectTag')}
             />
           </div>

@@ -25,6 +25,7 @@ interface ColoredItemComboboxProps {
   value: ColoredItem | null;
   onChange: (item: ColoredItem | null) => void;
   onCreateNew: (name: string, color: string) => Promise<ColoredItem>;
+  onDelete?: (item: ColoredItem) => Promise<void>;
   placeholder?: string;
   isLoading?: boolean;
   colors?: string[];
@@ -36,6 +37,7 @@ export function ColoredItemCombobox({
   value,
   onChange,
   onCreateNew,
+  onDelete,
   placeholder,
   isLoading = false,
   colors = DEFAULT_COLORS,
@@ -48,6 +50,7 @@ export function ColoredItemCombobox({
   const [search, setSearch] = useState('');
   const [newColor, setNewColor] = useState(colors[0] ?? '#00e5a0');
   const [isCreating, setIsCreating] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -136,6 +139,30 @@ export function ColoredItemCombobox({
       setIsCreating(false);
     }
   }, [search, newColor, isCreating, onCreateNew, onChange, haptic]);
+
+  const handleDelete = useCallback(
+    async (e: React.MouseEvent, item: ColoredItem) => {
+      e.stopPropagation();
+      if (!onDelete || deletingId !== null) return;
+
+      haptic.buttonPress();
+      setDeletingId(item.id);
+
+      try {
+        await onDelete(item);
+        haptic.success();
+        // Clear selection if deleted item was selected
+        if (value?.id === item.id) {
+          onChange(null);
+        }
+      } catch {
+        haptic.error();
+      } finally {
+        setDeletingId(null);
+      }
+    },
+    [onDelete, deletingId, value, onChange, haptic],
+  );
 
   // Keyboard handling
   const handleKeyDown = useCallback(
@@ -256,6 +283,23 @@ export function ColoredItemCombobox({
                       >
                         <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                       </svg>
+                    )}
+                    {onDelete && (
+                      <button
+                        type="button"
+                        onClick={(e) => handleDelete(e, item)}
+                        disabled={deletingId === item.id}
+                        className="shrink-0 rounded p-1 text-dark-600 transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50"
+                        aria-label={t('news.admin.combobox.delete', { name: item.name })}
+                      >
+                        {deletingId === item.id ? (
+                          <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-red-400 border-t-transparent" />
+                        ) : (
+                          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                          </svg>
+                        )}
+                      </button>
                     )}
                   </button>
                 ))}

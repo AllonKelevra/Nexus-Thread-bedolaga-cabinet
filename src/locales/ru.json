@@ -5089,7 +5089,8 @@
         "searchOrCreate": "Поиск или создание...",
         "noItems": "Ничего не найдено",
         "placeholder": "Выберите...",
-        "clear": "Очистить"
+        "clear": "Очистить",
+        "delete": "Удалить {{name}}"
       },
       "toolbar": {
         "bold": "Жирный",
