@@ -10,6 +10,7 @@ import PlaceholderExtension from '@tiptap/extension-placeholder';
 import TextAlignExtension from '@tiptap/extension-text-align';
 import UnderlineExtension from '@tiptap/extension-underline';
 import HighlightExtension from '@tiptap/extension-highlight';
+import { VideoExtension } from '../lib/tiptap-video';
 import { newsApi } from '../api/news';
 import { AdminBackButton } from '../components/admin';
 import { Toggle } from '../components/admin/Toggle';
@@ -246,6 +247,7 @@ export default function AdminNewsCreate() {
         types: ['heading', 'paragraph'],
       }),
       HighlightExtension,
+      VideoExtension,
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
@@ -319,13 +321,13 @@ export default function AdminNewsCreate() {
         if (result.media_type === 'image') {
           editor.chain().focus().setImage({ src: result.url, alt: file.name }).run();
         } else {
-          const safeUrl = result.url.replace(/"/g, '&quot;');
           editor
             .chain()
             .focus()
-            .insertContent(
-              `<video src="${safeUrl}" controls class="w-full rounded-xl max-h-96"></video>`,
-            )
+            .insertContent({
+              type: 'video',
+              attrs: { src: result.url, class: 'w-full rounded-xl max-h-96' },
+            })
             .run();
         }
         haptic.success();

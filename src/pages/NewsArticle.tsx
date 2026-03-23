@@ -189,13 +189,14 @@ function sanitizeHtml(html: string): string {
     }
   });
 
-  // Hook: validate <video> src — HTTPS only
+  // Hook: validate <video> src — only allow http/https (block javascript:, data:, etc.)
+  // HTTP is permitted because request.base_url behind a reverse proxy returns http://
   DOMPurify.addHook('afterSanitizeAttributes', (node) => {
     if (node.tagName === 'VIDEO') {
       const src = node.getAttribute('src') ?? '';
       try {
         const url = new URL(src);
-        if (url.protocol !== 'https:') {
+        if (url.protocol !== 'https:' && url.protocol !== 'http:') {
           node.remove();
           return;
         }
