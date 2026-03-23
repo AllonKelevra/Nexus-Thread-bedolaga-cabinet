@@ -382,16 +382,21 @@ export default function AdminNewsCreate() {
         return;
       }
 
+      const controller = new AbortController();
+      activeUploadsRef.current.add(controller);
       setIsFeaturedImageUploading(true);
 
       try {
-        const result = await newsApi.uploadMedia(file);
+        const result = await newsApi.uploadMedia(file, controller.signal);
+        if (controller.signal.aborted) return;
         setFeaturedImageUrl(result.url);
         haptic.success();
       } catch {
+        if (controller.signal.aborted) return;
         haptic.error();
         setSaveError(t('news.admin.uploadError'));
       } finally {
+        activeUploadsRef.current.delete(controller);
         setIsFeaturedImageUploading(false);
       }
     },
@@ -410,8 +415,10 @@ export default function AdminNewsCreate() {
 
   const handleEditorDrop = useCallback(
     (e: React.DragEvent) => {
-      e.preventDefault();
       setIsDragging(false);
+      // TipTap's handleDrop already handled media files dropped on the editor content
+      if (e.defaultPrevented) return;
+      e.preventDefault();
       const file = e.dataTransfer.files[0];
       if (file) handleMediaUpload(file);
     },

@@ -170,70 +170,68 @@ const SANITIZE_CONFIG = {
  */
 const articlePurify = DOMPurify(window);
 
+// Register sanitization hooks once at module init.
+// All hooks are stateless and idempotent — no need to add/remove per call.
+
+// Hook: strip iframes with disallowed src
+articlePurify.addHook('afterSanitizeAttributes', (node) => {
+  if (node.tagName === 'IFRAME') {
+    const src = node.getAttribute('src') ?? '';
+    if (!isAllowedIframeSrc(src)) {
+      node.remove();
+      return;
+    }
+    // Force sandbox — allow-scripts + allow-same-origin needed for YouTube/Vimeo
+    // (cross-origin, so sandbox escape via frameElement is not possible)
+    node.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation');
+    // Always set allow — restricts permissions even if original had none
+    node.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
+  }
+});
+
+// Hook: validate <video> src — only allow http/https (block javascript:, data:, etc.)
+// HTTP is permitted because request.base_url behind a reverse proxy returns http://
+articlePurify.addHook('afterSanitizeAttributes', (node) => {
+  if (node.tagName === 'VIDEO') {
+    const src = node.getAttribute('src') ?? '';
+    try {
+      const url = new URL(src);
+      if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+        node.remove();
+        return;
+      }
+    } catch {
+      node.remove();
+      return;
+    }
+    node.setAttribute('controls', '');
+    node.setAttribute('preload', 'metadata');
+  }
+});
+
+// Hook: force safe link attributes
+articlePurify.addHook('afterSanitizeAttributes', (node) => {
+  if (node.tagName === 'A') {
+    node.setAttribute('target', '_blank');
+    node.setAttribute('rel', 'noopener noreferrer');
+  }
+});
+
+// Hook: restrict inline styles to text-align only (used by TipTap)
+articlePurify.addHook('afterSanitizeAttributes', (node) => {
+  if (node.hasAttribute('style')) {
+    const style = node.getAttribute('style') ?? '';
+    const match = style.match(/text-align\s*:\s*(left|center|right|justify)/i);
+    if (match) {
+      node.setAttribute('style', `text-align: ${match[1]}`);
+    } else {
+      node.removeAttribute('style');
+    }
+  }
+});
+
 function sanitizeHtml(html: string): string {
-  articlePurify.removeAllHooks();
-
-  // Hook: strip iframes with disallowed src
-  articlePurify.addHook('afterSanitizeAttributes', (node) => {
-    if (node.tagName === 'IFRAME') {
-      const src = node.getAttribute('src') ?? '';
-      if (!isAllowedIframeSrc(src)) {
-        node.remove();
-        return;
-      }
-      // Force sandbox — allow-scripts + allow-same-origin needed for YouTube/Vimeo
-      // (cross-origin, so sandbox escape via frameElement is not possible)
-      node.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation');
-      if (node.hasAttribute('allow')) {
-        node.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
-      }
-    }
-  });
-
-  // Hook: validate <video> src — only allow http/https (block javascript:, data:, etc.)
-  // HTTP is permitted because request.base_url behind a reverse proxy returns http://
-  articlePurify.addHook('afterSanitizeAttributes', (node) => {
-    if (node.tagName === 'VIDEO') {
-      const src = node.getAttribute('src') ?? '';
-      try {
-        const url = new URL(src);
-        if (url.protocol !== 'https:' && url.protocol !== 'http:') {
-          node.remove();
-          return;
-        }
-      } catch {
-        node.remove();
-        return;
-      }
-      node.setAttribute('controls', '');
-      node.setAttribute('preload', 'metadata');
-    }
-  });
-
-  // Hook: force safe link attributes
-  articlePurify.addHook('afterSanitizeAttributes', (node) => {
-    if (node.tagName === 'A') {
-      node.setAttribute('target', '_blank');
-      node.setAttribute('rel', 'noopener noreferrer');
-    }
-  });
-
-  // Hook: restrict inline styles to text-align only (used by TipTap)
-  articlePurify.addHook('afterSanitizeAttributes', (node) => {
-    if (node.hasAttribute('style')) {
-      const style = node.getAttribute('style') ?? '';
-      const match = style.match(/text-align\s*:\s*(left|center|right|justify)/i);
-      if (match) {
-        node.setAttribute('style', `text-align: ${match[1]}`);
-      } else {
-        node.removeAttribute('style');
-      }
-    }
-  });
-
-  const result = articlePurify.sanitize(html, SANITIZE_CONFIG);
-  articlePurify.removeAllHooks();
-  return result;
+  return articlePurify.sanitize(html, SANITIZE_CONFIG);
 }
 
 /**
