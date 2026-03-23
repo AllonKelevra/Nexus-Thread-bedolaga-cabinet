@@ -430,7 +430,7 @@ export default function AdminNewsCreate() {
   const handleCreateCategory = useCallback(
     async (name: string, color: string) => {
       const cat = await newsApi.createCategory({ name, color });
-      queryClient.invalidateQueries({ queryKey: ['admin', 'news', 'categories'] });
+      await queryClient.invalidateQueries({ queryKey: ['admin', 'news', 'categories'] });
       return cat;
     },
     [queryClient],
@@ -439,7 +439,7 @@ export default function AdminNewsCreate() {
   const handleCreateTag = useCallback(
     async (name: string, color: string) => {
       const tag = await newsApi.createTag({ name, color });
-      queryClient.invalidateQueries({ queryKey: ['admin', 'news', 'tags'] });
+      await queryClient.invalidateQueries({ queryKey: ['admin', 'news', 'tags'] });
       return tag;
     },
     [queryClient],
@@ -475,10 +475,11 @@ export default function AdminNewsCreate() {
       });
     }
     if (articleData.tag) {
+      const matchedTag = tagsData?.find((t) => t.id === articleData.tag_id);
       setSelectedTag({
         id: articleData.tag_id ?? 0,
         name: articleData.tag,
-        color: articleData.category_color,
+        color: matchedTag?.color ?? '#94a3b8',
       });
     }
     setExcerpt(articleData.excerpt ?? '');
@@ -490,7 +491,7 @@ export default function AdminNewsCreate() {
       editor.commands.setContent(articleData.content);
       editorPopulated.current = true;
     }
-  }, [articleData, editor]);
+  }, [articleData, editor, tagsData]);
 
   // Auto-generate slug from title
   useEffect(() => {
@@ -531,9 +532,9 @@ export default function AdminNewsCreate() {
       excerpt: excerpt.trim() || null,
       category: selectedCategory.name,
       category_color: selectedCategory.color,
-      category_id: selectedCategory.id || null,
-      tag: selectedTag?.name || null,
-      tag_id: selectedTag?.id || null,
+      category_id: selectedCategory.id !== 0 ? selectedCategory.id : null,
+      tag: selectedTag?.name ?? null,
+      tag_id: selectedTag?.id != null && selectedTag.id !== 0 ? selectedTag.id : null,
       featured_image_url: isSafeUrl(featuredImageUrl.trim()) ? featuredImageUrl.trim() : null,
       is_published: isPublished,
       is_featured: isFeatured,
