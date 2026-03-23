@@ -215,7 +215,7 @@ export default function AdminNewsCreate() {
   const isUploading = uploadCount > 0;
   const [isDragging, setIsDragging] = useState(false);
   const [isFeaturedImageUploading, setIsFeaturedImageUploading] = useState(false);
-  const uploadAbortRef = useRef<AbortController | null>(null);
+  const activeUploadsRef = useRef(new Set<AbortController>());
 
   // Ref to hold the media upload handler — allows editorProps.handlePaste to
   // reference it without a circular dependency with useEditor.
@@ -301,14 +301,13 @@ export default function AdminNewsCreate() {
         return;
       }
 
-      uploadAbortRef.current?.abort();
       const controller = new AbortController();
-      uploadAbortRef.current = controller;
+      activeUploadsRef.current.add(controller);
 
       setUploadCount((c) => c + 1);
 
       try {
-        const result = await newsApi.uploadMedia(file);
+        const result = await newsApi.uploadMedia(file, controller.signal);
         if (controller.signal.aborted) return;
 
         if (!isSafeUrl(result.url)) {
@@ -335,19 +334,26 @@ export default function AdminNewsCreate() {
         haptic.error();
         setSaveError(t('news.admin.uploadError'));
       } finally {
-        if (!controller.signal.aborted) setUploadCount((c) => c - 1);
+        activeUploadsRef.current.delete(controller);
+        setUploadCount((c) => c - 1);
       }
     },
     [editor, haptic, t],
   );
 
   // Keep the ref in sync so editorProps handlers can access the latest callback
-  handleMediaUploadRef.current = handleMediaUpload;
-
-  // Cancel in-flight uploads on unmount to prevent state updates on destroyed editor
   useEffect(() => {
+    handleMediaUploadRef.current = handleMediaUpload;
+  }, [handleMediaUpload]);
+
+  // Cancel all in-flight uploads on unmount to prevent state updates on destroyed editor
+  useEffect(() => {
+    const uploads = activeUploadsRef.current;
     return () => {
-      uploadAbortRef.current?.abort();
+      for (const controller of uploads) {
+        controller.abort();
+      }
+      uploads.clear();
     };
   }, []);
 
@@ -689,7 +695,7 @@ export default function AdminNewsCreate() {
           <input
             ref={featuredImageInputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
+            accept="image/jpeg,image/png,image/webp"
             onChange={handleFeaturedImageUpload}
             className="hidden"
             aria-hidden="true"
@@ -894,7 +900,7 @@ export default function AdminNewsCreate() {
           <input
             ref={mediaInputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
+            accept="image/jpeg,image/png,image/webp,video/mp4,video/webm"
             onChange={handleFileInputChange}
             className="hidden"
             aria-hidden="true"

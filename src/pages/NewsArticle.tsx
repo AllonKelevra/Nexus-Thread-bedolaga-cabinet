@@ -78,51 +78,13 @@ function isAllowedIframeSrc(src: string): boolean {
   }
 }
 
-// Hook: strip iframes with disallowed src before DOMPurify finalizes the DOM.
-// Using 'afterSanitizeAttributes' is more reliable than 'uponSanitizeElement'
-// because the node is fully formed at this point.
-DOMPurify.addHook('afterSanitizeAttributes', (node) => {
-  if (node.tagName === 'IFRAME') {
-    const src = node.getAttribute('src') ?? '';
-    if (!isAllowedIframeSrc(src)) {
-      node.remove();
-      return;
-    }
-    // Force sandbox attribute on surviving iframes for defense-in-depth.
-    // allow-scripts + allow-same-origin are needed for YouTube/Vimeo embeds.
-    node.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation');
-    // Strip any allow/allowfullscreen values we did not explicitly set
-    if (node.hasAttribute('allow')) {
-      // Only permit safe feature policies for video embeds
-      node.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
-    }
-  }
-});
-
-// Hook: validate <video> src — only allow http/https URLs
-DOMPurify.addHook('afterSanitizeAttributes', (node) => {
-  if (node.tagName === 'VIDEO') {
-    const src = node.getAttribute('src') ?? '';
-    try {
-      const url = new URL(src);
-      if (url.protocol !== 'https:' && url.protocol !== 'http:') {
-        node.remove();
-        return;
-      }
-    } catch {
-      node.remove();
-      return;
-    }
-    // Force safe defaults
-    node.setAttribute('controls', '');
-    node.setAttribute('preload', 'metadata');
-  }
-});
-
 /**
  * Strict allowlist of tags and attributes for article content.
  * Using ALLOWED_TAGS / ALLOWED_ATTR instead of ADD_TAGS / ADD_ATTR
  * ensures nothing from the permissive defaults leaks through.
+ *
+ * IMPORTANT: <source> is intentionally NOT in ALLOWED_TAGS — this ensures
+ * <video> elements can only load from their own src attribute (validated by hook).
  */
 const SANITIZE_CONFIG = {
   ALLOWED_TAGS: [
@@ -201,32 +163,75 @@ const SANITIZE_CONFIG = {
   ADD_ATTR: ['target'],
 };
 
-// Hook: force rel="noopener noreferrer" on all <a> tags to prevent tabnabbing
-DOMPurify.addHook('afterSanitizeAttributes', (node) => {
-  if (node.tagName === 'A') {
-    node.setAttribute('target', '_blank');
-    node.setAttribute('rel', 'noopener noreferrer');
-  }
-});
-
 /**
- * Restrict inline styles to only text-align (used by TipTap).
- * Strip any other CSS property to prevent CSS injection / exfiltration.
+ * Sanitize HTML with scoped DOMPurify hooks.
+ *
+ * Hooks are registered/removed inside this function to avoid polluting the
+ * global DOMPurify instance (other pages use DOMPurify with their own config).
  */
-DOMPurify.addHook('afterSanitizeAttributes', (node) => {
-  if (node.hasAttribute('style')) {
-    const style = node.getAttribute('style') ?? '';
-    const match = style.match(/text-align\s*:\s*(left|center|right|justify)/i);
-    if (match) {
-      node.setAttribute('style', `text-align: ${match[1]}`);
-    } else {
-      node.removeAttribute('style');
-    }
-  }
-});
-
 function sanitizeHtml(html: string): string {
-  return DOMPurify.sanitize(html, SANITIZE_CONFIG);
+  DOMPurify.removeAllHooks();
+
+  // Hook: strip iframes with disallowed src
+  DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+    if (node.tagName === 'IFRAME') {
+      const src = node.getAttribute('src') ?? '';
+      if (!isAllowedIframeSrc(src)) {
+        node.remove();
+        return;
+      }
+      // Force sandbox — allow-scripts + allow-same-origin needed for YouTube/Vimeo
+      // (cross-origin, so sandbox escape via frameElement is not possible)
+      node.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation');
+      if (node.hasAttribute('allow')) {
+        node.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
+      }
+    }
+  });
+
+  // Hook: validate <video> src — HTTPS only
+  DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+    if (node.tagName === 'VIDEO') {
+      const src = node.getAttribute('src') ?? '';
+      try {
+        const url = new URL(src);
+        if (url.protocol !== 'https:') {
+          node.remove();
+          return;
+        }
+      } catch {
+        node.remove();
+        return;
+      }
+      node.setAttribute('controls', '');
+      node.setAttribute('preload', 'metadata');
+    }
+  });
+
+  // Hook: force safe link attributes
+  DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+    if (node.tagName === 'A') {
+      node.setAttribute('target', '_blank');
+      node.setAttribute('rel', 'noopener noreferrer');
+    }
+  });
+
+  // Hook: restrict inline styles to text-align only (used by TipTap)
+  DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+    if (node.hasAttribute('style')) {
+      const style = node.getAttribute('style') ?? '';
+      const match = style.match(/text-align\s*:\s*(left|center|right|justify)/i);
+      if (match) {
+        node.setAttribute('style', `text-align: ${match[1]}`);
+      } else {
+        node.removeAttribute('style');
+      }
+    }
+  });
+
+  const result = DOMPurify.sanitize(html, SANITIZE_CONFIG);
+  DOMPurify.removeAllHooks();
+  return result;
 }
 
 /**
