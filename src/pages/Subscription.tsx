@@ -265,6 +265,7 @@ export default function Subscription() {
     mutationFn: () => subscriptionApi.togglePause(subscriptionId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
       queryClient.invalidateQueries({ queryKey: ['balance'] });
     },
   });
@@ -290,6 +291,7 @@ export default function Subscription() {
     mutationFn: () => subscriptionApi.purchaseDevices(devicesToAdd, subscriptionId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
       queryClient.invalidateQueries({ queryKey: ['devices', subscriptionId] });
       queryClient.invalidateQueries({ queryKey: ['device-price'] });
       setShowDeviceTopup(false);
@@ -321,6 +323,7 @@ export default function Subscription() {
     mutationFn: () => subscriptionApi.reduceDevices(targetDeviceLimit, subscriptionId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
       queryClient.invalidateQueries({ queryKey: ['devices', subscriptionId] });
       queryClient.invalidateQueries({ queryKey: ['device-reduction-info', subscriptionId] });
       setShowDeviceReduction(false);
@@ -339,6 +342,7 @@ export default function Subscription() {
     mutationFn: (gb: number) => subscriptionApi.purchaseTraffic(gb, subscriptionId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
       setShowTrafficTopup(false);
       setSelectedTrafficPackage(null);
     },
@@ -364,6 +368,7 @@ export default function Subscription() {
     mutationFn: (countries: string[]) => subscriptionApi.updateCountries(countries, subscriptionId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
       queryClient.invalidateQueries({ queryKey: ['countries', subscriptionId] });
       setShowServerManagement(false);
     },

@@ -4,15 +4,10 @@ import { getGlassColors } from '../../utils/glassTheme';
 import { useHaptic } from '../../platform';
 import type { SubscriptionListItem } from '../../types';
 
-function formatTrafficDisplay(used: number, limit: number): string {
-  if (limit === 0) return '∞';
-  return `${used.toFixed(1)} / ${limit} ГБ`;
-}
-
-function formatDate(iso: string | null): string {
+function formatDate(iso: string | null, locale?: string): string {
   if (!iso) return '—';
   try {
-    return new Date(iso).toLocaleDateString('ru-RU', {
+    return new Date(iso).toLocaleDateString(locale ?? undefined, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -22,14 +17,40 @@ function formatDate(iso: string | null): string {
   }
 }
 
-function StatusDot({ status }: { status: string }) {
-  const color =
-    status === 'active' || status === 'trial'
-      ? 'bg-emerald-400'
-      : status === 'limited'
-        ? 'bg-amber-400'
-        : 'bg-red-400';
-  return <span className={`inline-block h-2.5 w-2.5 rounded-full ${color}`} />;
+function StatusBadge({
+  status,
+  t,
+}: {
+  status: string;
+  t: (key: string, fallback: string) => string;
+}) {
+  const isActive = status === 'active' || status === 'trial';
+  const isLimited = status === 'limited';
+  const isExpired = status === 'expired' || status === 'disabled';
+
+  const color = isActive
+    ? 'bg-emerald-400/15 text-emerald-400 border-emerald-400/20'
+    : isLimited
+      ? 'bg-amber-400/15 text-amber-400 border-amber-400/20'
+      : 'bg-red-400/15 text-red-400 border-red-400/20';
+
+  const label = isActive
+    ? status === 'trial'
+      ? t('subscription.statusTrial', 'Тестовая')
+      : t('subscription.statusActive', 'Активна')
+    : isLimited
+      ? t('subscription.statusLimited', 'Ограничена')
+      : isExpired
+        ? t('subscription.statusExpired', 'Истекла')
+        : status;
+
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${color}`}
+    >
+      {label}
+    </span>
+  );
 }
 
 export default function SubscriptionListCard({
@@ -39,7 +60,7 @@ export default function SubscriptionListCard({
   subscription: SubscriptionListItem;
   onClick: () => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { isDark } = useTheme();
   const g = getGlassColors(isDark);
   const { impact } = useHaptic();
@@ -49,54 +70,121 @@ export default function SubscriptionListCard({
     onClick();
   };
 
+  const isActive = subscription.status === 'active' || subscription.status === 'trial';
+  const isExpired = subscription.status === 'expired' || subscription.status === 'disabled';
+  const trafficLimit = subscription.traffic_limit_gb;
+  const trafficUsed = subscription.traffic_used_gb;
+  const isUnlimited = trafficLimit === 0;
+  const trafficPercent = isUnlimited
+    ? 0
+    : trafficLimit > 0
+      ? Math.min(100, (trafficUsed / trafficLimit) * 100)
+      : 0;
+  const trafficColor =
+    trafficPercent >= 90 ? 'bg-red-400' : trafficPercent >= 70 ? 'bg-amber-400' : 'bg-emerald-400';
+
   return (
     <button
       onClick={handleClick}
-      className="bento-card w-full text-left transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
-      style={{ background: g.cardBg, borderColor: g.cardBorder }}
+      className="w-full rounded-2xl border p-4 text-left transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
+      style={{
+        background: isExpired
+          ? isDark
+            ? 'rgba(255,59,92,0.04)'
+            : 'rgba(255,59,92,0.03)'
+          : g.cardBg,
+        borderColor: isExpired ? 'rgba(255,59,92,0.15)' : g.cardBorder,
+      }}
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <StatusDot status={subscription.status} />
-          <span className="text-base font-semibold">
+      {/* Header: tariff name + status badge + chevron */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="truncate text-base font-semibold" style={{ color: g.text }}>
             {subscription.tariff_name || t('subscription.defaultName', 'Подписка')}
           </span>
+          <StatusBadge status={subscription.status} t={t} />
         </div>
         <svg
-          className="h-5 w-5 opacity-40"
+          className="h-4 w-4 shrink-0 opacity-30"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
-          strokeWidth={2}
+          strokeWidth={2.5}
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
         </svg>
       </div>
 
-      <div className="mt-3 grid grid-cols-3 gap-3 text-sm opacity-70">
-        <div>
-          <div className="text-xs opacity-60">{t('subscription.traffic', 'Трафик')}</div>
-          <div>
-            {formatTrafficDisplay(subscription.traffic_used_gb, subscription.traffic_limit_gb)}
+      {/* Traffic mini progress bar */}
+      {isActive && (
+        <div className="mt-3">
+          <div className="mb-1 flex items-baseline justify-between">
+            <span className="text-[11px] font-medium" style={{ color: g.textSecondary }}>
+              {t('subscription.traffic', 'Трафик')}
+            </span>
+            <span className="text-[11px] tabular-nums" style={{ color: g.textSecondary }}>
+              {isUnlimited
+                ? '∞'
+                : `${trafficUsed.toFixed(1)} / ${trafficLimit} ${t('common.units.gb', 'ГБ')}`}
+            </span>
           </div>
-        </div>
-        <div>
-          <div className="text-xs opacity-60">{t('subscription.devices', 'Устройства')}</div>
-          <div>{subscription.device_limit}</div>
-        </div>
-        <div>
-          <div className="text-xs opacity-60">{t('subscription.until', 'До')}</div>
-          <div>{formatDate(subscription.end_date)}</div>
-        </div>
-      </div>
-
-      {subscription.is_trial && (
-        <div className="mt-2">
-          <span className="inline-block rounded-full bg-amber-500/20 px-2 py-0.5 text-xs text-amber-300">
-            {t('subscription.trial', 'Тестовая')}
-          </span>
+          {!isUnlimited && (
+            <div className="h-1.5 overflow-hidden rounded-full" style={{ background: g.innerBg }}>
+              <div
+                className={`h-full rounded-full transition-all ${trafficColor}`}
+                style={{ width: `${Math.max(1, trafficPercent)}%` }}
+              />
+            </div>
+          )}
         </div>
       )}
+
+      {/* Stats row */}
+      <div
+        className="mt-2.5 flex items-center gap-4 text-[12px]"
+        style={{ color: g.textSecondary }}
+      >
+        <span className="flex items-center gap-1">
+          <svg
+            className="h-3.5 w-3.5 opacity-50"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <rect x="5" y="2" width="14" height="20" rx="2" />
+            <path d="M12 18h.01" />
+          </svg>
+          {subscription.device_limit}
+        </span>
+        <span className="flex items-center gap-1">
+          <svg
+            className="h-3.5 w-3.5 opacity-50"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <path d="M16 2v4M8 2v4M3 10h18" />
+          </svg>
+          {formatDate(subscription.end_date, i18n.language)}
+        </span>
+        {subscription.autopay_enabled && (
+          <span className="flex items-center gap-1 text-emerald-400/70">
+            <svg
+              className="h-3 w-3"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2.5}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+            {t('subscription.autopay', 'Автопродление')}
+          </span>
+        )}
+      </div>
     </button>
   );
 }
