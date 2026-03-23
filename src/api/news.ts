@@ -66,7 +66,10 @@ export const newsApi = {
     const response = await apiClient.post<NewsMediaUploadResponse>(
       '/cabinet/admin/news/media/upload',
       formData,
-      { signal },
+      {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        signal,
+      },
     );
     return response.data;
   },
