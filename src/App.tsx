@@ -117,6 +117,11 @@ const AdminLandingEditor = lazy(() => import('./pages/AdminLandingEditor'));
 const AdminLandingStats = lazy(() => import('./pages/AdminLandingStats'));
 const AdminReferralNetwork = lazy(() => import('./pages/ReferralNetwork'));
 
+// News pages
+const NewsArticlePage = lazy(() => import('./pages/NewsArticle'));
+const AdminNews = lazy(() => import('./pages/AdminNews'));
+const AdminNewsCreate = lazy(() => import('./pages/AdminNewsCreate'));
+
 function ProtectedRoute({
   children,
   withLayout = true,
@@ -474,6 +479,16 @@ function App() {
             <ProtectedRoute>
               <LazyPage>
                 <Connection />
+              </LazyPage>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/news/:slug"
+          element={
+            <ProtectedRoute>
+              <LazyPage>
+                <NewsArticlePage />
               </LazyPage>
             </ProtectedRoute>
           }
@@ -1162,6 +1177,38 @@ function App() {
             </PermissionRoute>
           }
         />
+        {/* News admin routes */}
+        <Route
+          path="/admin/news"
+          element={
+            <PermissionRoute permission="news:read">
+              <LazyPage>
+                <AdminNews />
+              </LazyPage>
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="/admin/news/create"
+          element={
+            <PermissionRoute permission="news:create">
+              <LazyPage>
+                <AdminNewsCreate />
+              </LazyPage>
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="/admin/news/:id/edit"
+          element={
+            <PermissionRoute permission="news:edit">
+              <LazyPage>
+                <AdminNewsCreate />
+              </LazyPage>
+            </PermissionRoute>
+          }
+        />
+
         <Route
           path="/admin/audit-log"
           element={

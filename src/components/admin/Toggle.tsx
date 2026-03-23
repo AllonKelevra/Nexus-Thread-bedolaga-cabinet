@@ -7,17 +7,23 @@ interface ToggleProps {
 export function Toggle({ checked, onChange, disabled }: ToggleProps) {
   return (
     <button
+      role="switch"
+      aria-checked={checked}
       onClick={onChange}
       disabled={disabled}
-      className={`relative h-6 w-12 rounded-full transition-colors ${
-        checked ? 'bg-accent-500' : 'bg-dark-600'
-      } ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+      className={`flex min-h-[44px] items-center ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
     >
       <div
-        className={`absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform duration-200 ${
-          checked ? 'translate-x-6' : 'translate-x-0'
+        className={`relative h-8 w-14 rounded-full transition-colors ${
+          checked ? 'bg-accent-500' : 'bg-dark-600'
         }`}
-      />
+      >
+        <div
+          className={`absolute left-1 top-1 h-6 w-6 rounded-full bg-white transition-transform duration-200 ${
+            checked ? 'translate-x-6' : 'translate-x-0'
+          }`}
+        />
+      </div>
     </button>
   );
 }
