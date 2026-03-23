@@ -103,6 +103,7 @@ export interface UserDetailResponse {
   last_activity: string | null;
   cabinet_last_login: string | null;
   subscription: UserSubscriptionInfo | null;
+  subscriptions: UserSubscriptionInfo[];
   promo_group: UserPromoGroupInfo | null;
   referral: UserReferralInfo;
   total_spent_kopeks: number;
@@ -296,6 +297,7 @@ export interface UpdateSubscriptionRequest {
     | 'remove_traffic'
     | 'set_device_limit'
     | 'shorten';
+  subscription_id?: number;
   days?: number;
   end_date?: string;
   tariff_id?: number;

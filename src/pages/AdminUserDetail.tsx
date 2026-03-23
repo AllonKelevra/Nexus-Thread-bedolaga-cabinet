@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
@@ -335,6 +335,7 @@ export default function AdminUserDetail() {
   const [subAction, setSubAction] = useState<string>('extend');
   const [subDays, setSubDays] = useState<number | ''>(30);
   const [selectedTariffId, setSelectedTariffId] = useState<number | null>(null);
+  const [activeSubscriptionId, setActiveSubscriptionId] = useState<number | null>(null);
 
   // Promo group
   const [promoGroups, setPromoGroups] = useState<PromoGroup[]>([]);
@@ -602,6 +603,9 @@ export default function AdminUserDetail() {
     try {
       const data: UpdateSubscriptionRequest = {
         action: action as UpdateSubscriptionRequest['action'],
+        ...(activeSubscriptionId && action !== 'create'
+          ? { subscription_id: activeSubscriptionId }
+          : {}),
         ...(action === 'extend' || action === 'shorten' ? { days: toNumber(subDays, 30) } : {}),
         ...(action === 'change_tariff' && selectedTariffId ? { tariff_id: selectedTariffId } : {}),
         ...(action === 'create'
@@ -721,7 +725,11 @@ export default function AdminUserDetail() {
     if (!userId) return;
     setActionLoading(true);
     try {
-      await adminUsersApi.updateSubscription(userId, { action: 'add_traffic', traffic_gb: gb });
+      await adminUsersApi.updateSubscription(userId, {
+        action: 'add_traffic',
+        traffic_gb: gb,
+        ...(activeSubscriptionId ? { subscription_id: activeSubscriptionId } : {}),
+      });
       notify.success(t('admin.users.detail.subscription.trafficAdded'));
       setSelectedTrafficGb('');
       await loadUser();
@@ -739,6 +747,7 @@ export default function AdminUserDetail() {
       await adminUsersApi.updateSubscription(userId, {
         action: 'remove_traffic',
         traffic_purchase_id: purchaseId,
+        ...(activeSubscriptionId ? { subscription_id: activeSubscriptionId } : {}),
       });
       notify.success(t('admin.users.detail.subscription.trafficRemoved'));
       await loadUser();
@@ -756,6 +765,7 @@ export default function AdminUserDetail() {
       await adminUsersApi.updateSubscription(userId, {
         action: 'set_device_limit',
         device_limit: newLimit,
+        ...(activeSubscriptionId ? { subscription_id: activeSubscriptionId } : {}),
       });
       notify.success(t('admin.users.detail.subscription.deviceLimitUpdated'));
       await loadUser();
@@ -766,7 +776,20 @@ export default function AdminUserDetail() {
     }
   };
 
-  const currentTariff = tariffs.find((t) => t.id === user?.subscription?.tariff_id) || null;
+  // Multi-subscription: pick active subscription or first from list
+  const userSubscriptions = useMemo(() => user?.subscriptions ?? [], [user?.subscriptions]);
+  const selectedSub =
+    userSubscriptions.find((s) => s.id === activeSubscriptionId) ?? user?.subscription ?? null;
+
+  // Auto-select first subscription when user loads
+  useEffect(() => {
+    if (user && userSubscriptions.length > 0 && !activeSubscriptionId) {
+      const activeSub = userSubscriptions.find((s) => s.is_active) ?? userSubscriptions[0];
+      setActiveSubscriptionId(activeSub.id);
+    }
+  }, [user, userSubscriptions, activeSubscriptionId]);
+
+  const currentTariff = tariffs.find((t) => t.id === selectedSub?.tariff_id) || null;
 
   const handleChangePromoGroup = async (groupId: number | null) => {
     if (!userId) return;
@@ -1356,15 +1379,50 @@ export default function AdminUserDetail() {
         {/* Subscription Tab */}
         {activeTab === 'subscription' && (
           <div className="space-y-4">
-            {user.subscription ? (
+            {/* Subscription selector (when multiple) */}
+            {userSubscriptions.length > 1 && (
+              <div className="rounded-xl bg-dark-800/50 p-4">
+                <div className="mb-2 text-xs font-medium text-dark-500">
+                  {t('admin.users.detail.subscription.selectSubscription', 'Выберите подписку')} (
+                  {userSubscriptions.length})
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {userSubscriptions.map((sub) => (
+                    <button
+                      key={sub.id}
+                      onClick={() => setActiveSubscriptionId(sub.id)}
+                      className={`rounded-lg px-3 py-1.5 text-sm transition-all ${
+                        activeSubscriptionId === sub.id
+                          ? 'bg-accent-500 text-white'
+                          : 'bg-dark-700/50 text-dark-300 hover:bg-dark-700'
+                      }`}
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <span
+                          className={`inline-block h-2 w-2 rounded-full ${
+                            sub.is_active ? 'bg-emerald-400' : 'bg-red-400'
+                          }`}
+                        />
+                        {sub.tariff_name || `#${sub.id}`}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {selectedSub ? (
               <>
                 {/* Current subscription */}
                 <div className="rounded-xl bg-dark-800/50 p-4">
                   <div className="mb-3 flex items-center justify-between">
                     <span className="font-medium text-dark-200">
                       {t('admin.users.detail.subscription.current')}
+                      {userSubscriptions.length > 1 && (
+                        <span className="ml-2 text-xs text-dark-500">#{selectedSub.id}</span>
+                      )}
                     </span>
-                    <StatusBadge status={user.subscription.status} />
+                    <StatusBadge status={selectedSub.status} />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -1372,7 +1430,7 @@ export default function AdminUserDetail() {
                         {t('admin.users.detail.subscription.tariff')}
                       </div>
                       <div className="text-dark-100">
-                        {user.subscription.tariff_name ||
+                        {selectedSub.tariff_name ||
                           t('admin.users.detail.subscription.notSpecified')}
                       </div>
                     </div>
@@ -1380,7 +1438,7 @@ export default function AdminUserDetail() {
                       <div className="text-xs text-dark-500">
                         {t('admin.users.detail.subscription.validUntil')}
                       </div>
-                      <div className="text-dark-100">{formatDate(user.subscription.end_date)}</div>
+                      <div className="text-dark-100">{formatDate(selectedSub.end_date)}</div>
                     </div>
                     <div>
                       <div className="text-xs text-dark-500">
@@ -1389,8 +1447,8 @@ export default function AdminUserDetail() {
                       <div className="text-dark-100">
                         {panelInfo?.found
                           ? (panelInfo.used_traffic_bytes / (1024 * 1024 * 1024)).toFixed(1)
-                          : user.subscription.traffic_used_gb.toFixed(1)}{' '}
-                        / {user.subscription.traffic_limit_gb} {t('common.units.gb')}
+                          : selectedSub.traffic_used_gb.toFixed(1)}{' '}
+                        / {selectedSub.traffic_limit_gb} {t('common.units.gb')}
                       </div>
                     </div>
                     <div>
@@ -1399,21 +1457,21 @@ export default function AdminUserDetail() {
                       </div>
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => handleSetDeviceLimit(user.subscription!.device_limit - 1)}
-                          disabled={actionLoading || user.subscription.device_limit <= 1}
+                          onClick={() => handleSetDeviceLimit(selectedSub.device_limit - 1)}
+                          disabled={actionLoading || selectedSub.device_limit <= 1}
                           className="flex h-6 w-6 items-center justify-center rounded-md bg-dark-700 text-dark-300 transition-colors hover:bg-dark-600 disabled:opacity-30"
                         >
                           <MinusIcon />
                         </button>
                         <span className="min-w-[2ch] text-center text-dark-100">
-                          {user.subscription.device_limit}
+                          {selectedSub.device_limit}
                         </span>
                         <button
-                          onClick={() => handleSetDeviceLimit(user.subscription!.device_limit + 1)}
+                          onClick={() => handleSetDeviceLimit(selectedSub.device_limit + 1)}
                           disabled={
                             actionLoading ||
                             (currentTariff?.max_device_limit != null &&
-                              user.subscription.device_limit >= currentTariff.max_device_limit)
+                              selectedSub.device_limit >= currentTariff.max_device_limit)
                           }
                           className="flex h-6 w-6 items-center justify-center rounded-md bg-dark-700 text-dark-300 transition-colors hover:bg-dark-600 disabled:opacity-30"
                         >
@@ -1425,66 +1483,65 @@ export default function AdminUserDetail() {
                 </div>
 
                 {/* Traffic Packages */}
-                {user.subscription.traffic_purchases &&
-                  user.subscription.traffic_purchases.length > 0 && (
-                    <div className="rounded-xl bg-dark-800/50 p-4">
-                      <div className="mb-3 flex items-center justify-between">
-                        <span className="text-sm font-medium text-dark-200">
-                          {t('admin.users.detail.subscription.trafficPackages')}
-                          {user.subscription.purchased_traffic_gb > 0 && (
-                            <span className="ml-2 text-xs text-dark-400">
-                              ({user.subscription.purchased_traffic_gb} {t('common.units.gb')})
-                            </span>
-                          )}
-                        </span>
-                      </div>
-                      <div className="space-y-2">
-                        {user.subscription.traffic_purchases.map((tp) => (
-                          <div
-                            key={tp.id}
-                            className={`flex items-center justify-between rounded-lg px-3 py-2 ${
-                              tp.is_expired ? 'bg-dark-700/30 opacity-60' : 'bg-dark-700/50'
-                            }`}
-                          >
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-2 text-sm text-dark-200">
-                                <span className="font-medium">
-                                  {tp.traffic_gb} {t('common.units.gb')}
-                                </span>
-                                {tp.is_expired ? (
-                                  <span className="rounded-full bg-error-500/20 px-1.5 py-0.5 text-[10px] text-error-400">
-                                    {t('admin.users.detail.subscription.expired')}
-                                  </span>
-                                ) : (
-                                  <span className="text-xs text-dark-400">
-                                    {tp.days_remaining}{' '}
-                                    {t('admin.users.detail.subscription.daysLeft')}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            {!tp.is_expired && (
-                              <button
-                                onClick={() =>
-                                  handleInlineConfirm(`removeTraffic_${tp.id}`, () =>
-                                    handleRemoveTraffic(tp.id),
-                                  )
-                                }
-                                disabled={actionLoading}
-                                className={`ml-2 shrink-0 rounded-lg px-2 py-1 text-xs transition-all disabled:opacity-50 ${
-                                  confirmingAction === `removeTraffic_${tp.id}`
-                                    ? 'bg-error-500 text-white'
-                                    : 'text-dark-500 hover:bg-error-500/15 hover:text-error-400'
-                                }`}
-                              >
-                                {confirmingAction === `removeTraffic_${tp.id}` ? '?' : '\u00D7'}
-                              </button>
-                            )}
-                          </div>
-                        ))}
-                      </div>
+                {selectedSub.traffic_purchases && selectedSub.traffic_purchases.length > 0 && (
+                  <div className="rounded-xl bg-dark-800/50 p-4">
+                    <div className="mb-3 flex items-center justify-between">
+                      <span className="text-sm font-medium text-dark-200">
+                        {t('admin.users.detail.subscription.trafficPackages')}
+                        {selectedSub.purchased_traffic_gb > 0 && (
+                          <span className="ml-2 text-xs text-dark-400">
+                            ({selectedSub.purchased_traffic_gb} {t('common.units.gb')})
+                          </span>
+                        )}
+                      </span>
                     </div>
-                  )}
+                    <div className="space-y-2">
+                      {selectedSub.traffic_purchases.map((tp) => (
+                        <div
+                          key={tp.id}
+                          className={`flex items-center justify-between rounded-lg px-3 py-2 ${
+                            tp.is_expired ? 'bg-dark-700/30 opacity-60' : 'bg-dark-700/50'
+                          }`}
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 text-sm text-dark-200">
+                              <span className="font-medium">
+                                {tp.traffic_gb} {t('common.units.gb')}
+                              </span>
+                              {tp.is_expired ? (
+                                <span className="rounded-full bg-error-500/20 px-1.5 py-0.5 text-[10px] text-error-400">
+                                  {t('admin.users.detail.subscription.expired')}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-dark-400">
+                                  {tp.days_remaining}{' '}
+                                  {t('admin.users.detail.subscription.daysLeft')}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {!tp.is_expired && (
+                            <button
+                              onClick={() =>
+                                handleInlineConfirm(`removeTraffic_${tp.id}`, () =>
+                                  handleRemoveTraffic(tp.id),
+                                )
+                              }
+                              disabled={actionLoading}
+                              className={`ml-2 shrink-0 rounded-lg px-2 py-1 text-xs transition-all disabled:opacity-50 ${
+                                confirmingAction === `removeTraffic_${tp.id}`
+                                  ? 'bg-error-500 text-white'
+                                  : 'text-dark-500 hover:bg-error-500/15 hover:text-error-400'
+                              }`}
+                            >
+                              {confirmingAction === `removeTraffic_${tp.id}` ? '?' : '\u00D7'}
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Add Traffic */}
                 {currentTariff &&
@@ -1602,10 +1659,18 @@ export default function AdminUserDetail() {
                   </div>
                 )}
               </>
-            ) : hasPermission('users:subscription') ? (
+            ) : null}
+
+            {/* Create new subscription (shown when no subs, or always in multi-tariff) */}
+            {hasPermission('users:subscription') && (
               <div className="rounded-xl bg-dark-800/50 p-4">
-                <div className="mb-4 text-center text-dark-400">
-                  {t('admin.users.detail.subscription.noActive')}
+                {userSubscriptions.length === 0 && (
+                  <div className="mb-4 text-center text-dark-400">
+                    {t('admin.users.detail.subscription.noActive')}
+                  </div>
+                )}
+                <div className="mb-3 text-sm font-medium text-dark-200">
+                  {t('admin.users.detail.subscription.createNew', 'Создать подписку')}
                 </div>
                 <div className="space-y-3">
                   <select
@@ -1640,12 +1705,6 @@ export default function AdminUserDetail() {
                       ? t('admin.users.detail.subscription.creating')
                       : t('admin.users.detail.subscription.create')}
                   </button>
-                </div>
-              </div>
-            ) : (
-              <div className="rounded-xl bg-dark-800/50 p-4">
-                <div className="text-center text-dark-400">
-                  {t('admin.users.detail.subscription.noActive')}
                 </div>
               </div>
             )}

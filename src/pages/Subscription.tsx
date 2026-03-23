@@ -196,6 +196,14 @@ export default function Subscription() {
     is_unlimited: boolean;
   } | null>(null);
 
+  // Detect multi-tariff mode from cached subscriptions-list
+  const { data: multiSubData } = useQuery({
+    queryKey: ['subscriptions-list'],
+    queryFn: () => subscriptionApi.getSubscriptions(),
+    staleTime: 60_000,
+  });
+  const isMultiTariff = multiSubData?.multi_tariff_enabled ?? false;
+
   const { data: subscriptionResponse, isLoading } = useQuery({
     queryKey: ['subscription', subscriptionId],
     queryFn: () => subscriptionApi.getSubscription(subscriptionId),
@@ -376,7 +384,7 @@ export default function Subscription() {
       } else {
         setTrafficRefreshCooldown(30);
       }
-      queryClient.invalidateQueries({ queryKey: ['subscription'] });
+      queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
     },
     onError: (error: {
       response?: { status?: number; headers?: { get?: (key: string) => string } };
@@ -430,6 +438,12 @@ export default function Subscription() {
     }
   };
 
+  // In multi-tariff mode without a specific subscription ID, redirect to list
+  if (isMultiTariff && !subscriptionId && !isLoading) {
+    navigate('/subscriptions', { replace: true });
+    return null;
+  }
+
   if (isLoading) {
     return (
       <div className="flex min-h-64 items-center justify-center">
@@ -438,9 +452,56 @@ export default function Subscription() {
     );
   }
 
+  if (!subscription && subscriptionId) {
+    return (
+      <div className="mx-auto max-w-lg p-4 text-center">
+        <div className="mb-4 text-4xl">😕</div>
+        <h2 className="mb-2 text-xl font-bold text-dark-50">
+          {t('subscription.notFound', 'Подписка не найдена')}
+        </h2>
+        <p className="mb-4 text-sm text-dark-50/60">
+          {t('subscription.notFoundDesc', 'Возможно, подписка была удалена или не существует')}
+        </p>
+        <button
+          onClick={() => navigate('/subscriptions')}
+          className="rounded-xl bg-accent-500 px-6 py-2.5 text-sm font-medium text-white"
+        >
+          {t('subscription.backToList', 'Мои подписки')}
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-dark-50 sm:text-3xl">{t('subscription.title')}</h1>
+      {/* Multi-tariff: back navigation + tariff name */}
+      {isMultiTariff && subscriptionId ? (
+        <div>
+          <button
+            onClick={() => navigate('/subscriptions')}
+            className="mb-2 flex items-center gap-1.5 text-sm text-dark-50/50 transition-colors hover:text-dark-50/80"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+            {t('subscription.backToList', 'Мои подписки')}
+          </button>
+          <h1 className="text-2xl font-bold text-dark-50 sm:text-3xl">
+            {subscription?.tariff_name || t('subscription.title')}
+          </h1>
+        </div>
+      ) : (
+        <h1 className="text-2xl font-bold text-dark-50 sm:text-3xl">{t('subscription.title')}</h1>
+      )}
 
       {/* Current Subscription */}
       {subscription ? (

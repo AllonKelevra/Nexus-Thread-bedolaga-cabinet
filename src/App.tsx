@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router';
+import { Routes, Route, Navigate, useLocation, useParams } from 'react-router';
 import { useAuthStore } from './store/auth';
 import { useBlockingStore } from './store/blocking';
 import Layout from './components/layout/Layout';
@@ -191,6 +191,12 @@ function BlockingOverlay() {
   return null;
 }
 
+/** Redirect /subscription/:id → /subscriptions/:id preserving the param */
+function LegacySubscriptionRedirect() {
+  const { subscriptionId } = useParams<{ subscriptionId: string }>();
+  return <Navigate to={`/subscriptions/${subscriptionId}`} replace />;
+}
+
 function App() {
   useAnalyticsCounters();
 
@@ -269,7 +275,7 @@ function App() {
           }
         />
         <Route
-          path="/subscription/:subscriptionId"
+          path="/subscriptions/:subscriptionId"
           element={
             <ProtectedRoute>
               <LazyPage>
@@ -278,13 +284,13 @@ function App() {
             </ProtectedRoute>
           }
         />
+        {/* Legacy redirects for backward compatibility */}
+        <Route path="/subscription/:subscriptionId" element={<LegacySubscriptionRedirect />} />
         <Route
           path="/subscription"
           element={
             <ProtectedRoute>
-              <LazyPage>
-                <Subscription />
-              </LazyPage>
+              <Navigate to="/subscriptions" replace />
             </ProtectedRoute>
           }
         />

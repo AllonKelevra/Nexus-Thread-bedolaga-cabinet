@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/auth';
 import { useBlockingStore } from '../store/blocking';
@@ -18,6 +18,7 @@ import StatsGrid from '../components/dashboard/StatsGrid';
 import { giftApi } from '../api/gift';
 import { promoApi } from '../api/promo';
 import PendingGiftCard from '../components/dashboard/PendingGiftCard';
+import SubscriptionListCard from '../components/subscription/SubscriptionListCard';
 import { API } from '../config/constants';
 
 const ChevronRightIcon = () => (
@@ -28,6 +29,7 @@ const ChevronRightIcon = () => (
 
 export default function Dashboard() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const refreshUser = useAuthStore((state) => state.refreshUser);
   const queryClient = useQueryClient();
@@ -111,6 +113,7 @@ export default function Dashboard() {
     onSuccess: () => {
       setTrialError(null);
       queryClient.invalidateQueries({ queryKey: ['subscription'] });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
       queryClient.invalidateQueries({ queryKey: ['trial-info'] });
       queryClient.invalidateQueries({ queryKey: ['balance'] });
       queryClient.invalidateQueries({ queryKey: ['purchase-options'] });
@@ -130,7 +133,7 @@ export default function Dashboard() {
   } | null>(null);
 
   const refreshTrafficMutation = useMutation({
-    mutationFn: () => subscriptionApi.refreshTraffic(),
+    mutationFn: () => subscriptionApi.refreshTraffic(subscription?.id),
     onSuccess: (data) => {
       setTrafficData({
         traffic_used_gb: data.traffic_used_gb,
@@ -143,7 +146,7 @@ export default function Dashboard() {
       } else {
         setTrafficRefreshCooldown(30);
       }
-      queryClient.invalidateQueries({ queryKey: ['subscription'] });
+      queryClient.invalidateQueries({ queryKey: ['subscription', subscription?.id] });
     },
     onError: (error: {
       response?: { status?: number; headers?: { get?: (key: string) => string } };
@@ -274,7 +277,7 @@ export default function Dashboard() {
       {/* Pending Gift Activations */}
       {pendingGifts && pendingGifts.length > 0 && <PendingGiftCard gifts={pendingGifts} />}
 
-      {/* Multi-tariff: show mini-cards for each subscription */}
+      {/* Multi-tariff: show subscription cards (max 3) */}
       {isMultiTariff && multiSubData?.subscriptions && (
         <div className="space-y-3">
           <div className="flex items-center justify-between px-1">
@@ -285,42 +288,21 @@ export default function Dashboard() {
               {t('dashboard.manageAll', 'Управление')} →
             </Link>
           </div>
-          {multiSubData.subscriptions.map((sub) => {
-            const isActive = sub.status === 'active' || sub.status === 'trial';
-            const trafficDisplay =
-              sub.traffic_limit_gb === 0
-                ? '∞'
-                : `${sub.traffic_used_gb.toFixed(1)} / ${sub.traffic_limit_gb} ГБ`;
-            const endDate = sub.end_date
-              ? new Date(sub.end_date).toLocaleDateString('ru-RU', {
-                  day: '2-digit',
-                  month: '2-digit',
-                  year: 'numeric',
-                })
-              : '—';
-            return (
-              <Link
-                key={sub.id}
-                to={`/subscription/${sub.id}`}
-                className="bento-card flex items-center justify-between p-4 transition-all hover:scale-[1.01]"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`inline-block h-2 w-2 rounded-full ${isActive ? 'bg-emerald-400' : 'bg-red-400'}`}
-                    />
-                    <span className="font-semibold">{sub.tariff_name || 'Подписка'}</span>
-                  </div>
-                  <div className="mt-1.5 flex gap-4 text-xs opacity-50">
-                    <span>📊 {trafficDisplay}</span>
-                    <span>📱 {sub.device_limit}</span>
-                    <span>📅 {endDate}</span>
-                  </div>
-                </div>
-                <ChevronRightIcon />
-              </Link>
-            );
-          })}
+          {multiSubData.subscriptions.slice(0, 3).map((sub) => (
+            <SubscriptionListCard
+              key={sub.id}
+              subscription={sub}
+              onClick={() => navigate(`/subscriptions/${sub.id}`)}
+            />
+          ))}
+          {multiSubData.subscriptions.length > 3 && (
+            <Link
+              to="/subscriptions"
+              className="flex w-full items-center justify-center rounded-2xl border border-dashed border-white/15 p-3 text-xs opacity-50 transition-opacity hover:opacity-80"
+            >
+              {t('dashboard.showAll', 'Показать все')} ({multiSubData.subscriptions.length})
+            </Link>
+          )}
           <Link
             to="/subscription/purchase"
             className="flex w-full items-center justify-center gap-1.5 rounded-2xl border border-dashed border-white/15 p-3 text-xs opacity-50 transition-opacity hover:opacity-80"

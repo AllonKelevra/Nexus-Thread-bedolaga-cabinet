@@ -40,7 +40,7 @@ export default function SubscriptionPurchase() {
 
   // Subscription query (shares cache with /subscription page)
   const { data: subscriptionResponse, isLoading } = useQuery({
-    queryKey: ['subscription'],
+    queryKey: ['subscription', subscriptionId],
     queryFn: () => subscriptionApi.getSubscription(subscriptionId),
     retry: false,
     staleTime: 0,
@@ -55,7 +55,7 @@ export default function SubscriptionPurchase() {
     isError: optionsError,
     refetch: refetchOptions,
   } = useQuery({
-    queryKey: ['purchase-options'],
+    queryKey: ['purchase-options', subscriptionId],
     queryFn: () => subscriptionApi.getPurchaseOptions(subscriptionId),
     staleTime: 0,
     refetchOnMount: 'always',
@@ -237,9 +237,9 @@ export default function SubscriptionPurchase() {
   const purchaseMutation = useMutation({
     mutationFn: () => subscriptionApi.submitPurchase(currentSelection, subscriptionId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['subscription'] });
-      queryClient.invalidateQueries({ queryKey: ['purchase-options'] });
-      navigate('/subscription', { replace: true });
+      queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
+      queryClient.invalidateQueries({ queryKey: ['purchase-options', subscriptionId] });
+      navigate('/subscriptions', { replace: true });
     },
   });
 
@@ -254,11 +254,11 @@ export default function SubscriptionPurchase() {
   const switchTariffMutation = useMutation({
     mutationFn: (tariffId: number) => subscriptionApi.switchTariff(tariffId, subscriptionId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['subscription'] });
-      queryClient.invalidateQueries({ queryKey: ['purchase-options'] });
+      queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
+      queryClient.invalidateQueries({ queryKey: ['purchase-options', subscriptionId] });
       setSwitchTariffId(null);
 
-      navigate('/subscription', { replace: true });
+      navigate('/subscriptions', { replace: true });
     },
     onError: (error: unknown) => {
       if (error instanceof AxiosError) {
@@ -275,7 +275,7 @@ export default function SubscriptionPurchase() {
             setSelectedTariff(targetTariff);
             setSelectedTariffPeriod(targetTariff.periods[0] || null);
             setShowTariffPurchase(true);
-            queryClient.invalidateQueries({ queryKey: ['purchase-options'] });
+            queryClient.invalidateQueries({ queryKey: ['purchase-options', subscriptionId] });
           }
         }
       }
@@ -303,7 +303,8 @@ export default function SubscriptionPurchase() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription'] });
       queryClient.invalidateQueries({ queryKey: ['purchase-options'] });
-      navigate('/subscription', { replace: true });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
+      navigate('/subscriptions', { replace: true });
     },
   });
 
@@ -436,7 +437,7 @@ export default function SubscriptionPurchase() {
       {/* Header with back link */}
       <div className="flex items-center gap-3">
         <button
-          onClick={() => navigate('/subscription')}
+          onClick={() => navigate('/subscriptions')}
           aria-label="Back"
           className="flex h-9 w-9 items-center justify-center rounded-xl transition-colors"
           style={{
