@@ -38,9 +38,12 @@ export default function PurchaseCTAButton({
         ? t('subscription.cta.renewHint', 'Продление подписки')
         : t('subscription.cta.activeHint');
 
-  // In multi-tariff mode: renew goes to per-subscription renew page
-  const linkTo =
-    isMultiTariff && subscription?.id
+  // Trial → purchase page (buy a real tariff, trial can't be renewed)
+  // Multi-tariff active → per-subscription renew page
+  // Otherwise → purchase page
+  const linkTo = isTrial
+    ? '/subscription/purchase'
+    : isMultiTariff && subscription?.id
       ? `/subscriptions/${subscription.id}/renew`
       : '/subscription/purchase';
 
