@@ -1818,312 +1818,327 @@ export default function AdminUserDetail() {
               </div>
             )}
 
-            {/* Panel Info */}
-            {panelInfoLoading ? (
-              <div className="flex justify-center rounded-xl bg-dark-800/50 py-8">
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
-              </div>
-            ) : panelInfo && !panelInfo.found ? (
-              <div className="rounded-xl border border-dark-700 bg-dark-800/50 p-4 text-center text-sm text-dark-400">
-                {t('admin.users.detail.panelNotFound')}
-              </div>
-            ) : panelInfo && panelInfo.found ? (
+            {/* Panel Info, Traffic, Devices — only inside subscription detail */}
+            {(subscriptionDetailView || userSubscriptions.length <= 1) && (
               <>
-                {/* Links */}
-                {(panelInfo.subscription_url || panelInfo.happ_link) && (
-                  <div className="rounded-xl bg-dark-800/50 p-4">
-                    <div className="mb-3 text-sm font-medium text-dark-200">
-                      {t('admin.users.detail.subscriptionUrl')} / {t('admin.users.detail.happLink')}
-                    </div>
-                    <div className="space-y-2">
-                      {panelInfo.subscription_url && (
-                        <button
-                          onClick={() => copyToClipboard(panelInfo.subscription_url!)}
-                          className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
-                        >
-                          <div className="mb-0.5 text-xs text-dark-500">
-                            {t('admin.users.detail.subscriptionUrl')}
-                          </div>
-                          <div className="truncate font-mono text-xs text-dark-200">
-                            {panelInfo.subscription_url}
-                          </div>
-                        </button>
-                      )}
-                      {panelInfo.happ_link && (
-                        <button
-                          onClick={() => copyToClipboard(panelInfo.happ_link!)}
-                          className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
-                        >
-                          <div className="mb-0.5 text-xs text-dark-500">
-                            {t('admin.users.detail.happLink')}
-                          </div>
-                          <div className="truncate font-mono text-xs text-dark-200">
-                            {panelInfo.happ_link}
-                          </div>
-                        </button>
-                      )}
-                    </div>
+                {panelInfoLoading ? (
+                  <div className="flex justify-center rounded-xl bg-dark-800/50 py-8">
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
                   </div>
-                )}
-
-                {/* Config */}
-                {(panelInfo.trojan_password || panelInfo.vless_uuid || panelInfo.ss_password) && (
-                  <div className="rounded-xl bg-dark-800/50 p-4">
-                    <div className="mb-3 text-sm font-medium text-dark-200">
-                      {t('admin.users.detail.panelConfig')}
-                    </div>
-                    <div className="space-y-2">
-                      {panelInfo.trojan_password && (
-                        <button
-                          onClick={() => copyToClipboard(panelInfo.trojan_password!)}
-                          className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
-                        >
-                          <div className="mb-0.5 text-xs text-dark-500">
-                            {t('admin.users.detail.trojanPassword')}
-                          </div>
-                          <div className="truncate font-mono text-xs text-dark-200">
-                            {panelInfo.trojan_password}
-                          </div>
-                        </button>
-                      )}
-                      {panelInfo.vless_uuid && (
-                        <button
-                          onClick={() => copyToClipboard(panelInfo.vless_uuid!)}
-                          className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
-                        >
-                          <div className="mb-0.5 text-xs text-dark-500">
-                            {t('admin.users.detail.vlessUuid')}
-                          </div>
-                          <div className="truncate font-mono text-xs text-dark-200">
-                            {panelInfo.vless_uuid}
-                          </div>
-                        </button>
-                      )}
-                      {panelInfo.ss_password && (
-                        <button
-                          onClick={() => copyToClipboard(panelInfo.ss_password!)}
-                          className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
-                        >
-                          <div className="mb-0.5 text-xs text-dark-500">
-                            {t('admin.users.detail.ssPassword')}
-                          </div>
-                          <div className="truncate font-mono text-xs text-dark-200">
-                            {panelInfo.ss_password}
-                          </div>
-                        </button>
-                      )}
-                    </div>
+                ) : panelInfo && !panelInfo.found ? (
+                  <div className="rounded-xl border border-dark-700 bg-dark-800/50 p-4 text-center text-sm text-dark-400">
+                    {t('admin.users.detail.panelNotFound')}
                   </div>
-                )}
-
-                {/* Connection info */}
-                <div className="rounded-xl bg-dark-800/50 p-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <div className="text-xs text-dark-500">
-                        {t('admin.users.detail.firstConnected')}
-                      </div>
-                      <div className="text-sm text-dark-100">
-                        {formatDate(panelInfo.first_connected_at)}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-dark-500">
-                        {t('admin.users.detail.lastOnline')}
-                      </div>
-                      <div className="text-sm text-dark-100">{formatDate(panelInfo.online_at)}</div>
-                    </div>
-                    {panelInfo.last_connected_node_name && (
-                      <div className="col-span-2">
-                        <div className="text-xs text-dark-500">
-                          {t('admin.users.detail.lastNode')}
+                ) : panelInfo && panelInfo.found ? (
+                  <>
+                    {/* Links */}
+                    {(panelInfo.subscription_url || panelInfo.happ_link) && (
+                      <div className="rounded-xl bg-dark-800/50 p-4">
+                        <div className="mb-3 text-sm font-medium text-dark-200">
+                          {t('admin.users.detail.subscriptionUrl')} /{' '}
+                          {t('admin.users.detail.happLink')}
                         </div>
-                        <div className="text-sm text-dark-100">
-                          {panelInfo.last_connected_node_name}
+                        <div className="space-y-2">
+                          {panelInfo.subscription_url && (
+                            <button
+                              onClick={() => copyToClipboard(panelInfo.subscription_url!)}
+                              className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
+                            >
+                              <div className="mb-0.5 text-xs text-dark-500">
+                                {t('admin.users.detail.subscriptionUrl')}
+                              </div>
+                              <div className="truncate font-mono text-xs text-dark-200">
+                                {panelInfo.subscription_url}
+                              </div>
+                            </button>
+                          )}
+                          {panelInfo.happ_link && (
+                            <button
+                              onClick={() => copyToClipboard(panelInfo.happ_link!)}
+                              className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
+                            >
+                              <div className="mb-0.5 text-xs text-dark-500">
+                                {t('admin.users.detail.happLink')}
+                              </div>
+                              <div className="truncate font-mono text-xs text-dark-200">
+                                {panelInfo.happ_link}
+                              </div>
+                            </button>
+                          )}
                         </div>
                       </div>
                     )}
-                  </div>
-                </div>
 
-                {/* Live traffic */}
-                <div className="rounded-xl bg-dark-800/50 p-4">
-                  <div className="mb-3 text-sm font-medium text-dark-200">
-                    {t('admin.users.detail.liveTraffic')}
-                  </div>
-                  <div className="mb-2">
-                    <div className="mb-1 flex justify-between text-xs">
-                      <span className="text-dark-400">
-                        {formatBytes(panelInfo.used_traffic_bytes)}
-                      </span>
-                      <span className="text-dark-500">
-                        {panelInfo.traffic_limit_bytes > 0
-                          ? formatBytes(panelInfo.traffic_limit_bytes)
-                          : '∞'}
-                      </span>
-                    </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-dark-700">
-                      <div
-                        className="h-full rounded-full bg-accent-500 transition-all"
-                        style={{
-                          width:
-                            panelInfo.traffic_limit_bytes > 0
-                              ? `${Math.min(100, (panelInfo.used_traffic_bytes / panelInfo.traffic_limit_bytes) * 100)}%`
-                              : '0%',
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div className="text-xs text-dark-500">
-                    {t('admin.users.detail.lifetime')}:{' '}
-                    {formatBytes(panelInfo.lifetime_used_traffic_bytes)}
-                  </div>
-                </div>
+                    {/* Config */}
+                    {(panelInfo.trojan_password ||
+                      panelInfo.vless_uuid ||
+                      panelInfo.ss_password) && (
+                      <div className="rounded-xl bg-dark-800/50 p-4">
+                        <div className="mb-3 text-sm font-medium text-dark-200">
+                          {t('admin.users.detail.panelConfig')}
+                        </div>
+                        <div className="space-y-2">
+                          {panelInfo.trojan_password && (
+                            <button
+                              onClick={() => copyToClipboard(panelInfo.trojan_password!)}
+                              className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
+                            >
+                              <div className="mb-0.5 text-xs text-dark-500">
+                                {t('admin.users.detail.trojanPassword')}
+                              </div>
+                              <div className="truncate font-mono text-xs text-dark-200">
+                                {panelInfo.trojan_password}
+                              </div>
+                            </button>
+                          )}
+                          {panelInfo.vless_uuid && (
+                            <button
+                              onClick={() => copyToClipboard(panelInfo.vless_uuid!)}
+                              className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
+                            >
+                              <div className="mb-0.5 text-xs text-dark-500">
+                                {t('admin.users.detail.vlessUuid')}
+                              </div>
+                              <div className="truncate font-mono text-xs text-dark-200">
+                                {panelInfo.vless_uuid}
+                              </div>
+                            </button>
+                          )}
+                          {panelInfo.ss_password && (
+                            <button
+                              onClick={() => copyToClipboard(panelInfo.ss_password!)}
+                              className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
+                            >
+                              <div className="mb-0.5 text-xs text-dark-500">
+                                {t('admin.users.detail.ssPassword')}
+                              </div>
+                              <div className="truncate font-mono text-xs text-dark-200">
+                                {panelInfo.ss_password}
+                              </div>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
-                {/* Node usage */}
+                    {/* Connection info */}
+                    <div className="rounded-xl bg-dark-800/50 p-4">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <div className="text-xs text-dark-500">
+                            {t('admin.users.detail.firstConnected')}
+                          </div>
+                          <div className="text-sm text-dark-100">
+                            {formatDate(panelInfo.first_connected_at)}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-dark-500">
+                            {t('admin.users.detail.lastOnline')}
+                          </div>
+                          <div className="text-sm text-dark-100">
+                            {formatDate(panelInfo.online_at)}
+                          </div>
+                        </div>
+                        {panelInfo.last_connected_node_name && (
+                          <div className="col-span-2">
+                            <div className="text-xs text-dark-500">
+                              {t('admin.users.detail.lastNode')}
+                            </div>
+                            <div className="text-sm text-dark-100">
+                              {panelInfo.last_connected_node_name}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Live traffic */}
+                    <div className="rounded-xl bg-dark-800/50 p-4">
+                      <div className="mb-3 text-sm font-medium text-dark-200">
+                        {t('admin.users.detail.liveTraffic')}
+                      </div>
+                      <div className="mb-2">
+                        <div className="mb-1 flex justify-between text-xs">
+                          <span className="text-dark-400">
+                            {formatBytes(panelInfo.used_traffic_bytes)}
+                          </span>
+                          <span className="text-dark-500">
+                            {panelInfo.traffic_limit_bytes > 0
+                              ? formatBytes(panelInfo.traffic_limit_bytes)
+                              : '∞'}
+                          </span>
+                        </div>
+                        <div className="h-2 overflow-hidden rounded-full bg-dark-700">
+                          <div
+                            className="h-full rounded-full bg-accent-500 transition-all"
+                            style={{
+                              width:
+                                panelInfo.traffic_limit_bytes > 0
+                                  ? `${Math.min(100, (panelInfo.used_traffic_bytes / panelInfo.traffic_limit_bytes) * 100)}%`
+                                  : '0%',
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div className="text-xs text-dark-500">
+                        {t('admin.users.detail.lifetime')}:{' '}
+                        {formatBytes(panelInfo.lifetime_used_traffic_bytes)}
+                      </div>
+                    </div>
+
+                    {/* Node usage */}
+                    <div className="rounded-xl bg-dark-800/50 p-4">
+                      <div className="mb-3 flex items-center justify-between">
+                        <span className="text-sm font-medium text-dark-200">
+                          {t('admin.users.detail.nodeUsage')}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <div className="flex gap-1">
+                            {[1, 3, 7, 14, 30].map((d) => (
+                              <button
+                                key={d}
+                                onClick={() => setNodeUsageDays(d)}
+                                className={`rounded-lg px-2 py-1 text-xs transition-colors ${
+                                  nodeUsageDays === d
+                                    ? 'bg-accent-500/20 text-accent-400'
+                                    : 'text-dark-500 hover:text-dark-300'
+                                }`}
+                              >
+                                {d}d
+                              </button>
+                            ))}
+                          </div>
+                          <button
+                            onClick={() => loadSubscriptionData()}
+                            className="rounded-lg p-1 text-dark-500 transition-colors hover:text-dark-300"
+                            title={t('common.refresh')}
+                          >
+                            <RefreshIcon className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                      {nodeUsageForPeriod.length > 0 ? (
+                        <div className="space-y-2">
+                          {nodeUsageForPeriod.map((item) => {
+                            const maxBytes = nodeUsageForPeriod[0].total_bytes;
+                            const pct = maxBytes > 0 ? (item.total_bytes / maxBytes) * 100 : 0;
+                            return (
+                              <div key={item.node_uuid}>
+                                <div className="mb-1 flex justify-between text-xs">
+                                  <span className="text-dark-300">
+                                    {item.country_code && (
+                                      <span className="mr-1">
+                                        {getCountryFlag(item.country_code)}
+                                      </span>
+                                    )}
+                                    {item.node_name}
+                                  </span>
+                                  <span className="text-dark-400">
+                                    {formatBytes(item.total_bytes)}
+                                  </span>
+                                </div>
+                                <div className="h-1.5 overflow-hidden rounded-full bg-dark-700">
+                                  <div
+                                    className="h-full rounded-full bg-accent-500/60"
+                                    style={{ width: `${pct}%` }}
+                                  />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="py-2 text-center text-xs text-dark-500">-</div>
+                      )}
+                    </div>
+                  </>
+                ) : null}
+
+                {/* Devices */}
                 <div className="rounded-xl bg-dark-800/50 p-4">
                   <div className="mb-3 flex items-center justify-between">
                     <span className="text-sm font-medium text-dark-200">
-                      {t('admin.users.detail.nodeUsage')}
+                      {t('admin.users.detail.devices.title')} ({devicesTotal}/{deviceLimit})
                     </span>
                     <div className="flex items-center gap-2">
-                      <div className="flex gap-1">
-                        {[1, 3, 7, 14, 30].map((d) => (
-                          <button
-                            key={d}
-                            onClick={() => setNodeUsageDays(d)}
-                            className={`rounded-lg px-2 py-1 text-xs transition-colors ${
-                              nodeUsageDays === d
-                                ? 'bg-accent-500/20 text-accent-400'
-                                : 'text-dark-500 hover:text-dark-300'
-                            }`}
-                          >
-                            {d}d
-                          </button>
-                        ))}
-                      </div>
                       <button
-                        onClick={() => loadSubscriptionData()}
+                        onClick={() => loadDevices()}
                         className="rounded-lg p-1 text-dark-500 transition-colors hover:text-dark-300"
                         title={t('common.refresh')}
                       >
                         <RefreshIcon className="h-3.5 w-3.5" />
                       </button>
+                      {devices.length > 0 && (
+                        <button
+                          onClick={() => handleInlineConfirm('resetDevices', handleResetDevices)}
+                          disabled={actionLoading}
+                          className={`rounded-lg px-2 py-1 text-xs font-medium transition-all disabled:opacity-50 ${
+                            confirmingAction === 'resetDevices'
+                              ? 'bg-error-500 text-white'
+                              : 'bg-error-500/15 text-error-400 hover:bg-error-500/25'
+                          }`}
+                        >
+                          {confirmingAction === 'resetDevices'
+                            ? t('admin.users.detail.actions.areYouSure')
+                            : t('admin.users.detail.devices.resetAll')}
+                        </button>
+                      )}
                     </div>
                   </div>
-                  {nodeUsageForPeriod.length > 0 ? (
+                  {devicesLoading ? (
+                    <div className="flex justify-center py-4">
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+                    </div>
+                  ) : devices.length > 0 ? (
                     <div className="space-y-2">
-                      {nodeUsageForPeriod.map((item) => {
-                        const maxBytes = nodeUsageForPeriod[0].total_bytes;
-                        const pct = maxBytes > 0 ? (item.total_bytes / maxBytes) * 100 : 0;
-                        return (
-                          <div key={item.node_uuid}>
-                            <div className="mb-1 flex justify-between text-xs">
-                              <span className="text-dark-300">
-                                {item.country_code && (
-                                  <span className="mr-1">{getCountryFlag(item.country_code)}</span>
-                                )}
-                                {item.node_name}
-                              </span>
-                              <span className="text-dark-400">{formatBytes(item.total_bytes)}</span>
+                      {devices.map((device) => (
+                        <div
+                          key={device.hwid}
+                          className="flex items-center justify-between rounded-lg bg-dark-700/50 px-3 py-2"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-xs font-medium text-dark-200">
+                              {device.platform || device.device_model || device.hwid.slice(0, 12)}
                             </div>
-                            <div className="h-1.5 overflow-hidden rounded-full bg-dark-700">
-                              <div
-                                className="h-full rounded-full bg-accent-500/60"
-                                style={{ width: `${pct}%` }}
-                              />
+                            <div className="flex items-center gap-2 text-[10px] text-dark-500">
+                              {device.device_model && device.platform && (
+                                <span>{device.device_model}</span>
+                              )}
+                              <span className="font-mono">{device.hwid.slice(0, 8)}...</span>
+                              {device.created_at && (
+                                <span>
+                                  {new Date(device.created_at).toLocaleDateString(locale)}
+                                </span>
+                              )}
                             </div>
                           </div>
-                        );
-                      })}
+                          <button
+                            onClick={() =>
+                              handleInlineConfirm(`deleteDevice_${device.hwid}`, () =>
+                                handleDeleteDevice(device.hwid),
+                              )
+                            }
+                            disabled={actionLoading}
+                            className={`ml-2 shrink-0 rounded-lg px-2 py-1 text-xs transition-all disabled:opacity-50 ${
+                              confirmingAction === `deleteDevice_${device.hwid}`
+                                ? 'bg-error-500 text-white'
+                                : 'text-dark-500 hover:bg-error-500/15 hover:text-error-400'
+                            }`}
+                          >
+                            {confirmingAction === `deleteDevice_${device.hwid}` ? '?' : '\u00D7'}
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   ) : (
-                    <div className="py-2 text-center text-xs text-dark-500">-</div>
+                    <div className="py-2 text-center text-xs text-dark-500">
+                      {t('admin.users.detail.devices.none')}
+                    </div>
                   )}
                 </div>
               </>
-            ) : null}
-
-            {/* Devices */}
-            <div className="rounded-xl bg-dark-800/50 p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-sm font-medium text-dark-200">
-                  {t('admin.users.detail.devices.title')} ({devicesTotal}/{deviceLimit})
-                </span>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => loadDevices()}
-                    className="rounded-lg p-1 text-dark-500 transition-colors hover:text-dark-300"
-                    title={t('common.refresh')}
-                  >
-                    <RefreshIcon className="h-3.5 w-3.5" />
-                  </button>
-                  {devices.length > 0 && (
-                    <button
-                      onClick={() => handleInlineConfirm('resetDevices', handleResetDevices)}
-                      disabled={actionLoading}
-                      className={`rounded-lg px-2 py-1 text-xs font-medium transition-all disabled:opacity-50 ${
-                        confirmingAction === 'resetDevices'
-                          ? 'bg-error-500 text-white'
-                          : 'bg-error-500/15 text-error-400 hover:bg-error-500/25'
-                      }`}
-                    >
-                      {confirmingAction === 'resetDevices'
-                        ? t('admin.users.detail.actions.areYouSure')
-                        : t('admin.users.detail.devices.resetAll')}
-                    </button>
-                  )}
-                </div>
-              </div>
-              {devicesLoading ? (
-                <div className="flex justify-center py-4">
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
-                </div>
-              ) : devices.length > 0 ? (
-                <div className="space-y-2">
-                  {devices.map((device) => (
-                    <div
-                      key={device.hwid}
-                      className="flex items-center justify-between rounded-lg bg-dark-700/50 px-3 py-2"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-xs font-medium text-dark-200">
-                          {device.platform || device.device_model || device.hwid.slice(0, 12)}
-                        </div>
-                        <div className="flex items-center gap-2 text-[10px] text-dark-500">
-                          {device.device_model && device.platform && (
-                            <span>{device.device_model}</span>
-                          )}
-                          <span className="font-mono">{device.hwid.slice(0, 8)}...</span>
-                          {device.created_at && (
-                            <span>{new Date(device.created_at).toLocaleDateString(locale)}</span>
-                          )}
-                        </div>
-                      </div>
-                      <button
-                        onClick={() =>
-                          handleInlineConfirm(`deleteDevice_${device.hwid}`, () =>
-                            handleDeleteDevice(device.hwid),
-                          )
-                        }
-                        disabled={actionLoading}
-                        className={`ml-2 shrink-0 rounded-lg px-2 py-1 text-xs transition-all disabled:opacity-50 ${
-                          confirmingAction === `deleteDevice_${device.hwid}`
-                            ? 'bg-error-500 text-white'
-                            : 'text-dark-500 hover:bg-error-500/15 hover:text-error-400'
-                        }`}
-                      >
-                        {confirmingAction === `deleteDevice_${device.hwid}` ? '?' : '\u00D7'}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="py-2 text-center text-xs text-dark-500">
-                  {t('admin.users.detail.devices.none')}
-                </div>
-              )}
-            </div>
+            )}
           </div>
         )}
 
