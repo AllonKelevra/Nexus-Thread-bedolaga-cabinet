@@ -191,20 +191,34 @@ export default function SubscriptionListCard({
           </svg>
           {formatDate(subscription.end_date, i18n.language)}
         </span>
-        {subscription.autopay_enabled && (
-          <span className="flex items-center gap-1 text-emerald-400/70">
-            <svg
-              className="h-3 w-3"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2.5}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-            </svg>
-            {t('subscription.autopay', 'Автопродление')}
-          </span>
-        )}
+        {!isTrial &&
+          (() => {
+            const isDaily = subscription.is_daily;
+            const enabled = isDaily ? !subscription.is_daily_paused : subscription.autopay_enabled;
+            const label = isDaily
+              ? t('subscription.dailyAutoCharge', 'Автосписание')
+              : t('subscription.autopay', 'Автопродление');
+            return (
+              <span
+                className={`flex items-center gap-1 ${enabled ? 'text-emerald-400/70' : 'text-red-400/50'}`}
+              >
+                <svg
+                  className="h-3 w-3"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                >
+                  {enabled ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  )}
+                </svg>
+                {label}
+              </span>
+            );
+          })()}
       </div>
     </button>
   );

@@ -234,6 +234,7 @@ export default function Subscription() {
       subscriptionApi.updateAutopay(enabled, undefined, subscriptionId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
     },
   });
 

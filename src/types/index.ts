@@ -123,6 +123,8 @@ export interface SubscriptionListItem {
   subscription_url: string | null;
   subscription_crypto_link: string | null;
   is_trial: boolean;
+  is_daily?: boolean;
+  is_daily_paused?: boolean;
   autopay_enabled: boolean;
   connected_squads: string[] | null;
 }
