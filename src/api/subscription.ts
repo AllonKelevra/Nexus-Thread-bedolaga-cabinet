@@ -305,7 +305,8 @@ export const subscriptionApi = {
   }> => {
     const response = await apiClient.patch(
       '/cabinet/subscription/autopay',
-      bodyWithSubId({ enabled, days_before: daysBefore }, subscriptionId),
+      { enabled, days_before: daysBefore },
+      withSubId(subscriptionId),
     );
     return response.data;
   },
