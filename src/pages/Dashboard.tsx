@@ -51,16 +51,6 @@ export default function Dashboard() {
     refetchOnMount: 'always',
   });
 
-  const { data: subscriptionResponse, isLoading: subLoading } = useQuery({
-    queryKey: ['subscription'],
-    queryFn: () => subscriptionApi.getSubscription(),
-    retry: false,
-    staleTime: API.BALANCE_STALE_TIME_MS,
-    refetchOnMount: 'always',
-  });
-
-  const subscription = subscriptionResponse?.subscription ?? null;
-
   // Multi-tariff: check if user has multiple subscriptions
   const { data: multiSubData } = useQuery({
     queryKey: ['subscriptions-list'],
@@ -68,6 +58,17 @@ export default function Dashboard() {
     staleTime: 60_000,
   });
   const isMultiTariff = multiSubData?.multi_tariff_enabled ?? false;
+
+  const { data: subscriptionResponse, isLoading: subLoading } = useQuery({
+    queryKey: ['subscription'],
+    queryFn: () => subscriptionApi.getSubscription(),
+    retry: false,
+    staleTime: API.BALANCE_STALE_TIME_MS,
+    refetchOnMount: 'always',
+    enabled: !isMultiTariff,
+  });
+
+  const subscription = subscriptionResponse?.subscription ?? null;
 
   const { data: trialInfo, isLoading: trialLoading } = useQuery({
     queryKey: ['trial-info'],
@@ -78,7 +79,7 @@ export default function Dashboard() {
   const { data: devicesData } = useQuery({
     queryKey: ['devices'],
     queryFn: () => subscriptionApi.getDevices(),
-    enabled: !!subscription,
+    enabled: !!subscription && !isMultiTariff,
     staleTime: API.BALANCE_STALE_TIME_MS,
   });
 
