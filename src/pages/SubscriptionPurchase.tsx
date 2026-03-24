@@ -411,7 +411,7 @@ export default function SubscriptionPurchase() {
       <h1 className="text-2xl font-bold text-dark-50 sm:text-3xl">
         {isMultiTariff && !subscriptionId
           ? t('subscription.newTariff', 'Новый тариф')
-          : subscription?.is_daily && !subscription?.is_trial
+          : !isMultiTariff && subscription?.is_daily && !subscription?.is_trial
             ? t('subscription.switchTariff.title')
             : subscription && !subscription.is_trial
               ? t('subscription.extend')

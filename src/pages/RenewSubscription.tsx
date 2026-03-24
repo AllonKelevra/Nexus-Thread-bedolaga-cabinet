@@ -189,7 +189,13 @@ export default function RenewSubscription() {
                 </div>
                 {!canAfford && (
                   <div className="mt-1 text-[11px] text-red-400">
-                    {t('subscription.insufficientBalance', 'Недостаточно средств')}
+                    {t(
+                      'subscription.insufficientBalanceAmount',
+                      'Недостаточно средств. Не хватает {{missing}}',
+                      {
+                        missing: `${formatAmount((option.price_kopeks - balanceKopeks) / 100)} ${currencySymbol}`,
+                      },
+                    )}
                   </div>
                 )}
               </button>
