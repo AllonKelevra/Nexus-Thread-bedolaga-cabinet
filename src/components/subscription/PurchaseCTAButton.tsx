@@ -5,9 +5,14 @@ import type { Subscription } from '../../types';
 
 interface PurchaseCTAButtonProps {
   subscription: Subscription | null;
+  /** In multi-tariff mode, link to /subscriptions/:id/renew instead of /subscription/purchase */
+  isMultiTariff?: boolean;
 }
 
-export default function PurchaseCTAButton({ subscription }: PurchaseCTAButtonProps) {
+export default function PurchaseCTAButton({
+  subscription,
+  isMultiTariff = false,
+}: PurchaseCTAButtonProps) {
   const { t } = useTranslation();
 
   const isExpired = !subscription || (!subscription.is_active && !subscription.is_trial);
@@ -27,8 +32,14 @@ export default function PurchaseCTAButton({ subscription }: PurchaseCTAButtonPro
       ? t('subscription.cta.trialHint')
       : t('subscription.cta.activeHint');
 
+  // In multi-tariff mode: renew goes to per-subscription renew page
+  const linkTo =
+    isMultiTariff && subscription?.id
+      ? `/subscriptions/${subscription.id}/renew`
+      : '/subscription/purchase';
+
   return (
-    <Link to="/subscription/purchase" className="block">
+    <Link to={linkTo} className="block">
       <HoverBorderGradient
         accentColor={accentColor}
         duration={4}

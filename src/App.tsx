@@ -44,6 +44,7 @@ const Connection = lazy(() => import('./pages/Connection'));
 const ConnectionQR = lazy(() => import('./pages/ConnectionQR'));
 const QuickPurchase = lazy(() => import('./pages/QuickPurchase'));
 const PurchaseSuccess = lazy(() => import('./pages/PurchaseSuccess'));
+const RenewSubscription = lazy(() => import('./pages/RenewSubscription'));
 const AutoLogin = lazy(() => import('./pages/AutoLogin'));
 const TopUpMethodSelect = lazy(() => import('./pages/TopUpMethodSelect'));
 const TopUpAmount = lazy(() => import('./pages/TopUpAmount'));
@@ -280,6 +281,16 @@ function App() {
             <ProtectedRoute>
               <LazyPage>
                 <Subscription />
+              </LazyPage>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/subscriptions/:subscriptionId/renew"
+          element={
+            <ProtectedRoute>
+              <LazyPage>
+                <RenewSubscription />
               </LazyPage>
             </ProtectedRoute>
           }

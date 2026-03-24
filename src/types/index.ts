@@ -343,6 +343,8 @@ export interface Tariff {
   custom_days_discount_percent?: number;
   // Traffic reset
   traffic_reset_mode?: string;
+  // Multi-tariff: already purchased by user
+  is_purchased?: boolean;
 }
 
 export interface TariffsPurchaseOptions {
@@ -355,6 +357,8 @@ export interface TariffsPurchaseOptions {
   subscription_status?: string;
   subscription_is_expired?: boolean;
   has_subscription?: boolean;
+  // Multi-tariff: all available tariffs already purchased
+  all_tariffs_purchased?: boolean;
 }
 
 export interface ClassicPurchaseOptions {

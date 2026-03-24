@@ -711,9 +711,37 @@ export default function SubscriptionPurchase() {
               )}
 
               {/* Tariff Grid */}
+              {isMultiTariff &&
+                purchaseOptions &&
+                'all_tariffs_purchased' in purchaseOptions &&
+                purchaseOptions.all_tariffs_purchased && (
+                  <div
+                    className="rounded-2xl border p-6 text-center"
+                    style={{ background: g.cardBg, borderColor: g.cardBorder }}
+                  >
+                    <div className="mb-2 text-3xl">✅</div>
+                    <h3 className="mb-1 text-lg font-semibold" style={{ color: g.text }}>
+                      {t('subscription.allTariffsPurchased', 'Все тарифы подключены')}
+                    </h3>
+                    <p className="mb-4 text-sm" style={{ color: g.textSecondary }}>
+                      {t(
+                        'subscription.allTariffsPurchasedDesc',
+                        'Вы уже приобрели все доступные тарифы. Продлить подписку можно на странице тарифа.',
+                      )}
+                    </p>
+                    <button
+                      onClick={() => navigate('/subscriptions')}
+                      className="rounded-xl bg-accent-500 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-600"
+                    >
+                      {t('subscription.backToList', 'Мои подписки')}
+                    </button>
+                  </div>
+                )}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {[...tariffs]
                   .filter((tariff) => {
+                    // In multi-tariff mode: hide already purchased tariffs
+                    if (isMultiTariff && tariff.is_purchased) return false;
                     if (subscription?.is_trial && tariff.name.toLowerCase().includes('trial')) {
                       return false;
                     }
