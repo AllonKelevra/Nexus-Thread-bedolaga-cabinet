@@ -48,6 +48,11 @@ export const subscriptionApi = {
     return response.data;
   },
 
+  deleteSubscription: async (subscriptionId: number): Promise<{ message: string }> => {
+    const response = await apiClient.delete(`/cabinet/subscriptions/${subscriptionId}`);
+    return response.data;
+  },
+
   // ── Legacy single-subscription status ───────────────────────────────
 
   getSubscription: async (subscriptionId?: number): Promise<SubscriptionStatusResponse> => {

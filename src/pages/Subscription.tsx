@@ -4,6 +4,14 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
 import { subscriptionApi } from '../api/subscription';
 import { WebBackButton } from '../components/WebBackButton';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../components/primitives/Dialog';
 import TrafficProgressBar from '../components/dashboard/TrafficProgressBar';
 import { HoverBorderGradient } from '../components/ui/hover-border-gradient';
 import { useTrafficZone } from '../hooks/useTrafficZone';
@@ -175,6 +183,8 @@ export default function Subscription() {
   const g = getGlassColors(isDark);
   const haptic = useHaptic();
   const [copied, setCopied] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Helper to format price from kopeks
   const formatPrice = (kopeks: number) => `${formatAmount(kopeks / 100)} ${currencySymbol}`;
@@ -1263,6 +1273,72 @@ export default function Subscription() {
 
       {/* Purchase / Renewal CTA */}
       <PurchaseCTAButton subscription={subscription} isMultiTariff={isMultiTariff} />
+
+      {/* Delete expired subscription */}
+      {isMultiTariff && subscription && !subscription.is_active && !subscription.is_trial && (
+        <>
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-400/20 bg-red-400/5 p-3.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-400/10"
+          >
+            <svg
+              className="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
+            </svg>
+            {t('subscription.delete', 'Удалить подписку')}
+          </button>
+
+          <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+            <DialogContent className="max-w-sm">
+              <DialogHeader>
+                <DialogTitle>{t('subscription.deleteTitle', 'Удалить подписку?')}</DialogTitle>
+                <DialogDescription>
+                  {t(
+                    'subscription.deleteWarning',
+                    'Подписка будет удалена безвозвратно. Все данные, устройства и настройки будут потеряны. Это действие нельзя отменить.',
+                  )}
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="gap-2 sm:gap-0">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="rounded-xl border border-dark-700 bg-dark-800 px-4 py-2.5 text-sm font-medium text-dark-300 transition-colors hover:bg-dark-700"
+                >
+                  {t('common.cancel', 'Отмена')}
+                </button>
+                <button
+                  onClick={async () => {
+                    setDeleteLoading(true);
+                    try {
+                      await subscriptionApi.deleteSubscription(subscription.id);
+                      queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
+                      navigate('/subscriptions', { replace: true });
+                    } catch {
+                      setDeleteLoading(false);
+                      setShowDeleteConfirm(false);
+                    }
+                  }}
+                  disabled={deleteLoading}
+                  className="rounded-xl bg-red-500 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
+                >
+                  {deleteLoading
+                    ? t('common.processing', 'Удаление...')
+                    : t('subscription.confirmDelete', 'Да, удалить')}
+                </button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
 
       {/* Additional Options (Buy Devices) */}
       {subscription &&
