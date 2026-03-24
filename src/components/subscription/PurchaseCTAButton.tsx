@@ -17,6 +17,10 @@ export default function PurchaseCTAButton({
 
   const isExpired = !subscription || (!subscription.is_active && !subscription.is_trial);
   const isTrial = subscription?.is_trial;
+  const isDaily = subscription?.is_daily;
+
+  // Daily tariffs renew automatically — no manual renewal button needed in multi-tariff
+  if (isMultiTariff && isDaily && !isExpired) return null;
 
   const accentColor = isExpired ? '#FF3B5C' : 'rgb(var(--color-accent-400))';
 
@@ -30,7 +34,9 @@ export default function PurchaseCTAButton({
     ? t('subscription.cta.expiredHint')
     : isTrial
       ? t('subscription.cta.trialHint')
-      : t('subscription.cta.activeHint');
+      : isMultiTariff
+        ? t('subscription.cta.renewHint', 'Продление подписки')
+        : t('subscription.cta.activeHint');
 
   // In multi-tariff mode: renew goes to per-subscription renew page
   const linkTo =
