@@ -21,11 +21,17 @@ const withSubId = (subscriptionId?: number, extra?: Record<string, unknown>) => 
   },
 });
 
-/** Helper: merge subscription_id into request body */
-const bodyWithSubId = (body: Record<string, unknown>, subscriptionId?: number) => ({
-  ...body,
-  ...(subscriptionId != null && { subscription_id: subscriptionId }),
-});
+/**
+ * Helper for POST/PATCH/PUT: returns [body, axiosConfig] tuple.
+ * subscription_id goes as query param (backend expects Query(...)), NOT in body.
+ */
+const bodyWithSubId = (
+  body: Record<string, unknown>,
+  subscriptionId?: number,
+): [Record<string, unknown>, { params?: Record<string, unknown> }] => [
+  body,
+  subscriptionId != null ? { params: { subscription_id: subscriptionId } } : {},
+];
 
 export const subscriptionApi = {
   // ── Multi-tariff endpoints ──────────────────────────────────────────
@@ -72,7 +78,7 @@ export const subscriptionApi = {
   }> => {
     const response = await apiClient.post(
       '/cabinet/subscription/renew',
-      bodyWithSubId({ period_days: periodDays }, subscriptionId),
+      ...bodyWithSubId({ period_days: periodDays }, subscriptionId),
     );
     return response.data;
   },
@@ -97,7 +103,7 @@ export const subscriptionApi = {
   }> => {
     const response = await apiClient.post(
       '/cabinet/subscription/traffic',
-      bodyWithSubId({ gb }, subscriptionId),
+      ...bodyWithSubId({ gb }, subscriptionId),
     );
     return response.data;
   },
@@ -116,7 +122,7 @@ export const subscriptionApi = {
   }> => {
     const response = await apiClient.put(
       '/cabinet/subscription/traffic',
-      bodyWithSubId({ gb }, subscriptionId),
+      ...bodyWithSubId({ gb }, subscriptionId),
     );
     return response.data;
   },
@@ -124,7 +130,7 @@ export const subscriptionApi = {
   saveTrafficCart: async (trafficGb: number, subscriptionId?: number): Promise<void> => {
     await apiClient.post(
       '/cabinet/subscription/traffic/save-cart',
-      bodyWithSubId({ gb: trafficGb }, subscriptionId),
+      ...bodyWithSubId({ gb: trafficGb }, subscriptionId),
     );
   },
 
@@ -169,7 +175,7 @@ export const subscriptionApi = {
   }> => {
     const response = await apiClient.post(
       '/cabinet/subscription/devices/purchase',
-      bodyWithSubId({ devices }, subscriptionId),
+      ...bodyWithSubId({ devices }, subscriptionId),
     );
     return response.data;
   },
@@ -207,7 +213,7 @@ export const subscriptionApi = {
   saveDevicesCart: async (devices: number, subscriptionId?: number): Promise<void> => {
     await apiClient.post(
       '/cabinet/subscription/devices/save-cart',
-      bodyWithSubId({ devices }, subscriptionId),
+      ...bodyWithSubId({ devices }, subscriptionId),
     );
   },
 
@@ -239,7 +245,7 @@ export const subscriptionApi = {
   }> => {
     const response = await apiClient.post(
       '/cabinet/subscription/devices/reduce',
-      bodyWithSubId({ new_device_limit: newDeviceLimit }, subscriptionId),
+      ...bodyWithSubId({ new_device_limit: newDeviceLimit }, subscriptionId),
     );
     return response.data;
   },
@@ -339,7 +345,7 @@ export const subscriptionApi = {
   ): Promise<PurchasePreview> => {
     const response = await apiClient.post<PurchasePreview>(
       '/cabinet/subscription/purchase-preview',
-      bodyWithSubId({ selection }, subscriptionId),
+      ...bodyWithSubId({ selection }, subscriptionId),
     );
     return response.data;
   },
@@ -355,7 +361,7 @@ export const subscriptionApi = {
   }> => {
     const response = await apiClient.post(
       '/cabinet/subscription/purchase',
-      bodyWithSubId({ selection }, subscriptionId),
+      ...bodyWithSubId({ selection }, subscriptionId),
     );
     return response.data;
   },
@@ -423,7 +429,7 @@ export const subscriptionApi = {
   }> => {
     const response = await apiClient.post(
       '/cabinet/subscription/countries',
-      bodyWithSubId({ countries }, subscriptionId),
+      ...bodyWithSubId({ countries }, subscriptionId),
     );
     return response.data;
   },
@@ -499,7 +505,7 @@ export const subscriptionApi = {
   }> => {
     const response = await apiClient.post(
       '/cabinet/subscription/tariff/switch/preview',
-      bodyWithSubId({ tariff_id: tariffId, period_days: 30 }, subscriptionId),
+      ...bodyWithSubId({ tariff_id: tariffId, period_days: 30 }, subscriptionId),
     );
     return response.data;
   },
@@ -520,7 +526,7 @@ export const subscriptionApi = {
   }> => {
     const response = await apiClient.post(
       '/cabinet/subscription/tariff/switch',
-      bodyWithSubId({ tariff_id: tariffId, period_days: 30 }, subscriptionId),
+      ...bodyWithSubId({ tariff_id: tariffId, period_days: 30 }, subscriptionId),
     );
     return response.data;
   },
@@ -538,7 +544,8 @@ export const subscriptionApi = {
   }> => {
     const response = await apiClient.post(
       '/cabinet/subscription/pause',
-      subscriptionId != null ? { subscription_id: subscriptionId } : undefined,
+      undefined,
+      withSubId(subscriptionId),
     );
     return response.data;
   },
