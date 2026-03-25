@@ -103,6 +103,7 @@ export interface UserDetailResponse {
   last_activity: string | null;
   cabinet_last_login: string | null;
   subscription: UserSubscriptionInfo | null;
+  subscriptions: UserSubscriptionInfo[];
   promo_group: UserPromoGroupInfo | null;
   referral: UserReferralInfo;
   total_spent_kopeks: number;
@@ -296,6 +297,7 @@ export interface UpdateSubscriptionRequest {
     | 'remove_traffic'
     | 'set_device_limit'
     | 'shorten';
+  subscription_id?: number;
   days?: number;
   end_date?: string;
   tariff_id?: number;
@@ -601,26 +603,33 @@ export const adminUsersApi = {
   },
 
   // Get panel info
-  getPanelInfo: async (userId: number): Promise<UserPanelInfo> => {
-    const response = await apiClient.get(`/cabinet/admin/users/${userId}/panel-info`);
+  getPanelInfo: async (userId: number, subscriptionId?: number): Promise<UserPanelInfo> => {
+    const response = await apiClient.get(`/cabinet/admin/users/${userId}/panel-info`, {
+      params: subscriptionId != null ? { subscription_id: subscriptionId } : undefined,
+    });
     return response.data;
   },
 
   // Get node usage (always 30 days with daily breakdown)
-  getNodeUsage: async (userId: number): Promise<UserNodeUsageResponse> => {
-    const response = await apiClient.get(`/cabinet/admin/users/${userId}/node-usage`);
+  getNodeUsage: async (userId: number, subscriptionId?: number): Promise<UserNodeUsageResponse> => {
+    const response = await apiClient.get(`/cabinet/admin/users/${userId}/node-usage`, {
+      params: subscriptionId != null ? { subscription_id: subscriptionId } : undefined,
+    });
     return response.data;
   },
 
   // Get user devices
   getUserDevices: async (
     userId: number,
+    subscriptionId?: number,
   ): Promise<{
     devices: { hwid: string; platform: string; device_model: string; created_at: string | null }[];
     total: number;
     device_limit: number;
   }> => {
-    const response = await apiClient.get(`/cabinet/admin/users/${userId}/devices`);
+    const response = await apiClient.get(`/cabinet/admin/users/${userId}/devices`, {
+      params: subscriptionId != null ? { subscription_id: subscriptionId } : undefined,
+    });
     return response.data;
   },
 
@@ -628,16 +637,22 @@ export const adminUsersApi = {
   deleteUserDevice: async (
     userId: number,
     hwid: string,
+    subscriptionId?: number,
   ): Promise<{ success: boolean; message: string; deleted_hwid: string | null }> => {
-    const response = await apiClient.delete(`/cabinet/admin/users/${userId}/devices/${hwid}`);
+    const response = await apiClient.delete(`/cabinet/admin/users/${userId}/devices/${hwid}`, {
+      params: subscriptionId != null ? { subscription_id: subscriptionId } : undefined,
+    });
     return response.data;
   },
 
   // Reset all devices
   resetUserDevices: async (
     userId: number,
+    subscriptionId?: number,
   ): Promise<{ success: boolean; message: string; deleted_count: number }> => {
-    const response = await apiClient.delete(`/cabinet/admin/users/${userId}/devices`);
+    const response = await apiClient.delete(`/cabinet/admin/users/${userId}/devices`, {
+      params: subscriptionId != null ? { subscription_id: subscriptionId } : undefined,
+    });
     return response.data;
   },
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
@@ -335,6 +335,9 @@ export default function AdminUserDetail() {
   const [subAction, setSubAction] = useState<string>('extend');
   const [subDays, setSubDays] = useState<number | ''>(30);
   const [selectedTariffId, setSelectedTariffId] = useState<number | null>(null);
+  const [activeSubscriptionId, setActiveSubscriptionId] = useState<number | null>(null);
+  const hasAutoSelectedSub = useRef(false);
+  const [subscriptionDetailView, setSubscriptionDetailView] = useState(false);
 
   // Promo group
   const [promoGroups, setPromoGroups] = useState<PromoGroup[]>([]);
@@ -442,27 +445,27 @@ export default function AdminUserDetail() {
     if (!userId) return;
     try {
       setPanelInfoLoading(true);
-      const data = await adminUsersApi.getPanelInfo(userId);
+      const data = await adminUsersApi.getPanelInfo(userId, activeSubscriptionId ?? undefined);
       setPanelInfo(data);
     } catch {
     } finally {
       setPanelInfoLoading(false);
     }
-  }, [userId]);
+  }, [userId, activeSubscriptionId]);
 
   const loadNodeUsage = useCallback(async () => {
     if (!userId) return;
     try {
-      const data = await adminUsersApi.getNodeUsage(userId);
+      const data = await adminUsersApi.getNodeUsage(userId, activeSubscriptionId ?? undefined);
       setNodeUsage(data);
     } catch {}
-  }, [userId]);
+  }, [userId, activeSubscriptionId]);
 
   const loadDevices = useCallback(async () => {
     if (!userId) return;
     try {
       setDevicesLoading(true);
-      const data = await adminUsersApi.getUserDevices(userId);
+      const data = await adminUsersApi.getUserDevices(userId, activeSubscriptionId ?? undefined);
       setDevices(data.devices);
       setDevicesTotal(data.total);
       setDeviceLimit(data.device_limit);
@@ -470,7 +473,7 @@ export default function AdminUserDetail() {
     } finally {
       setDevicesLoading(false);
     }
-  }, [userId]);
+  }, [userId, activeSubscriptionId]);
 
   const loadSubscriptionData = useCallback(async () => {
     await Promise.all([loadPanelInfo(), loadNodeUsage(), loadDevices()]);
@@ -602,6 +605,9 @@ export default function AdminUserDetail() {
     try {
       const data: UpdateSubscriptionRequest = {
         action: action as UpdateSubscriptionRequest['action'],
+        ...(activeSubscriptionId && action !== 'create'
+          ? { subscription_id: activeSubscriptionId }
+          : {}),
         ...(action === 'extend' || action === 'shorten' ? { days: toNumber(subDays, 30) } : {}),
         ...(action === 'change_tariff' && selectedTariffId ? { tariff_id: selectedTariffId } : {}),
         ...(action === 'create'
@@ -693,7 +699,7 @@ export default function AdminUserDetail() {
     if (!userId) return;
     setActionLoading(true);
     try {
-      await adminUsersApi.deleteUserDevice(userId, hwid);
+      await adminUsersApi.deleteUserDevice(userId, hwid, activeSubscriptionId ?? undefined);
       notify.success(t('admin.users.detail.devices.deleted'));
       await loadDevices();
     } catch {
@@ -707,7 +713,7 @@ export default function AdminUserDetail() {
     if (!userId) return;
     setActionLoading(true);
     try {
-      await adminUsersApi.resetUserDevices(userId);
+      await adminUsersApi.resetUserDevices(userId, activeSubscriptionId ?? undefined);
       notify.success(t('admin.users.detail.devices.allDeleted'));
       await loadDevices();
     } catch {
@@ -721,7 +727,11 @@ export default function AdminUserDetail() {
     if (!userId) return;
     setActionLoading(true);
     try {
-      await adminUsersApi.updateSubscription(userId, { action: 'add_traffic', traffic_gb: gb });
+      await adminUsersApi.updateSubscription(userId, {
+        action: 'add_traffic',
+        traffic_gb: gb,
+        ...(activeSubscriptionId ? { subscription_id: activeSubscriptionId } : {}),
+      });
       notify.success(t('admin.users.detail.subscription.trafficAdded'));
       setSelectedTrafficGb('');
       await loadUser();
@@ -739,6 +749,7 @@ export default function AdminUserDetail() {
       await adminUsersApi.updateSubscription(userId, {
         action: 'remove_traffic',
         traffic_purchase_id: purchaseId,
+        ...(activeSubscriptionId ? { subscription_id: activeSubscriptionId } : {}),
       });
       notify.success(t('admin.users.detail.subscription.trafficRemoved'));
       await loadUser();
@@ -756,6 +767,7 @@ export default function AdminUserDetail() {
       await adminUsersApi.updateSubscription(userId, {
         action: 'set_device_limit',
         device_limit: newLimit,
+        ...(activeSubscriptionId ? { subscription_id: activeSubscriptionId } : {}),
       });
       notify.success(t('admin.users.detail.subscription.deviceLimitUpdated'));
       await loadUser();
@@ -766,7 +778,21 @@ export default function AdminUserDetail() {
     }
   };
 
-  const currentTariff = tariffs.find((t) => t.id === user?.subscription?.tariff_id) || null;
+  // Multi-subscription: pick active subscription or first from list
+  const userSubscriptions = useMemo(() => user?.subscriptions ?? [], [user?.subscriptions]);
+  const selectedSub =
+    userSubscriptions.find((s) => s.id === activeSubscriptionId) ?? user?.subscription ?? null;
+
+  // Auto-select first subscription when user loads (one-time init)
+  useEffect(() => {
+    if (user && userSubscriptions.length > 0 && !hasAutoSelectedSub.current) {
+      const activeSub = userSubscriptions.find((s) => s.is_active) ?? userSubscriptions[0];
+      setActiveSubscriptionId(activeSub.id);
+      hasAutoSelectedSub.current = true;
+    }
+  }, [user, userSubscriptions]);
+
+  const currentTariff = tariffs.find((t) => t.id === selectedSub?.tariff_id) || null;
 
   const handleChangePromoGroup = async (groupId: number | null) => {
     if (!userId) return;
@@ -1356,15 +1382,143 @@ export default function AdminUserDetail() {
         {/* Subscription Tab */}
         {activeTab === 'subscription' && (
           <div className="space-y-4">
-            {user.subscription ? (
+            {/* Multi-subscription: Level 1 — subscription list */}
+            {userSubscriptions.length > 1 && !subscriptionDetailView && (
               <>
+                <div className="space-y-3">
+                  {userSubscriptions.map((sub) => (
+                    <button
+                      key={sub.id}
+                      onClick={() => {
+                        setActiveSubscriptionId(sub.id);
+                        setSubscriptionDetailView(true);
+                      }}
+                      className="w-full rounded-xl border border-dark-700/50 bg-dark-800/50 p-4 text-left transition-all hover:border-dark-600"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-dark-100">
+                            {sub.tariff_name || `#${sub.id}`}
+                          </span>
+                          <StatusBadge status={sub.status} />
+                        </div>
+                        <svg
+                          className="h-4 w-4 text-dark-500"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={2.5}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                          />
+                        </svg>
+                      </div>
+                      <div className="mt-2 flex items-center gap-4 text-xs text-dark-400">
+                        <span>
+                          {sub.traffic_used_gb.toFixed(1)} / {sub.traffic_limit_gb}{' '}
+                          {t('common.units.gb')}
+                        </span>
+                        <span>{formatDate(sub.end_date)}</span>
+                        <span>
+                          {sub.device_limit}{' '}
+                          {t('admin.users.detail.subscription.devices', 'устройств')}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Create new subscription — at list level */}
+                {hasPermission('users:subscription') && (
+                  <div className="rounded-xl bg-dark-800/50 p-4">
+                    <div className="mb-3 text-sm font-medium text-dark-200">
+                      {t('admin.users.detail.subscription.createNew', 'Создать подписку')}
+                    </div>
+                    <div className="space-y-3">
+                      <select
+                        value={selectedTariffId || ''}
+                        onChange={(e) =>
+                          setSelectedTariffId(e.target.value ? parseInt(e.target.value) : null)
+                        }
+                        className="input"
+                      >
+                        <option value="">
+                          {t('admin.users.detail.subscription.selectTariff')}
+                        </option>
+                        {tariffs
+                          .filter((tariffItem) => {
+                            const purchasedIds = new Set(
+                              userSubscriptions
+                                .filter((s) => s.is_active || s.status === 'trial')
+                                .map((s) => s.tariff_id),
+                            );
+                            return !purchasedIds.has(tariffItem.id);
+                          })
+                          .map((tariffItem) => (
+                            <option key={tariffItem.id} value={tariffItem.id}>
+                              {tariffItem.name}
+                            </option>
+                          ))}
+                      </select>
+                      <input
+                        type="number"
+                        value={subDays}
+                        onChange={createNumberInputHandler(setSubDays, 1)}
+                        placeholder={t('admin.users.detail.subscription.days')}
+                        className="input"
+                        min={1}
+                        max={3650}
+                      />
+                      <button
+                        onClick={() => handleUpdateSubscription('create')}
+                        disabled={actionLoading}
+                        className="btn-primary w-full"
+                      >
+                        {actionLoading
+                          ? t('admin.users.detail.subscription.creating')
+                          : t('admin.users.detail.subscription.create')}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Level 2 — subscription detail (or single subscription) */}
+            {(subscriptionDetailView || userSubscriptions.length <= 1) && selectedSub ? (
+              <>
+                {/* Back to list (multi-subscription) */}
+                {subscriptionDetailView && userSubscriptions.length > 1 && (
+                  <button
+                    onClick={() => setSubscriptionDetailView(false)}
+                    className="flex items-center gap-1.5 text-sm text-dark-400 transition-colors hover:text-dark-200"
+                  >
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    {t('admin.users.detail.subscription.backToList', 'Все подписки')}
+                  </button>
+                )}
+
                 {/* Current subscription */}
                 <div className="rounded-xl bg-dark-800/50 p-4">
                   <div className="mb-3 flex items-center justify-between">
                     <span className="font-medium text-dark-200">
                       {t('admin.users.detail.subscription.current')}
+                      {userSubscriptions.length > 1 && (
+                        <span className="ml-2 text-xs text-dark-500">#{selectedSub.id}</span>
+                      )}
                     </span>
-                    <StatusBadge status={user.subscription.status} />
+                    <StatusBadge status={selectedSub.status} />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -1372,7 +1526,7 @@ export default function AdminUserDetail() {
                         {t('admin.users.detail.subscription.tariff')}
                       </div>
                       <div className="text-dark-100">
-                        {user.subscription.tariff_name ||
+                        {selectedSub.tariff_name ||
                           t('admin.users.detail.subscription.notSpecified')}
                       </div>
                     </div>
@@ -1380,7 +1534,7 @@ export default function AdminUserDetail() {
                       <div className="text-xs text-dark-500">
                         {t('admin.users.detail.subscription.validUntil')}
                       </div>
-                      <div className="text-dark-100">{formatDate(user.subscription.end_date)}</div>
+                      <div className="text-dark-100">{formatDate(selectedSub.end_date)}</div>
                     </div>
                     <div>
                       <div className="text-xs text-dark-500">
@@ -1389,8 +1543,8 @@ export default function AdminUserDetail() {
                       <div className="text-dark-100">
                         {panelInfo?.found
                           ? (panelInfo.used_traffic_bytes / (1024 * 1024 * 1024)).toFixed(1)
-                          : user.subscription.traffic_used_gb.toFixed(1)}{' '}
-                        / {user.subscription.traffic_limit_gb} {t('common.units.gb')}
+                          : selectedSub.traffic_used_gb.toFixed(1)}{' '}
+                        / {selectedSub.traffic_limit_gb} {t('common.units.gb')}
                       </div>
                     </div>
                     <div>
@@ -1399,21 +1553,21 @@ export default function AdminUserDetail() {
                       </div>
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => handleSetDeviceLimit(user.subscription!.device_limit - 1)}
-                          disabled={actionLoading || user.subscription.device_limit <= 1}
+                          onClick={() => handleSetDeviceLimit(selectedSub.device_limit - 1)}
+                          disabled={actionLoading || selectedSub.device_limit <= 1}
                           className="flex h-6 w-6 items-center justify-center rounded-md bg-dark-700 text-dark-300 transition-colors hover:bg-dark-600 disabled:opacity-30"
                         >
                           <MinusIcon />
                         </button>
                         <span className="min-w-[2ch] text-center text-dark-100">
-                          {user.subscription.device_limit}
+                          {selectedSub.device_limit}
                         </span>
                         <button
-                          onClick={() => handleSetDeviceLimit(user.subscription!.device_limit + 1)}
+                          onClick={() => handleSetDeviceLimit(selectedSub.device_limit + 1)}
                           disabled={
                             actionLoading ||
                             (currentTariff?.max_device_limit != null &&
-                              user.subscription.device_limit >= currentTariff.max_device_limit)
+                              selectedSub.device_limit >= currentTariff.max_device_limit)
                           }
                           className="flex h-6 w-6 items-center justify-center rounded-md bg-dark-700 text-dark-300 transition-colors hover:bg-dark-600 disabled:opacity-30"
                         >
@@ -1425,66 +1579,65 @@ export default function AdminUserDetail() {
                 </div>
 
                 {/* Traffic Packages */}
-                {user.subscription.traffic_purchases &&
-                  user.subscription.traffic_purchases.length > 0 && (
-                    <div className="rounded-xl bg-dark-800/50 p-4">
-                      <div className="mb-3 flex items-center justify-between">
-                        <span className="text-sm font-medium text-dark-200">
-                          {t('admin.users.detail.subscription.trafficPackages')}
-                          {user.subscription.purchased_traffic_gb > 0 && (
-                            <span className="ml-2 text-xs text-dark-400">
-                              ({user.subscription.purchased_traffic_gb} {t('common.units.gb')})
-                            </span>
-                          )}
-                        </span>
-                      </div>
-                      <div className="space-y-2">
-                        {user.subscription.traffic_purchases.map((tp) => (
-                          <div
-                            key={tp.id}
-                            className={`flex items-center justify-between rounded-lg px-3 py-2 ${
-                              tp.is_expired ? 'bg-dark-700/30 opacity-60' : 'bg-dark-700/50'
-                            }`}
-                          >
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-2 text-sm text-dark-200">
-                                <span className="font-medium">
-                                  {tp.traffic_gb} {t('common.units.gb')}
-                                </span>
-                                {tp.is_expired ? (
-                                  <span className="rounded-full bg-error-500/20 px-1.5 py-0.5 text-[10px] text-error-400">
-                                    {t('admin.users.detail.subscription.expired')}
-                                  </span>
-                                ) : (
-                                  <span className="text-xs text-dark-400">
-                                    {tp.days_remaining}{' '}
-                                    {t('admin.users.detail.subscription.daysLeft')}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            {!tp.is_expired && (
-                              <button
-                                onClick={() =>
-                                  handleInlineConfirm(`removeTraffic_${tp.id}`, () =>
-                                    handleRemoveTraffic(tp.id),
-                                  )
-                                }
-                                disabled={actionLoading}
-                                className={`ml-2 shrink-0 rounded-lg px-2 py-1 text-xs transition-all disabled:opacity-50 ${
-                                  confirmingAction === `removeTraffic_${tp.id}`
-                                    ? 'bg-error-500 text-white'
-                                    : 'text-dark-500 hover:bg-error-500/15 hover:text-error-400'
-                                }`}
-                              >
-                                {confirmingAction === `removeTraffic_${tp.id}` ? '?' : '\u00D7'}
-                              </button>
-                            )}
-                          </div>
-                        ))}
-                      </div>
+                {selectedSub.traffic_purchases && selectedSub.traffic_purchases.length > 0 && (
+                  <div className="rounded-xl bg-dark-800/50 p-4">
+                    <div className="mb-3 flex items-center justify-between">
+                      <span className="text-sm font-medium text-dark-200">
+                        {t('admin.users.detail.subscription.trafficPackages')}
+                        {selectedSub.purchased_traffic_gb > 0 && (
+                          <span className="ml-2 text-xs text-dark-400">
+                            ({selectedSub.purchased_traffic_gb} {t('common.units.gb')})
+                          </span>
+                        )}
+                      </span>
                     </div>
-                  )}
+                    <div className="space-y-2">
+                      {selectedSub.traffic_purchases.map((tp) => (
+                        <div
+                          key={tp.id}
+                          className={`flex items-center justify-between rounded-lg px-3 py-2 ${
+                            tp.is_expired ? 'bg-dark-700/30 opacity-60' : 'bg-dark-700/50'
+                          }`}
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 text-sm text-dark-200">
+                              <span className="font-medium">
+                                {tp.traffic_gb} {t('common.units.gb')}
+                              </span>
+                              {tp.is_expired ? (
+                                <span className="rounded-full bg-error-500/20 px-1.5 py-0.5 text-[10px] text-error-400">
+                                  {t('admin.users.detail.subscription.expired')}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-dark-400">
+                                  {tp.days_remaining}{' '}
+                                  {t('admin.users.detail.subscription.daysLeft')}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {!tp.is_expired && (
+                            <button
+                              onClick={() =>
+                                handleInlineConfirm(`removeTraffic_${tp.id}`, () =>
+                                  handleRemoveTraffic(tp.id),
+                                )
+                              }
+                              disabled={actionLoading}
+                              className={`ml-2 shrink-0 rounded-lg px-2 py-1 text-xs transition-all disabled:opacity-50 ${
+                                confirmingAction === `removeTraffic_${tp.id}`
+                                  ? 'bg-error-500 text-white'
+                                  : 'text-dark-500 hover:bg-error-500/15 hover:text-error-400'
+                              }`}
+                            >
+                              {confirmingAction === `removeTraffic_${tp.id}` ? '?' : '\u00D7'}
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Add Traffic */}
                 {currentTariff &&
@@ -1545,9 +1698,11 @@ export default function AdminUserDetail() {
                         <option value="shorten">
                           {t('admin.users.detail.subscription.shorten')}
                         </option>
-                        <option value="change_tariff">
-                          {t('admin.users.detail.subscription.changeTariff')}
-                        </option>
+                        {userSubscriptions.length <= 1 && (
+                          <option value="change_tariff">
+                            {t('admin.users.detail.subscription.changeTariff')}
+                          </option>
+                        )}
                         <option value="cancel">
                           {t('admin.users.detail.subscription.cancel')}
                         </option>
@@ -1602,10 +1757,18 @@ export default function AdminUserDetail() {
                   </div>
                 )}
               </>
-            ) : hasPermission('users:subscription') ? (
+            ) : null}
+
+            {/* Create new subscription — only for single-sub users or no subs */}
+            {hasPermission('users:subscription') && userSubscriptions.length <= 1 && (
               <div className="rounded-xl bg-dark-800/50 p-4">
-                <div className="mb-4 text-center text-dark-400">
-                  {t('admin.users.detail.subscription.noActive')}
+                {userSubscriptions.length === 0 && (
+                  <div className="mb-4 text-center text-dark-400">
+                    {t('admin.users.detail.subscription.noActive')}
+                  </div>
+                )}
+                <div className="mb-3 text-sm font-medium text-dark-200">
+                  {t('admin.users.detail.subscription.createNew', 'Создать подписку')}
                 </div>
                 <div className="space-y-3">
                   <select
@@ -1616,11 +1779,24 @@ export default function AdminUserDetail() {
                     className="input"
                   >
                     <option value="">{t('admin.users.detail.subscription.selectTariff')}</option>
-                    {tariffs.map((tariffItem) => (
-                      <option key={tariffItem.id} value={tariffItem.id}>
-                        {tariffItem.name}
-                      </option>
-                    ))}
+                    {tariffs
+                      .filter((tariffItem) => {
+                        // In multi-tariff: hide tariffs user already has
+                        if (userSubscriptions.length > 0) {
+                          const purchasedIds = new Set(
+                            userSubscriptions
+                              .filter((s) => s.is_active || s.status === 'trial')
+                              .map((s) => s.tariff_id),
+                          );
+                          return !purchasedIds.has(tariffItem.id);
+                        }
+                        return true;
+                      })
+                      .map((tariffItem) => (
+                        <option key={tariffItem.id} value={tariffItem.id}>
+                          {tariffItem.name}
+                        </option>
+                      ))}
                   </select>
                   <input
                     type="number"
@@ -1642,320 +1818,329 @@ export default function AdminUserDetail() {
                   </button>
                 </div>
               </div>
-            ) : (
-              <div className="rounded-xl bg-dark-800/50 p-4">
-                <div className="text-center text-dark-400">
-                  {t('admin.users.detail.subscription.noActive')}
-                </div>
-              </div>
             )}
 
-            {/* Panel Info */}
-            {panelInfoLoading ? (
-              <div className="flex justify-center rounded-xl bg-dark-800/50 py-8">
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
-              </div>
-            ) : panelInfo && !panelInfo.found ? (
-              <div className="rounded-xl border border-dark-700 bg-dark-800/50 p-4 text-center text-sm text-dark-400">
-                {t('admin.users.detail.panelNotFound')}
-              </div>
-            ) : panelInfo && panelInfo.found ? (
+            {/* Panel Info, Traffic, Devices — only inside subscription detail */}
+            {(subscriptionDetailView || userSubscriptions.length <= 1) && (
               <>
-                {/* Links */}
-                {(panelInfo.subscription_url || panelInfo.happ_link) && (
-                  <div className="rounded-xl bg-dark-800/50 p-4">
-                    <div className="mb-3 text-sm font-medium text-dark-200">
-                      {t('admin.users.detail.subscriptionUrl')} / {t('admin.users.detail.happLink')}
-                    </div>
-                    <div className="space-y-2">
-                      {panelInfo.subscription_url && (
-                        <button
-                          onClick={() => copyToClipboard(panelInfo.subscription_url!)}
-                          className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
-                        >
-                          <div className="mb-0.5 text-xs text-dark-500">
-                            {t('admin.users.detail.subscriptionUrl')}
-                          </div>
-                          <div className="truncate font-mono text-xs text-dark-200">
-                            {panelInfo.subscription_url}
-                          </div>
-                        </button>
-                      )}
-                      {panelInfo.happ_link && (
-                        <button
-                          onClick={() => copyToClipboard(panelInfo.happ_link!)}
-                          className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
-                        >
-                          <div className="mb-0.5 text-xs text-dark-500">
-                            {t('admin.users.detail.happLink')}
-                          </div>
-                          <div className="truncate font-mono text-xs text-dark-200">
-                            {panelInfo.happ_link}
-                          </div>
-                        </button>
-                      )}
-                    </div>
+                {panelInfoLoading ? (
+                  <div className="flex justify-center rounded-xl bg-dark-800/50 py-8">
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
                   </div>
-                )}
-
-                {/* Config */}
-                {(panelInfo.trojan_password || panelInfo.vless_uuid || panelInfo.ss_password) && (
-                  <div className="rounded-xl bg-dark-800/50 p-4">
-                    <div className="mb-3 text-sm font-medium text-dark-200">
-                      {t('admin.users.detail.panelConfig')}
-                    </div>
-                    <div className="space-y-2">
-                      {panelInfo.trojan_password && (
-                        <button
-                          onClick={() => copyToClipboard(panelInfo.trojan_password!)}
-                          className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
-                        >
-                          <div className="mb-0.5 text-xs text-dark-500">
-                            {t('admin.users.detail.trojanPassword')}
-                          </div>
-                          <div className="truncate font-mono text-xs text-dark-200">
-                            {panelInfo.trojan_password}
-                          </div>
-                        </button>
-                      )}
-                      {panelInfo.vless_uuid && (
-                        <button
-                          onClick={() => copyToClipboard(panelInfo.vless_uuid!)}
-                          className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
-                        >
-                          <div className="mb-0.5 text-xs text-dark-500">
-                            {t('admin.users.detail.vlessUuid')}
-                          </div>
-                          <div className="truncate font-mono text-xs text-dark-200">
-                            {panelInfo.vless_uuid}
-                          </div>
-                        </button>
-                      )}
-                      {panelInfo.ss_password && (
-                        <button
-                          onClick={() => copyToClipboard(panelInfo.ss_password!)}
-                          className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
-                        >
-                          <div className="mb-0.5 text-xs text-dark-500">
-                            {t('admin.users.detail.ssPassword')}
-                          </div>
-                          <div className="truncate font-mono text-xs text-dark-200">
-                            {panelInfo.ss_password}
-                          </div>
-                        </button>
-                      )}
-                    </div>
+                ) : panelInfo && !panelInfo.found ? (
+                  <div className="rounded-xl border border-dark-700 bg-dark-800/50 p-4 text-center text-sm text-dark-400">
+                    {t('admin.users.detail.panelNotFound')}
                   </div>
-                )}
-
-                {/* Connection info */}
-                <div className="rounded-xl bg-dark-800/50 p-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <div className="text-xs text-dark-500">
-                        {t('admin.users.detail.firstConnected')}
-                      </div>
-                      <div className="text-sm text-dark-100">
-                        {formatDate(panelInfo.first_connected_at)}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-dark-500">
-                        {t('admin.users.detail.lastOnline')}
-                      </div>
-                      <div className="text-sm text-dark-100">{formatDate(panelInfo.online_at)}</div>
-                    </div>
-                    {panelInfo.last_connected_node_name && (
-                      <div className="col-span-2">
-                        <div className="text-xs text-dark-500">
-                          {t('admin.users.detail.lastNode')}
+                ) : panelInfo && panelInfo.found ? (
+                  <>
+                    {/* Links */}
+                    {(panelInfo.subscription_url || panelInfo.happ_link) && (
+                      <div className="rounded-xl bg-dark-800/50 p-4">
+                        <div className="mb-3 text-sm font-medium text-dark-200">
+                          {t('admin.users.detail.subscriptionUrl')} /{' '}
+                          {t('admin.users.detail.happLink')}
                         </div>
-                        <div className="text-sm text-dark-100">
-                          {panelInfo.last_connected_node_name}
+                        <div className="space-y-2">
+                          {panelInfo.subscription_url && (
+                            <button
+                              onClick={() => copyToClipboard(panelInfo.subscription_url!)}
+                              className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
+                            >
+                              <div className="mb-0.5 text-xs text-dark-500">
+                                {t('admin.users.detail.subscriptionUrl')}
+                              </div>
+                              <div className="truncate font-mono text-xs text-dark-200">
+                                {panelInfo.subscription_url}
+                              </div>
+                            </button>
+                          )}
+                          {panelInfo.happ_link && (
+                            <button
+                              onClick={() => copyToClipboard(panelInfo.happ_link!)}
+                              className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
+                            >
+                              <div className="mb-0.5 text-xs text-dark-500">
+                                {t('admin.users.detail.happLink')}
+                              </div>
+                              <div className="truncate font-mono text-xs text-dark-200">
+                                {panelInfo.happ_link}
+                              </div>
+                            </button>
+                          )}
                         </div>
                       </div>
                     )}
-                  </div>
-                </div>
 
-                {/* Live traffic */}
-                <div className="rounded-xl bg-dark-800/50 p-4">
-                  <div className="mb-3 text-sm font-medium text-dark-200">
-                    {t('admin.users.detail.liveTraffic')}
-                  </div>
-                  <div className="mb-2">
-                    <div className="mb-1 flex justify-between text-xs">
-                      <span className="text-dark-400">
-                        {formatBytes(panelInfo.used_traffic_bytes)}
-                      </span>
-                      <span className="text-dark-500">
-                        {panelInfo.traffic_limit_bytes > 0
-                          ? formatBytes(panelInfo.traffic_limit_bytes)
-                          : '∞'}
-                      </span>
-                    </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-dark-700">
-                      <div
-                        className="h-full rounded-full bg-accent-500 transition-all"
-                        style={{
-                          width:
-                            panelInfo.traffic_limit_bytes > 0
-                              ? `${Math.min(100, (panelInfo.used_traffic_bytes / panelInfo.traffic_limit_bytes) * 100)}%`
-                              : '0%',
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div className="text-xs text-dark-500">
-                    {t('admin.users.detail.lifetime')}:{' '}
-                    {formatBytes(panelInfo.lifetime_used_traffic_bytes)}
-                  </div>
-                </div>
+                    {/* Config */}
+                    {(panelInfo.trojan_password ||
+                      panelInfo.vless_uuid ||
+                      panelInfo.ss_password) && (
+                      <div className="rounded-xl bg-dark-800/50 p-4">
+                        <div className="mb-3 text-sm font-medium text-dark-200">
+                          {t('admin.users.detail.panelConfig')}
+                        </div>
+                        <div className="space-y-2">
+                          {panelInfo.trojan_password && (
+                            <button
+                              onClick={() => copyToClipboard(panelInfo.trojan_password!)}
+                              className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
+                            >
+                              <div className="mb-0.5 text-xs text-dark-500">
+                                {t('admin.users.detail.trojanPassword')}
+                              </div>
+                              <div className="truncate font-mono text-xs text-dark-200">
+                                {panelInfo.trojan_password}
+                              </div>
+                            </button>
+                          )}
+                          {panelInfo.vless_uuid && (
+                            <button
+                              onClick={() => copyToClipboard(panelInfo.vless_uuid!)}
+                              className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
+                            >
+                              <div className="mb-0.5 text-xs text-dark-500">
+                                {t('admin.users.detail.vlessUuid')}
+                              </div>
+                              <div className="truncate font-mono text-xs text-dark-200">
+                                {panelInfo.vless_uuid}
+                              </div>
+                            </button>
+                          )}
+                          {panelInfo.ss_password && (
+                            <button
+                              onClick={() => copyToClipboard(panelInfo.ss_password!)}
+                              className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
+                            >
+                              <div className="mb-0.5 text-xs text-dark-500">
+                                {t('admin.users.detail.ssPassword')}
+                              </div>
+                              <div className="truncate font-mono text-xs text-dark-200">
+                                {panelInfo.ss_password}
+                              </div>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
-                {/* Node usage */}
+                    {/* Connection info */}
+                    <div className="rounded-xl bg-dark-800/50 p-4">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <div className="text-xs text-dark-500">
+                            {t('admin.users.detail.firstConnected')}
+                          </div>
+                          <div className="text-sm text-dark-100">
+                            {formatDate(panelInfo.first_connected_at)}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-dark-500">
+                            {t('admin.users.detail.lastOnline')}
+                          </div>
+                          <div className="text-sm text-dark-100">
+                            {formatDate(panelInfo.online_at)}
+                          </div>
+                        </div>
+                        {panelInfo.last_connected_node_name && (
+                          <div className="col-span-2">
+                            <div className="text-xs text-dark-500">
+                              {t('admin.users.detail.lastNode')}
+                            </div>
+                            <div className="text-sm text-dark-100">
+                              {panelInfo.last_connected_node_name}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Live traffic */}
+                    <div className="rounded-xl bg-dark-800/50 p-4">
+                      <div className="mb-3 text-sm font-medium text-dark-200">
+                        {t('admin.users.detail.liveTraffic')}
+                      </div>
+                      <div className="mb-2">
+                        <div className="mb-1 flex justify-between text-xs">
+                          <span className="text-dark-400">
+                            {formatBytes(panelInfo.used_traffic_bytes)}
+                          </span>
+                          <span className="text-dark-500">
+                            {panelInfo.traffic_limit_bytes > 0
+                              ? formatBytes(panelInfo.traffic_limit_bytes)
+                              : '∞'}
+                          </span>
+                        </div>
+                        <div className="h-2 overflow-hidden rounded-full bg-dark-700">
+                          <div
+                            className="h-full rounded-full bg-accent-500 transition-all"
+                            style={{
+                              width:
+                                panelInfo.traffic_limit_bytes > 0
+                                  ? `${Math.min(100, (panelInfo.used_traffic_bytes / panelInfo.traffic_limit_bytes) * 100)}%`
+                                  : '0%',
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div className="text-xs text-dark-500">
+                        {t('admin.users.detail.lifetime')}:{' '}
+                        {formatBytes(panelInfo.lifetime_used_traffic_bytes)}
+                      </div>
+                    </div>
+
+                    {/* Node usage */}
+                    <div className="rounded-xl bg-dark-800/50 p-4">
+                      <div className="mb-3 flex items-center justify-between">
+                        <span className="text-sm font-medium text-dark-200">
+                          {t('admin.users.detail.nodeUsage')}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <div className="flex gap-1">
+                            {[1, 3, 7, 14, 30].map((d) => (
+                              <button
+                                key={d}
+                                onClick={() => setNodeUsageDays(d)}
+                                className={`rounded-lg px-2 py-1 text-xs transition-colors ${
+                                  nodeUsageDays === d
+                                    ? 'bg-accent-500/20 text-accent-400'
+                                    : 'text-dark-500 hover:text-dark-300'
+                                }`}
+                              >
+                                {d}d
+                              </button>
+                            ))}
+                          </div>
+                          <button
+                            onClick={() => loadSubscriptionData()}
+                            className="rounded-lg p-1 text-dark-500 transition-colors hover:text-dark-300"
+                            title={t('common.refresh')}
+                          >
+                            <RefreshIcon className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                      {nodeUsageForPeriod.length > 0 ? (
+                        <div className="space-y-2">
+                          {nodeUsageForPeriod.map((item) => {
+                            const maxBytes = nodeUsageForPeriod[0].total_bytes;
+                            const pct = maxBytes > 0 ? (item.total_bytes / maxBytes) * 100 : 0;
+                            return (
+                              <div key={item.node_uuid}>
+                                <div className="mb-1 flex justify-between text-xs">
+                                  <span className="text-dark-300">
+                                    {item.country_code && (
+                                      <span className="mr-1">
+                                        {getCountryFlag(item.country_code)}
+                                      </span>
+                                    )}
+                                    {item.node_name}
+                                  </span>
+                                  <span className="text-dark-400">
+                                    {formatBytes(item.total_bytes)}
+                                  </span>
+                                </div>
+                                <div className="h-1.5 overflow-hidden rounded-full bg-dark-700">
+                                  <div
+                                    className="h-full rounded-full bg-accent-500/60"
+                                    style={{ width: `${pct}%` }}
+                                  />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="py-2 text-center text-xs text-dark-500">-</div>
+                      )}
+                    </div>
+                  </>
+                ) : null}
+
+                {/* Devices */}
                 <div className="rounded-xl bg-dark-800/50 p-4">
                   <div className="mb-3 flex items-center justify-between">
                     <span className="text-sm font-medium text-dark-200">
-                      {t('admin.users.detail.nodeUsage')}
+                      {t('admin.users.detail.devices.title')} ({devicesTotal}/{deviceLimit})
                     </span>
                     <div className="flex items-center gap-2">
-                      <div className="flex gap-1">
-                        {[1, 3, 7, 14, 30].map((d) => (
-                          <button
-                            key={d}
-                            onClick={() => setNodeUsageDays(d)}
-                            className={`rounded-lg px-2 py-1 text-xs transition-colors ${
-                              nodeUsageDays === d
-                                ? 'bg-accent-500/20 text-accent-400'
-                                : 'text-dark-500 hover:text-dark-300'
-                            }`}
-                          >
-                            {d}d
-                          </button>
-                        ))}
-                      </div>
                       <button
-                        onClick={() => loadSubscriptionData()}
+                        onClick={() => loadDevices()}
                         className="rounded-lg p-1 text-dark-500 transition-colors hover:text-dark-300"
                         title={t('common.refresh')}
                       >
                         <RefreshIcon className="h-3.5 w-3.5" />
                       </button>
+                      {devices.length > 0 && (
+                        <button
+                          onClick={() => handleInlineConfirm('resetDevices', handleResetDevices)}
+                          disabled={actionLoading}
+                          className={`rounded-lg px-2 py-1 text-xs font-medium transition-all disabled:opacity-50 ${
+                            confirmingAction === 'resetDevices'
+                              ? 'bg-error-500 text-white'
+                              : 'bg-error-500/15 text-error-400 hover:bg-error-500/25'
+                          }`}
+                        >
+                          {confirmingAction === 'resetDevices'
+                            ? t('admin.users.detail.actions.areYouSure')
+                            : t('admin.users.detail.devices.resetAll')}
+                        </button>
+                      )}
                     </div>
                   </div>
-                  {nodeUsageForPeriod.length > 0 ? (
+                  {devicesLoading ? (
+                    <div className="flex justify-center py-4">
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+                    </div>
+                  ) : devices.length > 0 ? (
                     <div className="space-y-2">
-                      {nodeUsageForPeriod.map((item) => {
-                        const maxBytes = nodeUsageForPeriod[0].total_bytes;
-                        const pct = maxBytes > 0 ? (item.total_bytes / maxBytes) * 100 : 0;
-                        return (
-                          <div key={item.node_uuid}>
-                            <div className="mb-1 flex justify-between text-xs">
-                              <span className="text-dark-300">
-                                {item.country_code && (
-                                  <span className="mr-1">{getCountryFlag(item.country_code)}</span>
-                                )}
-                                {item.node_name}
-                              </span>
-                              <span className="text-dark-400">{formatBytes(item.total_bytes)}</span>
+                      {devices.map((device) => (
+                        <div
+                          key={device.hwid}
+                          className="flex items-center justify-between rounded-lg bg-dark-700/50 px-3 py-2"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-xs font-medium text-dark-200">
+                              {device.platform || device.device_model || device.hwid.slice(0, 12)}
                             </div>
-                            <div className="h-1.5 overflow-hidden rounded-full bg-dark-700">
-                              <div
-                                className="h-full rounded-full bg-accent-500/60"
-                                style={{ width: `${pct}%` }}
-                              />
+                            <div className="flex items-center gap-2 text-[10px] text-dark-500">
+                              {device.device_model && device.platform && (
+                                <span>{device.device_model}</span>
+                              )}
+                              <span className="font-mono">{device.hwid.slice(0, 8)}...</span>
+                              {device.created_at && (
+                                <span>
+                                  {new Date(device.created_at).toLocaleDateString(locale)}
+                                </span>
+                              )}
                             </div>
                           </div>
-                        );
-                      })}
+                          <button
+                            onClick={() =>
+                              handleInlineConfirm(`deleteDevice_${device.hwid}`, () =>
+                                handleDeleteDevice(device.hwid),
+                              )
+                            }
+                            disabled={actionLoading}
+                            className={`ml-2 shrink-0 rounded-lg px-2 py-1 text-xs transition-all disabled:opacity-50 ${
+                              confirmingAction === `deleteDevice_${device.hwid}`
+                                ? 'bg-error-500 text-white'
+                                : 'text-dark-500 hover:bg-error-500/15 hover:text-error-400'
+                            }`}
+                          >
+                            {confirmingAction === `deleteDevice_${device.hwid}` ? '?' : '\u00D7'}
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   ) : (
-                    <div className="py-2 text-center text-xs text-dark-500">-</div>
+                    <div className="py-2 text-center text-xs text-dark-500">
+                      {t('admin.users.detail.devices.none')}
+                    </div>
                   )}
                 </div>
               </>
-            ) : null}
-
-            {/* Devices */}
-            <div className="rounded-xl bg-dark-800/50 p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-sm font-medium text-dark-200">
-                  {t('admin.users.detail.devices.title')} ({devicesTotal}/{deviceLimit})
-                </span>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => loadDevices()}
-                    className="rounded-lg p-1 text-dark-500 transition-colors hover:text-dark-300"
-                    title={t('common.refresh')}
-                  >
-                    <RefreshIcon className="h-3.5 w-3.5" />
-                  </button>
-                  {devices.length > 0 && (
-                    <button
-                      onClick={() => handleInlineConfirm('resetDevices', handleResetDevices)}
-                      disabled={actionLoading}
-                      className={`rounded-lg px-2 py-1 text-xs font-medium transition-all disabled:opacity-50 ${
-                        confirmingAction === 'resetDevices'
-                          ? 'bg-error-500 text-white'
-                          : 'bg-error-500/15 text-error-400 hover:bg-error-500/25'
-                      }`}
-                    >
-                      {confirmingAction === 'resetDevices'
-                        ? t('admin.users.detail.actions.areYouSure')
-                        : t('admin.users.detail.devices.resetAll')}
-                    </button>
-                  )}
-                </div>
-              </div>
-              {devicesLoading ? (
-                <div className="flex justify-center py-4">
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
-                </div>
-              ) : devices.length > 0 ? (
-                <div className="space-y-2">
-                  {devices.map((device) => (
-                    <div
-                      key={device.hwid}
-                      className="flex items-center justify-between rounded-lg bg-dark-700/50 px-3 py-2"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-xs font-medium text-dark-200">
-                          {device.platform || device.device_model || device.hwid.slice(0, 12)}
-                        </div>
-                        <div className="flex items-center gap-2 text-[10px] text-dark-500">
-                          {device.device_model && device.platform && (
-                            <span>{device.device_model}</span>
-                          )}
-                          <span className="font-mono">{device.hwid.slice(0, 8)}...</span>
-                          {device.created_at && (
-                            <span>{new Date(device.created_at).toLocaleDateString(locale)}</span>
-                          )}
-                        </div>
-                      </div>
-                      <button
-                        onClick={() =>
-                          handleInlineConfirm(`deleteDevice_${device.hwid}`, () =>
-                            handleDeleteDevice(device.hwid),
-                          )
-                        }
-                        disabled={actionLoading}
-                        className={`ml-2 shrink-0 rounded-lg px-2 py-1 text-xs transition-all disabled:opacity-50 ${
-                          confirmingAction === `deleteDevice_${device.hwid}`
-                            ? 'bg-error-500 text-white'
-                            : 'text-dark-500 hover:bg-error-500/15 hover:text-error-400'
-                        }`}
-                      >
-                        {confirmingAction === `deleteDevice_${device.hwid}` ? '?' : '\u00D7'}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="py-2 text-center text-xs text-dark-500">
-                  {t('admin.users.detail.devices.none')}
-                </div>
-              )}
-            </div>
+            )}
           </div>
         )}
 

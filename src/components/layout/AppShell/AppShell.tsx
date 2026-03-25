@@ -254,7 +254,7 @@ export function AppShell({ children }: AppShellProps) {
   // Desktop navigation items
   const desktopNavItems = [
     { path: '/', label: t('nav.dashboard'), icon: HomeIcon },
-    { path: '/subscription', label: t('nav.subscription'), icon: SubscriptionIcon },
+    { path: '/subscriptions', label: t('nav.subscription'), icon: SubscriptionIcon },
     { path: '/balance', label: t('nav.balance'), icon: CreditCardIcon },
     { path: '/support', label: t('nav.support'), icon: ChatIcon },
     { path: '/info', label: t('nav.info'), icon: InfoIcon },
