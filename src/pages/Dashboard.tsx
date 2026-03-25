@@ -309,9 +309,9 @@ export default function Dashboard() {
           )}
           <Link
             to="/subscription/purchase"
-            className="flex w-full items-center justify-center gap-1.5 rounded-2xl border border-dashed border-white/15 p-3 text-xs opacity-50 transition-opacity hover:opacity-80"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-accent-500/15 p-3.5 text-sm font-medium text-accent-400 transition-all hover:bg-accent-500/25"
           >
-            <span>+</span> {t('subscriptions.buyAnother', 'Купить ещё тариф')}
+            <span className="text-base">+</span> {t('subscriptions.buyAnother', 'Купить ещё тариф')}
           </Link>
         </div>
       )}
