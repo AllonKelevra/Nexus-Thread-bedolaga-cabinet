@@ -690,6 +690,14 @@ export default function Wheel() {
                     <p className="text-dark-400">{t('wheel.errors.dailyLimitReached')}</p>
                   </div>
                 )}
+              {/* Subscription selection required hint */}
+              {!isSpinning && needsSubscriptionPick && (
+                <div className="rounded-linear border border-warning-500/30 bg-warning-500/5 p-4 text-center">
+                  <p className="text-warning-400">
+                    {t('wheel.errors.selectSubscription', 'Выберите подписку для списания дней')}
+                  </p>
+                </div>
+              )}
 
               {/* Inline Result Card */}
               {spinResult && !isSpinning && (
