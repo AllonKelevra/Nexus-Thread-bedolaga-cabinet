@@ -336,6 +336,7 @@ export default function AdminUserDetail() {
   const [subDays, setSubDays] = useState<number | ''>(30);
   const [selectedTariffId, setSelectedTariffId] = useState<number | null>(null);
   const [activeSubscriptionId, setActiveSubscriptionId] = useState<number | null>(null);
+  const hasAutoSelectedSub = useRef(false);
   const [subscriptionDetailView, setSubscriptionDetailView] = useState(false);
 
   // Promo group
@@ -782,13 +783,14 @@ export default function AdminUserDetail() {
   const selectedSub =
     userSubscriptions.find((s) => s.id === activeSubscriptionId) ?? user?.subscription ?? null;
 
-  // Auto-select first subscription when user loads
+  // Auto-select first subscription when user loads (one-time init)
   useEffect(() => {
-    if (user && userSubscriptions.length > 0 && !activeSubscriptionId) {
+    if (user && userSubscriptions.length > 0 && !hasAutoSelectedSub.current) {
       const activeSub = userSubscriptions.find((s) => s.is_active) ?? userSubscriptions[0];
       setActiveSubscriptionId(activeSub.id);
+      hasAutoSelectedSub.current = true;
     }
-  }, [user, userSubscriptions, activeSubscriptionId]);
+  }, [user, userSubscriptions]);
 
   const currentTariff = tariffs.find((t) => t.id === selectedSub?.tariff_id) || null;
 

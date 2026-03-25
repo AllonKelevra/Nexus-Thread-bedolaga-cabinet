@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router';
+import { Navigate, useNavigate, useParams } from 'react-router';
 import { subscriptionApi } from '../api/subscription';
 import { WebBackButton } from '../components/WebBackButton';
 import { useDestructiveConfirm } from '../platform/hooks/useNativeDialog';
@@ -456,8 +456,7 @@ export default function Subscription() {
 
   // In multi-tariff mode without a specific subscription ID, redirect to list
   if (isMultiTariff && !subscriptionId && !isLoading) {
-    navigate('/subscriptions', { replace: true });
-    return null;
+    return <Navigate to="/subscriptions" replace />;
   }
 
   if (isLoading) {

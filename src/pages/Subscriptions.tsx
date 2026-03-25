@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router';
+import { Navigate, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { subscriptionApi } from '../api/subscription';
 import { useTheme } from '../hooks/useTheme';
@@ -68,8 +68,7 @@ export default function Subscriptions() {
 
   // Single-tariff mode with one subscription: skip list, go directly to detail
   if (data && !isMultiTariff && subscriptions.length === 1) {
-    navigate(`/subscriptions/${subscriptions[0].id}`, { replace: true });
-    return null;
+    return <Navigate to={`/subscriptions/${subscriptions[0].id}`} replace />;
   }
 
   return (
