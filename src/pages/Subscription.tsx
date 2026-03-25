@@ -491,7 +491,7 @@ export default function Subscription() {
     <div className="space-y-6">
       {/* Page title */}
       <div className="flex items-center gap-3">
-        <WebBackButton to="/subscriptions" />
+        <WebBackButton to={isMultiTariff ? '/subscriptions' : '/'} />
         <h1 className="text-2xl font-bold text-dark-50 sm:text-3xl">
           {isMultiTariff && subscription?.tariff_name
             ? subscription.tariff_name
