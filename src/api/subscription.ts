@@ -158,7 +158,8 @@ export const subscriptionApi = {
   }> => {
     const response = await apiClient.post(
       '/cabinet/subscription/refresh-traffic',
-      subscriptionId != null ? { subscription_id: subscriptionId } : undefined,
+      {},
+      withSubId(subscriptionId),
     );
     return response.data;
   },

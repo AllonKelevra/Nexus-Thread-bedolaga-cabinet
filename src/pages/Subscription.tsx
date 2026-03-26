@@ -302,6 +302,7 @@ export default function Subscription() {
       queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
       queryClient.invalidateQueries({ queryKey: ['devices', subscriptionId] });
       queryClient.invalidateQueries({ queryKey: ['device-price'] });
+      queryClient.invalidateQueries({ queryKey: ['balance'] });
       setShowDeviceTopup(false);
       setDevicesToAdd(1);
     },
@@ -351,6 +352,8 @@ export default function Subscription() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
       queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
+      queryClient.invalidateQueries({ queryKey: ['balance'] });
+      queryClient.invalidateQueries({ queryKey: ['traffic-packages', subscriptionId] });
       setShowTrafficTopup(false);
       setSelectedTrafficPackage(null);
     },

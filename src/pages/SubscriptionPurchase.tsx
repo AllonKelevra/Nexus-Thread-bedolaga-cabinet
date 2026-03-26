@@ -240,6 +240,8 @@ export default function SubscriptionPurchase() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
       queryClient.invalidateQueries({ queryKey: ['purchase-options', subscriptionId] });
+      queryClient.invalidateQueries({ queryKey: ['balance'] });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
       navigate('/subscriptions', { replace: true });
     },
   });

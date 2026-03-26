@@ -57,6 +57,7 @@ export default function RenewSubscription() {
       queryClient.invalidateQueries({ queryKey: ['subscription', subId] });
       queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
       queryClient.invalidateQueries({ queryKey: ['renewal-options', subId] });
+      queryClient.invalidateQueries({ queryKey: ['balance'] });
       navigate(`/subscriptions/${subId}`, { replace: true });
     },
     onError: (err: unknown) => {
