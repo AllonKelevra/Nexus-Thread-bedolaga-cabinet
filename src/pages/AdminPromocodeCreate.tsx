@@ -11,6 +11,7 @@ import {
   PromoCodeUpdateRequest,
   PromoGroup,
 } from '../api/promocodes';
+import { tariffsApi } from '../api/tariffs';
 import { usePlatform } from '../platform/hooks/usePlatform';
 
 // Icons
@@ -68,6 +69,15 @@ export default function AdminPromocodeCreate() {
   });
 
   const promoGroups: PromoGroup[] = promoGroupsData?.items || [];
+
+  // Fetch tariffs to show trial tariff info
+  const { data: tariffsData } = useQuery({
+    queryKey: ['admin-tariffs-for-promo'],
+    queryFn: () => tariffsApi.getTariffs(true),
+    enabled: type === 'trial_subscription',
+  });
+
+  const trialTariff = tariffsData?.tariffs?.find((t) => t.is_trial_available) || null;
 
   // Fetch promocode for editing
   const { isLoading: isLoadingPromocode } = useQuery({
@@ -298,6 +308,31 @@ export default function AdminPromocodeCreate() {
               />
               <span className="text-dark-400">{t('admin.promocodes.form.days')}</span>
             </div>
+          </div>
+        )}
+
+        {type === 'trial_subscription' && (
+          <div className="rounded-lg border border-dark-600 bg-dark-700/50 p-3">
+            {trialTariff ? (
+              <div className="text-sm">
+                <span className="text-dark-400">
+                  {t('admin.promocodes.form.trialTariffInfo', 'Будет выдан тариф:')}
+                </span>{' '}
+                <span className="font-medium text-accent-400">{trialTariff.name}</span>
+                <span className="text-dark-500">
+                  {' '}
+                  ({trialTariff.traffic_limit_gb} GB, {trialTariff.device_limit}{' '}
+                  {t('admin.promocodes.form.devices', 'устр.')})
+                </span>
+              </div>
+            ) : (
+              <div className="text-sm text-warning-400">
+                {t(
+                  'admin.promocodes.form.noTrialTariff',
+                  '⚠️ Триальный тариф не настроен. Отметьте тариф как «доступен для триала» в настройках тарифов.',
+                )}
+              </div>
+            )}
           </div>
         )}
 

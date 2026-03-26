@@ -68,14 +68,21 @@ export const balanceApi = {
   // Activate promo code
   activatePromocode: async (
     code: string,
+    subscriptionId?: number,
   ): Promise<{
     success: boolean;
-    message: string;
-    balance_before: number;
-    balance_after: number;
-    bonus_description: string | null;
+    message?: string;
+    balance_before?: number;
+    balance_after?: number;
+    bonus_description?: string | null;
+    error?: string;
+    eligible_subscriptions?: Array<{ id: number; tariff_name: string; days_left: number }>;
+    code?: string;
   }> => {
-    const response = await apiClient.post('/cabinet/promocode/activate', { code });
+    const response = await apiClient.post('/cabinet/promocode/activate', {
+      code,
+      ...(subscriptionId ? { subscription_id: subscriptionId } : {}),
+    });
     return response.data;
   },
 
