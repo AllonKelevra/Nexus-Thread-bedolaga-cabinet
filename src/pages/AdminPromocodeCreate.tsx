@@ -61,6 +61,7 @@ export default function AdminPromocodeCreate() {
   const [firstPurchaseOnly, setFirstPurchaseOnly] = useState(false);
   const [validUntil, setValidUntil] = useState('');
   const [promoGroupId, setPromoGroupId] = useState<number | null>(null);
+  const [tariffId, setTariffId] = useState<number | null>(null);
 
   // Fetch promo groups (for promo_group type)
   const { data: promoGroupsData } = useQuery({
@@ -104,6 +105,7 @@ export default function AdminPromocodeCreate() {
       setFirstPurchaseOnly(data.first_purchase_only || false);
       setValidUntil(data.valid_until ? data.valid_until.split('T')[0] : '');
       setPromoGroupId(data.promo_group_id || null);
+      setTariffId(data.tariff_id || null);
       return data;
     }, []),
   });
@@ -147,6 +149,7 @@ export default function AdminPromocodeCreate() {
       first_purchase_only: firstPurchaseOnly,
       valid_until: validUntil ? new Date(validUntil).toISOString() : null,
       promo_group_id: type === 'promo_group' ? promoGroupId : null,
+      ...(type === 'trial_subscription' && tariffId ? { tariff_id: tariffId } : {}),
     };
 
     if (isEdit) {
@@ -312,24 +315,33 @@ export default function AdminPromocodeCreate() {
         )}
 
         {type === 'trial_subscription' && (
-          <div className="rounded-lg border border-dark-600 bg-dark-700/50 p-3">
-            {trialTariff ? (
-              <div className="text-sm">
-                <span className="text-dark-400">
-                  {t('admin.promocodes.form.trialTariffInfo', 'Будет выдан тариф:')}
-                </span>{' '}
-                <span className="font-medium text-accent-400">{trialTariff.name}</span>
-                <span className="text-dark-500">
-                  {' '}
-                  ({trialTariff.traffic_limit_gb} GB, {trialTariff.device_limit}{' '}
-                  {t('admin.promocodes.form.devices', 'устр.')})
-                </span>
-              </div>
-            ) : (
-              <div className="text-sm text-warning-400">
+          <div>
+            <label className="mb-2 block text-sm font-medium text-dark-300">
+              {t('admin.promocodes.form.tariff', 'Тариф')}
+            </label>
+            <select
+              value={tariffId || ''}
+              onChange={(e) => setTariffId(e.target.value ? parseInt(e.target.value) : null)}
+              className="input"
+            >
+              <option value="">
+                {trialTariff
+                  ? t('admin.promocodes.form.defaultTrialTariff', 'По умолчанию: {{name}}', {
+                      name: trialTariff.name,
+                    })
+                  : t('admin.promocodes.form.selectTariff', '— Выберите тариф —')}
+              </option>
+              {tariffsData?.tariffs?.map((tariff) => (
+                <option key={tariff.id} value={tariff.id}>
+                  {tariff.name} ({tariff.traffic_limit_gb} GB, {tariff.device_limit} устр.)
+                </option>
+              ))}
+            </select>
+            {!tariffId && !trialTariff && (
+              <div className="mt-1 text-xs text-warning-400">
                 {t(
-                  'admin.promocodes.form.noTrialTariff',
-                  '⚠️ Триальный тариф не настроен. Отметьте тариф как «доступен для триала» в настройках тарифов.',
+                  'admin.promocodes.form.noTrialTariffHint',
+                  'Выберите тариф или отметьте тариф как «доступен для триала» в настройках.',
                 )}
               </div>
             )}
