@@ -221,6 +221,11 @@ export function AppShell({ children }: AppShellProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
+  // Reset keyboard state on route change — prevents bottom nav staying hidden after navigation
+  useEffect(() => {
+    setIsKeyboardOpen(false);
+  }, [location.pathname]);
+
   // Keyboard detection for hiding bottom nav
   useEffect(() => {
     const handleFocusIn = (e: FocusEvent) => {

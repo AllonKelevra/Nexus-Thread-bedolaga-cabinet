@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { usePlatform } from '@/platform';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../store/auth';
@@ -250,14 +251,16 @@ export default function Profile() {
     return () => clearInterval(timer);
   }, [verificationResendCooldown]);
 
-  // Auto-focus inputs on step change
+  // Auto-focus inputs on step change (skip on Telegram — keyboard hides bottom nav)
+  const { platform: profilePlatform } = usePlatform();
   useEffect(() => {
+    if (profilePlatform === 'telegram') return;
     const timer = setTimeout(() => {
       if (changeEmailStep === 'email') newEmailInputRef.current?.focus();
       else if (changeEmailStep === 'code') codeInputRef.current?.focus();
     }, 100);
     return () => clearTimeout(timer);
-  }, [changeEmailStep]);
+  }, [changeEmailStep, profilePlatform]);
 
   // Auto-close success after 3s
   useEffect(() => {
