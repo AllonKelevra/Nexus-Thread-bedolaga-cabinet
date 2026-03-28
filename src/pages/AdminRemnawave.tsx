@@ -923,12 +923,12 @@ function TrafficTab({ data, isLoading, onRefresh }: TrafficTabProps) {
             <span className="text-sm text-dark-300">{formatBytes(node.totalBytes)}</span>
           </div>
 
-          {node.inbounds.length > 0 && (
+          {(node.inbounds?.length ?? 0) > 0 && (
             <div className="space-y-1">
               <p className="mb-2 text-xs font-medium text-dark-400">
                 {t('admin.remnawave.traffic.inbounds', 'Inbounds')}
               </p>
-              {[...node.inbounds]
+              {[...(node.inbounds ?? [])]
                 .sort((a, b) => b.totalBytes - a.totalBytes)
                 .map((ib) => (
                   <div
@@ -948,12 +948,12 @@ function TrafficTab({ data, isLoading, onRefresh }: TrafficTabProps) {
             </div>
           )}
 
-          {node.outbounds.length > 0 && (
+          {(node.outbounds?.length ?? 0) > 0 && (
             <div className="mt-3 space-y-1">
               <p className="mb-2 text-xs font-medium text-dark-400">
                 {t('admin.remnawave.traffic.outbounds', 'Outbounds')}
               </p>
-              {[...node.outbounds]
+              {[...(node.outbounds ?? [])]
                 .sort((a, b) => b.totalBytes - a.totalBytes)
                 .map((ob) => (
                   <div

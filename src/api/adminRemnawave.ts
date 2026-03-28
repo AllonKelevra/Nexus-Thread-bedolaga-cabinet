@@ -174,8 +174,8 @@ export interface NodeRealtimeStats {
   uploadBytes: number;
   totalBytes: number;
   usersOnline: number;
-  inbounds: InboundTraffic[];
-  outbounds: InboundTraffic[];
+  inbounds?: InboundTraffic[];
+  outbounds?: InboundTraffic[];
 }
 
 // Squads
