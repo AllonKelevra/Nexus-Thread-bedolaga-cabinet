@@ -843,74 +843,6 @@ const GlassCard = memo(function GlassCard({ section, index, searchTerm }: GlassC
   );
 });
 
-// ─── Floating Orbs Background ───
-
-const CosmosBackground = memo(function CosmosBackground() {
-  return (
-    <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
-      <div
-        className="admin-orb"
-        style={{
-          width: 500,
-          height: 500,
-          background: 'rgb(var(--color-accent-500))',
-          top: '-12%',
-          left: '-5%',
-          opacity: 0.22,
-        }}
-      />
-      <div
-        className="admin-orb"
-        style={{
-          width: 420,
-          height: 420,
-          background: 'rgb(var(--color-error-400))',
-          bottom: '-15%',
-          right: '-5%',
-          opacity: 0.18,
-          animationDelay: '-7s',
-        }}
-      />
-      <div
-        className="admin-orb"
-        style={{
-          width: 350,
-          height: 350,
-          background: 'rgb(var(--color-success-400))',
-          top: '40%',
-          left: '50%',
-          opacity: 0.14,
-          animationDelay: '-13s',
-        }}
-      />
-      <div
-        className="admin-orb"
-        style={{
-          width: 300,
-          height: 300,
-          background: 'rgb(var(--color-accent-600))',
-          top: '65%',
-          left: '12%',
-          opacity: 0.14,
-          animationDelay: '-4s',
-        }}
-      />
-      <div
-        className="admin-orb"
-        style={{
-          width: 250,
-          height: 250,
-          background: 'rgb(var(--color-warning-400))',
-          top: '5%',
-          right: '15%',
-          opacity: 0.1,
-          animationDelay: '-10s',
-        }}
-      />
-    </div>
-  );
-});
-
 // ─── Main Component ───
 
 export default function AdminPanel() {
@@ -981,8 +913,6 @@ export default function AdminPanel() {
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
-      <CosmosBackground />
-
       <div
         className="relative z-10 mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-3 overflow-hidden px-4 sm:px-6"
         style={{
