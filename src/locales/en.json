@@ -2950,6 +2950,7 @@
           "recentTransactions": "Recent transactions"
         },
         "sync": {
+          "selectSubscription": "Select subscription",
           "hasDifferences": "Differences found",
           "synced": "Synchronized",
           "bot": "Bot",

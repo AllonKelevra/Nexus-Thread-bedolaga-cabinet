@@ -386,12 +386,12 @@ export default function AdminUserDetail() {
   const loadSyncStatus = useCallback(async () => {
     if (!userId) return;
     try {
-      const data = await adminUsersApi.getSyncStatus(userId);
+      const data = await adminUsersApi.getSyncStatus(userId, activeSubscriptionId ?? undefined);
       setSyncStatus(data);
     } catch (error) {
       console.error('Failed to load sync status:', error);
     }
-  }, [userId]);
+  }, [userId, activeSubscriptionId]);
 
   const loadTariffs = useCallback(async () => {
     if (!userId) return;
@@ -656,10 +656,14 @@ export default function AdminUserDetail() {
     if (!userId) return;
     setActionLoading(true);
     try {
-      await adminUsersApi.syncFromPanel(userId, {
-        update_subscription: true,
-        update_traffic: true,
-      });
+      await adminUsersApi.syncFromPanel(
+        userId,
+        {
+          update_subscription: true,
+          update_traffic: true,
+        },
+        activeSubscriptionId ?? undefined,
+      );
       await loadUser();
       await loadSyncStatus();
     } catch (error) {
@@ -673,7 +677,11 @@ export default function AdminUserDetail() {
     if (!userId) return;
     setActionLoading(true);
     try {
-      await adminUsersApi.syncToPanel(userId, { create_if_missing: true });
+      await adminUsersApi.syncToPanel(
+        userId,
+        { create_if_missing: true },
+        activeSubscriptionId ?? undefined,
+      );
       await loadUser();
       await loadSyncStatus();
     } catch (error) {
@@ -2309,6 +2317,26 @@ export default function AdminUserDetail() {
         {/* Sync Tab */}
         {activeTab === 'sync' && (
           <div className="space-y-4">
+            {/* Subscription selector for multi-tariff */}
+            {userSubscriptions.length > 1 && (
+              <div className="rounded-xl bg-dark-800/50 p-4">
+                <div className="mb-2 text-sm text-dark-400">
+                  {t('admin.users.detail.sync.selectSubscription')}
+                </div>
+                <select
+                  value={activeSubscriptionId || ''}
+                  onChange={(e) => setActiveSubscriptionId(Number(e.target.value) || null)}
+                  className="w-full rounded-lg border border-dark-600 bg-dark-700 px-3 py-2 text-sm text-dark-100"
+                >
+                  {userSubscriptions.map((sub) => (
+                    <option key={sub.id} value={sub.id}>
+                      {sub.tariff_name || `#${sub.id}`} — {sub.status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             {/* Sync status */}
             {syncStatus && (
               <div
@@ -2431,6 +2459,11 @@ export default function AdminUserDetail() {
 
             {/* UUID info */}
             <div className="rounded-xl bg-dark-800/50 p-4">
+              {syncStatus?.subscription_tariff_name && (
+                <div className="mb-2 text-xs text-dark-500">
+                  {syncStatus.subscription_tariff_name}
+                </div>
+              )}
               <div className="mb-1 text-sm text-dark-400">Remnawave UUID</div>
               <div className="break-all font-mono text-sm text-dark-100">
                 {syncStatus?.remnawave_uuid ||

@@ -251,6 +251,8 @@ export interface PanelSyncStatusResponse {
   user_id: number;
   telegram_id: number;
   remnawave_uuid: string | null;
+  subscription_id: number | null;
+  subscription_tariff_name: string | null;
   last_sync: string | null;
   bot_subscription_status: string | null;
   bot_subscription_end_date: string | null;
@@ -561,8 +563,12 @@ export const adminUsersApi = {
   },
 
   // Sync status
-  getSyncStatus: async (userId: number): Promise<PanelSyncStatusResponse> => {
-    const response = await apiClient.get(`/cabinet/admin/users/${userId}/sync/status`);
+  getSyncStatus: async (
+    userId: number,
+    subscriptionId?: number,
+  ): Promise<PanelSyncStatusResponse> => {
+    const params = subscriptionId != null ? { subscription_id: subscriptionId } : undefined;
+    const response = await apiClient.get(`/cabinet/admin/users/${userId}/sync/status`, { params });
     return response.data;
   },
 
@@ -570,8 +576,12 @@ export const adminUsersApi = {
   syncFromPanel: async (
     userId: number,
     data: SyncFromPanelRequest = {},
+    subscriptionId?: number,
   ): Promise<SyncFromPanelResponse> => {
-    const response = await apiClient.post(`/cabinet/admin/users/${userId}/sync/from-panel`, data);
+    const params = subscriptionId != null ? { subscription_id: subscriptionId } : undefined;
+    const response = await apiClient.post(`/cabinet/admin/users/${userId}/sync/from-panel`, data, {
+      params,
+    });
     return response.data;
   },
 
@@ -579,8 +589,12 @@ export const adminUsersApi = {
   syncToPanel: async (
     userId: number,
     data: SyncToPanelRequest = {},
+    subscriptionId?: number,
   ): Promise<SyncToPanelResponse> => {
-    const response = await apiClient.post(`/cabinet/admin/users/${userId}/sync/to-panel`, data);
+    const params = subscriptionId != null ? { subscription_id: subscriptionId } : undefined;
+    const response = await apiClient.post(`/cabinet/admin/users/${userId}/sync/to-panel`, data, {
+      params,
+    });
     return response.data;
   },
 

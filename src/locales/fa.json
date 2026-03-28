@@ -2578,6 +2578,7 @@
           "recentTransactions": "تراکنش‌های اخیر"
         },
         "sync": {
+          "selectSubscription": "انتخاب اشتراک",
           "hasDifferences": "اختلاف وجود دارد",
           "synced": "همگام‌سازی شده",
           "bot": "ربات",

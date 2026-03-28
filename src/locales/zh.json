@@ -2577,6 +2577,7 @@
           "recentTransactions": "最近交易"
         },
         "sync": {
+          "selectSubscription": "选择订阅",
           "hasDifferences": "存在差异",
           "synced": "已同步",
           "bot": "机器人",

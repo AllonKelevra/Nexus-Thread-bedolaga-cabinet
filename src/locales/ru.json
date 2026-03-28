@@ -3471,6 +3471,7 @@
           "recentTransactions": "Последние транзакции"
         },
         "sync": {
+          "selectSubscription": "Выберите подписку",
           "hasDifferences": "Есть расхождения",
           "synced": "Синхронизировано",
           "bot": "Бот",
