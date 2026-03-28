@@ -928,7 +928,7 @@ function TrafficTab({ data, isLoading, onRefresh }: TrafficTabProps) {
               <p className="mb-2 text-xs font-medium text-dark-400">
                 {t('admin.remnawave.traffic.inbounds', 'Inbounds')}
               </p>
-              {node.inbounds
+              {[...node.inbounds]
                 .sort((a, b) => b.totalBytes - a.totalBytes)
                 .map((ib) => (
                   <div
@@ -953,7 +953,7 @@ function TrafficTab({ data, isLoading, onRefresh }: TrafficTabProps) {
               <p className="mb-2 text-xs font-medium text-dark-400">
                 {t('admin.remnawave.traffic.outbounds', 'Outbounds')}
               </p>
-              {node.outbounds
+              {[...node.outbounds]
                 .sort((a, b) => b.totalBytes - a.totalBytes)
                 .map((ob) => (
                   <div

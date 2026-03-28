@@ -1514,8 +1514,18 @@
       "tabs": {
         "overview": "Обзор",
         "nodes": "Ноды",
+        "traffic": "Трафик",
         "squads": "Сквады",
         "sync": "Синхронизация"
+      },
+      "traffic": {
+        "noData": "Нет данных о трафике",
+        "totalDownload": "Загрузка",
+        "totalUpload": "Отдача",
+        "totalTraffic": "Всего",
+        "online": "онлайн",
+        "inbounds": "Inbounds",
+        "outbounds": "Outbounds"
       },
       "overview": {
         "system": "Система",

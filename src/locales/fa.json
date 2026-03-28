@@ -2755,8 +2755,18 @@
       "tabs": {
         "overview": "نمای کلی",
         "nodes": "گره‌ها",
+        "traffic": "ترافیک",
         "squads": "گروه‌ها",
         "sync": "همگام‌سازی"
+      },
+      "traffic": {
+        "noData": "داده ترافیکی موجود نیست",
+        "totalDownload": "دانلود",
+        "totalUpload": "آپلود",
+        "totalTraffic": "مجموع",
+        "online": "آنلاین",
+        "inbounds": "ورودی‌ها",
+        "outbounds": "خروجی‌ها"
       },
       "nodes": {
         "confirmRestartAll": "آیا مطمئنید می‌خواهید همه گره‌ها را راه‌اندازی مجدد کنید؟",

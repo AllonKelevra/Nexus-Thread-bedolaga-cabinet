@@ -1493,8 +1493,18 @@
       "tabs": {
         "overview": "Overview",
         "nodes": "Nodes",
+        "traffic": "Traffic",
         "squads": "Squads",
         "sync": "Sync"
+      },
+      "traffic": {
+        "noData": "No traffic data available",
+        "totalDownload": "Download",
+        "totalUpload": "Upload",
+        "totalTraffic": "Total",
+        "online": "online",
+        "inbounds": "Inbounds",
+        "outbounds": "Outbounds"
       },
       "overview": {
         "system": "System",

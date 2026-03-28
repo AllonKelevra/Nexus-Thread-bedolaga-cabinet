@@ -2763,8 +2763,18 @@
       "tabs": {
         "overview": "概览",
         "nodes": "节点",
+        "traffic": "流量",
         "squads": "小队",
         "sync": "同步"
+      },
+      "traffic": {
+        "noData": "暂无流量数据",
+        "totalDownload": "下载",
+        "totalUpload": "上传",
+        "totalTraffic": "总计",
+        "online": "在线",
+        "inbounds": "入站",
+        "outbounds": "出站"
       },
       "nodes": {
         "confirmRestartAll": "确定要重启所有节点吗？",
