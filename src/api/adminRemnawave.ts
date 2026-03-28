@@ -159,6 +159,25 @@ export interface NodeActionResponse {
   is_disabled?: boolean;
 }
 
+// Realtime Traffic
+export interface InboundTraffic {
+  tag: string;
+  downloadBytes: number;
+  uploadBytes: number;
+  totalBytes: number;
+}
+
+export interface NodeRealtimeStats {
+  nodeUuid: string;
+  nodeName: string;
+  downloadBytes: number;
+  uploadBytes: number;
+  totalBytes: number;
+  usersOnline: number;
+  inbounds: InboundTraffic[];
+  outbounds: InboundTraffic[];
+}
+
 // Squads
 export interface SquadWithLocalInfo {
   uuid: string;
@@ -282,7 +301,7 @@ export const adminRemnawaveApi = {
     return response.data;
   },
 
-  getNodesRealtime: async (): Promise<Record<string, unknown>[]> => {
+  getNodesRealtime: async (): Promise<NodeRealtimeStats[]> => {
     const response = await apiClient.get('/cabinet/admin/remnawave/nodes/realtime');
     return response.data;
   },

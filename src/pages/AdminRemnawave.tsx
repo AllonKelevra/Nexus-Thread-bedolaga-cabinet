@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import {
   adminRemnawaveApi,
   NodeInfo,
+  NodeRealtimeStats,
   SquadWithLocalInfo,
   SystemStatsResponse,
   AutoSyncStatus,
@@ -851,7 +852,133 @@ function SyncTab({
   );
 }
 
-type TabType = 'overview' | 'nodes' | 'squads' | 'sync';
+interface TrafficTabProps {
+  data: NodeRealtimeStats[] | undefined;
+  isLoading: boolean;
+  onRefresh: () => void;
+}
+
+function TrafficTab({ data, isLoading, onRefresh }: TrafficTabProps) {
+  const { t } = useTranslation();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="py-12 text-center">
+        <p className="text-dark-400">
+          {t('admin.remnawave.traffic.noData', 'No traffic data available')}
+        </p>
+        <button onClick={onRefresh} className="btn-primary mt-4">
+          {t('common.retry', 'Retry')}
+        </button>
+      </div>
+    );
+  }
+
+  const totalDownload = data.reduce((acc, n) => acc + n.downloadBytes, 0);
+  const totalUpload = data.reduce((acc, n) => acc + n.uploadBytes, 0);
+
+  return (
+    <div className="space-y-6">
+      {/* Totals */}
+      <div className="grid grid-cols-3 gap-3">
+        <StatCard
+          label={t('admin.remnawave.traffic.totalDownload', 'Download')}
+          value={formatBytes(totalDownload)}
+          icon={<span className="text-lg">↓</span>}
+          color="green"
+        />
+        <StatCard
+          label={t('admin.remnawave.traffic.totalUpload', 'Upload')}
+          value={formatBytes(totalUpload)}
+          icon={<span className="text-lg">↑</span>}
+          color="blue"
+        />
+        <StatCard
+          label={t('admin.remnawave.traffic.totalTraffic', 'Total')}
+          value={formatBytes(totalDownload + totalUpload)}
+          icon={<span className="text-lg">⇅</span>}
+          color="purple"
+        />
+      </div>
+
+      {/* Per-node inbound breakdown */}
+      {data.map((node) => (
+        <div key={node.nodeUuid} className="rounded-xl border border-dark-700 bg-dark-800/50 p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <GlobeIcon className="h-4 w-4 text-accent-400" />
+              <h3 className="font-medium text-dark-100">{node.nodeName}</h3>
+              <span className="text-xs text-dark-500">
+                {node.usersOnline} {t('admin.remnawave.traffic.online', 'online')}
+              </span>
+            </div>
+            <span className="text-sm text-dark-300">{formatBytes(node.totalBytes)}</span>
+          </div>
+
+          {node.inbounds.length > 0 && (
+            <div className="space-y-1">
+              <p className="mb-2 text-xs font-medium text-dark-400">
+                {t('admin.remnawave.traffic.inbounds', 'Inbounds')}
+              </p>
+              {node.inbounds
+                .sort((a, b) => b.totalBytes - a.totalBytes)
+                .map((ib) => (
+                  <div
+                    key={ib.tag}
+                    className="flex items-center justify-between rounded-lg bg-dark-900/50 px-3 py-2"
+                  >
+                    <span className="truncate text-sm text-dark-200">{ib.tag}</span>
+                    <div className="flex shrink-0 gap-4 text-xs text-dark-400">
+                      <span>↓ {formatBytes(ib.downloadBytes)}</span>
+                      <span>↑ {formatBytes(ib.uploadBytes)}</span>
+                      <span className="font-medium text-dark-300">
+                        {formatBytes(ib.totalBytes)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
+
+          {node.outbounds.length > 0 && (
+            <div className="mt-3 space-y-1">
+              <p className="mb-2 text-xs font-medium text-dark-400">
+                {t('admin.remnawave.traffic.outbounds', 'Outbounds')}
+              </p>
+              {node.outbounds
+                .sort((a, b) => b.totalBytes - a.totalBytes)
+                .map((ob) => (
+                  <div
+                    key={ob.tag}
+                    className="flex items-center justify-between rounded-lg bg-dark-900/50 px-3 py-2"
+                  >
+                    <span className="truncate text-sm text-dark-200">{ob.tag}</span>
+                    <div className="flex shrink-0 gap-4 text-xs text-dark-400">
+                      <span>↓ {formatBytes(ob.downloadBytes)}</span>
+                      <span>↑ {formatBytes(ob.uploadBytes)}</span>
+                      <span className="font-medium text-dark-300">
+                        {formatBytes(ob.totalBytes)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+type TabType = 'overview' | 'nodes' | 'traffic' | 'squads' | 'sync';
 
 export default function AdminRemnawave() {
   const { t } = useTranslation();
@@ -902,6 +1029,17 @@ export default function AdminRemnawave() {
     queryKey: ['admin-remnawave-squads'],
     queryFn: adminRemnawaveApi.getSquads,
     enabled: activeTab === 'squads',
+  });
+
+  const {
+    data: realtimeData,
+    isLoading: isLoadingRealtime,
+    refetch: refetchRealtime,
+  } = useQuery({
+    queryKey: ['admin-remnawave-realtime'],
+    queryFn: adminRemnawaveApi.getNodesRealtime,
+    enabled: activeTab === 'traffic',
+    refetchInterval: 10000,
   });
 
   const { data: autoSyncStatus, isLoading: isLoadingAutoSync } = useQuery({
@@ -978,6 +1116,11 @@ export default function AdminRemnawave() {
       icon: <ChartIcon />,
     },
     { id: 'nodes' as const, label: t('admin.remnawave.tabs.nodes', 'Nodes'), icon: <GlobeIcon /> },
+    {
+      id: 'traffic' as const,
+      label: t('admin.remnawave.tabs.traffic', 'Traffic'),
+      icon: <ChartIcon />,
+    },
     {
       id: 'squads' as const,
       label: t('admin.remnawave.tabs.squads', 'Squads'),
@@ -1072,6 +1215,14 @@ export default function AdminRemnawave() {
           onAction={handleNodeAction}
           onRestartAll={handleRestartAll}
           isActionLoading={nodeActionMutation.isPending || restartAllMutation.isPending}
+        />
+      )}
+
+      {activeTab === 'traffic' && (
+        <TrafficTab
+          data={realtimeData}
+          isLoading={isLoadingRealtime}
+          onRefresh={() => refetchRealtime()}
         />
       )}
 
