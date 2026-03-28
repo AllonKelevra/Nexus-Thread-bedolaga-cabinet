@@ -56,6 +56,8 @@ export function SettingsTreeSidebar({
             const translatedName = t(`admin.settings.settingNames.${formattedKey}`, formattedKey);
             if (translatedName.toLowerCase().includes(q)) return true;
             if (s.hint?.description?.toLowerCase().includes(q)) return true;
+            const categoryLabel = t(`admin.settings.categories.${s.category.key}`, s.category.key);
+            if (categoryLabel.toLowerCase().includes(q)) return true;
             return false;
           })
           .slice(0, 8)

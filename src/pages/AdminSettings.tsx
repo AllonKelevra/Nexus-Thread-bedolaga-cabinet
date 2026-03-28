@@ -106,7 +106,8 @@ export default function AdminSettings() {
       label: t(`admin.settings.categories.${key}`, key),
       settings,
     }));
-  }, [activeTreeInfo, allSettings, t]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- activeTreeInfo derived from activeSection
+  }, [activeSection, allSettings, t]);
 
   // Filter settings for search - GLOBAL search across all settings
   const filteredSettings = useMemo(() => {
@@ -168,7 +169,8 @@ export default function AdminSettings() {
     if (activeTreeInfo) return t(`admin.settings.tree.${activeTreeInfo.child.id}`);
 
     return t('admin.settings.title');
-  }, [activeSection, activeTreeInfo, t]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- activeTreeInfo derived from activeSection
+  }, [activeSection, t]);
 
   // Render content based on active section
   const renderContent = () => {
