@@ -1029,6 +1029,11 @@ export default function AdminTariffCreate() {
                 { value: 'DAY', labelKey: 'admin.tariffs.resetModeDaily', emoji: '📅' },
                 { value: 'WEEK', labelKey: 'admin.tariffs.resetModeWeekly', emoji: '📆' },
                 { value: 'MONTH', labelKey: 'admin.tariffs.resetModeMonthly', emoji: '🗓️' },
+                {
+                  value: 'MONTH_ROLLING',
+                  labelKey: 'admin.tariffs.resetModeMonthRolling',
+                  emoji: '🔄',
+                },
                 { value: 'NO_RESET', labelKey: 'admin.tariffs.resetModeNever', emoji: '🚫' },
               ].map((option) => (
                 <button

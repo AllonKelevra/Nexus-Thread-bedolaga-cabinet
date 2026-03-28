@@ -405,24 +405,24 @@ function OverviewTab({ stats, isLoading, onRefresh }: OverviewTabProps) {
       {/* Bandwidth */}
       <div>
         <h3 className="mb-3 text-sm font-medium text-dark-300">
-          {t('admin.remnawave.overview.bandwidth', 'Realtime Bandwidth')}
+          {t('admin.remnawave.overview.bandwidth', 'Inbound Traffic')}
         </h3>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <StatCard
             label={t('admin.remnawave.overview.download', 'Download')}
-            value={formatBytes(stats.bandwidth.realtime_download) + '/s'}
+            value={formatBytes(stats.bandwidth.realtime_download)}
             icon={<span className="text-lg">↓</span>}
             color="green"
           />
           <StatCard
             label={t('admin.remnawave.overview.upload', 'Upload')}
-            value={formatBytes(stats.bandwidth.realtime_upload) + '/s'}
+            value={formatBytes(stats.bandwidth.realtime_upload)}
             icon={<span className="text-lg">↑</span>}
             color="blue"
           />
           <StatCard
             label={t('admin.remnawave.overview.total', 'Total')}
-            value={formatBytes(stats.bandwidth.realtime_total) + '/s'}
+            value={formatBytes(stats.bandwidth.realtime_total)}
             icon={<span className="text-lg">⇅</span>}
             color="purple"
           />

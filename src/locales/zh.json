@@ -277,7 +277,8 @@
     "trafficReset": {
       "DAY": "每日重置",
       "WEEK": "每周重置",
-      "MONTH": "每月重置"
+      "MONTH": "每月重置",
+      "MONTH_ROLLING": "每30天重置"
     },
     "traffic": "流量",
     "unlimited": "无限",
@@ -1890,6 +1891,8 @@
       "resetModeWeeklyDesc": "每周重置",
       "resetModeMonthly": "每月",
       "resetModeMonthlyDesc": "每月重置",
+      "resetModeMonthRolling": "滚动月",
+      "resetModeMonthRollingDesc": "从首次连接起每30天重置",
       "resetModeNever": "从不",
       "resetModeNeverDesc": "流量不重置",
       "cancelButton": "取消",

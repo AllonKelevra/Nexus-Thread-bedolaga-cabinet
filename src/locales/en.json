@@ -316,7 +316,8 @@
     "trafficReset": {
       "DAY": "Resets daily",
       "WEEK": "Resets weekly",
-      "MONTH": "Resets monthly"
+      "MONTH": "Resets monthly",
+      "MONTH_ROLLING": "Resets every 30 days"
     },
     "traffic": "Traffic",
     "unlimited": "Unlimited",
@@ -1490,7 +1491,7 @@
         "totalUsers": "Total Users",
         "nodesOnline": "Nodes Online",
         "connections": "Connections",
-        "bandwidth": "Realtime Bandwidth",
+        "bandwidth": "Inbound Traffic",
         "download": "Download",
         "upload": "Upload",
         "total": "Total",
@@ -2198,6 +2199,8 @@
       "resetModeWeeklyDesc": "Reset every week",
       "resetModeMonthly": "Monthly",
       "resetModeMonthlyDesc": "Reset every month",
+      "resetModeMonthRolling": "Rolling month",
+      "resetModeMonthRollingDesc": "Reset every 30 days from first connection",
       "resetModeNever": "Never",
       "resetModeNeverDesc": "Traffic is not reset",
       "cancelButton": "Cancel",

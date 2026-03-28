@@ -94,6 +94,19 @@ export interface NodeInfo {
   created_at?: string;
   updated_at?: string;
   provider_uuid?: string;
+  active_plugin_uuid?: string;
+  config_profile?: {
+    active_config_profile_uuid: string | null;
+    active_inbounds: Array<{
+      uuid: string;
+      profile_uuid: string;
+      tag: string;
+      type: string;
+      network: string | null;
+      security: string | null;
+      port: number | null;
+    }>;
+  };
 }
 
 export interface NodesListResponse {

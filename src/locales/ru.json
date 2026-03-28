@@ -331,7 +331,8 @@
     "trafficReset": {
       "DAY": "Сброс ежедневно",
       "WEEK": "Сброс еженедельно",
-      "MONTH": "Сброс ежемесячно"
+      "MONTH": "Сброс ежемесячно",
+      "MONTH_ROLLING": "Сброс раз в 30 дней"
     },
     "traffic": "Трафик",
     "unlimited": "Безлимит",
@@ -1511,7 +1512,7 @@
         "totalUsers": "Всего пользователей",
         "nodesOnline": "Нод онлайн",
         "connections": "Подключений",
-        "bandwidth": "Пропускная способность",
+        "bandwidth": "Трафик по inbounds",
         "download": "Загрузка",
         "upload": "Отдача",
         "total": "Всего",
@@ -2712,6 +2713,8 @@
       "resetModeWeeklyDesc": "Сброс каждую неделю",
       "resetModeMonthly": "Ежемесячно",
       "resetModeMonthlyDesc": "Сброс каждый месяц",
+      "resetModeMonthRolling": "Скользящий месяц",
+      "resetModeMonthRollingDesc": "Сброс через 30 дней от первого подключения",
       "resetModeNever": "Никогда",
       "resetModeNeverDesc": "Трафик не сбрасывается",
       "cancelButton": "Отмена",
