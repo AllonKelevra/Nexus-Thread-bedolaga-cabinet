@@ -10,6 +10,7 @@ import {
   AutoSyncStatus,
 } from '../api/adminRemnawave';
 import { usePlatform } from '../platform/hooks/usePlatform';
+import { formatUptime } from '../utils/format';
 import {
   ServerIcon,
   ChartIcon,
@@ -41,16 +42,6 @@ const formatBytes = (bytes: number): string => {
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB'];
   const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-};
-
-const formatUptime = (seconds: number): string => {
-  const days = Math.floor(seconds / 86400);
-  const hours = Math.floor((seconds % 86400) / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-
-  if (days > 0) return `${days}d ${hours}h`;
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  return `${minutes}m`;
 };
 
 const getCountryFlag = (code: string | null | undefined): string => {
@@ -175,11 +166,12 @@ function NodeCard({ node, onAction, isLoading }: NodeCardProps) {
                 {t('admin.remnawave.nodes.trafficUsed', 'used')}
               </span>
             )}
-            {node.xray_uptime && (
+            {node.xray_uptime > 0 && (
               <span>
-                {t('admin.remnawave.nodes.uptimeLabel', 'Uptime')}: {node.xray_uptime}
+                {t('admin.remnawave.nodes.uptimeLabel', 'Uptime')}: {formatUptime(node.xray_uptime)}
               </span>
             )}
+            {node.versions?.xray && <span>Xray {node.versions.xray}</span>}
           </div>
         </div>
 
@@ -355,15 +347,9 @@ function OverviewTab({ stats, isLoading, onRefresh }: OverviewTabProps) {
     );
   }
 
-  // Use (total - available) instead of raw "used" to exclude disk cache/buffers
-  // This matches what htop/free show as actual application memory usage
-  const memoryActualUsed =
-    stats.server_info.memory_available > 0
-      ? stats.server_info.memory_total - stats.server_info.memory_available
-      : stats.server_info.memory_used;
   const memoryUsedPercent =
     stats.server_info.memory_total > 0
-      ? Math.round((memoryActualUsed / stats.server_info.memory_total) * 100)
+      ? Math.round((stats.server_info.memory_used / stats.server_info.memory_total) * 100)
       : 0;
 
   return (
@@ -437,14 +423,14 @@ function OverviewTab({ stats, isLoading, onRefresh }: OverviewTabProps) {
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
           <StatCard
             label={t('admin.remnawave.overview.cpu', 'CPU Cores')}
-            value={`${stats.server_info.cpu_cores} (${stats.server_info.cpu_physical_cores} physical)`}
+            value={stats.server_info.cpu_cores}
             icon={<span className="text-lg">⚡</span>}
             color="accent"
           />
           <StatCard
             label={t('admin.remnawave.overview.memory', 'Memory')}
             value={`${memoryUsedPercent}%`}
-            subValue={`${formatBytes(memoryActualUsed)} / ${formatBytes(stats.server_info.memory_total)}`}
+            subValue={`${formatBytes(stats.server_info.memory_used)} / ${formatBytes(stats.server_info.memory_total)}`}
             icon={<span className="text-lg">💾</span>}
             color={memoryUsedPercent > 80 ? 'red' : memoryUsedPercent > 60 ? 'orange' : 'green'}
           />

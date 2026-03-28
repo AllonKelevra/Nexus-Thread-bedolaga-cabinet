@@ -29,11 +29,9 @@ export interface SystemSummary {
 
 export interface ServerInfo {
   cpu_cores: number;
-  cpu_physical_cores: number;
   memory_total: number;
   memory_used: number;
   memory_free: number;
-  memory_available: number;
   uptime_seconds: number;
 }
 
@@ -78,22 +76,47 @@ export interface NodeInfo {
   is_disabled: boolean;
   is_node_online: boolean;
   is_xray_running: boolean;
-  users_online?: number;
+  users_online: number;
   traffic_used_bytes?: number;
   traffic_limit_bytes?: number;
   last_status_change?: string;
   last_status_message?: string;
-  xray_uptime?: string;
+  xray_uptime: number;
   is_traffic_tracking_active: boolean;
   traffic_reset_day?: number;
   notify_percent?: number;
   consumption_multiplier: number;
-  cpu_count?: number;
-  cpu_model?: string;
-  total_ram?: string;
   created_at?: string;
   updated_at?: string;
   provider_uuid?: string;
+  versions?: { xray: string; node: string } | null;
+  system?: {
+    info: {
+      arch: string;
+      cpus: number;
+      cpuModel: string;
+      memoryTotal: number;
+      hostname: string;
+      platform: string;
+      release: string;
+      type: string;
+      version: string;
+      networkInterfaces: string[];
+    };
+    stats: {
+      memoryFree: number;
+      memoryUsed: number;
+      uptime: number;
+      loadAvg: number[];
+      interface?: {
+        interface: string;
+        rxBytesPerSec: number;
+        txBytesPerSec: number;
+        rxTotal: number;
+        txTotal: number;
+      } | null;
+    };
+  } | null;
   active_plugin_uuid?: string;
   config_profile?: {
     active_config_profile_uuid: string | null;
