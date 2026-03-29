@@ -148,7 +148,12 @@ export default function Profile() {
   const registerEmailMutation = useMutation({
     mutationFn: ({ email, password }: { email: string; password: string }) =>
       authApi.registerEmail(email, password),
-    onSuccess: async () => {
+    onSuccess: async (response) => {
+      // Backend returns merge_required when email belongs to another user
+      if (response.merge_required && response.merge_token) {
+        navigate(`/merge/${response.merge_token}`, { replace: true });
+        return;
+      }
       setSuccess(t('profile.emailSent'));
       setError(null);
       setEmail('');
