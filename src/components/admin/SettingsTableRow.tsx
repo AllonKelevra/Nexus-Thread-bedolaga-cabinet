@@ -67,9 +67,13 @@ export function SettingsTableRow({
         className,
       )}
     >
-      <div className={cn(isLongValue ? 'space-y-3' : 'flex items-center gap-4')}>
+      <div
+        className={cn(
+          isLongValue ? 'space-y-3' : 'flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-4',
+        )}
+      >
         {/* Left side: name, badges, key */}
-        <div className={cn('min-w-0', !isLongValue && 'flex-1')}>
+        <div className={cn('min-w-0', !isLongValue && 'lg:flex-1')}>
           {/* Name + badges row */}
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-[13px] font-medium text-dark-100">{displayName}</span>
@@ -106,7 +110,12 @@ export function SettingsTableRow({
         </div>
 
         {/* Right side: control + action buttons */}
-        <div className={cn('flex items-center gap-2', isLongValue ? 'w-full' : 'flex-shrink-0')}>
+        <div
+          className={cn(
+            'flex items-center gap-2',
+            isLongValue ? 'w-full' : 'self-end lg:flex-shrink-0',
+          )}
+        >
           {setting.read_only ? (
             <span className="max-w-[240px] truncate rounded bg-dark-700/30 px-3 py-1.5 font-mono text-xs text-dark-400">
               {isBool
@@ -133,7 +142,7 @@ export function SettingsTableRow({
             <button
               onClick={onReset}
               disabled={isResetting}
-              className="flex-shrink-0 rounded-lg p-1.5 text-dark-500 opacity-0 transition-all hover:bg-dark-700 hover:text-dark-200 disabled:opacity-50 group-hover:opacity-100"
+              className="flex-shrink-0 rounded-lg p-1.5 text-dark-500 opacity-0 transition-all hover:bg-dark-700 hover:text-dark-200 disabled:opacity-50 group-hover:opacity-100 max-lg:opacity-100"
               title={t('admin.settings.reset')}
               aria-label={t('admin.settings.reset')}
             >
@@ -148,7 +157,7 @@ export function SettingsTableRow({
               'flex-shrink-0 rounded-lg p-1.5 transition-all',
               isFavorite
                 ? 'text-warning-400 hover:bg-warning-500/15'
-                : 'text-dark-500 opacity-0 hover:bg-dark-700/50 hover:text-warning-400 group-hover:opacity-100',
+                : 'text-dark-500 opacity-0 hover:bg-dark-700/50 hover:text-warning-400 group-hover:opacity-100 max-lg:opacity-100',
             )}
             title={
               isFavorite

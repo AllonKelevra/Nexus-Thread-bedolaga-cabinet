@@ -84,7 +84,7 @@ export function SettingsMobileTabs({
             setActiveSection('favorites');
             setExpandedGroup(null);
           }}
-          className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
+          className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition-all ${
             isFavoritesActive
               ? 'bg-accent-500/15 text-accent-400 ring-1 ring-accent-500/30'
               : 'bg-dark-800/50 text-dark-400 active:bg-dark-700'
@@ -116,7 +116,7 @@ export function SettingsMobileTabs({
                 setActiveSection(item.id);
                 setExpandedGroup(null);
               }}
-              className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
+              className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition-all ${
                 isActive
                   ? 'bg-accent-500/15 text-accent-400 ring-1 ring-accent-500/30'
                   : 'bg-dark-800/50 text-dark-400 active:bg-dark-700'
@@ -137,7 +137,7 @@ export function SettingsMobileTabs({
               key={group.id}
               ref={hasActiveChild ? activeRef : null}
               onClick={() => handleGroupTap(group.id)}
-              className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
+              className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition-all ${
                 hasActiveChild || isExpanded
                   ? 'bg-accent-500/15 text-accent-400 ring-1 ring-accent-500/30'
                   : 'bg-dark-800/50 text-dark-400 active:bg-dark-700'
@@ -148,6 +148,7 @@ export function SettingsMobileTabs({
             </button>
           );
         })}
+        <div className="w-3 shrink-0" aria-hidden="true" />
       </div>
 
       {/* Level 2: Sub-item chips (shown when a group is expanded) */}
@@ -164,7 +165,7 @@ export function SettingsMobileTabs({
                 <button
                   key={child.id}
                   onClick={() => setActiveSection(child.id)}
-                  className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                  className={`shrink-0 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
                     isActive
                       ? 'bg-accent-500/10 text-accent-400 ring-1 ring-accent-500/20'
                       : 'bg-dark-800/30 text-dark-500 active:bg-dark-700'
@@ -174,6 +175,7 @@ export function SettingsMobileTabs({
                 </button>
               );
             })}
+          <div className="w-3 shrink-0" aria-hidden="true" />
         </div>
       )}
     </div>

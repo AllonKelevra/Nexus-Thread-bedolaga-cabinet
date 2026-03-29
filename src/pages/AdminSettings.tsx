@@ -225,7 +225,7 @@ export default function AdminSettings() {
   return (
     <>
       {/* Mobile Layout */}
-      <div className="space-y-4 lg:hidden">
+      <div className="space-y-4 pb-4 lg:hidden">
         <SettingsMobileTabs
           activeSection={activeSection}
           setActiveSection={setActiveSection}
