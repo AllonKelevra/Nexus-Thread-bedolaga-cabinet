@@ -1,4 +1,5 @@
 ﻿import apiClient from './client';
+import i18n from '../i18n';
 import type {
   Balance,
   Transaction,
@@ -54,6 +55,7 @@ export const balanceApi = {
       amount_kopeks: number;
       payment_method: string;
       payment_option?: string;
+      language?: string;
     } = {
       amount_kopeks: amountKopeks,
       payment_method: paymentMethod,
@@ -61,6 +63,7 @@ export const balanceApi = {
     if (paymentOption) {
       payload.payment_option = paymentOption;
     }
+    payload.language = i18n.language || 'ru';
     const response = await apiClient.post('/cabinet/balance/topup', payload);
     return response.data;
   },
