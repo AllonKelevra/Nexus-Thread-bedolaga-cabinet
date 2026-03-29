@@ -2561,7 +2561,8 @@
           "balance": "余额",
           "sync": "同步",
           "tickets": "工单",
-          "gifts": "礼物"
+          "gifts": "礼物",
+          "referrals": "推荐"
         },
         "noTickets": "该用户没有工单",
         "ticketsCount": "个工单",
@@ -2717,6 +2718,26 @@
           "unknownUser": "未知",
           "totalSent": "已发送总数",
           "totalReceived": "已收到总数"
+        },
+        "referrals": {
+          "referredBy": "推荐人",
+          "noReferrer": "未分配推荐人",
+          "assignReferrer": "分配推荐人",
+          "removeReferrer": "移除",
+          "referrerAssigned": "推荐人已分配",
+          "referrerRemoved": "推荐人已移除",
+          "totalReferrals": "总推荐数",
+          "totalEarnings": "总收益",
+          "commission": "佣金",
+          "referralCode": "推荐码",
+          "default": "默认",
+          "referralsList": "推荐列表",
+          "noReferrals": "暂无推荐",
+          "removeReferral": "移除推荐",
+          "referralRemoved": "推荐已移除",
+          "searchPlaceholder": "按名称、邮箱或 Telegram ID 搜索...",
+          "alreadyReferred": "已有推荐人",
+          "noUsersFound": "未找到用户"
         }
       }
     },

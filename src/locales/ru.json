@@ -3452,7 +3452,8 @@
           "balance": "Баланс",
           "sync": "Синхронизация",
           "tickets": "Тикеты",
-          "gifts": "Подарки"
+          "gifts": "Подарки",
+          "referrals": "Рефералы"
         },
         "noTickets": "У пользователя нет тикетов",
         "ticketsCount": "тикетов",
@@ -3611,6 +3612,26 @@
           "unknownUser": "Неизвестный",
           "totalSent": "Всего отправлено",
           "totalReceived": "Всего получено"
+        },
+        "referrals": {
+          "referredBy": "Приглашён",
+          "noReferrer": "Реферер не назначен",
+          "assignReferrer": "Назначить реферера",
+          "removeReferrer": "Удалить",
+          "referrerAssigned": "Реферер назначен",
+          "referrerRemoved": "Реферер удалён",
+          "totalReferrals": "Всего рефералов",
+          "totalEarnings": "Всего заработано",
+          "commission": "Комиссия",
+          "referralCode": "Реферальный код",
+          "default": "стандарт",
+          "referralsList": "Рефералы",
+          "noReferrals": "Рефералов пока нет",
+          "removeReferral": "Удалить реферала",
+          "referralRemoved": "Реферал удалён",
+          "searchPlaceholder": "Поиск по имени, email или Telegram ID...",
+          "alreadyReferred": "уже чей-то реферал",
+          "noUsersFound": "Пользователи не найдены"
         }
       }
     },

@@ -536,6 +536,34 @@ export const adminUsersApi = {
     return response.data;
   },
 
+  // Assign a referrer to this user
+  assignReferrer: async (
+    userId: number,
+    referrerId: number,
+  ): Promise<{ success: boolean; message: string }> => {
+    const response = await apiClient.post(`/cabinet/admin/users/${userId}/assign-referrer`, {
+      referrer_id: referrerId,
+    });
+    return response.data;
+  },
+
+  // Remove this user's referrer
+  removeReferrer: async (userId: number): Promise<{ success: boolean; message: string }> => {
+    const response = await apiClient.delete(`/cabinet/admin/users/${userId}/referrer`);
+    return response.data;
+  },
+
+  // Remove a specific referral from this user's list
+  removeReferral: async (
+    userId: number,
+    referralUserId: number,
+  ): Promise<{ success: boolean; message: string }> => {
+    const response = await apiClient.delete(
+      `/cabinet/admin/users/${userId}/referrals/${referralUserId}`,
+    );
+    return response.data;
+  },
+
   // Get referrals
   getReferrals: async (userId: number, offset = 0, limit = 50): Promise<UsersListResponse> => {
     const response = await apiClient.get(`/cabinet/admin/users/${userId}/referrals`, {

@@ -2940,7 +2940,8 @@
           "balance": "Balance",
           "sync": "Synchronization",
           "tickets": "Tickets",
-          "gifts": "Gifts"
+          "gifts": "Gifts",
+          "referrals": "Referrals"
         },
         "noTickets": "No tickets from this user",
         "ticketsCount": "tickets",
@@ -3100,6 +3101,26 @@
           "unknownUser": "Unknown",
           "totalSent": "Total sent",
           "totalReceived": "Total received"
+        },
+        "referrals": {
+          "referredBy": "Referred By",
+          "noReferrer": "No referrer assigned",
+          "assignReferrer": "Assign Referrer",
+          "removeReferrer": "Remove",
+          "referrerAssigned": "Referrer assigned successfully",
+          "referrerRemoved": "Referrer removed successfully",
+          "totalReferrals": "Total Referrals",
+          "totalEarnings": "Total Earnings",
+          "commission": "Commission",
+          "referralCode": "Referral Code",
+          "default": "default",
+          "referralsList": "Referrals",
+          "noReferrals": "No referrals yet",
+          "removeReferral": "Remove referral",
+          "referralRemoved": "Referral removed successfully",
+          "searchPlaceholder": "Search by name, email, or Telegram ID...",
+          "alreadyReferred": "already has referrer",
+          "noUsersFound": "No users found"
         }
       }
     },
