@@ -313,6 +313,7 @@ export default function AdminUserDetail() {
   const [referrerSearchQuery, setReferrerSearchQuery] = useState('');
   const [showReferrerSearch, setShowReferrerSearch] = useState(false);
   const [referrerSearchResults, setReferrerSearchResults] = useState<UserListItem[]>([]);
+  const [referrerSearchLoading, setReferrerSearchLoading] = useState(false);
   const referrerSearchRef = useRef<HTMLDivElement>(null);
 
   // Panel info & node usage
@@ -443,7 +444,7 @@ export default function AdminUserDetail() {
     try {
       setReferralsLoading(true);
       const data = await adminUsersApi.getReferrals(userId, 0, 50);
-      setReferrals(data.users);
+      setReferrals(data.users || []);
     } catch {
     } finally {
       setReferralsLoading(false);
@@ -953,17 +954,29 @@ export default function AdminUserDetail() {
   useEffect(() => {
     if (referrerSearchQuery.length < 2 || !showReferrerSearch) {
       setReferrerSearchResults([]);
+      setReferrerSearchLoading(false);
       return;
     }
+    setReferrerSearchLoading(true);
+    let cancelled = false;
     const timer = setTimeout(async () => {
       try {
         const data = await adminUsersApi.getUsers({ search: referrerSearchQuery, limit: 10 });
-        setReferrerSearchResults(data.users || []);
+        if (!cancelled) {
+          setReferrerSearchResults(data.users || []);
+          setReferrerSearchLoading(false);
+        }
       } catch {
-        setReferrerSearchResults([]);
+        if (!cancelled) {
+          setReferrerSearchResults([]);
+          setReferrerSearchLoading(false);
+        }
       }
     }, 300);
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [referrerSearchQuery, showReferrerSearch]);
 
   // Referrals tab: close search dropdown on click outside
@@ -3064,11 +3077,13 @@ export default function AdminUserDetail() {
                           )}
                         </div>
                       )}
-                      {referrerSearchQuery.length >= 2 && referrerSearchResults.length === 0 && (
-                        <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-xl border border-dark-700 bg-dark-800 py-4 text-center text-sm text-dark-500 shadow-xl">
-                          {t('admin.users.detail.referrals.noUsersFound')}
-                        </div>
-                      )}
+                      {referrerSearchQuery.length >= 2 &&
+                        !referrerSearchLoading &&
+                        referrerSearchResults.length === 0 && (
+                          <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-xl border border-dark-700 bg-dark-800 py-4 text-center text-sm text-dark-500 shadow-xl">
+                            {t('admin.users.detail.referrals.noUsersFound')}
+                          </div>
+                        )}
                     </div>
                   ) : (
                     <div className="flex items-center justify-between">
@@ -3110,7 +3125,9 @@ export default function AdminUserDetail() {
                   {t('admin.users.detail.referrals.commission')}
                 </div>
                 <div className="mt-1 text-xl font-bold text-dark-100">
-                  {user.referral.commission_percent ?? t('admin.users.detail.referrals.default')}%
+                  {user.referral.commission_percent != null
+                    ? `${user.referral.commission_percent}%`
+                    : t('admin.users.detail.referrals.default')}
                 </div>
               </div>
               <div className="rounded-xl bg-dark-800/40 p-4">
