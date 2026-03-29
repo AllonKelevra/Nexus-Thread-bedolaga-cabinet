@@ -113,7 +113,7 @@ export function SettingsTableRow({
         <div
           className={cn(
             'flex items-center gap-2',
-            isLongValue ? 'w-full' : 'self-end lg:flex-shrink-0',
+            isLongValue ? 'w-full' : 'max-lg:self-end lg:flex-shrink-0',
           )}
         >
           {setting.read_only ? (
