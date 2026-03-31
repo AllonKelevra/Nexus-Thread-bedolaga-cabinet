@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.43.1](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/compare/v1.43.0...v1.43.1) (2026-03-31)
+
+
+### Bug Fixes
+
+* admin users search not working on pages beyond first ([fe609a5](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/fe609a505b99ec54c76969e4eb7d35b4973243e9))
+* unblock page rendering when Telegram CDN is unavailable ([826a82a](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/826a82aa1cddbd9a5b225632186ad98d7d71434d))
+
 ## [1.43.0](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/compare/v1.42.0...v1.43.0) (2026-03-29)
 
 
