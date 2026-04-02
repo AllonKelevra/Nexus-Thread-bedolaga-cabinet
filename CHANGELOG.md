@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.44.0](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/compare/v1.43.1...v1.44.0) (2026-04-02)
+
+
+### Features
+
+* move email linking form into Connected Accounts page ([6fd0668](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/6fd0668a243ed9ada8485586216e3956d35edc8e))
+
+
+### Bug Fixes
+
+* add key prop to AnimatePresence, accessibility labels, remove hardcoded fallback ([7892630](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/7892630e3bd4006e7f5dcd95d5e378c8a4d7e8f7))
+* subscription tab not highlighted on detail pages ([e2f81ad](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/e2f81ad28dd5caaee8d5b5a0796b4b78a6c36ace))
+
 ## [1.43.1](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/compare/v1.43.0...v1.43.1) (2026-03-31)
 
 
