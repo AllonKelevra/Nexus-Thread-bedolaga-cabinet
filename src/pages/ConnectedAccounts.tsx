@@ -430,7 +430,7 @@ export default function ConnectedAccounts() {
     setEmailSuccess(null);
 
     if (!emailValue.trim() || !isValidEmail(emailValue.trim())) {
-      setEmailError(t('profile.invalidEmail', 'Please enter a valid email address'));
+      setEmailError(t('profile.invalidEmail'));
       return;
     }
     if (!emailPassword || emailPassword.length < 8) {
@@ -675,6 +675,7 @@ export default function ConnectedAccounts() {
               <AnimatePresence>
                 {emailFormOpen && (
                   <motion.div
+                    key="email-link-form"
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
@@ -687,19 +688,25 @@ export default function ConnectedAccounts() {
                       </p>
                       <form onSubmit={handleEmailSubmit} className="space-y-3">
                         <div>
-                          <label className="label">Email</label>
+                          <label htmlFor="email-link-input" className="label">
+                            Email
+                          </label>
                           <input
+                            id="email-link-input"
                             type="email"
                             value={emailValue}
                             onChange={(e) => setEmailValue(e.target.value)}
-                            placeholder="your@email.com"
+                            placeholder="email@example.com"
                             className="input"
                             autoComplete="email"
                           />
                         </div>
                         <div>
-                          <label className="label">{t('auth.password')}</label>
+                          <label htmlFor="email-link-password" className="label">
+                            {t('auth.password')}
+                          </label>
                           <input
+                            id="email-link-password"
                             type="password"
                             value={emailPassword}
                             onChange={(e) => setEmailPassword(e.target.value)}
@@ -710,8 +717,11 @@ export default function ConnectedAccounts() {
                           <p className="mt-1 text-xs text-dark-500">{t('profile.passwordHint')}</p>
                         </div>
                         <div>
-                          <label className="label">{t('auth.confirmPassword')}</label>
+                          <label htmlFor="email-link-confirm" className="label">
+                            {t('auth.confirmPassword')}
+                          </label>
                           <input
+                            id="email-link-confirm"
                             type="password"
                             value={emailConfirmPassword}
                             onChange={(e) => setEmailConfirmPassword(e.target.value)}
