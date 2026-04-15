@@ -135,7 +135,7 @@ export default function AdminPromoGroupCreate() {
     periodDiscounts.forEach((pd) => {
       const days = pd.days === '' ? 0 : pd.days;
       const percent = pd.percent === '' ? 0 : pd.percent;
-      if (days > 0 && percent > 0) {
+      if (days > 0 && percent >= 0) {
         periodDiscountsRecord[days] = percent;
       }
     });
