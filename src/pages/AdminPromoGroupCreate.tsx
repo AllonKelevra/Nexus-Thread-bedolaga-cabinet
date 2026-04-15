@@ -150,8 +150,7 @@ export default function AdminPromoGroupCreate() {
       server_discount_percent: serverVal,
       traffic_discount_percent: trafficVal,
       device_discount_percent: deviceVal,
-      period_discounts:
-        Object.keys(periodDiscountsRecord).length > 0 ? periodDiscountsRecord : undefined,
+      period_discounts: periodDiscountsRecord,
       apply_discounts_to_addons: applyToAddons,
       auto_assign_total_spent_kopeks: autoAssignVal > 0 ? Math.round(autoAssignVal * 100) : 0,
       is_default: isDefault,
