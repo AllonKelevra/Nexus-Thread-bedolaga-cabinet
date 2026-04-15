@@ -1,5 +1,59 @@
 # Changelog
 
+## [1.45.0](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/compare/v1.44.2...v1.45.0) (2026-04-13)
+
+
+### Features
+
+* add broadcast category selector (system/news/promo) in admin UI ([362a698](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/362a69812fb57a8615750d367f73b3a29fda665b))
+* send campaign_slug during standalone email registration ([a46c89e](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/a46c89e45ee9dee121b589f665330d9ce71483d2))
+
+
+### Bug Fixes
+
+* add back button to AdminBanSystem page ([f787cc2](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/f787cc2de8de094965b83e04032723efe458eda9))
+* add Object.hasOwn polyfill for old iOS/Android WebViews ([7b0e6d8](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/7b0e6d8bc8a3bfb0907c057cade17679a672f643))
+* show API error details in menu editor save + allow tg:// URLs ([30d8d28](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/30d8d28475298a6b620b682a7437022d3b818c80))
+* subscription status badge overflow + inline password validation ([3d0fc76](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/3d0fc76ecda7c29c496ede51acaf931af53634e2))
+
+## [1.44.2](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/compare/v1.44.1...v1.44.2) (2026-04-08)
+
+
+### Bug Fixes
+
+* batch bug fixes matching backend changes ([e6f6713](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/e6f6713b0e9b854d7eb88f4e2a53b26656637079))
+* batch frontend fixes matching backend changes ([608a752](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/608a75220f19bf64a956601c00fcec7bb974c41a))
+
+## [1.44.1](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/compare/v1.44.0...v1.44.1) (2026-04-03)
+
+
+### Bug Fixes
+
+* 100% discount display + Telegram widget fix + sparkles icon ([300cb07](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/300cb07c58d8f374abde47b861f4757e236d4eb0))
+* complete sparkles icon in trial offer card (was showing only 1 of 3 sparkle paths) ([1cf9526](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/1cf95267138908e2da79e1da3ebb25c2d0ae03be))
+* support 100% discount display + fix Telegram link widget race condition ([207af81](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/207af81c953eccb2e474cca47dfe9434e8a58527))
+
+## [1.44.0](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/compare/v1.43.1...v1.44.0) (2026-04-02)
+
+
+### Features
+
+* move email linking form into Connected Accounts page ([6fd0668](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/6fd0668a243ed9ada8485586216e3956d35edc8e))
+
+
+### Bug Fixes
+
+* add key prop to AnimatePresence, accessibility labels, remove hardcoded fallback ([7892630](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/7892630e3bd4006e7f5dcd95d5e378c8a4d7e8f7))
+* subscription tab not highlighted on detail pages ([e2f81ad](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/e2f81ad28dd5caaee8d5b5a0796b4b78a6c36ace))
+
+## [1.43.1](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/compare/v1.43.0...v1.43.1) (2026-03-31)
+
+
+### Bug Fixes
+
+* admin users search not working on pages beyond first ([fe609a5](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/fe609a505b99ec54c76969e4eb7d35b4973243e9))
+* unblock page rendering when Telegram CDN is unavailable ([826a82a](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/commit/826a82aa1cddbd9a5b225632186ad98d7d71434d))
+
 ## [1.43.0](https://github.com/BEDOLAGA-DEV/bedolaga-cabinet/compare/v1.42.0...v1.43.0) (2026-03-29)
 
 
