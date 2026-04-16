@@ -680,6 +680,9 @@
       },
       "paypear": {
         "description": "Оплата через PayPear"
+      },
+      "rollypay": {
+        "description": "Оплата через RollyPay (СБП)"
       }
     },
     "transactionHistory": "История операций",
@@ -1976,6 +1979,7 @@
         "payments_riopay": "RioPay",
         "payments_severpay": "SeverPay",
         "payments_paypear": "PayPear",
+        "payments_rollypay": "RollyPay",
         "subs_core": "Основные",
         "subs_trial": "Пробный период",
         "subs_pricing": "Цены",

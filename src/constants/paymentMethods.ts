@@ -16,5 +16,6 @@ export const METHOD_LABELS: Record<string, string> = {
   riopay: 'RioPay',
   severpay: 'SeverPay',
   paypear: 'PayPear',
+  rollypay: 'RollyPay',
   manual: 'Ручное пополнение',
 };

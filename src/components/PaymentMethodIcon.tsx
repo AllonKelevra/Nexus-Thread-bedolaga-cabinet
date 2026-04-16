@@ -255,6 +255,26 @@ export default function PaymentMethodIcon({
       );
     }
 
+    case 'rollypay': {
+      const rollypayGradId = `${uid}-rollypay`;
+      return (
+        <svg className={className} viewBox="0 0 40 40">
+          <defs>
+            <linearGradient id={rollypayGradId} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#059669" />
+            </linearGradient>
+          </defs>
+          <circle cx="20" cy="20" r="20" fill={`url(#${rollypayGradId})`} />
+          <g fill="#fff" fontFamily="Arial,sans-serif" fontWeight="700">
+            <text x="20" y="26" textAnchor="middle" fontSize="14">
+              RP
+            </text>
+          </g>
+        </svg>
+      );
+    }
+
     default:
       return (
         <svg className={className} viewBox="0 0 40 40">

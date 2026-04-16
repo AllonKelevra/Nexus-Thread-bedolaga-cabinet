@@ -1656,6 +1656,7 @@
         "payments_riopay": "RioPay",
         "payments_severpay": "SeverPay",
         "payments_paypear": "PayPear",
+        "payments_rollypay": "RollyPay",
         "subs_core": "核心",
         "subs_trial": "试用",
         "subs_pricing": "定价",
