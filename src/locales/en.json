@@ -1956,6 +1956,7 @@
         "payments_wata": "Wata",
         "payments_riopay": "RioPay",
         "payments_severpay": "SeverPay",
+        "payments_paypear": "PayPear",
         "subs_core": "Core",
         "subs_trial": "Trial",
         "subs_pricing": "Pricing",
