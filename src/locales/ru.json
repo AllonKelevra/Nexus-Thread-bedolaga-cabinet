@@ -677,6 +677,9 @@
       },
       "kassa_ai": {
         "description": "Оплата через Kassa AI"
+      },
+      "paypear": {
+        "description": "Оплата через PayPear"
       }
     },
     "transactionHistory": "История операций",

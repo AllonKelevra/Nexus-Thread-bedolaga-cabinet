@@ -649,6 +649,9 @@
       },
       "kassa_ai": {
         "description": "Pay via Kassa AI"
+      },
+      "paypear": {
+        "description": "Pay via PayPear"
       }
     },
     "transactionHistory": "Transaction History",
