@@ -272,7 +272,8 @@
       "tariffs": "Tariffs",
       "traffic": "Traffic",
       "devices": "Devices",
-      "expiredDate": "Expired"
+      "expiredDate": "Expired",
+      "activeUntil": "Active until"
     },
     "suspended": {
       "title": "Subscription Suspended",

@@ -957,7 +957,7 @@ export default function Subscription() {
               <div className="mb-5">
                 <CountdownTimer
                   endDate={subscription.end_date}
-                  isActive={subscription.is_active}
+                  isActive={subscription.is_active || subscription.is_limited}
                   glassColors={g}
                 />
               </div>

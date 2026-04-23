@@ -284,7 +284,8 @@
       "tariffs": "Тарифы",
       "traffic": "Трафик",
       "devices": "Устройства",
-      "expiredDate": "Истекла"
+      "expiredDate": "Истекла",
+      "activeUntil": "Активна до"
     },
     "suspended": {
       "title": "Подписка приостановлена",
