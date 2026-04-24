@@ -49,6 +49,12 @@ export interface UserListItem {
   subscription_status: string | null;
   subscription_is_trial: boolean;
   subscription_end_date: string | null;
+  tariff_id: number | null;
+  tariff_name: string | null;
+  traffic_used_gb: number;
+  traffic_limit_gb: number;
+  device_limit: number;
+  days_remaining: number;
   promo_group_id: number | null;
   promo_group_name: string | null;
   total_spent_kopeks: number;

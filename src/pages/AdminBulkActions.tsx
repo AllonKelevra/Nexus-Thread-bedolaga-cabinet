@@ -1245,22 +1245,15 @@ export default function AdminBulkActions() {
       },
       {
         id: 'tariff',
-        accessorFn: (row) => row.promo_group_name,
+        accessorFn: (row) => row.tariff_name,
         header: t('admin.bulkActions.columns.tariff'),
         size: 120,
         cell: ({ row }) => {
-          // UserListItem doesn't have tariff_name directly; we'll show subscription info
           const user = row.original;
-          if (!user.has_subscription) {
-            return <span className="text-xs text-dark-500">-</span>;
+          if (!user.tariff_name) {
+            return <span className="text-xs text-dark-500">—</span>;
           }
-          return (
-            <span className="text-xs text-dark-300">
-              {user.subscription_status === 'trial'
-                ? t('admin.bulkActions.statuses.trial')
-                : user.subscription_status || '-'}
-            </span>
-          );
+          return <span className="text-xs text-dark-200">{user.tariff_name}</span>;
         },
       },
       {
