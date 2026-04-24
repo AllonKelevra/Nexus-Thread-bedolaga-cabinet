@@ -16,6 +16,7 @@ import {
   type BulkActionType,
   type BulkActionParams,
   type BulkActionResult,
+  type BulkProgressEvent,
 } from '../api/adminBulkActions';
 import { usePlatform } from '../platform/hooks/usePlatform';
 import { useCurrency } from '../hooks/useCurrency';
@@ -32,11 +33,20 @@ interface ActionConfig {
   colorClass: string;
 }
 
+interface ProgressState {
+  current: number;
+  total: number;
+  successCount: number;
+  errorCount: number;
+  log: BulkProgressEvent[];
+}
+
 interface ModalState {
   open: boolean;
   action: BulkActionType | null;
   loading: boolean;
   result: BulkActionResult | null;
+  progress: ProgressState | null;
 }
 
 // ============ Icons ============
@@ -235,6 +245,165 @@ function DropdownSelect({
   );
 }
 
+// ============ Progress View ============
+
+function ProgressView({ progress }: { progress: ProgressState }) {
+  const { t } = useTranslation();
+  const logEndRef = useRef<HTMLDivElement>(null);
+  const percentage = progress.total > 0 ? Math.round((progress.current / progress.total) * 100) : 0;
+
+  useEffect(() => {
+    logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [progress.log.length]);
+
+  return (
+    <div className="space-y-4">
+      {/* Progress bar */}
+      <div>
+        <div className="mb-2 flex items-center justify-between text-sm">
+          <span className="font-medium text-dark-200">
+            {t('admin.bulkActions.progress.processed', {
+              current: progress.current,
+              total: progress.total,
+            })}
+          </span>
+          <span className="font-bold tabular-nums text-accent-400">{percentage}%</span>
+        </div>
+        <div className="h-2.5 overflow-hidden rounded-full bg-dark-700/60">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-accent-500 to-accent-400 transition-all duration-300 ease-out"
+            style={{ width: `${percentage}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Counters */}
+      <div className="flex gap-4">
+        <div className="flex items-center gap-1.5">
+          <div className="h-2 w-2 rounded-full bg-success-400" />
+          <span className="text-sm tabular-nums text-success-400">{progress.successCount}</span>
+          <span className="text-xs text-dark-500">{t('admin.bulkActions.progress.succeeded')}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="h-2 w-2 rounded-full bg-error-400" />
+          <span className="text-sm tabular-nums text-error-400">{progress.errorCount}</span>
+          <span className="text-xs text-dark-500">{t('admin.bulkActions.progress.failed')}</span>
+        </div>
+      </div>
+
+      {/* Live log */}
+      {progress.log.length > 0 && (
+        <div className="max-h-48 overflow-y-auto rounded-xl border border-dark-700 bg-dark-800/50 p-3">
+          <div className="space-y-1">
+            {progress.log.slice(-10).map((entry, idx) => (
+              <div key={idx} className="flex items-start gap-2 text-xs">
+                {entry.success ? (
+                  <span className="mt-0.5 shrink-0 text-success-400" aria-hidden="true">
+                    <svg
+                      className="h-3 w-3"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={3}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M4.5 12.75l6 6 9-13.5"
+                      />
+                    </svg>
+                  </span>
+                ) : (
+                  <span className="mt-0.5 shrink-0 text-error-400" aria-hidden="true">
+                    <svg
+                      className="h-3 w-3"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={3}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </span>
+                )}
+                <span className="font-mono text-dark-400">
+                  {entry.username ? `@${entry.username}` : `#${entry.user_id}`}
+                </span>
+                <span className={entry.success ? 'text-dark-300' : 'text-error-300'}>
+                  {entry.success
+                    ? entry.message || t('admin.bulkActions.progress.ok')
+                    : entry.error || t('admin.bulkActions.progress.errorGeneric')}
+                </span>
+              </div>
+            ))}
+            <div ref={logEndRef} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============ Error Details ============
+
+function ErrorDetails({ result }: { result: BulkActionResult }) {
+  const { t } = useTranslation();
+  const [expanded, setExpanded] = useState(false);
+
+  if (result.error_count === 0 || result.errors.length === 0) return null;
+
+  return (
+    <div className="rounded-xl border border-error-500/20 bg-error-500/5">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="flex w-full items-center justify-between px-4 py-3 text-left"
+        aria-expanded={expanded}
+      >
+        <span className="text-sm font-medium text-error-400">
+          {t('admin.bulkActions.errors.title', { count: result.error_count })}
+        </span>
+        <svg
+          className={cn(
+            'h-4 w-4 text-error-400 transition-transform duration-200',
+            expanded && 'rotate-180',
+          )}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
+      </button>
+      {expanded && (
+        <div className="max-h-48 overflow-y-auto border-t border-error-500/20 px-4 py-3">
+          <div className="space-y-2">
+            {result.errors.map((err, idx) => (
+              <div key={idx} className="flex items-start gap-2 text-xs">
+                <span className="mt-0.5 shrink-0 text-error-400" aria-hidden="true">
+                  <svg
+                    className="h-3 w-3"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={3}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </span>
+                <span className="shrink-0 font-mono text-dark-400">
+                  {err.username ? `@${err.username}` : `#${err.user_id}`}
+                </span>
+                <span className="text-error-300">{err.error}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ============ Action Modal ============
 
 interface ActionModalProps {
@@ -260,18 +429,35 @@ function ActionModal({
   const [trafficGb, setTrafficGb] = useState(10);
   const [balanceRub, setBalanceRub] = useState(100);
   const [promoGroupId, setPromoGroupId] = useState<number | null>(promoGroups[0]?.id ?? null);
+  const [grantTariffId, setGrantTariffId] = useState<number>(tariffs[0]?.id ?? 0);
+  const [grantDays, setGrantDays] = useState(30);
 
   useEffect(() => {
     if (tariffs.length > 0 && tariffId === 0) {
       setTariffId(tariffs[0].id);
     }
-  }, [tariffs, tariffId]);
+    if (tariffs.length > 0 && grantTariffId === 0) {
+      setGrantTariffId(tariffs[0].id);
+    }
+  }, [tariffs, tariffId, grantTariffId]);
 
   useEffect(() => {
     if (promoGroups.length > 0 && promoGroupId === null) {
       setPromoGroupId(promoGroups[0].id);
     }
   }, [promoGroups, promoGroupId]);
+
+  // Escape key handler — only when not loading
+  useEffect(() => {
+    if (!modal.open) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !modal.loading) {
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [modal.open, modal.loading, onClose]);
 
   if (!modal.open || !modal.action) return null;
 
@@ -283,6 +469,7 @@ function ActionModal({
     add_traffic: 'admin.bulkActions.actions.addTraffic',
     add_balance: 'admin.bulkActions.actions.addBalance',
     assign_promo_group: 'admin.bulkActions.actions.assignPromoGroup',
+    grant_subscription: 'admin.bulkActions.actions.grantSubscription',
   };
 
   const handleSubmit = () => {
@@ -303,8 +490,18 @@ function ActionModal({
       case 'assign_promo_group':
         params.promo_group_id = promoGroupId;
         break;
+      case 'grant_subscription':
+        params.tariff_id = grantTariffId;
+        params.days = grantDays;
+        break;
     }
     onExecute(params);
+  };
+
+  const handleBackdropClick = () => {
+    if (!modal.loading) {
+      onClose();
+    }
   };
 
   const renderInputs = () => {
@@ -386,6 +583,40 @@ function ActionModal({
             />
           </div>
         );
+      case 'grant_subscription':
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-dark-300">
+                {t('admin.bulkActions.params.tariff')}
+              </label>
+              <DropdownSelect
+                value={String(grantTariffId)}
+                options={tariffs.map((tt) => ({ value: String(tt.id), label: tt.name }))}
+                onChange={(v) => setGrantTariffId(Number(v))}
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-dark-300">
+                {t('admin.bulkActions.params.days')}
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={365}
+                value={grantDays}
+                onChange={(e) => setGrantDays(Number(e.target.value))}
+                className="w-full rounded-xl border border-dark-700 bg-dark-800 px-3 py-2.5 text-sm text-dark-100 outline-none transition-colors focus:border-accent-500/40"
+              />
+            </div>
+            {/* Warning about users with existing subscriptions */}
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2.5">
+              <p className="text-xs text-amber-400">
+                {t('admin.bulkActions.grantSubscription.warning')}
+              </p>
+            </div>
+          </div>
+        );
       default:
         return null;
     }
@@ -397,29 +628,63 @@ function ActionModal({
       role="dialog"
       aria-modal="true"
     >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-dark-950/80 backdrop-blur-sm" onClick={onClose} />
+      {/* Backdrop — no close on click during loading */}
+      <div
+        className="absolute inset-0 bg-dark-950/80 backdrop-blur-sm"
+        onClick={handleBackdropClick}
+      />
 
       {/* Modal */}
       <div className="relative w-full max-w-md rounded-2xl border border-dark-700 bg-dark-900 p-6 shadow-2xl">
         {/* Header */}
         <div className="mb-5 flex items-center justify-between">
           <h3 className="text-lg font-bold text-dark-100">{t(actionLabelKeys[modal.action])}</h3>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1 text-dark-400 transition-colors hover:bg-dark-800 hover:text-dark-200"
-            aria-label={t('admin.bulkActions.cancel')}
-          >
-            <XCloseIcon />
-          </button>
+          {!modal.loading && (
+            <button
+              onClick={onClose}
+              className="rounded-lg p-1 text-dark-400 transition-colors hover:bg-dark-800 hover:text-dark-200"
+              aria-label={t('common.close')}
+            >
+              <XCloseIcon />
+            </button>
+          )}
         </div>
 
-        {/* Result view */}
-        {modal.result ? (
+        {/* Progress view during execution */}
+        {modal.loading && modal.progress ? (
           <div className="space-y-4">
+            <ProgressView progress={modal.progress} />
+            <p className="text-center text-xs text-dark-500">
+              {t('admin.bulkActions.progress.doNotClose')}
+            </p>
+          </div>
+        ) : modal.result ? (
+          /* Result view */
+          <div className="space-y-4">
+            {/* Summary line */}
             <div className="rounded-xl border border-dark-700 bg-dark-800/50 p-4">
               <div className="mb-3 text-center text-sm font-semibold text-dark-100">
                 {t('admin.bulkActions.complete')}
+              </div>
+              {/* Colored summary */}
+              <div className="mb-3 text-center text-sm">
+                <span className="font-medium text-success-400">
+                  {t('admin.bulkActions.progress.summarySuccess', {
+                    count: modal.result.success_count,
+                  })}
+                </span>
+                {modal.result.error_count > 0 && (
+                  <>
+                    <span className="mx-1.5 text-dark-600" aria-hidden="true">
+                      /
+                    </span>
+                    <span className="font-medium text-error-400">
+                      {t('admin.bulkActions.progress.summaryErrors', {
+                        count: modal.result.error_count,
+                      })}
+                    </span>
+                  </>
+                )}
               </div>
               <div className="flex justify-center gap-6">
                 <div className="text-center">
@@ -442,6 +707,10 @@ function ActionModal({
                 )}
               </div>
             </div>
+
+            {/* Collapsible error details */}
+            <ErrorDetails result={modal.result} />
+
             <button
               onClick={onClose}
               className="w-full rounded-xl bg-accent-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-600"
@@ -475,14 +744,7 @@ function ActionModal({
                 disabled={modal.loading}
                 className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-accent-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-600 disabled:opacity-50"
               >
-                {modal.loading ? (
-                  <>
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                    {t('admin.bulkActions.executing')}
-                  </>
-                ) : (
-                  t('admin.bulkActions.confirm')
-                )}
+                {t('admin.bulkActions.confirm')}
               </button>
             </div>
           </>
@@ -553,6 +815,12 @@ function FloatingActionBar({
       labelKey: 'admin.bulkActions.actions.addBalance',
       icon: <span aria-hidden="true">$</span>,
       colorClass: 'text-warning-400 hover:bg-warning-500/10',
+    },
+    {
+      type: 'grant_subscription',
+      labelKey: 'admin.bulkActions.actions.grantSubscription',
+      icon: <span aria-hidden="true">+</span>,
+      colorClass: 'text-success-400 hover:bg-success-500/10',
     },
     {
       type: 'assign_promo_group',
@@ -655,6 +923,7 @@ export default function AdminBulkActions() {
     action: null,
     loading: false,
     result: null,
+    progress: null,
   });
 
   // Debounce timer ref
@@ -763,32 +1032,100 @@ export default function AdminBulkActions() {
   }, [rowSelection]);
 
   const handleOpenAction = (type: BulkActionType) => {
-    setModal({ open: true, action: type, loading: false, result: null });
+    setModal({ open: true, action: type, loading: false, result: null, progress: null });
   };
 
   const handleExecuteAction = async (params: BulkActionParams) => {
     if (!modal.action || selectedUserIds.length === 0) return;
 
-    setModal((prev) => ({ ...prev, loading: true }));
+    const totalCount = selectedUserIds.length;
+    setModal((prev) => ({
+      ...prev,
+      loading: true,
+      progress: {
+        current: 0,
+        total: totalCount,
+        successCount: 0,
+        errorCount: 0,
+        log: [],
+      },
+    }));
 
     try {
-      const result = await adminBulkActionsApi.execute({
-        action: modal.action,
-        user_ids: selectedUserIds,
-        params,
+      await adminBulkActionsApi.executeWithStream(
+        {
+          action: modal.action,
+          user_ids: selectedUserIds,
+          params,
+        },
+        (event) => {
+          if (event.type === 'progress') {
+            setModal((prev) => ({
+              ...prev,
+              progress: prev.progress
+                ? {
+                    current: event.current,
+                    total: event.total,
+                    successCount: prev.progress.successCount + (event.success ? 1 : 0),
+                    errorCount: prev.progress.errorCount + (event.success ? 0 : 1),
+                    log: [...prev.progress.log, event],
+                  }
+                : prev.progress,
+            }));
+          } else if (event.type === 'complete') {
+            setModal((prev) => ({
+              ...prev,
+              loading: false,
+              progress: null,
+              result: {
+                success: event.success,
+                total: event.total,
+                success_count: event.success_count,
+                error_count: event.error_count,
+                errors: event.errors,
+              },
+            }));
+            loadUsers();
+          }
+        },
+      );
+
+      // If stream ended without a complete event, finalize from progress
+      setModal((prev) => {
+        if (prev.loading && prev.progress) {
+          return {
+            ...prev,
+            loading: false,
+            result: {
+              success: prev.progress.errorCount === 0,
+              total: prev.progress.total,
+              success_count: prev.progress.successCount,
+              error_count: prev.progress.errorCount,
+              errors: prev.progress.log
+                .filter((e) => !e.success)
+                .map((e) => ({
+                  user_id: e.user_id,
+                  username: e.username,
+                  error: e.error || '',
+                })),
+            },
+            progress: null,
+          };
+        }
+        return prev;
       });
-      setModal((prev) => ({ ...prev, loading: false, result }));
-      // Refresh the user list after action
+
       loadUsers();
     } catch {
       setModal((prev) => ({
         ...prev,
         loading: false,
+        progress: null,
         result: {
           success: false,
-          total: selectedUserIds.length,
-          success_count: 0,
-          error_count: selectedUserIds.length,
+          total: totalCount,
+          success_count: prev.progress?.successCount ?? 0,
+          error_count: totalCount - (prev.progress?.successCount ?? 0),
           errors: [],
         },
       }));
@@ -796,10 +1133,11 @@ export default function AdminBulkActions() {
   };
 
   const handleCloseModal = () => {
+    if (modal.loading) return;
     if (modal.result) {
       setRowSelection({});
     }
-    setModal({ open: false, action: null, loading: false, result: null });
+    setModal({ open: false, action: null, loading: false, result: null, progress: null });
   };
 
   // ---- TanStack Table ----
@@ -830,26 +1168,30 @@ export default function AdminBulkActions() {
             </button>
           </div>
         ),
-        cell: ({ row }) => (
-          <div className="flex items-center justify-center">
-            <button
-              onClick={row.getToggleSelectedHandler()}
-              className={cn(
-                'h-4.5 w-4.5 flex items-center justify-center rounded border transition-colors',
-                row.getIsSelected()
-                  ? 'border-accent-500 bg-accent-500'
-                  : 'border-dark-600 bg-dark-800 hover:border-dark-500',
-              )}
-              aria-label={
-                row.getIsSelected()
-                  ? t('admin.bulkActions.deselectAll')
-                  : t('admin.bulkActions.selectAll')
-              }
-            >
-              {row.getIsSelected() && <CheckIcon />}
-            </button>
-          </div>
-        ),
+        cell: ({ row }) => {
+          const userName =
+            row.original.full_name || row.original.username || String(row.original.telegram_id);
+          return (
+            <div className="flex items-center justify-center">
+              <button
+                onClick={row.getToggleSelectedHandler()}
+                className={cn(
+                  'h-4.5 w-4.5 flex items-center justify-center rounded border transition-colors',
+                  row.getIsSelected()
+                    ? 'border-accent-500 bg-accent-500'
+                    : 'border-dark-600 bg-dark-800 hover:border-dark-500',
+                )}
+                aria-label={
+                  row.getIsSelected()
+                    ? t('admin.bulkActions.deselectUser', { name: userName })
+                    : t('admin.bulkActions.selectUser', { name: userName })
+                }
+              >
+                {row.getIsSelected() && <CheckIcon />}
+              </button>
+            </div>
+          );
+        },
         enableSorting: false,
       },
       {

@@ -2028,6 +2028,8 @@
       "selectedCount": "Selected: {{count}}",
       "selectAll": "Select all",
       "deselectAll": "Deselect all",
+      "selectUser": "Select user {{name}}",
+      "deselectUser": "Deselect user {{name}}",
       "noResults": "No users found",
       "actions": {
         "extend": "Extend subscription",
@@ -2036,7 +2038,8 @@
         "changeTariff": "Change tariff",
         "addTraffic": "Add traffic",
         "addBalance": "Add balance",
-        "assignPromoGroup": "Assign promo group"
+        "assignPromoGroup": "Assign promo group",
+        "grantSubscription": "Grant subscription"
       },
       "params": {
         "days": "Number of days",
@@ -2046,12 +2049,28 @@
         "promoGroup": "Promo group",
         "removePromoGroup": "Remove promo group"
       },
+      "grantSubscription": {
+        "warning": "Users who already have a subscription on the selected tariff will be skipped"
+      },
       "confirm": "Apply",
       "cancel": "Cancel",
       "executing": "Executing...",
       "complete": "Complete",
       "successCount": "Succeeded: {{count}}",
       "errorCount": "Errors: {{count}}",
+      "progress": {
+        "processed": "Processed: {{current}} / {{total}}",
+        "succeeded": "succeeded",
+        "failed": "failed",
+        "ok": "OK",
+        "errorGeneric": "Error",
+        "doNotClose": "Please do not close this window while the operation is in progress",
+        "summarySuccess": "{{count}} succeeded",
+        "summaryErrors": "{{count}} errors"
+      },
+      "errors": {
+        "title": "{{count}} errors — show details"
+      },
       "filters": {
         "search": "Search by ID, username, email",
         "status": "Subscription status",

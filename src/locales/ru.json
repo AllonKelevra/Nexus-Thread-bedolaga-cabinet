@@ -3776,6 +3776,8 @@
       "selectedCount": "Выбрано: {{count}}",
       "selectAll": "Выбрать всех",
       "deselectAll": "Снять выделение",
+      "selectUser": "Выбрать пользователя {{name}}",
+      "deselectUser": "Снять выбор пользователя {{name}}",
       "noResults": "Пользователи не найдены",
       "actions": {
         "extend": "Продлить подписку",
@@ -3784,7 +3786,8 @@
         "changeTariff": "Сменить тариф",
         "addTraffic": "Начислить трафик",
         "addBalance": "Начислить баланс",
-        "assignPromoGroup": "Назначить промогруппу"
+        "assignPromoGroup": "Назначить промогруппу",
+        "grantSubscription": "Выдать подписку"
       },
       "params": {
         "days": "Количество дней",
@@ -3794,12 +3797,28 @@
         "promoGroup": "Промогруппа",
         "removePromoGroup": "Убрать промогруппу"
       },
+      "grantSubscription": {
+        "warning": "Пользователи, у которых уже есть подписка на выбранный тариф, будут пропущены"
+      },
       "confirm": "Применить",
       "cancel": "Отмена",
       "executing": "Выполнение...",
       "complete": "Выполнено",
       "successCount": "Успешно: {{count}}",
       "errorCount": "Ошибок: {{count}}",
+      "progress": {
+        "processed": "Обработано: {{current}} / {{total}}",
+        "succeeded": "успешно",
+        "failed": "ошибок",
+        "ok": "ОК",
+        "errorGeneric": "Ошибка",
+        "doNotClose": "Не закрывайте это окно, пока операция выполняется",
+        "summarySuccess": "{{count}} успешно",
+        "summaryErrors": "{{count}} ошибок"
+      },
+      "errors": {
+        "title": "{{count}} ошибок — показать детали"
+      },
       "filters": {
         "search": "Поиск по ID, нику, email",
         "status": "Статус подписки",
