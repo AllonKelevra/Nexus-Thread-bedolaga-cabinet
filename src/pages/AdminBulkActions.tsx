@@ -188,7 +188,7 @@ function SubscriptionSubRow({
             <button
               onClick={onToggleSelect}
               className={cn(
-                'h-4.5 w-4.5 flex items-center justify-center rounded-md border-2 transition-all duration-150',
+                'flex h-5 w-5 items-center justify-center rounded-md border-2 transition-all duration-150',
                 isSelected
                   ? 'border-accent-500 bg-accent-500 shadow-[0_0_8px_rgba(var(--color-accent-500),0.4)]'
                   : 'border-dark-500 bg-dark-700/60 hover:border-accent-500/50 hover:bg-dark-600/60',
@@ -201,7 +201,7 @@ function SubscriptionSubRow({
             >
               {isSelected && (
                 <svg
-                  className="h-2.5 w-2.5 text-white"
+                  className="h-3 w-3 text-white"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
