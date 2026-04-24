@@ -411,10 +411,11 @@ export default function AdminInfoPageEditor() {
     refetchOnWindowFocus: false,
   });
 
-  // Populate form when page data loads
+  // Populate form when page data loads (once only — not on locale switch)
   const editorPopulated = useRef(false);
+  const formPopulated = useRef(false);
   useEffect(() => {
-    if (!pageData) return;
+    if (!pageData || formPopulated.current) return;
     setSlug(pageData.slug);
     setSlugManuallyEdited(true);
     setIcon(pageData.icon ?? '');
@@ -422,11 +423,16 @@ export default function AdminInfoPageEditor() {
     setSortOrder(pageData.sort_order);
     setTitles(pageData.title);
     setContents(pageData.content);
-    if (editor && pageData.content[activeLocale] && !editorPopulated.current) {
-      editor.commands.setContent(pageData.content[activeLocale] ?? '');
-      editorPopulated.current = true;
-    }
-  }, [pageData, editor, activeLocale]);
+    formPopulated.current = true;
+  }, [pageData]);
+
+  // Set editor content once when editor is ready
+  useEffect(() => {
+    if (!pageData || !editor || editorPopulated.current) return;
+    const initialContent = pageData.content[activeLocale] ?? pageData.content['ru'] ?? '';
+    editor.commands.setContent(initialContent);
+    editorPopulated.current = true;
+  }, [pageData, editor]); // activeLocale intentionally omitted
 
   // Auto-generate slug from Russian title
   useEffect(() => {
