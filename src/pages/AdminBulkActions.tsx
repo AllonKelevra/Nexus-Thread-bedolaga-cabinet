@@ -191,10 +191,10 @@ function SubscriptionSubRow({
             <button
               onClick={onToggleSelect}
               className={cn(
-                'flex h-3.5 w-3.5 items-center justify-center rounded border transition-colors',
+                'h-4.5 w-4.5 flex items-center justify-center rounded-md border-2 transition-all duration-150',
                 isSelected
-                  ? 'border-accent-500 bg-accent-500'
-                  : 'border-dark-600 bg-dark-800 hover:border-dark-500',
+                  ? 'border-accent-500 bg-accent-500 shadow-[0_0_8px_rgba(var(--color-accent-500),0.4)]'
+                  : 'border-dark-500 bg-dark-700/60 hover:border-accent-500/50 hover:bg-dark-600/60',
               )}
               aria-label={
                 isSelected
@@ -204,7 +204,7 @@ function SubscriptionSubRow({
             >
               {isSelected && (
                 <svg
-                  className="h-2 w-2 text-white"
+                  className="h-2.5 w-2.5 text-white"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -1429,12 +1429,12 @@ export default function AdminBulkActions() {
             <button
               onClick={table.getToggleAllRowsSelectedHandler()}
               className={cn(
-                'h-4.5 w-4.5 flex items-center justify-center rounded border transition-colors',
+                'flex h-5 w-5 items-center justify-center rounded-md border-2 transition-all duration-150',
                 table.getIsAllRowsSelected()
-                  ? 'border-accent-500 bg-accent-500'
+                  ? 'border-accent-500 bg-accent-500 shadow-[0_0_8px_rgba(var(--color-accent-500),0.4)]'
                   : table.getIsSomeRowsSelected()
                     ? 'border-accent-500 bg-accent-500/30'
-                    : 'border-dark-600 bg-dark-800 hover:border-dark-500',
+                    : 'border-dark-500 bg-dark-700/60 hover:border-accent-500/50 hover:bg-dark-600/60',
               )}
               aria-label={t('admin.bulkActions.selectAll')}
             >
@@ -1453,10 +1453,10 @@ export default function AdminBulkActions() {
               <button
                 onClick={row.getToggleSelectedHandler()}
                 className={cn(
-                  'h-4.5 w-4.5 flex items-center justify-center rounded border transition-colors',
+                  'flex h-5 w-5 items-center justify-center rounded-md border-2 transition-all duration-150',
                   row.getIsSelected()
-                    ? 'border-accent-500 bg-accent-500'
-                    : 'border-dark-600 bg-dark-800 hover:border-dark-500',
+                    ? 'border-accent-500 bg-accent-500 shadow-[0_0_8px_rgba(var(--color-accent-500),0.4)]'
+                    : 'border-dark-500 bg-dark-700/60 hover:border-accent-500/50 hover:bg-dark-600/60',
                 )}
                 aria-label={
                   row.getIsSelected()
