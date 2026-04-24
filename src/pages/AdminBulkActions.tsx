@@ -1756,28 +1756,56 @@ export default function AdminBulkActions() {
     () => [
       {
         id: 'select',
-        size: 40,
-        header: ({ table }) => (
-          <div className="flex items-center justify-center">
-            <button
-              onClick={table.getToggleAllRowsSelectedHandler()}
-              className={cn(
-                'flex h-5 w-5 items-center justify-center rounded-md border-2 transition-all duration-150',
-                table.getIsAllRowsSelected()
-                  ? 'border-accent-500 bg-accent-500 shadow-[0_0_8px_rgba(var(--color-accent-500),0.4)]'
-                  : table.getIsSomeRowsSelected()
-                    ? 'border-accent-500 bg-accent-500/30'
-                    : 'border-dark-500 bg-dark-700/60 hover:border-accent-500/50 hover:bg-dark-600/60',
+        size: 56,
+        header: ({ table }) => {
+          const allSubsSelected =
+            allVisibleSubscriptionIds.length > 0 &&
+            allVisibleSubscriptionIds.every((id) => subscriptionSelection[id]);
+          const someSubsSelected =
+            !allSubsSelected && allVisibleSubscriptionIds.some((id) => subscriptionSelection[id]);
+          return (
+            <div className="flex items-center justify-center gap-1.5">
+              {/* Select all users */}
+              <button
+                onClick={table.getToggleAllRowsSelectedHandler()}
+                className={cn(
+                  'flex h-5 w-5 items-center justify-center rounded-md border-2 transition-all duration-150',
+                  table.getIsAllRowsSelected()
+                    ? 'border-accent-500 bg-accent-500 shadow-[0_0_8px_rgba(var(--color-accent-500),0.4)]'
+                    : table.getIsSomeRowsSelected()
+                      ? 'border-accent-500 bg-accent-500/30'
+                      : 'border-dark-500 bg-dark-700/60 hover:border-accent-500/50 hover:bg-dark-600/60',
+                )}
+                aria-label={t('admin.bulkActions.selectAll')}
+                title={t('admin.bulkActions.selectAll')}
+              >
+                {table.getIsAllRowsSelected() && <CheckIcon />}
+                {table.getIsSomeRowsSelected() && !table.getIsAllRowsSelected() && (
+                  <div className="h-0.5 w-2 rounded-full bg-white" />
+                )}
+              </button>
+              {/* Select all subscriptions */}
+              {isMultiTariff && allVisibleSubscriptionIds.length > 0 && (
+                <button
+                  onClick={toggleAllSubscriptions}
+                  className={cn(
+                    'flex h-5 w-5 items-center justify-center rounded-md border-2 transition-all duration-150',
+                    allSubsSelected
+                      ? 'border-success-500 bg-success-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]'
+                      : someSubsSelected
+                        ? 'border-success-500 bg-success-500/30'
+                        : 'border-dark-500 bg-dark-700/60 hover:border-success-500/50 hover:bg-dark-600/60',
+                  )}
+                  aria-label={t('admin.bulkActions.selectAllSubs')}
+                  title={t('admin.bulkActions.selectAllSubs')}
+                >
+                  {allSubsSelected && <CheckIcon />}
+                  {someSubsSelected && <div className="h-0.5 w-2 rounded-full bg-white" />}
+                </button>
               )}
-              aria-label={t('admin.bulkActions.selectAll')}
-            >
-              {table.getIsAllRowsSelected() && <CheckIcon />}
-              {table.getIsSomeRowsSelected() && !table.getIsAllRowsSelected() && (
-                <div className="h-0.5 w-2 rounded-full bg-white" />
-              )}
-            </button>
-          </div>
-        ),
+            </div>
+          );
+        },
         cell: ({ row }) => {
           const userName =
             row.original.full_name || row.original.username || String(row.original.telegram_id);
