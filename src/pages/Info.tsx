@@ -374,7 +374,7 @@ export default function Info() {
   const locale = i18n.language.split('-')[0];
 
   // Fetch tab replacements
-  const { data: tabReplacements } = useQuery({
+  const { data: tabReplacements, isError: replacementsError } = useQuery({
     queryKey: ['info-pages', 'tab-replacements'],
     queryFn: infoPagesApi.getTabReplacements,
     staleTime: 60_000,
@@ -387,9 +387,9 @@ export default function Info() {
     staleTime: 60_000,
   });
 
-  // Filter to only pages that don't replace a built-in tab
+  // Filter to only pages that don't replace a built-in tab and don't collide with built-in IDs
   const extraPages = useMemo(
-    () => (customPages ?? []).filter((p) => !p.replaces_tab),
+    () => (customPages ?? []).filter((p) => !p.replaces_tab && !BUILTIN_TABS.has(p.slug)),
     [customPages],
   );
 
@@ -406,8 +406,8 @@ export default function Info() {
   // Slug to fetch: either a custom page tab or a tab replacement
   const pageSlugToFetch = customTabSlug ?? currentTabSlug;
 
-  // Wait for tab replacements before firing built-in queries
-  const replacementsLoaded = tabReplacements !== undefined;
+  // Wait for tab replacements before firing built-in queries (also proceed on error — graceful degradation)
+  const replacementsLoaded = tabReplacements !== undefined || replacementsError;
 
   // Fetch the InfoPage when needed (replacement or custom tab)
   const { data: infoPage, isLoading: infoPageLoading } = useQuery({
@@ -496,9 +496,9 @@ export default function Info() {
 
   const tabs = [...builtinTabs, ...customTabs];
 
-  const toggleFaq = (id: number) => {
-    setExpandedFaq(expandedFaq === id ? null : id);
-  };
+  const toggleFaq = useCallback((id: number) => {
+    setExpandedFaq((prev) => (prev === id ? null : id));
+  }, []);
 
   const renderInfoPageContent = () => {
     if (infoPageLoading) {
@@ -525,8 +525,8 @@ export default function Info() {
     }
 
     return (
-      <div className="bento-card prose prose-invert max-w-none !overflow-visible">
-        <div dangerouslySetInnerHTML={{ __html: infoPageHtml }} />
+      <div className="bento-card prose prose-invert max-w-none">
+        <div className="overflow-x-auto" dangerouslySetInnerHTML={{ __html: infoPageHtml }} />
       </div>
     );
   };
@@ -601,7 +601,10 @@ export default function Info() {
 
       return (
         <div className="bento-card prose prose-invert max-w-none">
-          <div dangerouslySetInnerHTML={{ __html: formatContent(rules.content) }} />
+          <div
+            className="overflow-x-auto"
+            dangerouslySetInnerHTML={{ __html: formatContent(rules.content) }}
+          />
           {rules.updated_at && (
             <p className="mt-6 border-t border-dark-700 pt-4 text-sm text-dark-400">
               {t('info.updatedAt')}: {new Date(rules.updated_at).toLocaleDateString()}
@@ -626,7 +629,10 @@ export default function Info() {
 
       return (
         <div className="bento-card prose prose-invert max-w-none">
-          <div dangerouslySetInnerHTML={{ __html: formatContent(privacy.content) }} />
+          <div
+            className="overflow-x-auto"
+            dangerouslySetInnerHTML={{ __html: formatContent(privacy.content) }}
+          />
           {privacy.updated_at && (
             <p className="mt-6 border-t border-dark-700 pt-4 text-sm text-dark-400">
               {t('info.updatedAt')}: {new Date(privacy.updated_at).toLocaleDateString()}
@@ -651,7 +657,10 @@ export default function Info() {
 
       return (
         <div className="bento-card prose prose-invert max-w-none">
-          <div dangerouslySetInnerHTML={{ __html: formatContent(offer.content) }} />
+          <div
+            className="overflow-x-auto"
+            dangerouslySetInnerHTML={{ __html: formatContent(offer.content) }}
+          />
           {offer.updated_at && (
             <p className="mt-6 border-t border-dark-700 pt-4 text-sm text-dark-400">
               {t('info.updatedAt')}: {new Date(offer.updated_at).toLocaleDateString()}
@@ -723,13 +732,13 @@ export default function Info() {
             <div className="mb-4 grid grid-cols-2 gap-4">
               <div className="rounded-xl bg-dark-800/50 p-3">
                 <div className="mb-1 text-xs text-dark-400">{t('info.totalSpent')}</div>
-                <div className="text-lg font-bold text-dark-50">
+                <div className="truncate text-base font-bold text-dark-50 sm:text-lg">
                   {formatCurrency(loyaltyData.current_spent_rubles)}
                 </div>
               </div>
               <div className="rounded-xl bg-dark-800/50 p-3">
                 <div className="mb-1 text-xs text-dark-400">{t('info.currentStatus')}</div>
-                <div className="text-lg font-bold text-accent-400">
+                <div className="truncate text-base font-bold text-accent-400 sm:text-lg">
                   {loyaltyData.current_tier_name || '-'}
                 </div>
               </div>
@@ -745,7 +754,10 @@ export default function Info() {
                   <span>
                     {t('info.toNextStatus')}:{' '}
                     {formatCurrency(
-                      loyaltyData.next_tier_threshold_rubles - loyaltyData.current_spent_rubles,
+                      Math.max(
+                        0,
+                        loyaltyData.next_tier_threshold_rubles - loyaltyData.current_spent_rubles,
+                      ),
                     )}
                   </span>
                 </div>
