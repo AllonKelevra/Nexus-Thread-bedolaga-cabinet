@@ -121,10 +121,7 @@ const ChevronDownIcon = () => (
 
 const ChevronExpandIcon = ({ expanded }: { expanded: boolean }) => (
   <svg
-    className={cn(
-      'h-4 w-4 text-dark-400 transition-transform duration-200',
-      expanded && 'rotate-180',
-    )}
+    className={cn('h-4 w-4 text-white transition-transform duration-200', expanded && 'rotate-180')}
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
