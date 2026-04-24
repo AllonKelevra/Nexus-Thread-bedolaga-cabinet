@@ -2031,6 +2031,7 @@
       "selectUser": "Select user {{name}}",
       "deselectUser": "Deselect user {{name}}",
       "noResults": "No users found",
+      "perPage": "Per page",
       "actions": {
         "extend": "Extend subscription",
         "cancel": "Deactivate subscriptions",

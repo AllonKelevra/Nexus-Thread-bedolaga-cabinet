@@ -1409,7 +1409,7 @@ export default function AdminBulkActions() {
 
   // Pagination
   const [offset, setOffset] = useState(0);
-  const limit = 50;
+  const [limit, setLimit] = useState(50);
 
   // Selection
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
@@ -1466,7 +1466,7 @@ export default function AdminBulkActions() {
     } finally {
       setLoading(false);
     }
-  }, [offset, committedSearch, statusFilter, tariffFilter, promoGroupFilter]);
+  }, [offset, limit, committedSearch, statusFilter, tariffFilter, promoGroupFilter]);
 
   useEffect(() => {
     loadUsers();
@@ -1583,10 +1583,8 @@ export default function AdminBulkActions() {
     for (const user of users) {
       const subs = user.subscriptions ?? [];
       const filtered = getFilteredSubs(subs);
-      if (filtered.length > 1) {
-        for (const sub of filtered) {
-          ids.push(sub.id);
-        }
+      for (const sub of filtered) {
+        ids.push(sub.id);
       }
     }
     return ids;
@@ -2214,12 +2212,32 @@ export default function AdminBulkActions() {
         </div>
       )}
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-between">
-          <div className="text-sm text-dark-400">
+      {/* Pagination + per-page selector */}
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-dark-400">
             {offset + 1}&ndash;{Math.min(offset + limit, total)} / {total}
+          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-dark-500">{t('admin.bulkActions.perPage')}</span>
+            <select
+              value={limit}
+              onChange={(e) => {
+                setLimit(Number(e.target.value));
+                setOffset(0);
+                clearAllSelections();
+              }}
+              className="rounded-lg border border-dark-700 bg-dark-800 px-2 py-1.5 text-xs text-dark-200 outline-none transition-colors focus:border-accent-500/40"
+            >
+              {[25, 50, 100, 200].map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
           </div>
+        </div>
+        {totalPages > 1 && (
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
@@ -2247,8 +2265,8 @@ export default function AdminBulkActions() {
               <ChevronRightIcon />
             </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Floating action bar — portal to body for correct fixed positioning */}
       {createPortal(
