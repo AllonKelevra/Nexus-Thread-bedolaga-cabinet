@@ -3787,7 +3787,8 @@
         "addTraffic": "Начислить трафик",
         "addBalance": "Начислить баланс",
         "assignPromoGroup": "Назначить промогруппу",
-        "grantSubscription": "Выдать подписку"
+        "grantSubscription": "Выдать подписку",
+        "setDevices": "Изменить устройства"
       },
       "params": {
         "days": "Количество дней",
@@ -3795,7 +3796,8 @@
         "trafficGb": "Объём трафика (ГБ)",
         "balanceRub": "Сумма (руб.)",
         "promoGroup": "Промогруппа",
-        "removePromoGroup": "Убрать промогруппу"
+        "removePromoGroup": "Убрать промогруппу",
+        "deviceLimit": "Кол-во устройств"
       },
       "grantSubscription": {
         "warning": "Пользователи, у которых уже есть подписка на выбранный тариф, будут пропущены"

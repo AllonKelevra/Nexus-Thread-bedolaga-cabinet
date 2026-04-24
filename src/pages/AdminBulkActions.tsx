@@ -140,6 +140,7 @@ const SUBSCRIPTION_LEVEL_ACTIONS: Set<BulkActionType> = new Set([
   'activate_subscription',
   'change_tariff',
   'add_traffic',
+  'set_devices',
 ]);
 
 function isSubscriptionLevelAction(action: BulkActionType): boolean {
@@ -264,6 +265,24 @@ function SubscriptionSubRow({
               />
             </div>
           </div>
+
+          {/* Devices */}
+          <span className="flex items-center gap-1 text-xs text-dark-400">
+            <svg
+              className="h-3 w-3"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={1.5}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"
+              />
+            </svg>
+            {subscription.device_limit}
+          </span>
         </div>
       </td>
     </tr>
@@ -738,6 +757,7 @@ function ActionModal({
   const [promoGroupId, setPromoGroupId] = useState<number | null>(promoGroups[0]?.id ?? null);
   const [grantTariffId, setGrantTariffId] = useState<number>(tariffs[0]?.id ?? 0);
   const [grantDays, setGrantDays] = useState(30);
+  const [deviceLimit, setDeviceLimit] = useState(1);
 
   useEffect(() => {
     if (tariffs.length > 0 && tariffId === 0) {
@@ -778,6 +798,7 @@ function ActionModal({
     add_balance: 'admin.bulkActions.actions.addBalance',
     assign_promo_group: 'admin.bulkActions.actions.assignPromoGroup',
     grant_subscription: 'admin.bulkActions.actions.grantSubscription',
+    set_devices: 'admin.bulkActions.actions.setDevices',
   };
 
   const handleSubmit = () => {
@@ -801,6 +822,9 @@ function ActionModal({
       case 'grant_subscription':
         params.tariff_id = grantTariffId;
         params.days = grantDays;
+        break;
+      case 'set_devices':
+        params.device_limit = deviceLimit;
         break;
     }
     onExecute(params);
@@ -888,6 +912,22 @@ function ActionModal({
                 ...promoGroups.map((pg) => ({ value: String(pg.id), label: pg.name })),
               ]}
               onChange={(v) => setPromoGroupId(v === 'null' ? null : Number(v))}
+            />
+          </div>
+        );
+      case 'set_devices':
+        return (
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-dark-300">
+              {t('admin.bulkActions.params.deviceLimit')}
+            </label>
+            <input
+              type="number"
+              min={1}
+              max={50}
+              value={deviceLimit}
+              onChange={(e) => setDeviceLimit(Number(e.target.value))}
+              className="w-full rounded-xl border border-dark-700 bg-dark-800 px-3 py-2.5 text-sm text-dark-100 outline-none transition-colors focus:border-accent-500/40"
             />
           </div>
         );
@@ -1127,6 +1167,26 @@ function FloatingActionBar({
       type: 'add_traffic',
       labelKey: 'admin.bulkActions.actions.addTraffic',
       icon: <span aria-hidden="true">+</span>,
+      colorClass: 'text-accent-400 hover:bg-accent-500/10',
+    },
+    {
+      type: 'set_devices',
+      labelKey: 'admin.bulkActions.actions.setDevices',
+      icon: (
+        <svg
+          className="h-3.5 w-3.5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"
+          />
+        </svg>
+      ),
       colorClass: 'text-accent-400 hover:bg-accent-500/10',
     },
     {
@@ -1780,13 +1840,34 @@ export default function AdminBulkActions() {
         id: 'tariff',
         accessorFn: (row) => row.tariff_name,
         header: t('admin.bulkActions.columns.tariff'),
-        size: 120,
+        size: 160,
         cell: ({ row }) => {
           const user = row.original;
-          if (!user.tariff_name) {
-            return <span className="text-xs text-dark-500">—</span>;
+          const subs = user.subscriptions ?? [];
+          const tariffNames = subs
+            .map((s) => s.tariff_name)
+            .filter((name): name is string => !!name);
+          const uniqueNames = [...new Set(tariffNames)];
+
+          if (uniqueNames.length === 0) {
+            if (!user.tariff_name) {
+              return <span className="text-xs text-dark-500">—</span>;
+            }
+            return <span className="text-xs text-dark-200">{user.tariff_name}</span>;
           }
-          return <span className="text-xs text-dark-200">{user.tariff_name}</span>;
+
+          return (
+            <div className="flex flex-wrap gap-1">
+              {uniqueNames.map((name) => (
+                <span
+                  key={name}
+                  className="inline-flex rounded-md border border-dark-600/40 bg-dark-700/40 px-1.5 py-0.5 text-[10px] font-medium text-dark-200"
+                >
+                  {name}
+                </span>
+              ))}
+            </div>
+          );
         },
       },
       {
@@ -1799,33 +1880,6 @@ export default function AdminBulkActions() {
             {formatWithCurrency(getValue() as number)}
           </span>
         ),
-      },
-      {
-        id: 'days_remaining',
-        header: t('admin.bulkActions.columns.daysRemaining'),
-        size: 80,
-        cell: ({ row }) => {
-          const user = row.original;
-          if (!user.subscription_end_date) {
-            return <span className="text-xs text-dark-500">-</span>;
-          }
-          const end = new Date(user.subscription_end_date);
-          const now = new Date();
-          const days = Math.max(
-            0,
-            Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
-          );
-          return (
-            <span
-              className={cn(
-                'text-xs font-medium tabular-nums',
-                days === 0 ? 'text-error-400' : days <= 3 ? 'text-warning-400' : 'text-dark-300',
-              )}
-            >
-              {days}
-            </span>
-          );
-        },
       },
       {
         id: 'promo_group',

@@ -42,6 +42,7 @@ export interface UserListItemSubscription {
   days_remaining: number;
   traffic_used_gb: number;
   traffic_limit_gb: number;
+  device_limit: number;
 }
 
 export interface UserListItem {

@@ -2039,7 +2039,8 @@
         "addTraffic": "Add traffic",
         "addBalance": "Add balance",
         "assignPromoGroup": "Assign promo group",
-        "grantSubscription": "Grant subscription"
+        "grantSubscription": "Grant subscription",
+        "setDevices": "Set devices"
       },
       "params": {
         "days": "Number of days",
@@ -2047,7 +2048,8 @@
         "trafficGb": "Traffic amount (GB)",
         "balanceRub": "Amount (RUB)",
         "promoGroup": "Promo group",
-        "removePromoGroup": "Remove promo group"
+        "removePromoGroup": "Remove promo group",
+        "deviceLimit": "Device count"
       },
       "grantSubscription": {
         "warning": "Users who already have a subscription on the selected tariff will be skipped"

@@ -10,7 +10,8 @@ export type BulkActionType =
   | 'add_traffic'
   | 'add_balance'
   | 'assign_promo_group'
-  | 'grant_subscription';
+  | 'grant_subscription'
+  | 'set_devices';
 
 export interface BulkActionRequest {
   action: BulkActionType;
@@ -27,6 +28,7 @@ export interface BulkActionParams {
   amount_kopeks?: number;
   balance_description?: string;
   promo_group_id?: number | null;
+  device_limit?: number;
 }
 
 export interface BulkActionErrorItem {
