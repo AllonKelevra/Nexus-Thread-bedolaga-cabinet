@@ -3843,7 +3843,17 @@
         "daysRemaining": "Дни",
         "promoGroup": "Группа",
         "spent": "Потрачено"
-      }
+      },
+      "subscriptionsSelected": "{{count}} подписок выбрано",
+      "usersSelected": "{{count}} пользователей выбрано",
+      "expandSubscriptions": "Показать подписки",
+      "collapseSubscriptions": "Скрыть подписки",
+      "noSubscriptions": "Нет подписок",
+      "subscriptionTarget": "Цель: подписки",
+      "userTarget": "Цель: пользователи",
+      "daysUnit": "дн.",
+      "trafficOf": "из",
+      "trafficGbUnit": "ГБ"
     },
     "theme": {
       "accentColor": "Акцентный цвет",

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import {
@@ -8,7 +8,7 @@ import {
   type ColumnDef,
   type RowSelectionState,
 } from '@tanstack/react-table';
-import { adminUsersApi, type UserListItem } from '../api/adminUsers';
+import { adminUsersApi, type UserListItem, type UserListItemSubscription } from '../api/adminUsers';
 import { tariffsApi, type TariffListItem } from '../api/tariffs';
 import { promocodesApi, type PromoGroup } from '../api/promocodes';
 import {
@@ -118,6 +118,160 @@ const ChevronDownIcon = () => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
   </svg>
 );
+
+const ChevronExpandIcon = ({ expanded }: { expanded: boolean }) => (
+  <svg
+    className={cn(
+      'h-4 w-4 text-dark-400 transition-transform duration-200',
+      expanded && 'rotate-180',
+    )}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={2}
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+  </svg>
+);
+
+// ============ Action target helpers ============
+
+const SUBSCRIPTION_LEVEL_ACTIONS: Set<BulkActionType> = new Set([
+  'extend_subscription',
+  'add_days',
+  'cancel_subscription',
+  'activate_subscription',
+  'change_tariff',
+  'add_traffic',
+]);
+
+function isSubscriptionLevelAction(action: BulkActionType): boolean {
+  return SUBSCRIPTION_LEVEL_ACTIONS.has(action);
+}
+
+// ============ Subscription sub-row ============
+
+interface SubscriptionSubRowProps {
+  subscription: UserListItemSubscription;
+  isSelected: boolean;
+  onToggleSelect: () => void;
+  isMultiTariff: boolean;
+}
+
+function SubscriptionSubRow({
+  subscription,
+  isSelected,
+  onToggleSelect,
+  isMultiTariff,
+}: SubscriptionSubRowProps) {
+  const { t } = useTranslation();
+
+  const days = subscription.days_remaining;
+  const daysColor =
+    days === 0 ? 'text-error-400' : days <= 7 ? 'text-amber-400' : 'text-success-400';
+
+  const trafficPercent =
+    subscription.traffic_limit_gb > 0
+      ? Math.min(100, (subscription.traffic_used_gb / subscription.traffic_limit_gb) * 100)
+      : 0;
+  const trafficBarColor =
+    trafficPercent >= 90 ? 'bg-error-400' : trafficPercent >= 70 ? 'bg-amber-400' : 'bg-accent-400';
+
+  return (
+    <tr
+      className={cn(
+        'border-b border-dark-700/30 transition-colors',
+        isSelected ? 'bg-accent-500/8' : 'bg-dark-850/40 hover:bg-dark-800/60',
+      )}
+    >
+      {/* Checkbox cell */}
+      <td className="px-3 py-2">
+        {isMultiTariff && (
+          <div className="flex items-center justify-center">
+            <button
+              onClick={onToggleSelect}
+              className={cn(
+                'flex h-3.5 w-3.5 items-center justify-center rounded border transition-colors',
+                isSelected
+                  ? 'border-accent-500 bg-accent-500'
+                  : 'border-dark-600 bg-dark-800 hover:border-dark-500',
+              )}
+              aria-label={
+                isSelected
+                  ? t('admin.bulkActions.deselectUser', { name: subscription.tariff_name || '' })
+                  : t('admin.bulkActions.selectUser', { name: subscription.tariff_name || '' })
+              }
+            >
+              {isSelected && (
+                <svg
+                  className="h-2 w-2 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={4}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              )}
+            </button>
+          </div>
+        )}
+      </td>
+
+      {/* Subscription info — spans remaining columns */}
+      <td colSpan={7} className="px-3 py-2">
+        <div className="flex items-center gap-3 pl-9">
+          {/* Tariff name */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] text-dark-500" aria-hidden="true">
+              <svg
+                className="h-3.5 w-3.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"
+                />
+              </svg>
+            </span>
+            <span className="text-xs font-semibold text-dark-200">
+              {subscription.tariff_name || '—'}
+            </span>
+          </div>
+
+          {/* Status */}
+          <StatusBadge status={subscription.status} />
+
+          {/* Days remaining */}
+          <span className={cn('text-xs font-medium tabular-nums', daysColor)}>
+            {days}
+            <span className="ml-0.5 text-[10px] font-normal text-dark-500">
+              {t('admin.bulkActions.daysUnit')}
+            </span>
+          </span>
+
+          {/* Traffic progress */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] tabular-nums text-dark-400">
+              {subscription.traffic_used_gb.toFixed(1)} {t('admin.bulkActions.trafficOf')}{' '}
+              {subscription.traffic_limit_gb} {t('admin.bulkActions.trafficGbUnit')}
+            </span>
+            <div className="h-1.5 w-16 overflow-hidden rounded-full bg-dark-700/60">
+              <div
+                className={cn('h-full rounded-full transition-all duration-300', trafficBarColor)}
+                style={{ width: `${trafficPercent}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      </td>
+    </tr>
+  );
+}
 
 // ============ Status badge ============
 
@@ -757,13 +911,19 @@ function ActionModal({
 
 // ============ Floating Action Bar ============
 
-function FloatingActionBar({
-  selectedCount,
-  onAction,
-}: {
-  selectedCount: number;
+interface FloatingActionBarProps {
+  selectedUserCount: number;
+  selectedSubscriptionCount: number;
+  isMultiTariff: boolean;
   onAction: (type: BulkActionType) => void;
-}) {
+}
+
+function FloatingActionBar({
+  selectedUserCount,
+  selectedSubscriptionCount,
+  isMultiTariff,
+  onAction,
+}: FloatingActionBarProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -778,7 +938,8 @@ function FloatingActionBar({
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  if (selectedCount === 0) return null;
+  const hasAnySelection = selectedUserCount > 0 || selectedSubscriptionCount > 0;
+  if (!hasAnySelection) return null;
 
   const actions: ActionConfig[] = [
     {
@@ -837,14 +998,31 @@ function FloatingActionBar({
         ref={menuRef}
         className="relative flex w-full max-w-2xl items-center gap-3 rounded-2xl border border-dark-700/60 bg-dark-800/80 px-5 py-3 shadow-2xl backdrop-blur-xl"
       >
-        {/* Selection count */}
+        {/* Selection counts */}
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-500/20 text-sm font-bold text-accent-400">
-            {selectedCount}
-          </div>
-          <span className="hidden text-sm font-medium text-dark-200 sm:inline">
-            {t('admin.bulkActions.selectedCount', { count: selectedCount })}
-          </span>
+          {selectedUserCount > 0 && (
+            <div className="flex items-center gap-1.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-500/20 text-sm font-bold text-accent-400">
+                {selectedUserCount}
+              </div>
+              <span className="hidden text-xs font-medium text-dark-300 sm:inline">
+                {t('admin.bulkActions.usersSelected', { count: selectedUserCount })}
+              </span>
+            </div>
+          )}
+          {isMultiTariff && selectedSubscriptionCount > 0 && (
+            <div className="flex items-center gap-1.5">
+              {selectedUserCount > 0 && <div className="mx-1 h-4 w-px bg-dark-700" />}
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-success-500/20 text-sm font-bold text-success-400">
+                {selectedSubscriptionCount}
+              </div>
+              <span className="hidden text-xs font-medium text-dark-300 sm:inline">
+                {t('admin.bulkActions.subscriptionsSelected', {
+                  count: selectedSubscriptionCount,
+                })}
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="mx-2 h-6 w-px bg-dark-700" />
@@ -860,25 +1038,75 @@ function FloatingActionBar({
           </button>
 
           {open && (
-            <div className="absolute bottom-full right-0 mb-2 w-64 rounded-xl border border-dark-700 bg-dark-800 py-1.5 shadow-2xl">
-              {actions.map((a) => (
-                <button
-                  key={a.type}
-                  onClick={() => {
-                    setOpen(false);
-                    onAction(a.type);
-                  }}
-                  className={cn(
-                    'flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm font-medium transition-colors',
-                    a.colorClass,
-                  )}
-                >
-                  <span className="border-current/20 bg-current/5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-xs font-bold">
-                    {a.icon}
+            <div className="absolute bottom-full right-0 mb-2 w-64 overflow-hidden rounded-xl border border-dark-700 bg-dark-800 py-1.5 shadow-2xl">
+              {/* Subscription-level actions */}
+              {isMultiTariff && (
+                <div className="border-b border-dark-700/50 px-4 py-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-dark-500">
+                    {t('admin.bulkActions.subscriptionTarget')}
                   </span>
-                  {t(a.labelKey)}
-                </button>
-              ))}
+                </div>
+              )}
+              {actions
+                .filter((a) => isSubscriptionLevelAction(a.type))
+                .map((a) => {
+                  const count = isMultiTariff ? selectedSubscriptionCount : selectedUserCount;
+                  const disabled = count === 0;
+                  return (
+                    <button
+                      key={a.type}
+                      onClick={() => {
+                        if (disabled) return;
+                        setOpen(false);
+                        onAction(a.type);
+                      }}
+                      disabled={disabled}
+                      className={cn(
+                        'flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm font-medium transition-colors',
+                        disabled ? 'cursor-not-allowed opacity-40' : a.colorClass,
+                      )}
+                    >
+                      <span className="border-current/20 bg-current/5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-xs font-bold">
+                        {a.icon}
+                      </span>
+                      {t(a.labelKey)}
+                    </button>
+                  );
+                })}
+
+              {/* User-level actions */}
+              {isMultiTariff && (
+                <div className="border-b border-t border-dark-700/50 px-4 py-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-dark-500">
+                    {t('admin.bulkActions.userTarget')}
+                  </span>
+                </div>
+              )}
+              {actions
+                .filter((a) => !isSubscriptionLevelAction(a.type))
+                .map((a) => {
+                  const disabled = selectedUserCount === 0;
+                  return (
+                    <button
+                      key={a.type}
+                      onClick={() => {
+                        if (disabled) return;
+                        setOpen(false);
+                        onAction(a.type);
+                      }}
+                      disabled={disabled}
+                      className={cn(
+                        'flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm font-medium transition-colors',
+                        disabled ? 'cursor-not-allowed opacity-40' : a.colorClass,
+                      )}
+                    >
+                      <span className="border-current/20 bg-current/5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-xs font-bold">
+                        {a.icon}
+                      </span>
+                      {t(a.labelKey)}
+                    </button>
+                  );
+                })}
             </div>
           )}
         </div>
@@ -917,6 +1145,8 @@ export default function AdminBulkActions() {
 
   // Selection
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [subscriptionSelection, setSubscriptionSelection] = useState<Record<number, boolean>>({});
+  const [expandedRows, setExpandedRows] = useState<Record<number, boolean>>({});
 
   // Modal
   const [modal, setModal] = useState<ModalState>({
@@ -929,6 +1159,12 @@ export default function AdminBulkActions() {
 
   // Debounce timer ref
   const searchTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // ---- Multi-tariff detection ----
+  const isMultiTariff = useMemo(
+    () => users.some((u) => (u.subscriptions?.length ?? 0) > 1),
+    [users],
+  );
 
   // ---- Data loading ----
 
@@ -979,13 +1215,19 @@ export default function AdminBulkActions() {
 
   // ---- Handlers ----
 
+  const clearAllSelections = useCallback(() => {
+    setRowSelection({});
+    setSubscriptionSelection({});
+    setExpandedRows({});
+  }, []);
+
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
     clearTimeout(searchTimerRef.current);
     searchTimerRef.current = setTimeout(() => {
       setOffset(0);
       setCommittedSearch(value);
-      setRowSelection({});
+      clearAllSelections();
     }, 400);
   };
 
@@ -999,29 +1241,29 @@ export default function AdminBulkActions() {
     clearTimeout(searchTimerRef.current);
     setOffset(0);
     setCommittedSearch(searchInput);
-    setRowSelection({});
+    clearAllSelections();
   };
 
   const handleStatusFilterChange = (v: string) => {
     setStatusFilter(v as SubscriptionStatusFilter);
     setOffset(0);
-    setRowSelection({});
+    clearAllSelections();
   };
 
   const handleTariffFilterChange = (v: string) => {
     setTariffFilter(v);
     setOffset(0);
-    setRowSelection({});
+    clearAllSelections();
   };
 
   const handlePromoGroupFilterChange = (v: string) => {
     setPromoGroupFilter(v);
     setOffset(0);
-    setRowSelection({});
+    clearAllSelections();
   };
 
   const handleRefresh = () => {
-    setRowSelection({});
+    clearAllSelections();
     loadUsers();
   };
 
@@ -1032,14 +1274,38 @@ export default function AdminBulkActions() {
       .filter((id) => id > 0);
   }, [rowSelection]);
 
+  const selectedSubscriptionIds = useMemo(() => {
+    return Object.keys(subscriptionSelection)
+      .filter((k) => subscriptionSelection[Number(k)])
+      .map(Number);
+  }, [subscriptionSelection]);
+
+  const toggleExpandRow = useCallback((userId: number) => {
+    setExpandedRows((prev) => ({
+      ...prev,
+      [userId]: !prev[userId],
+    }));
+  }, []);
+
+  const toggleSubscriptionSelection = useCallback((subscriptionId: number) => {
+    setSubscriptionSelection((prev) => ({
+      ...prev,
+      [subscriptionId]: !prev[subscriptionId],
+    }));
+  }, []);
+
   const handleOpenAction = (type: BulkActionType) => {
     setModal({ open: true, action: type, loading: false, result: null, progress: null });
   };
 
   const handleExecuteAction = async (params: BulkActionParams) => {
-    if (!modal.action || selectedUserIds.length === 0) return;
+    if (!modal.action) return;
 
-    const totalCount = selectedUserIds.length;
+    const isSubAction = isMultiTariff && isSubscriptionLevelAction(modal.action);
+    const targetIds = isSubAction ? selectedSubscriptionIds : selectedUserIds;
+    if (targetIds.length === 0) return;
+
+    const totalCount = targetIds.length;
     setModal((prev) => ({
       ...prev,
       loading: true,
@@ -1052,55 +1318,52 @@ export default function AdminBulkActions() {
       },
     }));
 
+    const requestPayload = isSubAction
+      ? { action: modal.action, subscription_ids: targetIds, params }
+      : { action: modal.action, user_ids: targetIds, params };
+
     try {
-      await adminBulkActionsApi.executeWithStream(
-        {
-          action: modal.action,
-          user_ids: selectedUserIds,
-          params,
-        },
-        (event) => {
-          if (event.type === 'progress') {
-            setModal((prev) => ({
-              ...prev,
-              progress: prev.progress
-                ? {
-                    current: event.current,
-                    total: event.total,
-                    successCount: prev.progress.successCount + (event.success ? 1 : 0),
-                    errorCount: prev.progress.errorCount + (event.success ? 0 : 1),
-                    log: [...prev.progress.log, event],
-                  }
-                : prev.progress,
-            }));
-          } else if (event.type === 'complete') {
-            setModal((prev) => {
-              // Build errors from accumulated progress log
-              const errors = (prev.progress?.log ?? [])
-                .filter((e) => !e.success)
-                .map((e) => ({
-                  user_id: e.user_id,
-                  username: e.username,
-                  error: e.message || e.error || '',
-                }));
-              return {
-                ...prev,
-                loading: false,
-                progress: null,
-                result: {
-                  success: event.error_count === 0,
+      await adminBulkActionsApi.executeWithStream(requestPayload, (event) => {
+        if (event.type === 'progress') {
+          setModal((prev) => ({
+            ...prev,
+            progress: prev.progress
+              ? {
+                  current: event.current,
                   total: event.total,
-                  success_count: event.success_count,
-                  error_count: event.error_count,
-                  skipped_count: event.skipped_count || 0,
-                  errors,
-                },
-              };
-            });
-            loadUsers();
-          }
-        },
-      );
+                  successCount: prev.progress.successCount + (event.success ? 1 : 0),
+                  errorCount: prev.progress.errorCount + (event.success ? 0 : 1),
+                  log: [...prev.progress.log, event],
+                }
+              : prev.progress,
+          }));
+        } else if (event.type === 'complete') {
+          setModal((prev) => {
+            // Build errors from accumulated progress log
+            const errors = (prev.progress?.log ?? [])
+              .filter((e) => !e.success)
+              .map((e) => ({
+                user_id: e.user_id,
+                username: e.username,
+                error: e.message || e.error || '',
+              }));
+            return {
+              ...prev,
+              loading: false,
+              progress: null,
+              result: {
+                success: event.error_count === 0,
+                total: event.total,
+                success_count: event.success_count,
+                error_count: event.error_count,
+                skipped_count: event.skipped_count || 0,
+                errors,
+              },
+            };
+          });
+          loadUsers();
+        }
+      });
 
       // If stream ended without a complete event, finalize from progress
       setModal((prev) => {
@@ -1149,7 +1412,7 @@ export default function AdminBulkActions() {
   const handleCloseModal = () => {
     if (modal.loading) return;
     if (modal.result) {
-      setRowSelection({});
+      clearAllSelections();
     }
     setModal({ open: false, action: null, loading: false, result: null, progress: null });
   };
@@ -1215,13 +1478,43 @@ export default function AdminBulkActions() {
         size: 200,
         cell: ({ row }) => {
           const user = row.original;
+          const subCount = user.subscriptions?.length ?? 0;
+          const canExpand = subCount > 1;
+          const isExpanded = expandedRows[user.id] ?? false;
           return (
             <div className="flex items-center gap-2.5">
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent-500 to-accent-700 text-[10px] font-medium text-white">
-                {user.first_name?.[0] || user.username?.[0] || '?'}
-              </div>
+              {canExpand ? (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleExpandRow(user.id);
+                  }}
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent-500 to-accent-700 transition-transform"
+                  aria-label={
+                    isExpanded
+                      ? t('admin.bulkActions.collapseSubscriptions')
+                      : t('admin.bulkActions.expandSubscriptions')
+                  }
+                  aria-expanded={isExpanded}
+                >
+                  <ChevronExpandIcon expanded={isExpanded} />
+                </button>
+              ) : (
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent-500 to-accent-700 text-[10px] font-medium text-white">
+                  {user.first_name?.[0] || user.username?.[0] || '?'}
+                </div>
+              )}
               <div className="min-w-0">
-                <div className="truncate text-xs font-medium text-dark-100">{user.full_name}</div>
+                <div className="flex items-center gap-1.5">
+                  <span className="truncate text-xs font-medium text-dark-100">
+                    {user.full_name}
+                  </span>
+                  {canExpand && (
+                    <span className="shrink-0 rounded-md bg-dark-700/60 px-1.5 py-0.5 text-[9px] font-medium tabular-nums text-dark-400">
+                      {subCount}
+                    </span>
+                  )}
+                </div>
                 <div className="truncate text-[10px] leading-tight text-dark-500">
                   {user.username ? `@${user.username}` : `ID: ${user.telegram_id}`}
                 </div>
@@ -1325,7 +1618,7 @@ export default function AdminBulkActions() {
         },
       },
     ],
-    [t, formatWithCurrency],
+    [t, formatWithCurrency, expandedRows, toggleExpandRow],
   );
 
   const table = useReactTable({
@@ -1474,25 +1767,50 @@ export default function AdminBulkActions() {
                 ))}
               </thead>
               <tbody>
-                {table.getRowModel().rows.map((row) => (
-                  <tr
-                    key={row.id}
-                    className={cn(
-                      'border-b border-dark-700/50 transition-colors',
-                      row.getIsSelected() ? 'bg-accent-500/5' : 'hover:bg-dark-800/50',
-                    )}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <td
-                        key={cell.id}
-                        className="px-3 py-2.5"
-                        style={{ width: cell.column.getSize() }}
+                {table.getRowModel().rows.map((row) => {
+                  const user = row.original;
+                  const subs = user.subscriptions ?? [];
+                  const canExpand = subs.length > 1;
+                  const isExpanded = expandedRows[user.id] ?? false;
+
+                  return (
+                    <React.Fragment key={row.id}>
+                      {/* User row */}
+                      <tr
+                        className={cn(
+                          'border-b transition-colors',
+                          canExpand && isExpanded ? 'border-dark-700/30' : 'border-dark-700/50',
+                          row.getIsSelected() ? 'bg-accent-500/5' : 'hover:bg-dark-800/50',
+                        )}
                       >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
+                        {row.getVisibleCells().map((cell) => (
+                          <td
+                            key={cell.id}
+                            className="px-3 py-2.5"
+                            style={{ width: cell.column.getSize() }}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </td>
+                        ))}
+                      </tr>
+
+                      {/* Subscription sub-rows (only when expanded and multi-sub) */}
+                      {canExpand &&
+                        isExpanded &&
+                        subs.map((sub) => (
+                          <SubscriptionSubRow
+                            key={`sub-${sub.id}`}
+                            subscription={sub}
+                            isSelected={subscriptionSelection[sub.id] ?? false}
+                            onToggleSelect={() => toggleSubscriptionSelection(sub.id)}
+                            isMultiTariff={isMultiTariff}
+                          />
+                        ))}
+
+                      {/* Single subscription — auto-select with user (no separate sub-row) */}
+                    </React.Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -1509,7 +1827,7 @@ export default function AdminBulkActions() {
             <button
               onClick={() => {
                 setOffset(Math.max(0, offset - limit));
-                setRowSelection({});
+                clearAllSelections();
               }}
               disabled={offset === 0}
               className="rounded-lg border border-dark-700 bg-dark-800 p-2 transition-colors hover:bg-dark-700 disabled:opacity-50"
@@ -1523,7 +1841,7 @@ export default function AdminBulkActions() {
             <button
               onClick={() => {
                 setOffset(offset + limit);
-                setRowSelection({});
+                clearAllSelections();
               }}
               disabled={offset + limit >= total}
               className="rounded-lg border border-dark-700 bg-dark-800 p-2 transition-colors hover:bg-dark-700 disabled:opacity-50"
@@ -1536,12 +1854,21 @@ export default function AdminBulkActions() {
       )}
 
       {/* Floating action bar */}
-      <FloatingActionBar selectedCount={selectedUserIds.length} onAction={handleOpenAction} />
+      <FloatingActionBar
+        selectedUserCount={selectedUserIds.length}
+        selectedSubscriptionCount={selectedSubscriptionIds.length}
+        isMultiTariff={isMultiTariff}
+        onAction={handleOpenAction}
+      />
 
       {/* Action modal */}
       <ActionModal
         modal={modal}
-        selectedCount={selectedUserIds.length}
+        selectedCount={
+          modal.action && isMultiTariff && isSubscriptionLevelAction(modal.action)
+            ? selectedSubscriptionIds.length
+            : selectedUserIds.length
+        }
         tariffs={tariffs}
         promoGroups={promoGroups}
         onClose={handleCloseModal}
@@ -1549,7 +1876,9 @@ export default function AdminBulkActions() {
       />
 
       {/* Bottom spacer when action bar is visible */}
-      {selectedUserIds.length > 0 && <div className="h-20" />}
+      {(selectedUserIds.length > 0 || selectedSubscriptionIds.length > 0) && (
+        <div className="h-20" />
+      )}
     </div>
   );
 }

@@ -2095,7 +2095,17 @@
         "daysRemaining": "Days",
         "promoGroup": "Group",
         "spent": "Spent"
-      }
+      },
+      "subscriptionsSelected": "{{count}} subscriptions selected",
+      "usersSelected": "{{count}} users selected",
+      "expandSubscriptions": "Show subscriptions",
+      "collapseSubscriptions": "Hide subscriptions",
+      "noSubscriptions": "No subscriptions",
+      "subscriptionTarget": "Target: subscriptions",
+      "userTarget": "Target: users",
+      "daysUnit": "d",
+      "trafficOf": "of",
+      "trafficGbUnit": "GB"
     },
     "theme": {
       "accentColor": "Accent color",

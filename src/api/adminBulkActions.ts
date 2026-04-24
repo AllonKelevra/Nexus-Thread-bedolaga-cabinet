@@ -14,7 +14,8 @@ export type BulkActionType =
 
 export interface BulkActionRequest {
   action: BulkActionType;
-  user_ids: number[];
+  user_ids?: number[];
+  subscription_ids?: number[];
   params: BulkActionParams;
   dry_run?: boolean;
 }
@@ -48,6 +49,7 @@ export interface BulkProgressEvent {
   current: number;
   total: number;
   user_id: number;
+  subscription_id?: number;
   username?: string;
   success: boolean;
   message?: string;
