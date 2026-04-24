@@ -259,7 +259,9 @@ function FaqAnswerEditor({ value, onChange }: { value: string; onChange: (html: 
   const isUploading = uploadCount > 0;
   const [isDragging, setIsDragging] = useState(false);
   const activeUploadsRef = useRef(new Set<AbortController>());
-  const suppressUpdate = useRef(false);
+
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
 
   const editor = useEditor({
     extensions: FAQ_EDITOR_EXTENSIONS,
@@ -270,10 +272,9 @@ function FaqAnswerEditor({ value, onChange }: { value: string; onChange: (html: 
       },
     },
     onUpdate: ({ editor: e }) => {
-      if (suppressUpdate.current) return;
       const html = e.getHTML();
       const isEmpty = html === '<p></p>' || html === '';
-      onChange(isEmpty ? '' : html);
+      onChangeRef.current(isEmpty ? '' : html);
     },
   });
 
@@ -283,9 +284,7 @@ function FaqAnswerEditor({ value, onChange }: { value: string; onChange: (html: 
     const currentHtml = editor.getHTML();
     const normalizedCurrent = currentHtml === '<p></p>' ? '' : currentHtml;
     if (normalizedCurrent !== value) {
-      suppressUpdate.current = true;
-      editor.commands.setContent(value || '');
-      suppressUpdate.current = false;
+      editor.commands.setContent(value || '', { emitUpdate: false });
     }
   }, [value, editor]);
 
@@ -499,9 +498,11 @@ function FaqAnswerEditor({ value, onChange }: { value: string; onChange: (html: 
         onDrop={(e) => {
           setIsDragging(false);
           if (e.defaultPrevented) return;
-          e.preventDefault();
           const file = e.dataTransfer.files[0];
-          if (file) handleMediaUpload(file);
+          if (file && (file.type.startsWith('image/') || file.type.startsWith('video/'))) {
+            e.preventDefault();
+            handleMediaUpload(file);
+          }
         }}
       >
         <EditorContent editor={editor} />
@@ -535,6 +536,25 @@ interface FaqBuilderProps {
 function FaqBuilder({ items, onChange, locale, localeLabel }: FaqBuilderProps) {
   const { t } = useTranslation();
 
+  // Stable keys for React — travel with items through reorder/delete
+  const keyCounter = useRef(0);
+  const [itemKeys, setItemKeys] = useState<number[]>(() => items.map(() => keyCounter.current++));
+
+  // Sync key count when items change externally (e.g., locale switch resets items)
+  useEffect(() => {
+    setItemKeys((prev) => {
+      if (prev.length === items.length) return prev;
+      if (items.length > prev.length) {
+        const newKeys = [...prev];
+        for (let i = prev.length; i < items.length; i++) {
+          newKeys.push(keyCounter.current++);
+        }
+        return newKeys;
+      }
+      return prev.slice(0, items.length);
+    });
+  }, [items.length]);
+
   const handleQuestionChange = useCallback(
     (index: number, value: string) => {
       const updated = items.map((item, i) => (i === index ? { ...item, q: value } : item));
@@ -553,12 +573,14 @@ function FaqBuilder({ items, onChange, locale, localeLabel }: FaqBuilderProps) {
 
   const handleRemove = useCallback(
     (index: number) => {
+      setItemKeys((prev) => prev.filter((_, i) => i !== index));
       onChange(items.filter((_, i) => i !== index));
     },
     [items, onChange],
   );
 
   const handleAdd = useCallback(() => {
+    setItemKeys((prev) => [...prev, keyCounter.current++]);
     onChange([...items, { q: '', a: '' }]);
   }, [items, onChange]);
 
@@ -567,6 +589,11 @@ function FaqBuilder({ items, onChange, locale, localeLabel }: FaqBuilderProps) {
       if (index === 0) return;
       const updated = [...items];
       [updated[index - 1], updated[index]] = [updated[index], updated[index - 1]];
+      setItemKeys((prev) => {
+        const k = [...prev];
+        [k[index - 1], k[index]] = [k[index], k[index - 1]];
+        return k;
+      });
       onChange(updated);
     },
     [items, onChange],
@@ -577,6 +604,11 @@ function FaqBuilder({ items, onChange, locale, localeLabel }: FaqBuilderProps) {
       if (index >= items.length - 1) return;
       const updated = [...items];
       [updated[index], updated[index + 1]] = [updated[index + 1], updated[index]];
+      setItemKeys((prev) => {
+        const k = [...prev];
+        [k[index], k[index + 1]] = [k[index + 1], k[index]];
+        return k;
+      });
       onChange(updated);
     },
     [items, onChange],
@@ -603,7 +635,7 @@ function FaqBuilder({ items, onChange, locale, localeLabel }: FaqBuilderProps) {
 
       {items.map((item, index) => (
         <div
-          key={index}
+          key={itemKeys[index] ?? index}
           className="rounded-xl border border-dark-700 bg-dark-800/50 p-4 transition-all hover:border-dark-600"
         >
           <div className="mb-3 flex items-center justify-between">
