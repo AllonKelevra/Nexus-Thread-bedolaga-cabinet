@@ -719,6 +719,11 @@ export default function AdminBulkActions() {
     }, 400);
   };
 
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => clearTimeout(searchTimerRef.current);
+  }, []);
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     clearTimeout(searchTimerRef.current);
@@ -753,9 +758,9 @@ export default function AdminBulkActions() {
   const selectedUserIds = useMemo(() => {
     return Object.keys(rowSelection)
       .filter((k) => rowSelection[k])
-      .map((idx) => users[Number(idx)]?.id)
-      .filter(Boolean);
-  }, [rowSelection, users]);
+      .map(Number)
+      .filter((id) => id > 0);
+  }, [rowSelection]);
 
   const handleOpenAction = (type: BulkActionType) => {
     setModal({ open: true, action: type, loading: false, result: null });
