@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import {
@@ -1451,10 +1452,10 @@ export default function AdminBulkActions() {
       );
       setUsers(data.users);
       setTotal(data.total);
-      // Auto-expand all users with multiple subscriptions
+      // Auto-expand all users who have subscriptions
       const autoExpand: Record<number, boolean> = {};
       for (const u of data.users) {
-        if ((u.subscriptions?.length ?? 0) > 1) {
+        if ((u.subscriptions?.length ?? 0) > 0) {
           autoExpand[u.id] = true;
         }
       }
@@ -2181,15 +2182,18 @@ export default function AdminBulkActions() {
         </div>
       )}
 
-      {/* Floating action bar */}
-      <FloatingActionBar
-        selectedUserCount={selectedUserIds.length}
-        selectedSubscriptionCount={selectedSubscriptionIds.length}
-        isMultiTariff={isMultiTariff}
-        totalVisibleSubscriptionCount={allVisibleSubscriptionIds.length}
-        onAction={handleOpenAction}
-        onToggleAllSubscriptions={toggleAllSubscriptions}
-      />
+      {/* Floating action bar — portal to body for correct fixed positioning */}
+      {createPortal(
+        <FloatingActionBar
+          selectedUserCount={selectedUserIds.length}
+          selectedSubscriptionCount={selectedSubscriptionIds.length}
+          isMultiTariff={isMultiTariff}
+          totalVisibleSubscriptionCount={allVisibleSubscriptionIds.length}
+          onAction={handleOpenAction}
+          onToggleAllSubscriptions={toggleAllSubscriptions}
+        />,
+        document.body,
+      )}
 
       {/* Action modal */}
       <ActionModal
