@@ -3825,8 +3825,18 @@
         "isActive": "Active",
         "sortOrder": "Sort Order",
         "icon": "Icon (emoji)",
-        "pageType": "Page Type"
+        "pageType": "Page Type",
+        "replacesTab": "Replaces Tab"
       },
+      "replacesTabNone": "None",
+      "replacesTabOptions": {
+        "faq": "FAQ",
+        "rules": "Rules",
+        "privacy": "Privacy",
+        "offer": "Offer"
+      },
+      "replacesTabConflict": "already assigned",
+      "replacesTabWarning": "Another page already replaces this tab. It will be unassigned on save.",
       "filter": {
         "all": "All",
         "page": "Pages",

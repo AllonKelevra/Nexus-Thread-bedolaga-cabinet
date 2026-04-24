@@ -17,7 +17,7 @@ import { AdminBackButton } from '../components/admin';
 import { Toggle } from '../components/admin/Toggle';
 import { useHapticFeedback } from '../platform/hooks/useHaptic';
 import { cn } from '../lib/utils';
-import type { InfoPageType, FaqItem } from '../api/infoPages';
+import type { InfoPageType, FaqItem, ReplacesTab } from '../api/infoPages';
 
 const AVAILABLE_LOCALES = ['ru', 'en', 'zh', 'fa'] as const;
 type LocaleCode = (typeof AVAILABLE_LOCALES)[number];
@@ -410,6 +410,7 @@ export default function AdminInfoPageEditor() {
   const [isActive, setIsActive] = useState(true);
   const [sortOrder, setSortOrder] = useState(0);
   const [pageType, setPageType] = useState<InfoPageType>(initialPageType);
+  const [replacesTab, setReplacesTab] = useState<ReplacesTab | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
   // FAQ Q&A state per locale
@@ -591,6 +592,13 @@ export default function AdminInfoPageEditor() {
     [handleMediaUpload],
   );
 
+  // Fetch all admin pages to detect tab conflicts
+  const { data: allAdminPages } = useQuery({
+    queryKey: ['admin', 'info-pages', 'list', 'all'],
+    queryFn: () => infoPagesApi.getAdminPages(),
+    staleTime: 30_000,
+  });
+
   // Fetch page for editing
   const { data: pageData, isLoading: isLoadingPage } = useQuery({
     queryKey: ['admin', 'info-pages', 'page', pageId],
@@ -616,6 +624,7 @@ export default function AdminInfoPageEditor() {
     setIsActive(pageData.is_active);
     setSortOrder(pageData.sort_order);
     setPageType(pageData.page_type ?? 'page');
+    setReplacesTab(pageData.replaces_tab ?? null);
     setTitles(pageData.title);
 
     if (pageData.page_type === 'faq') {
@@ -682,6 +691,7 @@ export default function AdminInfoPageEditor() {
       is_active: boolean;
       sort_order: number;
       icon: string | null;
+      replaces_tab: ReplacesTab | null;
     }) => {
       if (isEdit && pageId != null) {
         return infoPagesApi.updatePage(pageId, data);
@@ -730,6 +740,7 @@ export default function AdminInfoPageEditor() {
       is_active: isActive,
       sort_order: sortOrder,
       icon: icon.trim() || null,
+      replaces_tab: replacesTab,
     };
 
     haptic.buttonPress();
@@ -852,6 +863,35 @@ export default function AdminInfoPageEditor() {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Replaces tab selector */}
+        <div>
+          <label className="label">{t('admin.infoPages.fields.replacesTab')}</label>
+          <select
+            value={replacesTab ?? ''}
+            onChange={(e) => setReplacesTab((e.target.value || null) as ReplacesTab | null)}
+            className="input max-w-xs"
+          >
+            <option value="">{t('admin.infoPages.replacesTabNone')}</option>
+            {(['faq', 'rules', 'privacy', 'offer'] as const).map((tab) => {
+              const conflict = allAdminPages?.find(
+                (p) => p.replaces_tab === tab && p.id !== pageId,
+              );
+              return (
+                <option key={tab} value={tab}>
+                  {t(`admin.infoPages.replacesTabOptions.${tab}`)}
+                  {conflict ? ` (${t('admin.infoPages.replacesTabConflict')})` : ''}
+                </option>
+              );
+            })}
+          </select>
+          {replacesTab &&
+            allAdminPages?.some((p) => p.replaces_tab === replacesTab && p.id !== pageId) && (
+              <p className="mt-1 text-xs text-warning-400">
+                {t('admin.infoPages.replacesTabWarning')}
+              </p>
+            )}
         </div>
 
         {/* Locale tabs */}

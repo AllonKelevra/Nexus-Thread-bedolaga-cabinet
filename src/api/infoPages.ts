@@ -2,6 +2,8 @@ import apiClient from './client';
 
 export type InfoPageType = 'page' | 'faq';
 
+export type ReplacesTab = 'faq' | 'rules' | 'privacy' | 'offer';
+
 export interface InfoPage {
   id: number;
   slug: string;
@@ -11,6 +13,7 @@ export interface InfoPage {
   is_active: boolean;
   sort_order: number;
   icon: string | null;
+  replaces_tab: ReplacesTab | null;
   created_at: string;
   updated_at: string | null;
 }
@@ -23,6 +26,7 @@ export interface InfoPageListItem {
   is_active: boolean;
   sort_order: number;
   icon: string | null;
+  replaces_tab: ReplacesTab | null;
   updated_at: string | null;
 }
 
@@ -34,6 +38,7 @@ export interface InfoPageCreateRequest {
   is_active: boolean;
   sort_order: number;
   icon: string | null;
+  replaces_tab: ReplacesTab | null;
 }
 
 export interface InfoPageUpdateRequest {
@@ -44,7 +49,10 @@ export interface InfoPageUpdateRequest {
   is_active?: boolean;
   sort_order?: number;
   icon?: string | null;
+  replaces_tab?: ReplacesTab | null;
 }
+
+export type TabReplacements = Record<ReplacesTab, string | null>;
 
 /** Single FAQ Q&A item stored in content JSONB. */
 export interface FaqItem {
@@ -58,6 +66,11 @@ export interface InfoPageReorderRequest {
 
 export const infoPagesApi = {
   // Public endpoints
+  getTabReplacements: async (): Promise<TabReplacements> => {
+    const response = await apiClient.get<TabReplacements>('/cabinet/info-pages/tab-replacements');
+    return response.data;
+  },
+
   getPages: async (pageType?: InfoPageType): Promise<InfoPageListItem[]> => {
     const params = pageType ? { page_type: pageType } : undefined;
     const response = await apiClient.get<InfoPageListItem[]>('/cabinet/info-pages', { params });

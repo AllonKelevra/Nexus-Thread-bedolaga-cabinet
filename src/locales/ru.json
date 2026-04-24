@@ -4369,8 +4369,18 @@
         "isActive": "Активна",
         "sortOrder": "Порядок сортировки",
         "icon": "Иконка (эмодзи)",
-        "pageType": "Тип страницы"
+        "pageType": "Тип страницы",
+        "replacesTab": "Заменяет таб"
       },
+      "replacesTabNone": "Не заменяет",
+      "replacesTabOptions": {
+        "faq": "FAQ",
+        "rules": "Правила",
+        "privacy": "Конфиденциальность",
+        "offer": "Оферта"
+      },
+      "replacesTabConflict": "уже занят",
+      "replacesTabWarning": "Другая страница уже заменяет этот таб. При сохранении она будет снята.",
       "filter": {
         "all": "Все",
         "page": "Страницы",

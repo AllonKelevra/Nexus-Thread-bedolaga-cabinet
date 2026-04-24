@@ -3392,8 +3392,18 @@
         "isActive": "已激活",
         "sortOrder": "排序",
         "icon": "图标（表情）",
-        "pageType": "页面类型"
+        "pageType": "页面类型",
+        "replacesTab": "替换标签"
       },
+      "replacesTabNone": "不替换",
+      "replacesTabOptions": {
+        "faq": "FAQ",
+        "rules": "规则",
+        "privacy": "隐私",
+        "offer": "条款"
+      },
+      "replacesTabConflict": "已被占用",
+      "replacesTabWarning": "另一个页面已替换此标签。保存后该页面将被取消替换。",
       "filter": {
         "all": "全部",
         "page": "页面",

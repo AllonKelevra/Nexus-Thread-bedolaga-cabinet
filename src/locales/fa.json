@@ -3393,8 +3393,18 @@
         "isActive": "فعال",
         "sortOrder": "ترتیب",
         "icon": "آیکون (ایموجی)",
-        "pageType": "نوع صفحه"
+        "pageType": "نوع صفحه",
+        "replacesTab": "جایگزینی تب"
       },
+      "replacesTabNone": "بدون جایگزینی",
+      "replacesTabOptions": {
+        "faq": "FAQ",
+        "rules": "قوانین",
+        "privacy": "حریم خصوصی",
+        "offer": "پیشنهاد"
+      },
+      "replacesTabConflict": "قبلا اختصاص داده شده",
+      "replacesTabWarning": "صفحه دیگری قبلا این تب را جایگزین کرده است. با ذخیره، آن صفحه حذف خواهد شد.",
       "filter": {
         "all": "همه",
         "page": "صفحات",

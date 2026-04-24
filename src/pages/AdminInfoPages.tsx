@@ -139,6 +139,11 @@ const PageRow = memo(function PageRow({
             >
               {page.is_active ? t('admin.infoPages.active') : t('admin.infoPages.inactive')}
             </span>
+            {page.replaces_tab && (
+              <span className="rounded-full bg-purple-500/20 px-2 py-0.5 text-[10px] font-medium text-purple-400">
+                {t(`admin.infoPages.replacesTabOptions.${page.replaces_tab}`)}
+              </span>
+            )}
             <span className="text-xs text-dark-500">#{page.id}</span>
           </div>
 
