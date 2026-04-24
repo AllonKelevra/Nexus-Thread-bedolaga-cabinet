@@ -2040,7 +2040,12 @@
         "addBalance": "Add balance",
         "assignPromoGroup": "Assign promo group",
         "grantSubscription": "Grant subscription",
-        "setDevices": "Set devices"
+        "setDevices": "Set devices",
+        "deleteSubscription": "Delete subscriptions"
+      },
+      "deleteSubscription": {
+        "warning": "Selected subscriptions will be permanently deleted from the bot and RemnaWave panel!",
+        "hint": "Users will lose VPN access for deleted subscriptions. This action cannot be undone."
       },
       "params": {
         "days": "Number of days",

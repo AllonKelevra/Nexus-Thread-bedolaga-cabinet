@@ -11,7 +11,8 @@ export type BulkActionType =
   | 'add_balance'
   | 'assign_promo_group'
   | 'grant_subscription'
-  | 'set_devices';
+  | 'set_devices'
+  | 'delete_subscription';
 
 export interface BulkActionRequest {
   action: BulkActionType;
