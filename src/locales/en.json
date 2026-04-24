@@ -2086,6 +2086,7 @@
         "allStatuses": "All statuses",
         "allTariffs": "All tariffs",
         "allGroups": "All groups",
+        "trialOnly": "Trial only",
         "tariffsSelected": "{{count}} tariffs",
         "selectAll": "Select all",
         "deselectAll": "Deselect all"

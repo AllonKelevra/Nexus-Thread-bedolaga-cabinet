@@ -3834,6 +3834,7 @@
         "allStatuses": "Все статусы",
         "allTariffs": "Все тарифы",
         "allGroups": "Все группы",
+        "trialOnly": "Только триал",
         "tariffsSelected": "{{count}} тарифов",
         "selectAll": "Выбрать все",
         "deselectAll": "Снять все"

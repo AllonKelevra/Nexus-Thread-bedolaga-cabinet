@@ -1403,6 +1403,7 @@ export default function AdminBulkActions() {
   const [searchInput, setSearchInput] = useState('');
   const [committedSearch, setCommittedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<SubscriptionStatusFilter>('');
+  const [trialOnly, setTrialOnly] = useState(false);
   const [tariffFilter, setTariffFilter] = useState<number[]>([]);
   const [promoGroupFilter, setPromoGroupFilter] = useState('');
 
@@ -1444,7 +1445,7 @@ export default function AdminBulkActions() {
       };
       if (committedSearch) params.search = committedSearch;
       if (statusFilter) params.subscription_status = statusFilter;
-      if (tariffFilter.length === 1) params.tariff_id = tariffFilter[0];
+      if (tariffFilter.length > 0) params.tariff_id = tariffFilter.join(',');
       if (promoGroupFilter) params.promo_group_id = Number(promoGroupFilter);
 
       const data = await adminUsersApi.getUsers(
@@ -1980,12 +1981,17 @@ export default function AdminBulkActions() {
   // When multiple tariffs are selected, filter users client-side
   // (server only supports single tariff_id filter)
   const filteredUsers = useMemo(() => {
-    if (tariffFilter.length <= 1) return users;
-    return users.filter((u) => {
-      const subs = u.subscriptions ?? [];
-      return subs.some((s) => s.tariff_id !== null && tariffFilter.includes(s.tariff_id));
-    });
-  }, [users, tariffFilter]);
+    let result = users;
+
+    // Trial-only filter: show users with trial subscription
+    if (trialOnly) {
+      result = result.filter(
+        (u) => u.subscription_is_trial || (u.subscriptions ?? []).some((s) => s.status === 'trial'),
+      );
+    }
+
+    return result;
+  }, [users, trialOnly]);
 
   const table = useReactTable({
     data: filteredUsers,
@@ -2005,7 +2011,6 @@ export default function AdminBulkActions() {
     { value: '', label: t('admin.bulkActions.filters.allStatuses') },
     { value: 'active', label: t('admin.bulkActions.statuses.active') },
     { value: 'expired', label: t('admin.bulkActions.statuses.expired') },
-    { value: 'trial', label: t('admin.bulkActions.statuses.trial') },
     { value: 'limited', label: t('admin.bulkActions.statuses.limited') },
     { value: 'disabled', label: t('admin.bulkActions.statuses.disabled') },
   ];
@@ -2074,7 +2079,7 @@ export default function AdminBulkActions() {
           </div>
         </form>
 
-        {/* Filter dropdowns */}
+        {/* Filter dropdowns + trial toggle */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <DropdownSelect
             value={statusFilter}
@@ -2093,6 +2098,31 @@ export default function AdminBulkActions() {
             onChange={handlePromoGroupFilterChange}
           />
         </div>
+
+        {/* Trial filter checkbox */}
+        <label className="inline-flex cursor-pointer items-center gap-2">
+          <button
+            onClick={() => {
+              setTrialOnly((prev) => !prev);
+              setOffset(0);
+              clearAllSelections();
+            }}
+            className={cn(
+              'flex h-5 w-5 items-center justify-center rounded-md border-2 transition-all duration-150',
+              trialOnly
+                ? 'border-amber-500 bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]'
+                : 'border-dark-500 bg-dark-700/60 hover:border-amber-500/50 hover:bg-dark-600/60',
+            )}
+            aria-pressed={trialOnly}
+          >
+            {trialOnly && <CheckIcon />}
+          </button>
+          <span
+            className={cn('text-sm', trialOnly ? 'font-medium text-amber-400' : 'text-dark-400')}
+          >
+            {t('admin.bulkActions.filters.trialOnly')}
+          </span>
+        </label>
       </div>
 
       {/* Table */}
