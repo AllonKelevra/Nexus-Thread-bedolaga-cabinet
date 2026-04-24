@@ -396,6 +396,162 @@ function DropdownSelect({
   );
 }
 
+// ============ Multi-Select Dropdown ============
+
+interface MultiSelectOption {
+  value: number;
+  label: string;
+}
+
+interface MultiSelectDropdownProps {
+  options: MultiSelectOption[];
+  selected: number[];
+  onChange: (ids: number[]) => void;
+  placeholder: string;
+  className?: string;
+}
+
+function MultiSelectDropdown({
+  options,
+  selected,
+  onChange,
+  placeholder,
+  className,
+}: MultiSelectDropdownProps) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const buttonLabel = useMemo(() => {
+    if (selected.length === 0) return placeholder;
+    if (selected.length <= 2) {
+      return selected
+        .map((id) => options.find((o) => o.value === id)?.label)
+        .filter(Boolean)
+        .join(', ');
+    }
+    return t('admin.bulkActions.filters.tariffsSelected', { count: selected.length });
+  }, [selected, options, placeholder, t]);
+
+  const handleToggle = (value: number) => {
+    if (selected.includes(value)) {
+      onChange(selected.filter((id) => id !== value));
+    } else {
+      onChange([...selected, value]);
+    }
+  };
+
+  const handleSelectAll = () => {
+    onChange(options.map((o) => o.value));
+  };
+
+  const handleDeselectAll = () => {
+    onChange([]);
+  };
+
+  return (
+    <div ref={containerRef} className={cn('relative', className)}>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className={cn(
+          'flex w-full items-center justify-between rounded-xl border bg-dark-800 px-3 py-2.5 text-left text-sm outline-none transition-colors',
+          open
+            ? 'border-accent-500/40 shadow-[0_0_0_3px_rgba(var(--color-accent-500),0.08)]'
+            : 'border-dark-700',
+          selected.length > 0 ? 'text-dark-100' : 'text-dark-500',
+        )}
+        aria-expanded={open}
+        aria-haspopup="listbox"
+      >
+        <span className="truncate">{buttonLabel}</span>
+        <div
+          className={cn('ml-2 shrink-0 text-dark-500 transition-transform', open && 'rotate-180')}
+        >
+          <ChevronDownIcon />
+        </div>
+      </button>
+
+      {open && (
+        <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto rounded-xl border border-dark-700 bg-dark-800 py-1 shadow-2xl">
+          {/* Select all / Deselect all */}
+          <div className="flex items-center gap-1 border-b border-dark-700/50 px-3 py-1.5">
+            <button
+              type="button"
+              onClick={handleSelectAll}
+              className="text-xs font-medium text-accent-400 transition-colors hover:text-accent-300"
+            >
+              {t('admin.bulkActions.filters.selectAll')}
+            </button>
+            <span className="text-dark-600">/</span>
+            <button
+              type="button"
+              onClick={handleDeselectAll}
+              className="text-xs font-medium text-dark-400 transition-colors hover:text-dark-300"
+            >
+              {t('admin.bulkActions.filters.deselectAll')}
+            </button>
+          </div>
+
+          {/* Options */}
+          {options.map((option) => {
+            const isChecked = selected.includes(option.value);
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => handleToggle(option.value)}
+                className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm transition-colors hover:bg-dark-700/50"
+                role="option"
+                aria-selected={isChecked}
+              >
+                <div
+                  className={cn(
+                    'flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-all duration-150',
+                    isChecked
+                      ? 'border-accent-500 bg-accent-500'
+                      : 'border-dark-500 bg-dark-700/60',
+                  )}
+                >
+                  {isChecked && (
+                    <svg
+                      className="h-2.5 w-2.5 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={4}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M4.5 12.75l6 6 9-13.5"
+                      />
+                    </svg>
+                  )}
+                </div>
+                <span className={cn('text-sm', isChecked ? 'text-dark-100' : 'text-dark-300')}>
+                  {option.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ============ Progress View ============
 
 function ProgressView({ progress }: { progress: ProgressState }) {
@@ -912,14 +1068,18 @@ interface FloatingActionBarProps {
   selectedUserCount: number;
   selectedSubscriptionCount: number;
   isMultiTariff: boolean;
+  totalVisibleSubscriptionCount: number;
   onAction: (type: BulkActionType) => void;
+  onToggleAllSubscriptions: () => void;
 }
 
 function FloatingActionBar({
   selectedUserCount,
   selectedSubscriptionCount,
   isMultiTariff,
+  totalVisibleSubscriptionCount,
   onAction,
+  onToggleAllSubscriptions,
 }: FloatingActionBarProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -1021,6 +1181,22 @@ function FloatingActionBar({
             </div>
           )}
         </div>
+
+        {/* Toggle all subscriptions button */}
+        {isMultiTariff && totalVisibleSubscriptionCount > 0 && (
+          <>
+            <div className="mx-1 h-6 w-px bg-dark-700" />
+            <button
+              onClick={onToggleAllSubscriptions}
+              className="shrink-0 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-dark-300 transition-colors hover:bg-dark-700 hover:text-dark-200"
+            >
+              {selectedSubscriptionCount === totalVisibleSubscriptionCount &&
+              selectedSubscriptionCount > 0
+                ? t('admin.bulkActions.deselectAllSubs')
+                : t('admin.bulkActions.selectAllSubs')}
+            </button>
+          </>
+        )}
 
         <div className="mx-2 h-6 w-px bg-dark-700" />
 
@@ -1133,7 +1309,7 @@ export default function AdminBulkActions() {
   const [searchInput, setSearchInput] = useState('');
   const [committedSearch, setCommittedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<SubscriptionStatusFilter>('');
-  const [tariffFilter, setTariffFilter] = useState('');
+  const [tariffFilter, setTariffFilter] = useState<number[]>([]);
   const [promoGroupFilter, setPromoGroupFilter] = useState('');
 
   // Pagination
@@ -1174,7 +1350,7 @@ export default function AdminBulkActions() {
       };
       if (committedSearch) params.search = committedSearch;
       if (statusFilter) params.subscription_status = statusFilter;
-      if (tariffFilter) params.tariff_id = Number(tariffFilter);
+      if (tariffFilter.length === 1) params.tariff_id = tariffFilter[0];
       if (promoGroupFilter) params.promo_group_id = Number(promoGroupFilter);
 
       const data = await adminUsersApi.getUsers(
@@ -1182,6 +1358,14 @@ export default function AdminBulkActions() {
       );
       setUsers(data.users);
       setTotal(data.total);
+      // Auto-expand all users with multiple subscriptions
+      const autoExpand: Record<number, boolean> = {};
+      for (const u of data.users) {
+        if ((u.subscriptions?.length ?? 0) > 1) {
+          autoExpand[u.id] = true;
+        }
+      }
+      setExpandedRows(autoExpand);
     } catch {
       // keep stale data
     } finally {
@@ -1247,8 +1431,8 @@ export default function AdminBulkActions() {
     clearAllSelections();
   };
 
-  const handleTariffFilterChange = (v: string) => {
-    setTariffFilter(v);
+  const handleTariffFilterChange = (ids: number[]) => {
+    setTariffFilter(ids);
     setOffset(0);
     clearAllSelections();
   };
@@ -1290,6 +1474,64 @@ export default function AdminBulkActions() {
       [subscriptionId]: !prev[subscriptionId],
     }));
   }, []);
+
+  const getFilteredSubs = useCallback(
+    (subs: UserListItemSubscription[]): UserListItemSubscription[] => {
+      if (tariffFilter.length === 0) return subs;
+      return subs.filter((s) => s.tariff_id !== null && tariffFilter.includes(s.tariff_id));
+    },
+    [tariffFilter],
+  );
+
+  const allVisibleSubscriptionIds = useMemo(() => {
+    const ids: number[] = [];
+    for (const user of users) {
+      const subs = user.subscriptions ?? [];
+      const filtered = getFilteredSubs(subs);
+      if (filtered.length > 1) {
+        for (const sub of filtered) {
+          ids.push(sub.id);
+        }
+      }
+    }
+    return ids;
+  }, [users, getFilteredSubs]);
+
+  const toggleAllSubscriptions = useCallback(() => {
+    const allSelected =
+      allVisibleSubscriptionIds.length > 0 &&
+      allVisibleSubscriptionIds.every((id) => subscriptionSelection[id]);
+
+    if (allSelected) {
+      // Deselect all
+      const next: Record<number, boolean> = {};
+      for (const key of Object.keys(subscriptionSelection)) {
+        const id = Number(key);
+        if (!allVisibleSubscriptionIds.includes(id)) {
+          next[id] = subscriptionSelection[id];
+        }
+      }
+      setSubscriptionSelection(next);
+    } else {
+      // Select all visible
+      const next = { ...subscriptionSelection };
+      for (const id of allVisibleSubscriptionIds) {
+        next[id] = true;
+      }
+      setSubscriptionSelection(next);
+    }
+
+    // Auto-expand rows that have filtered subs
+    const expanded: Record<number, boolean> = { ...expandedRows };
+    for (const user of users) {
+      const subs = user.subscriptions ?? [];
+      const filtered = getFilteredSubs(subs);
+      if (filtered.length > 1) {
+        expanded[user.id] = true;
+      }
+    }
+    setExpandedRows(expanded);
+  }, [allVisibleSubscriptionIds, subscriptionSelection, expandedRows, users, getFilteredSubs]);
 
   const handleOpenAction = (type: BulkActionType) => {
     setModal({ open: true, action: type, loading: false, result: null, progress: null });
@@ -1475,7 +1717,8 @@ export default function AdminBulkActions() {
         size: 200,
         cell: ({ row }) => {
           const user = row.original;
-          const subCount = user.subscriptions?.length ?? 0;
+          const filteredSubs = getFilteredSubs(user.subscriptions ?? []);
+          const subCount = filteredSubs.length;
           const canExpand = subCount > 1;
           const isExpanded = expandedRows[user.id] ?? false;
           return (
@@ -1615,7 +1858,7 @@ export default function AdminBulkActions() {
         },
       },
     ],
-    [t, formatWithCurrency, expandedRows, toggleExpandRow],
+    [t, formatWithCurrency, expandedRows, toggleExpandRow, getFilteredSubs],
   );
 
   const table = useReactTable({
@@ -1641,10 +1884,10 @@ export default function AdminBulkActions() {
     { value: 'disabled', label: t('admin.bulkActions.statuses.disabled') },
   ];
 
-  const tariffOptions: DropdownOption[] = [
-    { value: '', label: t('admin.bulkActions.filters.allTariffs') },
-    ...tariffs.map((tt) => ({ value: String(tt.id), label: tt.name })),
-  ];
+  const tariffMultiOptions: MultiSelectOption[] = tariffs.map((tt) => ({
+    value: tt.id,
+    label: tt.name,
+  }));
 
   const promoGroupOptions: DropdownOption[] = [
     { value: '', label: t('admin.bulkActions.filters.allGroups') },
@@ -1712,10 +1955,11 @@ export default function AdminBulkActions() {
             options={statusOptions}
             onChange={handleStatusFilterChange}
           />
-          <DropdownSelect
-            value={tariffFilter}
-            options={tariffOptions}
+          <MultiSelectDropdown
+            options={tariffMultiOptions}
+            selected={tariffFilter}
             onChange={handleTariffFilterChange}
+            placeholder={t('admin.bulkActions.filters.allTariffs')}
           />
           <DropdownSelect
             value={promoGroupFilter}
@@ -1766,8 +2010,8 @@ export default function AdminBulkActions() {
               <tbody>
                 {table.getRowModel().rows.map((row) => {
                   const user = row.original;
-                  const subs = user.subscriptions ?? [];
-                  const canExpand = subs.length > 1;
+                  const filteredSubs = getFilteredSubs(user.subscriptions ?? []);
+                  const canExpand = filteredSubs.length > 1;
                   const isExpanded = expandedRows[user.id] ?? false;
 
                   return (
@@ -1794,7 +2038,7 @@ export default function AdminBulkActions() {
                       {/* Subscription sub-rows (only when expanded and multi-sub) */}
                       {canExpand &&
                         isExpanded &&
-                        subs.map((sub) => (
+                        filteredSubs.map((sub) => (
                           <SubscriptionSubRow
                             key={`sub-${sub.id}`}
                             subscription={sub}
@@ -1855,7 +2099,9 @@ export default function AdminBulkActions() {
         selectedUserCount={selectedUserIds.length}
         selectedSubscriptionCount={selectedSubscriptionIds.length}
         isMultiTariff={isMultiTariff}
+        totalVisibleSubscriptionCount={allVisibleSubscriptionIds.length}
         onAction={handleOpenAction}
+        onToggleAllSubscriptions={toggleAllSubscriptions}
       />
 
       {/* Action modal */}

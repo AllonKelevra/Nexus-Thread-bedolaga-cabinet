@@ -3826,7 +3826,10 @@
         "promoGroup": "Промогруппа",
         "allStatuses": "Все статусы",
         "allTariffs": "Все тарифы",
-        "allGroups": "Все группы"
+        "allGroups": "Все группы",
+        "tariffsSelected": "{{count}} тарифов",
+        "selectAll": "Выбрать все",
+        "deselectAll": "Снять все"
       },
       "statuses": {
         "active": "Активна",
@@ -3853,7 +3856,9 @@
       "userTarget": "Цель: пользователи",
       "daysUnit": "дн.",
       "trafficOf": "из",
-      "trafficGbUnit": "ГБ"
+      "trafficGbUnit": "ГБ",
+      "selectAllSubs": "Выбрать все подписки",
+      "deselectAllSubs": "Снять все подписки"
     },
     "theme": {
       "accentColor": "Акцентный цвет",

@@ -2078,7 +2078,10 @@
         "promoGroup": "Promo group",
         "allStatuses": "All statuses",
         "allTariffs": "All tariffs",
-        "allGroups": "All groups"
+        "allGroups": "All groups",
+        "tariffsSelected": "{{count}} tariffs",
+        "selectAll": "Select all",
+        "deselectAll": "Deselect all"
       },
       "statuses": {
         "active": "Active",
@@ -2105,7 +2108,9 @@
       "userTarget": "Target: users",
       "daysUnit": "d",
       "trafficOf": "of",
-      "trafficGbUnit": "GB"
+      "trafficGbUnit": "GB",
+      "selectAllSubs": "Select all subscriptions",
+      "deselectAllSubs": "Deselect all subscriptions"
     },
     "theme": {
       "accentColor": "Accent color",
