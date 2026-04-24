@@ -2258,6 +2258,11 @@ export default function AdminBulkActions() {
         )}
       </div>
 
+      {/* Bottom spacer to prevent floating bar from covering pagination */}
+      {(selectedUserIds.length > 0 || selectedSubscriptionIds.length > 0) && (
+        <div className="h-24" />
+      )}
+
       {/* Floating action bar — portal to body for correct fixed positioning */}
       {createPortal(
         <FloatingActionBar
