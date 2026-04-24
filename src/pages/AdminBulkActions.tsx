@@ -779,6 +779,13 @@ function ActionModal({
     }
   }, [promoGroups, promoGroupId]);
 
+  // Reset deleteFromPanel to default when modal opens
+  useEffect(() => {
+    if (modal.open && modal.action === 'delete_user') {
+      setDeleteFromPanel(true);
+    }
+  }, [modal.open, modal.action]);
+
   // Escape key handler — only when not loading
   useEffect(() => {
     if (!modal.open) return;
@@ -997,11 +1004,11 @@ function ActionModal({
                 {t('admin.bulkActions.deleteUser.hint')}
               </p>
             </div>
-            <label className="inline-flex cursor-pointer items-center gap-2">
+            <label className="inline-flex min-h-[44px] cursor-pointer items-center gap-2">
               <button
                 onClick={() => setDeleteFromPanel((prev) => !prev)}
                 className={cn(
-                  'flex h-5 w-5 items-center justify-center rounded-md border-2 transition-all duration-150',
+                  'flex h-6 w-6 items-center justify-center rounded-md border-2 transition-all duration-150',
                   deleteFromPanel
                     ? 'border-error-500 bg-error-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]'
                     : 'border-dark-500 bg-dark-700/60 hover:border-error-500/50 hover:bg-dark-600/60',
@@ -1052,7 +1059,7 @@ function ActionModal({
           {!modal.loading && (
             <button
               onClick={onClose}
-              className="rounded-lg p-1 text-dark-400 transition-colors hover:bg-dark-800 hover:text-dark-200"
+              className="min-h-[44px] min-w-[44px] rounded-lg p-2.5 text-dark-400 transition-colors hover:bg-dark-800 hover:text-dark-200"
               aria-label={t('common.close')}
             >
               <XCloseIcon />
@@ -1145,14 +1152,14 @@ function ActionModal({
               <button
                 onClick={onClose}
                 disabled={modal.loading}
-                className="flex-1 rounded-xl border border-dark-700 bg-dark-800 px-4 py-2.5 text-sm font-medium text-dark-300 transition-colors hover:bg-dark-700 disabled:opacity-50"
+                className="min-h-[44px] flex-1 rounded-xl border border-dark-700 bg-dark-800 px-4 py-2.5 text-sm font-medium text-dark-300 transition-colors hover:bg-dark-700 disabled:opacity-50"
               >
                 {t('admin.bulkActions.cancel')}
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={modal.loading}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-accent-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-600 disabled:opacity-50"
+                className="flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl bg-accent-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-600 disabled:opacity-50"
               >
                 {t('admin.bulkActions.confirm')}
               </button>
@@ -2414,11 +2421,6 @@ export default function AdminBulkActions() {
         onClose={handleCloseModal}
         onExecute={handleExecuteAction}
       />
-
-      {/* Bottom spacer when action bar is visible */}
-      {(selectedUserIds.length > 0 || selectedSubscriptionIds.length > 0) && (
-        <div className="h-20" />
-      )}
     </div>
   );
 }
