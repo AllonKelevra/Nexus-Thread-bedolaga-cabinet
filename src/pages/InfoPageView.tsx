@@ -271,7 +271,7 @@ export default function InfoPageView() {
 
       {/* Page content - sanitized with DOMPurify (strict allowlist) */}
       <div
-        className="prose max-w-none lg:max-w-3xl"
+        className="prose max-w-none overflow-x-auto lg:max-w-3xl"
         dangerouslySetInnerHTML={{ __html: sanitizedContent }}
       />
     </div>
