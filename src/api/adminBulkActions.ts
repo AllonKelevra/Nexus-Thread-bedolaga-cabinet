@@ -2,9 +2,10 @@ import apiClient from './client';
 import { tokenStorage } from '../utils/token';
 
 export type BulkActionType =
-  | 'extend'
-  | 'cancel'
-  | 'activate'
+  | 'extend_subscription'
+  | 'add_days'
+  | 'cancel_subscription'
+  | 'activate_subscription'
   | 'change_tariff'
   | 'add_traffic'
   | 'add_balance'
@@ -15,13 +16,15 @@ export interface BulkActionRequest {
   action: BulkActionType;
   user_ids: number[];
   params: BulkActionParams;
+  dry_run?: boolean;
 }
 
 export interface BulkActionParams {
   days?: number;
   tariff_id?: number;
   traffic_gb?: number;
-  balance_kopeks?: number;
+  amount_kopeks?: number;
+  balance_description?: string;
   promo_group_id?: number | null;
 }
 
@@ -36,6 +39,7 @@ export interface BulkActionResult {
   total: number;
   success_count: number;
   error_count: number;
+  skipped_count: number;
   errors: BulkActionErrorItem[];
 }
 
@@ -52,11 +56,10 @@ export interface BulkProgressEvent {
 
 export interface BulkCompleteEvent {
   type: 'complete';
-  success: boolean;
   total: number;
   success_count: number;
   error_count: number;
-  errors: BulkActionErrorItem[];
+  skipped_count: number;
 }
 
 export type BulkSSEEvent = BulkProgressEvent | BulkCompleteEvent;
@@ -66,7 +69,23 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 export const adminBulkActionsApi = {
   execute: async (data: BulkActionRequest): Promise<BulkActionResult> => {
     const response = await apiClient.post('/cabinet/admin/bulk/execute', data);
-    return response.data;
+    const raw = response.data;
+    // Transform backend results[] to frontend errors[]
+    const errors: BulkActionErrorItem[] = (raw.results || [])
+      .filter((r: { success: boolean }) => !r.success)
+      .map((r: { user_id: number; username?: string; message?: string }) => ({
+        user_id: r.user_id,
+        username: r.username,
+        error: r.message || 'Unknown error',
+      }));
+    return {
+      success: raw.error_count === 0,
+      total: raw.total,
+      success_count: raw.success_count,
+      error_count: raw.error_count,
+      skipped_count: raw.skipped_count || 0,
+      errors,
+    };
   },
 
   executeWithStream: async (
@@ -128,10 +147,13 @@ export const adminBulkActionsApi = {
       }
     } else {
       // Fallback: non-streaming JSON response
-      const result = (await response.json()) as BulkActionResult;
+      const raw = await response.json();
       onEvent({
         type: 'complete',
-        ...result,
+        total: raw.total,
+        success_count: raw.success_count,
+        error_count: raw.error_count,
+        skipped_count: raw.skipped_count || 0,
       });
     }
   },

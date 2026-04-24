@@ -462,9 +462,10 @@ function ActionModal({
   if (!modal.open || !modal.action) return null;
 
   const actionLabelKeys: Record<BulkActionType, string> = {
-    extend: 'admin.bulkActions.actions.extend',
-    cancel: 'admin.bulkActions.actions.cancel',
-    activate: 'admin.bulkActions.actions.activate',
+    extend_subscription: 'admin.bulkActions.actions.extend',
+    add_days: 'admin.bulkActions.actions.extend',
+    cancel_subscription: 'admin.bulkActions.actions.cancel',
+    activate_subscription: 'admin.bulkActions.actions.activate',
     change_tariff: 'admin.bulkActions.actions.changeTariff',
     add_traffic: 'admin.bulkActions.actions.addTraffic',
     add_balance: 'admin.bulkActions.actions.addBalance',
@@ -475,7 +476,7 @@ function ActionModal({
   const handleSubmit = () => {
     const params: BulkActionParams = {};
     switch (modal.action) {
-      case 'extend':
+      case 'extend_subscription':
         params.days = days;
         break;
       case 'change_tariff':
@@ -485,7 +486,7 @@ function ActionModal({
         params.traffic_gb = trafficGb;
         break;
       case 'add_balance':
-        params.balance_kopeks = Math.round(balanceRub * 100);
+        params.amount_kopeks = Math.round(balanceRub * 100);
         break;
       case 'assign_promo_group':
         params.promo_group_id = promoGroupId;
@@ -506,7 +507,7 @@ function ActionModal({
 
   const renderInputs = () => {
     switch (modal.action) {
-      case 'extend':
+      case 'extend_subscription':
         return (
           <div>
             <label className="mb-1.5 block text-sm font-medium text-dark-300">
@@ -781,19 +782,19 @@ function FloatingActionBar({
 
   const actions: ActionConfig[] = [
     {
-      type: 'extend',
+      type: 'extend_subscription',
       labelKey: 'admin.bulkActions.actions.extend',
       icon: <span aria-hidden="true">+</span>,
       colorClass: 'text-success-400 hover:bg-success-500/10',
     },
     {
-      type: 'activate',
+      type: 'activate_subscription',
       labelKey: 'admin.bulkActions.actions.activate',
       icon: <span aria-hidden="true">+</span>,
       colorClass: 'text-success-400 hover:bg-success-500/10',
     },
     {
-      type: 'cancel',
+      type: 'cancel_subscription',
       labelKey: 'admin.bulkActions.actions.cancel',
       icon: <span aria-hidden="true">-</span>,
       colorClass: 'text-error-400 hover:bg-error-500/10',
@@ -1073,18 +1074,29 @@ export default function AdminBulkActions() {
                 : prev.progress,
             }));
           } else if (event.type === 'complete') {
-            setModal((prev) => ({
-              ...prev,
-              loading: false,
-              progress: null,
-              result: {
-                success: event.success,
-                total: event.total,
-                success_count: event.success_count,
-                error_count: event.error_count,
-                errors: event.errors,
-              },
-            }));
+            setModal((prev) => {
+              // Build errors from accumulated progress log
+              const errors = (prev.progress?.log ?? [])
+                .filter((e) => !e.success)
+                .map((e) => ({
+                  user_id: e.user_id,
+                  username: e.username,
+                  error: e.message || e.error || '',
+                }));
+              return {
+                ...prev,
+                loading: false,
+                progress: null,
+                result: {
+                  success: event.error_count === 0,
+                  total: event.total,
+                  success_count: event.success_count,
+                  error_count: event.error_count,
+                  skipped_count: event.skipped_count || 0,
+                  errors,
+                },
+              };
+            });
             loadUsers();
           }
         },
@@ -1101,6 +1113,7 @@ export default function AdminBulkActions() {
               total: prev.progress.total,
               success_count: prev.progress.successCount,
               error_count: prev.progress.errorCount,
+              skipped_count: 0,
               errors: prev.progress.log
                 .filter((e) => !e.success)
                 .map((e) => ({
@@ -1126,6 +1139,7 @@ export default function AdminBulkActions() {
           total: totalCount,
           success_count: prev.progress?.successCount ?? 0,
           error_count: totalCount - (prev.progress?.successCount ?? 0),
+          skipped_count: 0,
           errors: [],
         },
       }));
