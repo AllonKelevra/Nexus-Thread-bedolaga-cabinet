@@ -1574,11 +1574,11 @@ export default function AdminBulkActions() {
       .then((d) => setPromoGroups(d.items))
       .catch(() => {});
     campaignsApi
-      .getCampaigns(true, 0, 200)
+      .getCampaigns(true, 0, 100)
       .then((d) => setCampaigns(d.campaigns))
       .catch(() => {});
     partnerApi
-      .getPartners({ limit: 200 })
+      .getPartners({ limit: 100 })
       .then((d) => setPartners(d.items))
       .catch(() => {});
   }, []);
