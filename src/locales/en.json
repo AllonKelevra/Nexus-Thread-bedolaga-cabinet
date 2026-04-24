@@ -1125,7 +1125,8 @@
       "salesStats": "Sales Statistics",
       "landings": "Landings",
       "referralNetwork": "Referral Network",
-      "news": "News"
+      "news": "News",
+      "bulkActions": "Bulk Actions"
     },
     "panel": {
       "title": "Admin Panel",
@@ -2019,6 +2020,62 @@
         "telegramOidcEnabled": "OIDC Enabled",
         "telegramOidcClientId": "Client ID (Bot ID)",
         "telegramOidcClientSecret": "Client Secret"
+      }
+    },
+    "bulkActions": {
+      "title": "Bulk Actions",
+      "subtitle": "User management",
+      "selectedCount": "Selected: {{count}}",
+      "selectAll": "Select all",
+      "deselectAll": "Deselect all",
+      "noResults": "No users found",
+      "actions": {
+        "extend": "Extend subscription",
+        "cancel": "Deactivate subscriptions",
+        "activate": "Activate subscriptions",
+        "changeTariff": "Change tariff",
+        "addTraffic": "Add traffic",
+        "addBalance": "Add balance",
+        "assignPromoGroup": "Assign promo group"
+      },
+      "params": {
+        "days": "Number of days",
+        "tariff": "Select tariff",
+        "trafficGb": "Traffic amount (GB)",
+        "balanceRub": "Amount (RUB)",
+        "promoGroup": "Promo group",
+        "removePromoGroup": "Remove promo group"
+      },
+      "confirm": "Apply",
+      "cancel": "Cancel",
+      "executing": "Executing...",
+      "complete": "Complete",
+      "successCount": "Succeeded: {{count}}",
+      "errorCount": "Errors: {{count}}",
+      "filters": {
+        "search": "Search by ID, username, email",
+        "status": "Subscription status",
+        "tariff": "Tariff",
+        "promoGroup": "Promo group",
+        "allStatuses": "All statuses",
+        "allTariffs": "All tariffs",
+        "allGroups": "All groups"
+      },
+      "statuses": {
+        "active": "Active",
+        "expired": "Expired",
+        "trial": "Trial",
+        "limited": "Limited",
+        "disabled": "Disabled"
+      },
+      "columns": {
+        "user": "User",
+        "status": "Status",
+        "tariff": "Tariff",
+        "balance": "Balance",
+        "daysRemaining": "Days",
+        "promoGroup": "Group",
+        "spent": "Spent"
       }
     },
     "theme": {

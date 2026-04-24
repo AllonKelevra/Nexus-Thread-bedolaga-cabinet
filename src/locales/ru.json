@@ -1146,7 +1146,8 @@
       "salesStats": "Статистика продаж",
       "landings": "Лендинги",
       "referralNetwork": "Реферальная сеть",
-      "news": "Новости"
+      "news": "Новости",
+      "bulkActions": "Массовые действия"
     },
     "panel": {
       "title": "Панель администратора",
@@ -3768,6 +3769,62 @@
       "tariffs": "Тарифы и продажи",
       "users": "Пользователи",
       "security": "Безопасность"
+    },
+    "bulkActions": {
+      "title": "Массовые действия",
+      "subtitle": "Управление пользователями",
+      "selectedCount": "Выбрано: {{count}}",
+      "selectAll": "Выбрать всех",
+      "deselectAll": "Снять выделение",
+      "noResults": "Пользователи не найдены",
+      "actions": {
+        "extend": "Продлить подписку",
+        "cancel": "Деактивировать подписки",
+        "activate": "Активировать подписки",
+        "changeTariff": "Сменить тариф",
+        "addTraffic": "Начислить трафик",
+        "addBalance": "Начислить баланс",
+        "assignPromoGroup": "Назначить промогруппу"
+      },
+      "params": {
+        "days": "Количество дней",
+        "tariff": "Выберите тариф",
+        "trafficGb": "Объём трафика (ГБ)",
+        "balanceRub": "Сумма (руб.)",
+        "promoGroup": "Промогруппа",
+        "removePromoGroup": "Убрать промогруппу"
+      },
+      "confirm": "Применить",
+      "cancel": "Отмена",
+      "executing": "Выполнение...",
+      "complete": "Выполнено",
+      "successCount": "Успешно: {{count}}",
+      "errorCount": "Ошибок: {{count}}",
+      "filters": {
+        "search": "Поиск по ID, нику, email",
+        "status": "Статус подписки",
+        "tariff": "Тариф",
+        "promoGroup": "Промогруппа",
+        "allStatuses": "Все статусы",
+        "allTariffs": "Все тарифы",
+        "allGroups": "Все группы"
+      },
+      "statuses": {
+        "active": "Активна",
+        "expired": "Истекла",
+        "trial": "Триал",
+        "limited": "Ограничена",
+        "disabled": "Отключена"
+      },
+      "columns": {
+        "user": "Пользователь",
+        "status": "Статус",
+        "tariff": "Тариф",
+        "balance": "Баланс",
+        "daysRemaining": "Дни",
+        "promoGroup": "Группа",
+        "spent": "Потрачено"
+      }
     },
     "theme": {
       "accentColor": "Акцентный цвет",

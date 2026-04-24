@@ -333,6 +333,12 @@ const icons = {
       <path d="M15 8h-5M15 12h-5" />
     </SvgIcon>
   ),
+  'list-checks': (
+    <SvgIcon>
+      <path d="M10 6h11M10 12h11M10 18h11" />
+      <path d="m3 6 1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2" />
+    </SvgIcon>
+  ),
   search: (
     <SvgIcon>
       <circle cx="11" cy="11" r="8" />
@@ -412,6 +418,12 @@ const sections: AdminSection[] = [
     gradient: 'linear-gradient(135deg, rgb(var(--color-accent-400)), rgb(var(--color-error-400)))',
     items: [
       { name: 'admin.nav.users', icon: 'users', to: '/admin/users', permission: 'users:read' },
+      {
+        name: 'admin.nav.bulkActions',
+        icon: 'list-checks',
+        to: '/admin/bulk-actions',
+        permission: 'users:read',
+      },
       {
         name: 'admin.nav.tickets',
         icon: 'ticket',
