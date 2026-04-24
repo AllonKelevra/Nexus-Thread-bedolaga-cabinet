@@ -148,6 +148,11 @@ const NewsArticlePage = lazyWithRetry(() => import('./pages/NewsArticle'));
 const AdminNews = lazyWithRetry(() => import('./pages/AdminNews'));
 const AdminNewsCreate = lazyWithRetry(() => import('./pages/AdminNewsCreate'));
 
+// Info pages
+const InfoPageView = lazyWithRetry(() => import('./pages/InfoPageView'));
+const AdminInfoPages = lazyWithRetry(() => import('./pages/AdminInfoPages'));
+const AdminInfoPageEditor = lazyWithRetry(() => import('./pages/AdminInfoPageEditor'));
+
 function ProtectedRoute({
   children,
   withLayout = true,
@@ -551,6 +556,16 @@ function App() {
             <ProtectedRoute>
               <LazyPage>
                 <NewsArticlePage />
+              </LazyPage>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/info/:slug"
+          element={
+            <ProtectedRoute>
+              <LazyPage>
+                <InfoPageView />
               </LazyPage>
             </ProtectedRoute>
           }
@@ -1276,6 +1291,38 @@ function App() {
             <PermissionRoute permission="news:edit">
               <LazyPage>
                 <AdminNewsCreate />
+              </LazyPage>
+            </PermissionRoute>
+          }
+        />
+
+        {/* Info pages admin routes */}
+        <Route
+          path="/admin/info-pages"
+          element={
+            <PermissionRoute permission="settings:read">
+              <LazyPage>
+                <AdminInfoPages />
+              </LazyPage>
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="/admin/info-pages/create"
+          element={
+            <PermissionRoute permission="settings:edit">
+              <LazyPage>
+                <AdminInfoPageEditor />
+              </LazyPage>
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="/admin/info-pages/:id/edit"
+          element={
+            <PermissionRoute permission="settings:edit">
+              <LazyPage>
+                <AdminInfoPageEditor />
               </LazyPage>
             </PermissionRoute>
           }

@@ -949,7 +949,8 @@
       "salesStats": "销售统计",
       "landings": "落地页",
       "referralNetwork": "推荐网络",
-      "news": "新闻"
+      "news": "新闻",
+      "infoPages": "信息页面"
     },
     "panel": {
       "title": "管理面板",
@@ -3365,6 +3366,37 @@
       "periodDaySuffix": "天",
       "localeTab": "语言",
       "localeHint": "切换语言以编辑该语言的文本"
+    },
+    "infoPages": {
+      "title": "信息页面",
+      "subtitle": "管理静态信息页面",
+      "create": "创建页面",
+      "edit": "编辑",
+      "save": "保存",
+      "saving": "保存中...",
+      "saved": "页面已保存",
+      "delete": "删除",
+      "confirmDelete": "确定删除此页面？",
+      "saveError": "保存页面失败，请重试。",
+      "noPages": "暂无信息页面",
+      "notFound": "页面未找到",
+      "active": "已激活",
+      "inactive": "未激活",
+      "localeLabel": "内容语言",
+      "fields": {
+        "slug": "URL标识",
+        "title": "标题",
+        "content": "内容",
+        "isActive": "已激活",
+        "sortOrder": "排序",
+        "icon": "图标（表情）"
+      },
+      "locales": {
+        "ru": "俄语",
+        "en": "英语",
+        "zh": "中文",
+        "fa": "波斯语"
+      }
     }
   },
   "adminUpdates": {

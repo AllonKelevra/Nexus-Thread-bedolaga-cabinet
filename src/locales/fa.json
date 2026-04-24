@@ -949,7 +949,8 @@
       "salesStats": "آمار فروش",
       "landings": "صفحات فرود",
       "referralNetwork": "شبکه ارجاع",
-      "news": "اخبار"
+      "news": "اخبار",
+      "infoPages": "صفحات اطلاعات"
     },
     "panel": {
       "title": "پنل مدیریت",
@@ -3366,6 +3367,37 @@
       "periodDaySuffix": "روز",
       "localeTab": "زبان",
       "localeHint": "زبان را تغییر دهید تا متن را به آن زبان ویرایش کنید"
+    },
+    "infoPages": {
+      "title": "صفحات اطلاعات",
+      "subtitle": "مدیریت صفحات اطلاعات ثابت",
+      "create": "ایجاد صفحه",
+      "edit": "ویرایش",
+      "save": "ذخیره",
+      "saving": "در حال ذخیره...",
+      "saved": "صفحه ذخیره شد",
+      "delete": "حذف",
+      "confirmDelete": "این صفحه حذف شود؟",
+      "saveError": "ذخیره صفحه ناموفق بود. لطفاً دوباره تلاش کنید.",
+      "noPages": "هنوز صفحه اطلاعاتی وجود ندارد",
+      "notFound": "صفحه پیدا نشد",
+      "active": "فعال",
+      "inactive": "غیرفعال",
+      "localeLabel": "زبان محتوا",
+      "fields": {
+        "slug": "شناسه URL",
+        "title": "عنوان",
+        "content": "محتوا",
+        "isActive": "فعال",
+        "sortOrder": "ترتیب",
+        "icon": "آیکون (ایموجی)"
+      },
+      "locales": {
+        "ru": "روسی",
+        "en": "انگلیسی",
+        "zh": "چینی",
+        "fa": "فارسی"
+      }
     }
   },
   "adminUpdates": {

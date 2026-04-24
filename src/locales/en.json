@@ -1126,7 +1126,8 @@
       "landings": "Landings",
       "referralNetwork": "Referral Network",
       "news": "News",
-      "bulkActions": "Bulk Actions"
+      "bulkActions": "Bulk Actions",
+      "infoPages": "Info Pages"
     },
     "panel": {
       "title": "Admin Panel",
@@ -3797,6 +3798,37 @@
         "page": "Page {{current}} of {{total}}",
         "prev": "Previous",
         "next": "Next"
+      }
+    },
+    "infoPages": {
+      "title": "Information Pages",
+      "subtitle": "Manage static information pages",
+      "create": "Create Page",
+      "edit": "Edit",
+      "save": "Save",
+      "saving": "Saving...",
+      "saved": "Page saved",
+      "delete": "Delete",
+      "confirmDelete": "Delete this page?",
+      "saveError": "Failed to save page. Please try again.",
+      "noPages": "No information pages yet",
+      "notFound": "Page not found",
+      "active": "Active",
+      "inactive": "Inactive",
+      "localeLabel": "Content Language",
+      "fields": {
+        "slug": "URL Slug",
+        "title": "Title",
+        "content": "Content",
+        "isActive": "Active",
+        "sortOrder": "Sort Order",
+        "icon": "Icon (emoji)"
+      },
+      "locales": {
+        "ru": "Russian",
+        "en": "English",
+        "zh": "Chinese",
+        "fa": "Persian"
       }
     }
   },
