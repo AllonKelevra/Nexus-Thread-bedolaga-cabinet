@@ -234,6 +234,296 @@ const PlusSmallIcon = () => (
   </svg>
 );
 
+// --- FAQ Answer Rich Editor ---
+
+const FAQ_EDITOR_EXTENSIONS = [
+  StarterKit.configure({
+    heading: { levels: [2, 3] },
+    link: false,
+    underline: false,
+  }),
+  UnderlineExtension,
+  LinkExtension.configure({ openOnClick: false, HTMLAttributes: { class: 'link' } }),
+  ImageExtension.configure({ HTMLAttributes: { class: 'rounded-xl max-w-full' } }),
+  PlaceholderExtension.configure({ placeholder: '' }),
+  TextAlignExtension.configure({ types: ['heading', 'paragraph'] }),
+  HighlightExtension,
+  VideoExtension,
+];
+
+function FaqAnswerEditor({ value, onChange }: { value: string; onChange: (html: string) => void }) {
+  const { t } = useTranslation();
+  const haptic = useHapticFeedback();
+  const mediaRef = useRef<HTMLInputElement>(null);
+  const [uploadCount, setUploadCount] = useState(0);
+  const isUploading = uploadCount > 0;
+  const [isDragging, setIsDragging] = useState(false);
+  const activeUploadsRef = useRef(new Set<AbortController>());
+  const suppressUpdate = useRef(false);
+
+  const editor = useEditor({
+    extensions: FAQ_EDITOR_EXTENSIONS,
+    content: value,
+    editorProps: {
+      attributes: {
+        class: 'prose prose-sm max-w-none min-h-[120px] p-3 focus:outline-none',
+      },
+    },
+    onUpdate: ({ editor: e }) => {
+      if (suppressUpdate.current) return;
+      const html = e.getHTML();
+      const isEmpty = html === '<p></p>' || html === '';
+      onChange(isEmpty ? '' : html);
+    },
+  });
+
+  // Sync external value changes (e.g., reorder, locale switch)
+  useEffect(() => {
+    if (!editor || editor.isDestroyed) return;
+    const currentHtml = editor.getHTML();
+    const normalizedCurrent = currentHtml === '<p></p>' ? '' : currentHtml;
+    if (normalizedCurrent !== value) {
+      suppressUpdate.current = true;
+      editor.commands.setContent(value || '');
+      suppressUpdate.current = false;
+    }
+  }, [value, editor]);
+
+  // Cleanup uploads on unmount
+  useEffect(() => {
+    const uploads = activeUploadsRef.current;
+    return () => {
+      for (const c of uploads) c.abort();
+      uploads.clear();
+    };
+  }, []);
+
+  const handleMediaUpload = useCallback(
+    async (file: File) => {
+      if (!editor) return;
+      const isImage = file.type.startsWith('image/');
+      const isVideo = file.type.startsWith('video/');
+      if (!isImage && !isVideo) return;
+      const maxSize = isImage ? 10 * 1024 * 1024 : 50 * 1024 * 1024;
+      if (file.size > maxSize) {
+        haptic.error();
+        return;
+      }
+      const controller = new AbortController();
+      activeUploadsRef.current.add(controller);
+      setUploadCount((c) => c + 1);
+      try {
+        const result = await newsApi.uploadMedia(file, controller.signal);
+        if (controller.signal.aborted) return;
+        if (!isSafeUrl(result.url)) return;
+        if (result.media_type === 'image') {
+          editor.chain().focus().setImage({ src: result.url, alt: file.name }).run();
+        } else {
+          editor
+            .chain()
+            .focus()
+            .insertContent({
+              type: 'video',
+              attrs: { src: result.url, class: 'w-full rounded-xl max-h-96' },
+            })
+            .run();
+        }
+        haptic.success();
+      } catch {
+        if (!controller.signal.aborted) haptic.error();
+      } finally {
+        activeUploadsRef.current.delete(controller);
+        setUploadCount((c) => c - 1);
+      }
+    },
+    [editor, haptic],
+  );
+
+  const handleMediaUploadRef = useRef(handleMediaUpload);
+  useEffect(() => {
+    handleMediaUploadRef.current = handleMediaUpload;
+  }, [handleMediaUpload]);
+
+  // Register paste/drop handlers after editor is created
+  useEffect(() => {
+    if (!editor) return;
+    const handlePaste = (_view: unknown, event: ClipboardEvent) => {
+      const items = event.clipboardData?.items;
+      if (!items) return false;
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith('image/') || item.type.startsWith('video/')) {
+          const file = item.getAsFile();
+          if (file) {
+            handleMediaUploadRef.current(file);
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+    const handleDrop = (_view: unknown, event: DragEvent) => {
+      const file = event.dataTransfer?.files[0];
+      if (file && (file.type.startsWith('image/') || file.type.startsWith('video/'))) {
+        event.preventDefault();
+        handleMediaUploadRef.current(file);
+        return true;
+      }
+      return false;
+    };
+    editor.setOptions({ editorProps: { ...editor.options.editorProps, handlePaste, handleDrop } });
+  }, [editor]);
+
+  const addLink = useCallback(() => {
+    const url = window.prompt(t('news.admin.toolbar.linkUrlPrompt'));
+    if (url && editor) {
+      try {
+        const parsed = new URL(url);
+        if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return;
+      } catch {
+        return;
+      }
+      editor.chain().focus().setLink({ href: url }).run();
+    }
+  }, [editor, t]);
+
+  if (!editor) return null;
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-dark-700 bg-dark-800/50">
+      {/* Upload overlay */}
+      {isUploading && (
+        <div className="flex items-center justify-center gap-2 bg-dark-900/60 px-3 py-2">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-accent-400 border-t-transparent" />
+          <span className="text-xs text-dark-300">{t('news.admin.uploading')}</span>
+        </div>
+      )}
+      {isDragging && !isUploading && (
+        <div className="flex items-center justify-center border-b border-dashed border-accent-400 bg-accent-400/10 px-3 py-2">
+          <span className="text-xs font-medium text-accent-400">{t('news.admin.dropMedia')}</span>
+        </div>
+      )}
+
+      {/* Compact toolbar */}
+      <div className="flex flex-wrap items-center gap-0.5 border-b border-dark-700 bg-dark-800 px-1.5 py-1">
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleBold().run()}
+          isActive={editor.isActive('bold')}
+          title={t('news.admin.toolbar.bold')}
+        >
+          <BoldIcon />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleItalic().run()}
+          isActive={editor.isActive('italic')}
+          title={t('news.admin.toolbar.italic')}
+        >
+          <ItalicIcon />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleUnderline().run()}
+          isActive={editor.isActive('underline')}
+          title={t('news.admin.toolbar.underline')}
+        >
+          <UnderlineIcon />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleStrike().run()}
+          isActive={editor.isActive('strike')}
+          title={t('news.admin.toolbar.strikethrough')}
+        >
+          <StrikeIcon />
+        </ToolbarButton>
+        <div className="mx-0.5 h-4 w-px bg-dark-700" />
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          isActive={editor.isActive('heading', { level: 2 })}
+          title={t('news.admin.toolbar.heading2')}
+        >
+          <H2Icon />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleBulletList().run()}
+          isActive={editor.isActive('bulletList')}
+          title={t('news.admin.toolbar.bulletList')}
+        >
+          <ListBulletIcon />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          isActive={editor.isActive('orderedList')}
+          title={t('news.admin.toolbar.orderedList')}
+        >
+          <ListOrderedIcon />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          isActive={editor.isActive('blockquote')}
+          title={t('news.admin.toolbar.blockquote')}
+        >
+          <QuoteIcon />
+        </ToolbarButton>
+        <div className="mx-0.5 h-4 w-px bg-dark-700" />
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleHighlight().run()}
+          isActive={editor.isActive('highlight')}
+          title={t('news.admin.toolbar.highlight')}
+        >
+          <HighlightIcon />
+        </ToolbarButton>
+        <ToolbarButton onClick={addLink} title={t('news.admin.toolbar.link')}>
+          <LinkIcon />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => mediaRef.current?.click()}
+          disabled={isUploading}
+          title={t('news.admin.toolbar.image')}
+        >
+          {isUploading ? (
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-accent-400 border-t-transparent" />
+          ) : (
+            <ImageIcon />
+          )}
+        </ToolbarButton>
+      </div>
+
+      {/* Editor */}
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          setIsDragging(true);
+        }}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          setIsDragging(false);
+        }}
+        onDrop={(e) => {
+          setIsDragging(false);
+          if (e.defaultPrevented) return;
+          e.preventDefault();
+          const file = e.dataTransfer.files[0];
+          if (file) handleMediaUpload(file);
+        }}
+      >
+        <EditorContent editor={editor} />
+      </div>
+
+      {/* Hidden file input */}
+      <input
+        ref={mediaRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,video/mp4,video/webm"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleMediaUpload(file);
+          e.target.value = '';
+        }}
+        className="hidden"
+        aria-hidden="true"
+      />
+    </div>
+  );
+}
+
 // --- FAQ Q&A Builder ---
 interface FaqBuilderProps {
   items: FaqItem[];
@@ -367,14 +657,10 @@ function FaqBuilder({ items, onChange, locale, localeLabel }: FaqBuilderProps) {
               <label className="mb-1 block text-xs font-medium text-dark-400">
                 {t('admin.infoPages.faq.answer')}
               </label>
-              <textarea
+              <FaqAnswerEditor
                 value={item.a}
-                onChange={(e) => handleAnswerChange(index, e.target.value)}
-                className="input min-h-[80px] text-sm"
-                placeholder={t('admin.infoPages.faq.answerPlaceholder')}
-                rows={3}
+                onChange={(html) => handleAnswerChange(index, html)}
               />
-              <p className="mt-1 text-[10px] text-dark-500">{t('admin.infoPages.faq.htmlHint')}</p>
             </div>
           </div>
         </div>
