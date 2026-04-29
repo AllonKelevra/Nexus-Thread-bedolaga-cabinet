@@ -38,6 +38,7 @@ export interface UserListItemSubscription {
   tariff_id: number | null;
   tariff_name: string | null;
   status: string;
+  is_trial: boolean;
   end_date: string | null;
   days_remaining: number;
   traffic_used_gb: number;
