@@ -820,15 +820,17 @@ export default function QuickPurchase() {
     if (config?.discount) setDiscountExpired(false);
   }, [config?.discount]);
 
-  // Save document.referrer on mount (before SPA navigation loses it)
+  // Save document.referrer on mount (before SPA navigation loses it).
+  // Clamp to 500 chars -- backend `referrer` column is max_length=500 and would
+  // otherwise reject long ad-click referrers (gclid+gbraid+params) with 422.
   useEffect(() => {
     if (document.referrer && !sessionStorage.getItem('landing_referrer')) {
-      sessionStorage.setItem('landing_referrer', document.referrer);
+      sessionStorage.setItem('landing_referrer', document.referrer.slice(0, 500));
     }
-    // Save subid from URL
+    // Save subid from URL (also clamped to backend limit of 255)
     const urlSubid = new URLSearchParams(window.location.search).get('subid');
     if (urlSubid) {
-      sessionStorage.setItem('landing_subid', urlSubid);
+      sessionStorage.setItem('landing_subid', urlSubid.slice(0, 255));
     }
   }, []);
 
@@ -854,7 +856,14 @@ export default function QuickPurchase() {
   // Selection state
   const [selectedTariffId, setSelectedTariffId] = useState<number | null>(null);
   const [selectedPeriodDays, setSelectedPeriodDays] = useState<number | null>(null);
-  const [contactValue, setContactValue] = useState(() => localStorage.getItem('lp_contact') || '');
+  const contactKey = `lp_contact_${slug ?? ''}`;
+  const [contactValue, setContactValue] = useState(() => {
+    try {
+      return localStorage.getItem(contactKey) || '';
+    } catch {
+      return '';
+    }
+  });
   const [isGift, setIsGift] = useState(false);
   const [giftRecipient, setGiftRecipient] = useState('');
   const [giftMessage, setGiftMessage] = useState('');
@@ -1157,7 +1166,11 @@ export default function QuickPurchase() {
               contactValue={contactValue}
               onContactChange={(v) => {
                 setContactValue(v);
-                localStorage.setItem('lp_contact', v);
+                try {
+                  localStorage.setItem(contactKey, v);
+                } catch {
+                  /* */
+                }
                 setSubmitError(null);
               }}
               isGift={isGift}
