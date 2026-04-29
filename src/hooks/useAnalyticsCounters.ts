@@ -12,6 +12,7 @@ function removeElement(id: string) {
 }
 
 function injectYandexMetrika(counterId: string) {
+  if (!/^\d{1,15}$/.test(counterId)) return;
   try {
     localStorage.setItem('ym_counter_id', counterId);
   } catch {
@@ -38,6 +39,7 @@ function injectYandexMetrika(counterId: string) {
 }
 
 function injectGoogleAds(conversionId: string) {
+  if (!/^[A-Za-z0-9_-]{1,30}$/.test(conversionId)) return;
   if (document.getElementById(GTAG_LOADER_ID)) return;
 
   // External gtag.js loader
