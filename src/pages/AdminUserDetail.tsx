@@ -1355,6 +1355,12 @@ export default function AdminUserDetail() {
               </div>
               <div className="rounded-xl bg-dark-800/50 p-3">
                 <div className="mb-1 text-xs text-dark-500">
+                  {t('admin.users.detail.cabinetLastLogin')}
+                </div>
+                <div className="text-dark-100">{formatDate(user.cabinet_last_login)}</div>
+              </div>
+              <div className="rounded-xl bg-dark-800/50 p-3">
+                <div className="mb-1 text-xs text-dark-500">
                   {t('admin.users.detail.totalSpent')}
                 </div>
                 <div className="text-dark-100">
