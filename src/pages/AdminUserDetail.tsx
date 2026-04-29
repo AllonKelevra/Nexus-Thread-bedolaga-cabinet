@@ -390,6 +390,7 @@ export default function AdminUserDetail() {
   const [requestHistoryOffset, setRequestHistoryOffset] = useState(0);
   const [requestHistoryTotal, setRequestHistoryTotal] = useState(0);
   const [requestHistoryExpanded, setRequestHistoryExpanded] = useState(false);
+  const [requestHistorySubId, setRequestHistorySubId] = useState<number | null>(null);
 
   const userId = id ? parseInt(id, 10) : null;
 
@@ -498,7 +499,7 @@ export default function AdminUserDetail() {
         setRequestHistoryLoading(true);
         const data = await adminUsersApi.getSubscriptionRequestHistory(
           userId,
-          activeSubscriptionId ?? undefined,
+          requestHistorySubId ?? undefined,
           offset,
           20,
         );
@@ -511,7 +512,7 @@ export default function AdminUserDetail() {
         setRequestHistoryLoading(false);
       }
     },
-    [userId, activeSubscriptionId],
+    [userId, requestHistorySubId],
   );
 
   const loadNodeUsage = useCallback(async () => {
@@ -606,8 +607,22 @@ export default function AdminUserDetail() {
       return;
     }
     loadUser();
+  }, [userId, loadUser, navigate]);
+
+  // Load panel info when subscription changes (separate from mount to avoid redundant loadUser)
+  useEffect(() => {
+    if (!userId || isNaN(userId)) return;
     loadPanelInfo();
-  }, [userId, loadUser, loadPanelInfo, navigate]);
+  }, [userId, loadPanelInfo]);
+
+  // Reload request history when the request-history subscription selector changes
+  useEffect(() => {
+    if (!requestHistoryExpanded || requestHistorySubId === null) return;
+    setRequestHistory([]);
+    setRequestHistoryOffset(0);
+    setRequestHistoryTotal(0);
+    loadRequestHistory(0);
+  }, [requestHistorySubId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (activeTab === 'info') {
@@ -860,6 +875,7 @@ export default function AdminUserDetail() {
     if (user && userSubscriptions.length > 0 && !hasAutoSelectedSub.current) {
       const activeSub = userSubscriptions.find((s) => s.is_active) ?? userSubscriptions[0];
       setActiveSubscriptionId(activeSub.id);
+      setRequestHistorySubId(activeSub.id);
       hasAutoSelectedSub.current = true;
     }
   }, [user, userSubscriptions]);
@@ -2511,13 +2527,9 @@ export default function AdminUserDetail() {
                       {userSubscriptions.length > 1 && (
                         <div className="mb-3">
                           <select
-                            value={activeSubscriptionId || ''}
+                            value={requestHistorySubId || ''}
                             onChange={(e) => {
-                              const subId = Number(e.target.value) || null;
-                              setActiveSubscriptionId(subId);
-                              setRequestHistory([]);
-                              setRequestHistoryOffset(0);
-                              setRequestHistoryTotal(0);
+                              setRequestHistorySubId(Number(e.target.value) || null);
                             }}
                             className="w-full rounded-lg border border-dark-600 bg-dark-700 px-3 py-2 text-sm text-dark-100"
                           >
