@@ -1709,7 +1709,9 @@
         "telegramOidcEnabled": "启用 OIDC",
         "telegramOidcClientId": "Client ID（机器人 ID）",
         "telegramOidcClientSecret": "Client Secret"
-      }
+      },
+      "offlineConv": "\u79bb\u7ebf\u8f6c\u5316",
+      "apiKey": "API \u5bc6\u94a5"
     },
     "buttons": {
       "color": "按钮颜色",
