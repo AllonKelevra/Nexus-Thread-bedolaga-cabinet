@@ -6,6 +6,7 @@ import { rbacApi } from '@/api/rbac';
 import { PermissionGate } from '@/components/auth/PermissionGate';
 import { usePermissionStore } from '@/store/permissions';
 import { usePlatform } from '@/platform/hooks/usePlatform';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 const BackIcon = () => (
   <svg
@@ -64,6 +65,9 @@ export default function AdminRoles() {
 
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const deleteDialogRef = useFocusTrap<HTMLDivElement>(deleteConfirm !== null, {
+    onEscape: () => setDeleteConfirm(null),
+  });
 
   // Queries
   const {
@@ -248,8 +252,15 @@ export default function AdminRoles() {
             onClick={() => setDeleteConfirm(null)}
             aria-hidden="true"
           />
-          <div className="relative w-full max-w-sm rounded-xl border border-dark-700 bg-dark-800 p-6">
-            <h3 className="mb-2 text-lg font-semibold text-dark-100">
+          <div
+            ref={deleteDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="role-delete-title"
+            tabIndex={-1}
+            className="relative w-full max-w-sm rounded-xl border border-dark-700 bg-dark-800 p-6"
+          >
+            <h3 id="role-delete-title" className="mb-2 text-lg font-semibold text-dark-100">
               {t('admin.roles.confirm.title')}
             </h3>
             <p className="mb-6 text-dark-400">{t('admin.roles.confirm.text')}</p>

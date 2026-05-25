@@ -24,7 +24,7 @@ import { AppWithNavigator } from './AppWithNavigator';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { initLogoPreload } from './api/branding';
 import { getCachedFullscreenEnabled, isTelegramMobile } from './hooks/useTelegramSDK';
-import './i18n';
+import { applyTelegramLanguage } from './i18n';
 import './styles/globals.css';
 
 // Polyfill Object.hasOwn for older iOS/Android WebViews (Safari < 15.4, old Chrome).
@@ -54,6 +54,9 @@ if (isTelegramEnv && !alreadyInitialized) {
     restoreInitData();
 
     clearStaleSessionIfNeeded(retrieveRawInitData() || null);
+
+    // Adopt the user's Telegram client language on first run (no explicit choice yet).
+    applyTelegramLanguage();
 
     // Each mount in its own try/catch so one failure doesn't block others.
     // mountMiniApp() internally mounts themeParams in SDK v3,

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AdminBackButton } from '../components/admin/AdminBackButton';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import {
   banSystemApi,
   type BanSystemStatus,
@@ -198,6 +199,9 @@ export default function AdminBanSystem() {
   const [stats, setStats] = useState<BanSystemStats | null>(null);
   const [users, setUsers] = useState<BanUsersListResponse | null>(null);
   const [selectedUser, setSelectedUser] = useState<BanUserDetailResponse | null>(null);
+  const userDetailRef = useFocusTrap<HTMLDivElement>(selectedUser !== null, {
+    onEscape: () => setSelectedUser(null),
+  });
   const [punishments, setPunishments] = useState<BanPunishmentsListResponse | null>(null);
   const [nodes, setNodes] = useState<BanNodesListResponse | null>(null);
   const [agents, setAgents] = useState<BanAgentsListResponse | null>(null);
@@ -1498,15 +1502,21 @@ export default function AdminBanSystem() {
           onClick={() => setSelectedUser(null)}
         >
           <div
+            ref={userDetailRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ban-user-detail-title"
+            tabIndex={-1}
             className="max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-dark-700 bg-dark-800"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-dark-700 p-4">
-              <h3 className="text-lg font-semibold text-dark-100">
+              <h3 id="ban-user-detail-title" className="text-lg font-semibold text-dark-100">
                 {t('banSystem.userDetail.title')}
               </h3>
               <button
                 onClick={() => setSelectedUser(null)}
+                aria-label={t('common.close')}
                 className="text-dark-400 hover:text-dark-200"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

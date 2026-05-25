@@ -1,6 +1,7 @@
 import i18n, { type ResourceLanguage } from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
+import { getTelegramLanguageCode } from './hooks/useTelegramSDK';
 
 const localeLoaders: Record<string, () => Promise<{ default: ResourceLanguage }>> = {
   ru: () => import('./locales/ru.json'),
@@ -11,6 +12,7 @@ const localeLoaders: Record<string, () => Promise<{ default: ResourceLanguage }>
 
 const SUPPORTED_LANGS = Object.keys(localeLoaders);
 const FALLBACK_LNG = 'ru';
+const LANGUAGE_STORAGE_KEY = 'cabinet_language';
 
 const loadedLanguages = new Set<string>();
 
@@ -60,5 +62,22 @@ i18n.on('languageChanged', (lng: string) => {
   const code = lng.split('-')[0];
   loadLanguage(code);
 });
+
+/**
+ * On first run inside Telegram (no explicit stored choice), adopt the user's
+ * Telegram client language. Must be called after the Telegram SDK is initialised
+ * (e.g. from main.tsx), since launch params are unavailable before init().
+ */
+export function applyTelegramLanguage(): void {
+  try {
+    if (localStorage.getItem(LANGUAGE_STORAGE_KEY)) return; // explicit choice wins
+  } catch {
+    return;
+  }
+  const code = getTelegramLanguageCode();
+  if (code && SUPPORTED_LANGS.includes(code) && i18n.language?.split('-')[0] !== code) {
+    i18n.changeLanguage(code);
+  }
+}
 
 export default i18n;
