@@ -12,6 +12,7 @@ import UnderlineExtension from '@tiptap/extension-underline';
 import HighlightExtension from '@tiptap/extension-highlight';
 import { VideoExtension } from '../lib/tiptap-video';
 import { newsApi } from '../api/news';
+import { usePrompt } from '../store/promptDialog';
 import { AdminBackButton } from '../components/admin';
 import { ColoredItemCombobox } from '../components/admin/ColoredItemCombobox';
 import { Toggle } from '../components/admin/Toggle';
@@ -601,17 +602,21 @@ export default function AdminNewsCreate() {
   };
 
   // Toolbar actions
-  const addLink = () => {
-    const url = window.prompt(t('news.admin.toolbar.linkUrlPrompt'));
-    if (url && editor) {
-      try {
-        const parsed = new URL(url);
-        if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return;
-      } catch {
-        return;
-      }
-      editor.chain().focus().setLink({ href: url }).run();
+  const promptDialog = usePrompt();
+  const addLink = async () => {
+    if (!editor) return;
+    const url = await promptDialog({
+      label: t('news.admin.toolbar.linkUrlPrompt'),
+      inputType: 'url',
+    });
+    if (!url) return;
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return;
+    } catch {
+      return;
     }
+    editor.chain().focus().setLink({ href: url }).run();
   };
 
   if (isEdit && isLoadingArticle) {

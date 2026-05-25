@@ -66,7 +66,7 @@ export default function VerifyEmail() {
   }, [searchParams, t, navigate, setTokens, setUser, checkAdminStatus]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-8 sm:py-12">
+    <div className="min-h-viewport flex items-center justify-center bg-gray-50 px-4 py-8 sm:py-12">
       {/* Language switcher in corner */}
       <div className="fixed right-4 top-4 z-50">
         <LanguageSwitcher />

@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router';
 import { useSuccessNotification } from '../store/successNotification';
 import { useCurrency } from '../hooks/useCurrency';
 import { useTelegramSDK } from '../hooks/useTelegramSDK';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useHaptic } from '@/platform';
 
 // Icons
@@ -92,6 +93,9 @@ export default function SuccessNotificationModal() {
   const handleClose = useCallback(() => {
     hide();
   }, [hide]);
+
+  // Esc + scroll-lock are handled by the effects below; the trap only manages focus.
+  const modalRef = useFocusTrap<HTMLDivElement>(isOpen, { lockScroll: false });
 
   // Escape key to close
   useEffect(() => {
@@ -205,6 +209,11 @@ export default function SuccessNotificationModal() {
 
       {/* Modal */}
       <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="success-modal-title"
+        tabIndex={-1}
         className="relative mx-4 w-full max-w-sm overflow-hidden rounded-3xl border border-dark-700/50 bg-dark-900 shadow-2xl"
         style={{
           marginBottom: safeBottom ? `${safeBottom}px` : undefined,
@@ -214,6 +223,7 @@ export default function SuccessNotificationModal() {
         {/* Close button */}
         <button
           onClick={handleClose}
+          aria-label={t('common.close')}
           className="absolute right-3 top-3 z-10 rounded-xl p-2 text-dark-400 transition-colors hover:bg-dark-800 hover:text-dark-200"
         >
           <CloseIcon />
@@ -224,7 +234,9 @@ export default function SuccessNotificationModal() {
           className={`flex flex-col items-center bg-gradient-to-br ${gradientClass} px-6 pb-8 pt-10`}
         >
           <div className="mb-4 animate-bounce text-white">{icon}</div>
-          <h2 className="text-center text-2xl font-bold text-white">{title}</h2>
+          <h2 id="success-modal-title" className="text-center text-2xl font-bold text-white">
+            {title}
+          </h2>
           {message && <p className="mt-2 text-center text-white/80">{message}</p>}
         </div>
 

@@ -13,6 +13,7 @@ import HighlightExtension from '@tiptap/extension-highlight';
 import { VideoExtension } from '../lib/tiptap-video';
 import { infoPagesApi } from '../api/infoPages';
 import { newsApi } from '../api/news';
+import { usePrompt } from '../store/promptDialog';
 import { AdminBackButton } from '../components/admin';
 import { Toggle } from '../components/admin/Toggle';
 import { useHapticFeedback } from '../platform/hooks/useHaptic';
@@ -372,18 +373,23 @@ function FaqAnswerEditor({ value, onChange }: { value: string; onChange: (html: 
     editor.setOptions({ editorProps: { ...editor.options.editorProps, handlePaste, handleDrop } });
   }, [editor]);
 
-  const addLink = useCallback(() => {
-    const url = window.prompt(t('news.admin.toolbar.linkUrlPrompt'));
-    if (url && editor) {
-      try {
-        const parsed = new URL(url);
-        if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return;
-      } catch {
-        return;
-      }
-      editor.chain().focus().setLink({ href: url }).run();
+  const promptDialog = usePrompt();
+
+  const addLink = useCallback(async () => {
+    if (!editor) return;
+    const url = await promptDialog({
+      label: t('news.admin.toolbar.linkUrlPrompt'),
+      inputType: 'url',
+    });
+    if (!url) return;
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return;
+    } catch {
+      return;
     }
-  }, [editor, t]);
+    editor.chain().focus().setLink({ href: url }).run();
+  }, [editor, t, promptDialog]);
 
   if (!editor) return null;
 
@@ -1070,17 +1076,21 @@ export default function AdminInfoPageEditor() {
   };
 
   // Toolbar actions
-  const addLink = () => {
-    const url = window.prompt(t('news.admin.toolbar.linkUrlPrompt'));
-    if (url && editor) {
-      try {
-        const parsed = new URL(url);
-        if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return;
-      } catch {
-        return;
-      }
-      editor.chain().focus().setLink({ href: url }).run();
+  const promptDialog = usePrompt();
+  const addLink = async () => {
+    if (!editor) return;
+    const url = await promptDialog({
+      label: t('news.admin.toolbar.linkUrlPrompt'),
+      inputType: 'url',
+    });
+    if (!url) return;
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return;
+    } catch {
+      return;
     }
+    editor.chain().focus().setLink({ href: url }).run();
   };
 
   if (isEdit && isLoadingPage) {

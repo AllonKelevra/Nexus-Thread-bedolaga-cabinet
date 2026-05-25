@@ -11,6 +11,7 @@ import {
 } from '../../api/buttonStyles';
 import { Toggle } from './Toggle';
 import { useNotify } from '../../platform/hooks/useNotify';
+import { useNativeDialog } from '../../platform/hooks/useNativeDialog';
 
 type StyleValue = 'primary' | 'success' | 'danger' | 'default';
 
@@ -42,6 +43,7 @@ export function ButtonsTab() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const notify = useNotify();
+  const { confirm: confirmDialog } = useNativeDialog();
 
   const { data: serverStyles } = useQuery({
     queryKey: ['button-styles'],
@@ -341,8 +343,8 @@ export function ButtonsTab() {
       {/* Reset */}
       <div className="flex justify-end">
         <button
-          onClick={() => {
-            if (window.confirm(t('admin.buttons.resetConfirm'))) {
+          onClick={async () => {
+            if (await confirmDialog(t('admin.buttons.resetConfirm'))) {
               resetMutation.mutate();
             }
           }}

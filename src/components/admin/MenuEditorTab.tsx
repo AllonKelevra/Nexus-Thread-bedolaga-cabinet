@@ -29,6 +29,7 @@ import {
 } from '../../api/menuLayout';
 import { Toggle } from './Toggle';
 import { useNotify } from '../../platform/hooks/useNotify';
+import { useNativeDialog } from '../../platform/hooks/useNativeDialog';
 
 const GripIcon = () => (
   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -532,6 +533,7 @@ export function MenuEditorTab() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const notify = useNotify();
+  const { confirm: confirmDialog } = useNativeDialog();
 
   // Fetch config
   const {
@@ -868,8 +870,8 @@ export function MenuEditorTab() {
       {/* Reset */}
       <div className="flex justify-end">
         <button
-          onClick={() => {
-            if (window.confirm(t('admin.menuEditor.resetConfirm'))) {
+          onClick={async () => {
+            if (await confirmDialog(t('admin.menuEditor.resetConfirm'))) {
               resetMutation.mutate();
             }
           }}

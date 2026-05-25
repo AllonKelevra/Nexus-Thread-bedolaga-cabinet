@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { rbacApi, AccessPolicy, AdminRole } from '@/api/rbac';
 import { PermissionGate } from '@/components/auth/PermissionGate';
 import { usePlatform } from '@/platform/hooks/usePlatform';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 const BackIcon = () => (
   <svg
@@ -155,6 +156,9 @@ export default function AdminPolicies() {
   const { capabilities } = usePlatform();
 
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+  const deleteDialogRef = useFocusTrap<HTMLDivElement>(deleteConfirm !== null, {
+    onEscape: () => setDeleteConfirm(null),
+  });
   const [formError, setFormError] = useState<string | null>(null);
 
   // Queries
@@ -449,8 +453,15 @@ export default function AdminPolicies() {
             onClick={() => setDeleteConfirm(null)}
             aria-hidden="true"
           />
-          <div className="relative w-full max-w-sm rounded-xl border border-dark-700 bg-dark-800 p-6">
-            <h3 className="mb-2 text-lg font-semibold text-dark-100">
+          <div
+            ref={deleteDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="policy-delete-title"
+            tabIndex={-1}
+            className="relative w-full max-w-sm rounded-xl border border-dark-700 bg-dark-800 p-6"
+          >
+            <h3 id="policy-delete-title" className="mb-2 text-lg font-semibold text-dark-100">
               {t('admin.policies.confirm.title')}
             </h3>
             <p className="mb-6 text-dark-400">{t('admin.policies.confirm.text')}</p>

@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { adminApi, AdminTicket, AdminTicketDetail } from '../api/admin';
 import { ticketsApi } from '../api/tickets';
+import { copyToClipboard as copyText } from '../utils/clipboard';
 import { usePlatform } from '../platform/hooks/usePlatform';
 
 interface MediaAttachment {
@@ -257,14 +258,7 @@ export default function AdminTickets() {
   };
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text).catch(() => {
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-    });
+    void copyText(text);
   };
 
   return (

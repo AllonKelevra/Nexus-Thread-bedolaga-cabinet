@@ -139,7 +139,7 @@ export default function TelegramRedirect() {
   }, [status]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <div className="min-h-viewport flex items-center justify-center p-4">
       {/* Background */}
       <div className="fixed inset-0 bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950" />
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-accent-500/10 via-transparent to-transparent" />

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { usePlatform } from '@/platform';
+import { copyToClipboard } from '@/utils/clipboard';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../store/auth';
@@ -115,7 +116,7 @@ export default function Profile() {
 
   const copyReferralLink = () => {
     if (referralLink) {
-      navigator.clipboard.writeText(referralLink);
+      void copyToClipboard(referralLink);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -140,7 +141,7 @@ export default function Profile() {
     }
 
     const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareText)}`;
-    window.open(telegramUrl, '_blank', 'noopener,noreferrer');
+    openTelegramLink(telegramUrl);
   };
 
   const resendVerificationMutation = useMutation({
@@ -224,7 +225,7 @@ export default function Profile() {
   }, [verificationResendCooldown]);
 
   // Auto-focus inputs on step change (skip on Telegram — keyboard hides bottom nav)
-  const { platform: profilePlatform } = usePlatform();
+  const { platform: profilePlatform, openTelegramLink } = usePlatform();
   useEffect(() => {
     if (profilePlatform === 'telegram') return;
     const timer = setTimeout(() => {

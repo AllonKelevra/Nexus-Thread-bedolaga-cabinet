@@ -1111,6 +1111,18 @@ img.twemoji {
 }
 
 @layer utilities {
+  /* Viewport height — correct across web (dvh) and Telegram Mini App.
+     main.tsx binds --tg-viewport-stable-height via bindViewportCssVars();
+     on the standalone web build the var is undefined and falls back to 100dvh. */
+  .min-h-viewport {
+    min-height: 100dvh;
+    min-height: var(--tg-viewport-stable-height, 100dvh);
+  }
+  .h-viewport {
+    height: 100dvh;
+    height: var(--tg-viewport-stable-height, 100dvh);
+  }
+
   /* Text gradient */
   .text-gradient {
     @apply bg-gradient-to-r from-accent-400 to-accent-600 bg-clip-text text-transparent;

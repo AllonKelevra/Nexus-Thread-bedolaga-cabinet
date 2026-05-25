@@ -5,6 +5,7 @@ import i18n from '../i18n';
 import { DEVICE_ALIAS_MAX_LENGTH } from '../constants/devices';
 import { useCurrency } from '../hooks/useCurrency';
 import { useNotify } from '../platform/hooks/useNotify';
+import { copyToClipboard as copyText } from '../utils/clipboard';
 import {
   adminUsersApi,
   type UserDetailResponse,
@@ -1220,7 +1221,7 @@ export default function AdminUserDetail() {
 
   const copyToClipboard = async (text: string) => {
     try {
-      await navigator.clipboard.writeText(text);
+      await copyText(text);
       notify.success(t('admin.users.detail.copied'));
     } catch {}
   };

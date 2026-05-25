@@ -137,7 +137,7 @@ export default function Contests() {
 
                 {/* Render game based on type */}
                 {(gameData.game_type === 'quest' || gameData.game_type === 'locks') && (
-                  <div className="grid grid-cols-5 gap-2">
+                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
                     {Array.from({
                       length: gameData.game_data.total || gameData.game_data.grid_size || 9,
                     }).map((_, i) => (
@@ -154,7 +154,7 @@ export default function Contests() {
                 )}
 
                 {gameData.game_type === 'server' && (
-                  <div className="grid grid-cols-5 gap-2">
+                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
                     {gameData.game_data.flags?.map((flag: string, i: number) => (
                       <button
                         key={i}

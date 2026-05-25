@@ -368,6 +368,10 @@ export default function Wheel() {
     setIsPayingStars(true);
     // In browser: pre-open window synchronously (direct user gesture) to avoid popup blocker
     if (!capabilities.hasInvoice) {
+      // Web-only: synchronously pre-open a tab during the user gesture to dodge the
+      // popup blocker before the async invoice URL resolves. Not reached in Telegram
+      // (hasInvoice is true there, so the native invoice flow is used instead).
+      // eslint-disable-next-line no-restricted-properties
       preOpenedWindowRef.current = window.open('about:blank', '_blank') || null;
     }
     starsInvoiceMutation.mutate();

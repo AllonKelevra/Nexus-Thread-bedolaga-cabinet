@@ -142,7 +142,7 @@ export function SettingsTableRow({
             <button
               onClick={onReset}
               disabled={isResetting}
-              className="flex-shrink-0 rounded-lg p-1.5 text-dark-500 opacity-0 transition-all hover:bg-dark-700 hover:text-dark-200 disabled:opacity-50 group-hover:opacity-100 max-lg:opacity-100"
+              className="flex-shrink-0 rounded-lg p-1.5 text-dark-500 opacity-0 transition-all hover:bg-dark-700 hover:text-dark-200 disabled:opacity-50 group-focus-within:opacity-100 group-hover:opacity-100 max-lg:opacity-100 [@media(hover:none)]:opacity-100"
               title={t('admin.settings.reset')}
               aria-label={t('admin.settings.reset')}
             >
@@ -157,7 +157,7 @@ export function SettingsTableRow({
               'flex-shrink-0 rounded-lg p-1.5 transition-all',
               isFavorite
                 ? 'text-warning-400 hover:bg-warning-500/15'
-                : 'text-dark-500 opacity-0 hover:bg-dark-700/50 hover:text-warning-400 group-hover:opacity-100 max-lg:opacity-100',
+                : 'text-dark-500 opacity-0 hover:bg-dark-700/50 hover:text-warning-400 group-focus-within:opacity-100 group-hover:opacity-100 max-lg:opacity-100 [@media(hover:none)]:opacity-100',
             )}
             title={
               isFavorite

@@ -13,6 +13,7 @@ import { staggerContainer, staggerItem } from '@/components/motion/transitions';
 import type { PaymentMethod, PaymentMethodOption } from '../types';
 import BentoCard from '../components/ui/BentoCard';
 import { saveTopUpPendingInfo } from '../utils/topUpStorage';
+import { copyToClipboard } from '@/utils/clipboard';
 
 // Icons
 const StarIcon = () => (
@@ -400,7 +401,7 @@ export default function TopUpAmount() {
   const handleCopyUrl = async () => {
     if (!paymentUrl) return;
     try {
-      await navigator.clipboard.writeText(paymentUrl);
+      await copyToClipboard(paymentUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -522,7 +523,7 @@ export default function TopUpAmount() {
 
       {/* Quick amount buttons */}
       {quickAmounts.length > 0 && (
-        <motion.div variants={staggerItem} className="grid grid-cols-4 gap-2">
+        <motion.div variants={staggerItem} className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {quickAmounts.map((a) => {
             const val = getQuickValue(a);
             const isSelected = amount === val;

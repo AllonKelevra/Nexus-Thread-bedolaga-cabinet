@@ -1,6 +1,7 @@
 import { useMemo, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 interface PreviewButton {
   text: string;
@@ -185,6 +186,7 @@ export function TelegramPreview({
 }: TelegramPreviewProps) {
   const { t } = useTranslation();
   const rendered = useMemo(() => tokensToReact(tokenize(text)), [text]);
+  const dialogRef = useFocusTrap<HTMLDivElement>(open, { onEscape: onClose });
   if (!open) return null;
   return createPortal(
     <div
@@ -192,6 +194,11 @@ export function TelegramPreview({
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t('admin.broadcasts.preview', 'Предпросмотр Telegram')}
+        tabIndex={-1}
         className="w-full max-w-md rounded-2xl bg-[#17212b] p-4 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
@@ -199,7 +206,11 @@ export function TelegramPreview({
           <h3 className="text-base font-semibold text-white">
             {t('admin.broadcasts.preview', 'Предпросмотр Telegram')}
           </h3>
-          <button onClick={onClose} className="rounded p-1 text-dark-400 hover:bg-dark-700">
+          <button
+            onClick={onClose}
+            aria-label={t('common.close', 'Закрыть')}
+            className="flex h-9 w-9 items-center justify-center rounded text-dark-400 hover:bg-dark-700"
+          >
             ✕
           </button>
         </div>
@@ -247,6 +258,7 @@ export function TelegramPreview({
 
 export function EmailPreview({ open, onClose, subject, htmlContent }: EmailPreviewProps) {
   const { t } = useTranslation();
+  const dialogRef = useFocusTrap<HTMLDivElement>(open, { onEscape: onClose });
   if (!open) return null;
   const emptyHtml = `<p style="color:#999;font-family:sans-serif">${t('admin.broadcasts.previewEmpty', '— пусто —')}</p>`;
   return createPortal(
@@ -255,6 +267,11 @@ export function EmailPreview({ open, onClose, subject, htmlContent }: EmailPrevi
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={subject || t('admin.broadcasts.emailSubject', 'Email')}
+        tabIndex={-1}
         className="flex h-[80vh] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
@@ -269,7 +286,8 @@ export function EmailPreview({ open, onClose, subject, htmlContent }: EmailPrevi
           </div>
           <button
             onClick={onClose}
-            className="ml-3 rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+            aria-label={t('common.close', 'Закрыть')}
+            className="ml-3 flex h-9 w-9 items-center justify-center rounded text-gray-400 hover:bg-gray-100 hover:text-gray-700"
           >
             ✕
           </button>

@@ -12,6 +12,7 @@ import { HoverBorderGradient } from '../components/ui/hover-border-gradient';
 import { useTrafficZone } from '../hooks/useTrafficZone';
 import { formatTraffic } from '../utils/formatTraffic';
 import { getGlassColors } from '../utils/glassTheme';
+import { copyToClipboard } from '../utils/clipboard';
 import { useTheme } from '../hooks/useTheme';
 import InsufficientBalancePrompt from '../components/InsufficientBalancePrompt';
 import { useCurrency } from '../hooks/useCurrency';
@@ -554,7 +555,7 @@ export default function Subscription() {
 
   const copyUrl = () => {
     if (displayedConnectionUrl) {
-      navigator.clipboard.writeText(displayedConnectionUrl);
+      void copyToClipboard(displayedConnectionUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
