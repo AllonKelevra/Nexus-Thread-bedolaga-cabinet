@@ -1126,8 +1126,11 @@ export default function AdminInfoPageEditor() {
       <div className="space-y-5">
         {/* Slug */}
         <div>
-          <label className="label">{t('admin.infoPages.fields.slug')}</label>
+          <label htmlFor="ip-slug" className="label">
+            {t('admin.infoPages.fields.slug')}
+          </label>
           <input
+            id="ip-slug"
             type="text"
             value={slug}
             onChange={(e) => {
@@ -1142,8 +1145,11 @@ export default function AdminInfoPageEditor() {
         {/* Icon + Sort Order row */}
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="label">{t('admin.infoPages.fields.icon')}</label>
+            <label htmlFor="ip-icon" className="label">
+              {t('admin.infoPages.fields.icon')}
+            </label>
             <input
+              id="ip-icon"
               type="text"
               value={icon}
               onChange={(e) => setIcon(e.target.value)}
@@ -1152,8 +1158,11 @@ export default function AdminInfoPageEditor() {
             />
           </div>
           <div>
-            <label className="label">{t('admin.infoPages.fields.sortOrder')}</label>
+            <label htmlFor="ip-sortorder" className="label">
+              {t('admin.infoPages.fields.sortOrder')}
+            </label>
             <input
+              id="ip-sortorder"
               type="number"
               value={sortOrder}
               onChange={(e) => setSortOrder(Number(e.target.value) || 0)}
@@ -1199,8 +1208,11 @@ export default function AdminInfoPageEditor() {
 
         {/* Replaces tab selector */}
         <div>
-          <label className="label">{t('admin.infoPages.fields.replacesTab')}</label>
+          <label htmlFor="ip-replaces-tab" className="label">
+            {t('admin.infoPages.fields.replacesTab')}
+          </label>
           <select
+            id="ip-replaces-tab"
             value={replacesTab ?? ''}
             onChange={(e) => setReplacesTab((e.target.value || null) as ReplacesTab | null)}
             className="input max-w-xs"
@@ -1250,10 +1262,11 @@ export default function AdminInfoPageEditor() {
 
         {/* Title for current locale */}
         <div>
-          <label className="label">
+          <label htmlFor="ip-title" className="label">
             {t('admin.infoPages.fields.title')} ({t(`admin.infoPages.locales.${activeLocale}`)})
           </label>
           <input
+            id="ip-title"
             type="text"
             value={titles[activeLocale] ?? ''}
             onChange={(e) => setTitles((prev) => ({ ...prev, [activeLocale]: e.target.value }))}
