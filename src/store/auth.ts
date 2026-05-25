@@ -13,7 +13,12 @@ import {
   consumeReferralCode,
   getPendingReferralCode,
 } from '../utils/referral';
-import { tokenStorage, isTokenValid, tokenRefreshManager } from '../utils/token';
+import {
+  tokenStorage,
+  isTokenValid,
+  tokenRefreshManager,
+  restoreRefreshTokenFromCloud,
+} from '../utils/token';
 import { usePermissionStore } from './permissions';
 
 export interface TelegramWidgetData {
@@ -162,11 +167,16 @@ export const useAuthStore = create<AuthState>()(
             tokenStorage.migrateFromLocalStorage();
 
             const accessToken = tokenStorage.getAccessToken();
-            const refreshToken = tokenStorage.getRefreshToken();
+            let refreshToken = tokenStorage.getRefreshToken();
 
             if (!refreshToken) {
-              set({ isLoading: false, isAuthenticated: false });
-              return;
+              // localStorage may have been wiped by the Telegram WebView; try to
+              // recover the refresh token from Telegram CloudStorage before giving up.
+              refreshToken = await restoreRefreshTokenFromCloud();
+              if (!refreshToken) {
+                set({ isLoading: false, isAuthenticated: false });
+                return;
+              }
             }
 
             if (!isTokenValid(accessToken)) {
@@ -384,4 +394,5 @@ export const useAuthStore = create<AuthState>()(
 captureCampaignFromUrl();
 captureReferralFromUrl();
 
-useAuthStore.getState().initialize();
+// Note: initialize() is kicked off from main.tsx after the Telegram SDK is set up,
+// so CloudStorage-backed token recovery can run during bootstrap.

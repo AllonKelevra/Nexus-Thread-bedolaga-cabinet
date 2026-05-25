@@ -20,6 +20,7 @@ import {
   isFullscreen,
 } from '@telegram-apps/sdk-react';
 import { clearStaleSessionIfNeeded } from './utils/token';
+import { useAuthStore } from './store/auth';
 import { AppWithNavigator } from './AppWithNavigator';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { initLogoPreload } from './api/branding';
@@ -99,6 +100,11 @@ if (isTelegramEnv && !alreadyInitialized) {
   // Outside Telegram — still clear stale session tokens if any
   clearStaleSessionIfNeeded(null);
 }
+
+// Bootstrap auth after the Telegram SDK is initialised so CloudStorage-backed
+// refresh-token recovery can run inside initialize() (launch params + CloudStorage
+// are only available post-init()).
+void useAuthStore.getState().initialize();
 
 if ('requestIdleCallback' in window) {
   requestIdleCallback(() => initLogoPreload());

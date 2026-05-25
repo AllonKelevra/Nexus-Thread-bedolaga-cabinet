@@ -1,12 +1,21 @@
 import { useTranslation } from 'react-i18next';
 import { useBlockingStore } from '../../store/blocking';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 export default function MaintenanceScreen() {
   const { t } = useTranslation();
   const maintenanceInfo = useBlockingStore((state) => state.maintenanceInfo);
+  const screenRef = useFocusTrap<HTMLDivElement>(true, { lockScroll: false });
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-dark-950 p-6">
+    <div
+      ref={screenRef}
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="maintenance-title"
+      tabIndex={-1}
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-dark-950 p-6"
+    >
       <div className="w-full max-w-md text-center">
         {/* Icon */}
         <div className="mb-8">
@@ -28,7 +37,9 @@ export default function MaintenanceScreen() {
         </div>
 
         {/* Title */}
-        <h1 className="mb-4 text-2xl font-bold text-white">{t('blocking.maintenance.title')}</h1>
+        <h1 id="maintenance-title" className="mb-4 text-2xl font-bold text-white">
+          {t('blocking.maintenance.title')}
+        </h1>
 
         {/* Message */}
         <p className="mb-6 text-lg text-gray-400">

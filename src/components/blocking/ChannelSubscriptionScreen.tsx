@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useBlockingStore } from '../../store/blocking';
 import { apiClient, isChannelSubscriptionError } from '../../api/client';
 import { usePlatform } from '../../platform';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 const CHECK_COOLDOWN_SECONDS = 5;
 
@@ -80,8 +81,17 @@ export default function ChannelSubscriptionScreen() {
     }
   }, [clearBlocking, t]);
 
+  const screenRef = useFocusTrap<HTMLDivElement>(true, { lockScroll: false });
+
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-dark-950 p-6">
+    <div
+      ref={screenRef}
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="channel-sub-title"
+      tabIndex={-1}
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-dark-950 p-6"
+    >
       <div className="w-full max-w-md text-center">
         {/* Icon */}
         <div className="mb-8">
@@ -93,7 +103,9 @@ export default function ChannelSubscriptionScreen() {
         </div>
 
         {/* Title */}
-        <h1 className="mb-4 text-2xl font-bold text-white">{t('blocking.channel.title')}</h1>
+        <h1 id="channel-sub-title" className="mb-4 text-2xl font-bold text-white">
+          {t('blocking.channel.title')}
+        </h1>
 
         {/* Message */}
         <p className="mb-6 text-lg text-gray-400">
