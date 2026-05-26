@@ -1261,7 +1261,11 @@ export default function AdminUserDetail() {
     try {
       await copyText(text);
       notify.success(t('admin.users.detail.copied'));
-    } catch {}
+    } catch {
+      // copy adapter already handles fallback + permission errors; surface
+      // the failure to the user instead of swallowing it silently.
+      notify.error(t('common.error'));
+    }
   };
 
   if (loading) {
