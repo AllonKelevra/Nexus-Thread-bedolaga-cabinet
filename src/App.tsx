@@ -271,31 +271,25 @@ function App() {
         <Route
           path="/buy/success/:token"
           element={
-            <ErrorBoundary level="app">
-              <LazyPage>
-                <PurchaseSuccess />
-              </LazyPage>
-            </ErrorBoundary>
+            <LazyPage>
+              <PurchaseSuccess />
+            </LazyPage>
           }
         />
         <Route
           path="/buy/:slug"
           element={
-            <ErrorBoundary level="app">
-              <LazyPage>
-                <QuickPurchase />
-              </LazyPage>
-            </ErrorBoundary>
+            <LazyPage>
+              <QuickPurchase />
+            </LazyPage>
           }
         />
         <Route
           path="/auto-login"
           element={
-            <ErrorBoundary level="app">
-              <LazyPage>
-                <AutoLogin />
-              </LazyPage>
-            </ErrorBoundary>
+            <LazyPage>
+              <AutoLogin />
+            </LazyPage>
           }
         />
 
@@ -394,11 +388,9 @@ function App() {
           path="/balance/top-up/result"
           element={
             <ProtectedRoute withLayout={false}>
-              <ErrorBoundary level="app">
-                <LazyPage>
-                  <TopUpResult />
-                </LazyPage>
-              </ErrorBoundary>
+              <LazyPage>
+                <TopUpResult />
+              </LazyPage>
             </ProtectedRoute>
           }
         />
@@ -525,25 +517,21 @@ function App() {
         <Route
           path="/gift"
           element={
-            <ErrorBoundary level="app">
-              <ProtectedRoute>
-                <LazyPage>
-                  <GiftSubscription />
-                </LazyPage>
-              </ProtectedRoute>
-            </ErrorBoundary>
+            <ProtectedRoute>
+              <LazyPage>
+                <GiftSubscription />
+              </LazyPage>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/gift/result"
           element={
-            <ErrorBoundary level="app">
-              <ProtectedRoute>
-                <LazyPage>
-                  <GiftResult />
-                </LazyPage>
-              </ProtectedRoute>
-            </ErrorBoundary>
+            <ProtectedRoute>
+              <LazyPage>
+                <GiftResult />
+              </LazyPage>
+            </ProtectedRoute>
           }
         />
         <Route
