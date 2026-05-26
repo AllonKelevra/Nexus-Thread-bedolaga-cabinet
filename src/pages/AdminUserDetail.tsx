@@ -23,6 +23,8 @@ import { adminApi, type AdminTicket, type AdminTicketDetail } from '../api/admin
 import { promocodesApi, type PromoGroup } from '../api/promocodes';
 import { promoOffersApi } from '../api/promoOffers';
 import { AdminBackButton } from '../components/admin';
+import { GiftsTab } from '../components/admin/userDetail/GiftsTab';
+import { SyncTab } from '../components/admin/userDetail/SyncTab';
 import { createNumberInputHandler, toNumber } from '../utils/inputHelpers';
 import { usePermissionStore } from '../store/permissions';
 import { MessageMediaGrid } from '../components/tickets/MessageMediaGrid';
@@ -60,17 +62,7 @@ const MinusIcon = () => (
   </svg>
 );
 
-const ArrowDownIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
-  </svg>
-);
-
-const ArrowUpIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
-  </svg>
-);
+// (ArrowDownIcon / ArrowUpIcon moved to components/admin/userDetail/SyncTab.tsx)
 
 const TelegramIcon = () => (
   <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
@@ -98,155 +90,7 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function GiftStatusBadge({ status }: { status: string }) {
-  const { t } = useTranslation();
-  const styles: Record<string, string> = {
-    pending: 'bg-warning-500/20 text-warning-400 border-warning-500/30',
-    paid: 'bg-accent-500/20 text-accent-400 border-accent-500/30',
-    delivered: 'bg-success-500/20 text-success-400 border-success-500/30',
-    pending_activation: 'bg-accent-500/20 text-accent-400 border-accent-500/30',
-    failed: 'bg-error-500/20 text-error-400 border-error-500/30',
-    expired: 'bg-dark-600 text-dark-400 border-dark-500',
-  };
-  const fallback = 'bg-dark-600 text-dark-400 border-dark-500';
-
-  const label = t(`admin.users.detail.gifts.status.${status}`, { defaultValue: '' }) || status;
-
-  return (
-    <span
-      className={`rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${styles[status] || fallback}`}
-    >
-      {label}
-    </span>
-  );
-}
-
-function GiftCard({
-  gift,
-  direction,
-  locale,
-  onNavigateToUser,
-}: {
-  gift: import('../api/adminUsers').AdminUserGiftItem;
-  direction: 'sent' | 'received';
-  locale: string;
-  onNavigateToUser: (userId: number) => void;
-}) {
-  const { t } = useTranslation();
-  const { formatWithCurrency } = useCurrency();
-  const isSent = direction === 'sent';
-
-  const otherPartyLabel = isSent
-    ? t('admin.users.detail.gifts.recipient')
-    : t('admin.users.detail.gifts.sender');
-  const otherPartyName = isSent
-    ? gift.receiver_username
-      ? `@${gift.receiver_username}`
-      : gift.gift_recipient_value || t('admin.users.detail.gifts.codeOnly')
-    : gift.buyer_username
-      ? `@${gift.buyer_username}`
-      : gift.buyer_full_name || t('admin.users.detail.gifts.unknownUser');
-  const otherPartyId = isSent ? gift.receiver_user_id : gift.buyer_user_id;
-
-  const dateOpts: Intl.DateTimeFormatOptions = {
-    day: '2-digit',
-    month: '2-digit',
-    year: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  };
-
-  return (
-    <div className="rounded-xl border border-dark-700/50 bg-dark-800/50 p-4 transition-colors hover:bg-dark-800/70">
-      {/* Header */}
-      <div className="mb-3 flex items-start justify-between">
-        <div className="flex items-center gap-2">
-          <div
-            className={`flex h-8 w-8 items-center justify-center rounded-lg ${isSent ? 'bg-accent-500/15' : 'bg-success-500/15'}`}
-          >
-            <svg
-              className={`h-4 w-4 ${isSent ? 'text-accent-400' : 'text-success-400'}`}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"
-              />
-            </svg>
-          </div>
-          <div>
-            <div className="text-sm font-medium text-dark-100">{gift.tariff_name || '—'}</div>
-            <div className="text-xs text-dark-500">
-              {gift.period_days} {t('admin.users.detail.gifts.days')} · {gift.device_limit}{' '}
-              {t('admin.users.detail.gifts.devices')}
-            </div>
-          </div>
-        </div>
-        <GiftStatusBadge status={gift.status} />
-      </div>
-
-      {/* Details grid */}
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-        <div>
-          <span className="text-dark-500">{otherPartyLabel}:</span>{' '}
-          <span className="text-dark-300">{otherPartyName}</span>
-          {otherPartyId && (
-            <button
-              onClick={() => onNavigateToUser(otherPartyId)}
-              className="ml-1 text-accent-400 hover:text-accent-300"
-            >
-              #{otherPartyId}
-            </button>
-          )}
-        </div>
-        <div>
-          <span className="text-dark-500">{t('admin.users.detail.gifts.amount')}:</span>{' '}
-          <span className="text-dark-300">{formatWithCurrency(gift.amount_kopeks / 100)}</span>
-        </div>
-        <div>
-          <span className="text-dark-500">{t('admin.users.detail.gifts.paymentMethod')}:</span>{' '}
-          <span className="text-dark-300">{gift.payment_method || '—'}</span>
-        </div>
-        <div>
-          <span className="text-dark-500">{t('admin.users.detail.gifts.createdAt')}:</span>{' '}
-          <span className="text-dark-300">
-            {gift.created_at ? new Date(gift.created_at).toLocaleString(locale, dateOpts) : '—'}
-          </span>
-        </div>
-        {gift.paid_at && (
-          <div>
-            <span className="text-dark-500">{t('admin.users.detail.gifts.paidAt')}:</span>{' '}
-            <span className="text-dark-300">
-              {new Date(gift.paid_at).toLocaleString(locale, dateOpts)}
-            </span>
-          </div>
-        )}
-        {gift.delivered_at && (
-          <div>
-            <span className="text-dark-500">{t('admin.users.detail.gifts.deliveredAt')}:</span>{' '}
-            <span className="text-success-400">
-              {new Date(gift.delivered_at).toLocaleString(locale, dateOpts)}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Gift message */}
-      {gift.gift_message && (
-        <div className="mt-3 rounded-lg bg-dark-900/50 p-2.5 text-xs italic text-dark-400">
-          &ldquo;{gift.gift_message}&rdquo;
-        </div>
-      )}
-
-      {/* Token */}
-      <div className="mt-2 font-mono text-[10px] text-dark-600">GIFT-{gift.token}</div>
-    </div>
-  );
-}
+// (GiftStatusBadge / GiftCard / GiftsTab JSX moved to components/admin/userDetail/GiftsTab.tsx)
 
 // ============ Main Page ============
 
@@ -2992,186 +2836,17 @@ export default function AdminUserDetail() {
 
         {/* Sync Tab */}
         {activeTab === 'sync' && (
-          <div className="space-y-4">
-            {/* Subscription selector for multi-tariff */}
-            {userSubscriptions.length > 1 && (
-              <div className="rounded-xl bg-dark-800/50 p-4">
-                <div className="mb-2 text-sm text-dark-400">
-                  {t('admin.users.detail.sync.selectSubscription')}
-                </div>
-                <select
-                  value={activeSubscriptionId || ''}
-                  onChange={(e) => setActiveSubscriptionId(Number(e.target.value) || null)}
-                  className="w-full rounded-lg border border-dark-600 bg-dark-700 px-3 py-2 text-sm text-dark-100"
-                >
-                  {userSubscriptions.map((sub) => (
-                    <option key={sub.id} value={sub.id}>
-                      {sub.tariff_name || `#${sub.id}`} — {sub.status}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* Sync status */}
-            {syncStatus && (
-              <div
-                className={`rounded-xl border p-4 ${syncStatus.has_differences ? 'border-warning-500/30 bg-warning-500/10' : 'border-success-500/30 bg-success-500/10'}`}
-              >
-                <div className="mb-3 flex items-center gap-2">
-                  {syncStatus.has_differences ? (
-                    <span className="font-medium text-warning-400">
-                      {t('admin.users.detail.sync.hasDifferences')}
-                    </span>
-                  ) : (
-                    <span className="font-medium text-success-400">
-                      {t('admin.users.detail.sync.synced')}
-                    </span>
-                  )}
-                </div>
-
-                {syncStatus.differences.length > 0 && (
-                  <div className="mb-3 space-y-1">
-                    {syncStatus.differences.map((diff, i) => (
-                      <div key={i} className="text-xs text-dark-300">
-                        • {diff}
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <div className="mb-2 text-xs text-dark-500">
-                      {t('admin.users.detail.sync.bot')}
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex justify-between">
-                        <span className="text-dark-400">
-                          {t('admin.users.detail.sync.statusLabel')}:
-                        </span>
-                        <span className="text-dark-200">
-                          {syncStatus.bot_subscription_status || '-'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-dark-400">{t('admin.users.detail.sync.until')}:</span>
-                        <span className="text-dark-200">
-                          {syncStatus.bot_subscription_end_date
-                            ? new Date(syncStatus.bot_subscription_end_date).toLocaleDateString(
-                                locale,
-                              )
-                            : '-'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-dark-400">
-                          {t('admin.users.detail.sync.traffic')}:
-                        </span>
-                        <span className="text-dark-200">
-                          {syncStatus.bot_traffic_used_gb.toFixed(2)} {t('common.units.gb')}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-dark-400">
-                          {t('admin.users.detail.sync.devices')}:
-                        </span>
-                        <span className="text-dark-200">{syncStatus.bot_device_limit}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-dark-400">
-                          {t('admin.users.detail.sync.squads')}:
-                        </span>
-                        <span className="text-dark-200">{syncStatus.bot_squads?.length || 0}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="mb-2 text-xs text-dark-500">
-                      {t('admin.users.detail.sync.panel')}
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex justify-between">
-                        <span className="text-dark-400">
-                          {t('admin.users.detail.sync.statusLabel')}:
-                        </span>
-                        <span className="text-dark-200">{syncStatus.panel_status || '-'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-dark-400">{t('admin.users.detail.sync.until')}:</span>
-                        <span className="text-dark-200">
-                          {syncStatus.panel_expire_at
-                            ? new Date(syncStatus.panel_expire_at).toLocaleDateString(locale)
-                            : '-'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-dark-400">
-                          {t('admin.users.detail.sync.traffic')}:
-                        </span>
-                        <span className="text-dark-200">
-                          {syncStatus.panel_traffic_used_gb.toFixed(2)} {t('common.units.gb')}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-dark-400">
-                          {t('admin.users.detail.sync.devices')}:
-                        </span>
-                        <span className="text-dark-200">{syncStatus.panel_device_limit}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-dark-400">
-                          {t('admin.users.detail.sync.squads')}:
-                        </span>
-                        <span className="text-dark-200">
-                          {syncStatus.panel_squads?.length || 0}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* UUID info */}
-            <div className="rounded-xl bg-dark-800/50 p-4">
-              {syncStatus?.subscription_tariff_name && (
-                <div className="mb-2 text-xs text-dark-500">
-                  {syncStatus.subscription_tariff_name}
-                </div>
-              )}
-              <div className="mb-1 text-sm text-dark-400">Remnawave UUID</div>
-              <div className="break-all font-mono text-sm text-dark-100">
-                {syncStatus?.remnawave_uuid ||
-                  user.remnawave_uuid ||
-                  t('admin.users.detail.sync.notLinked')}
-              </div>
-            </div>
-
-            {/* Sync buttons */}
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={handleSyncFromPanel}
-                disabled={actionLoading}
-                className="flex flex-col items-center justify-center gap-2 rounded-xl border border-accent-500/30 bg-accent-500/10 p-4 text-accent-400 transition-all hover:bg-accent-500/20 disabled:opacity-50"
-              >
-                <ArrowDownIcon className={`h-6 w-6 ${actionLoading ? 'animate-bounce' : ''}`} />
-                <span className="text-center text-xs font-medium">
-                  {t('admin.users.detail.sync.fromPanel')}
-                </span>
-              </button>
-              <button
-                onClick={handleSyncToPanel}
-                disabled={actionLoading}
-                className="flex flex-col items-center justify-center gap-2 rounded-xl border border-accent-500/30 bg-accent-500/10 p-4 text-accent-400 transition-all hover:bg-accent-500/20 disabled:opacity-50"
-              >
-                <ArrowUpIcon className={`h-6 w-6 ${actionLoading ? 'animate-bounce' : ''}`} />
-                <span className="text-center text-xs font-medium">
-                  {t('admin.users.detail.sync.toPanel')}
-                </span>
-              </button>
-            </div>
-          </div>
+          <SyncTab
+            user={user}
+            syncStatus={syncStatus}
+            userSubscriptions={userSubscriptions}
+            activeSubscriptionId={activeSubscriptionId}
+            onActiveSubscriptionChange={setActiveSubscriptionId}
+            actionLoading={actionLoading}
+            onSyncFromPanel={handleSyncFromPanel}
+            onSyncToPanel={handleSyncToPanel}
+            locale={locale}
+          />
         )}
 
         {/* Tickets Tab */}
@@ -3399,126 +3074,12 @@ export default function AdminUserDetail() {
 
         {/* Gifts Tab */}
         {activeTab === 'gifts' && (
-          <div className="space-y-6">
-            {giftsLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
-              </div>
-            ) : !giftsData || (giftsData.sent.length === 0 && giftsData.received.length === 0) ? (
-              <div className="flex flex-col items-center justify-center rounded-xl bg-dark-800/50 py-16">
-                <svg
-                  className="mb-3 h-12 w-12 text-dark-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"
-                  />
-                </svg>
-                <p className="text-sm text-dark-500">{t('admin.users.detail.gifts.noGifts')}</p>
-              </div>
-            ) : (
-              <>
-                {/* Summary counters */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-xl bg-dark-800/50 p-4">
-                    <div className="mb-1 text-xs text-dark-500">
-                      {t('admin.users.detail.gifts.totalSent')}
-                    </div>
-                    <div className="text-2xl font-bold text-accent-400">{giftsData.sent_total}</div>
-                  </div>
-                  <div className="rounded-xl bg-dark-800/50 p-4">
-                    <div className="mb-1 text-xs text-dark-500">
-                      {t('admin.users.detail.gifts.totalReceived')}
-                    </div>
-                    <div className="text-2xl font-bold text-success-400">
-                      {giftsData.received_total}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Sent Gifts */}
-                <div>
-                  <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-dark-200">
-                    <svg
-                      className="h-4 w-4 text-accent-400"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"
-                      />
-                    </svg>
-                    {t('admin.users.detail.gifts.sentTitle')}
-                    <span className="text-dark-500">({giftsData.sent_total})</span>
-                  </h3>
-                  {giftsData.sent.length === 0 ? (
-                    <div className="rounded-xl bg-dark-800/30 py-6 text-center text-sm text-dark-500">
-                      {t('admin.users.detail.gifts.noSent')}
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {giftsData.sent.map((gift) => (
-                        <GiftCard
-                          key={gift.id}
-                          gift={gift}
-                          direction="sent"
-                          locale={locale}
-                          onNavigateToUser={(id) => navigate(`/admin/users/${id}`)}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Received Gifts */}
-                <div>
-                  <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-dark-200">
-                    <svg
-                      className="h-4 w-4 text-success-400"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M9 3.75H6.912a2.25 2.25 0 00-2.15 1.588L2.35 13.177a2.25 2.25 0 00-.1.661V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 00-2.15-1.588H15M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.013-1.244h3.859"
-                      />
-                    </svg>
-                    {t('admin.users.detail.gifts.receivedTitle')}
-                    <span className="text-dark-500">({giftsData.received_total})</span>
-                  </h3>
-                  {giftsData.received.length === 0 ? (
-                    <div className="rounded-xl bg-dark-800/30 py-6 text-center text-sm text-dark-500">
-                      {t('admin.users.detail.gifts.noReceived')}
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {giftsData.received.map((gift) => (
-                        <GiftCard
-                          key={gift.id}
-                          gift={gift}
-                          direction="received"
-                          locale={locale}
-                          onNavigateToUser={(id) => navigate(`/admin/users/${id}`)}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
+          <GiftsTab
+            giftsLoading={giftsLoading}
+            giftsData={giftsData}
+            locale={locale}
+            onNavigateToUser={(id) => navigate(`/admin/users/${id}`)}
+          />
         )}
 
         {/* Referrals Tab */}
