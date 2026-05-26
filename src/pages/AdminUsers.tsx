@@ -142,7 +142,7 @@ function UserRow({ user, onClick, formatAmount }: UserRowProps) {
                   : user.subscription_status === 'trial'
                     ? 'border-accent-500/30 bg-accent-500/20 text-accent-400'
                     : user.subscription_status === 'limited'
-                      ? 'border-yellow-500/30 bg-yellow-500/20 text-yellow-400'
+                      ? 'border-warning-500/30 bg-warning-500/20 text-warning-400'
                       : 'border-warning-500/30 bg-warning-500/20 text-warning-400'
               }`}
             >
