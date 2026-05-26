@@ -45,7 +45,7 @@ function StatusBadge({
     ? 'bg-emerald-400/15 text-emerald-400 border-emerald-400/20'
     : isLimited
       ? 'bg-amber-400/15 text-amber-400 border-amber-400/20'
-      : 'bg-red-400/15 text-red-400 border-red-400/20';
+      : 'bg-error-400/15 text-error-400 border-error-400/20';
 
   const label = isActive
     ? t('subscription.statusActive', 'Активна')
@@ -96,7 +96,11 @@ export default function SubscriptionListCard({
       ? Math.min(100, (trafficUsed / trafficLimit) * 100)
       : 0;
   const trafficColor =
-    trafficPercent >= 90 ? 'bg-red-400' : trafficPercent >= 70 ? 'bg-amber-400' : 'bg-emerald-400';
+    trafficPercent >= 90
+      ? 'bg-error-400'
+      : trafficPercent >= 70
+        ? 'bg-amber-400'
+        : 'bg-emerald-400';
 
   const isLimitedStatus = subscription.status === 'limited';
 
@@ -207,7 +211,7 @@ export default function SubscriptionListCard({
               : t('subscription.autopay', 'Автопродление');
             return (
               <span
-                className={`flex items-center gap-1 ${enabled ? 'text-emerald-400/70' : 'text-red-400/50'}`}
+                className={`flex items-center gap-1 ${enabled ? 'text-emerald-400/70' : 'text-error-400/50'}`}
               >
                 <svg
                   className="h-3 w-3"

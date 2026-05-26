@@ -141,7 +141,7 @@ function EffectBadge({ effect, className }: EffectBadgeProps) {
       className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold ${
         isAllow
           ? 'border-success-500/30 bg-success-500/10 text-success-400'
-          : 'border-red-500/30 bg-red-500/10 text-red-400'
+          : 'border-error-500/30 bg-error-500/10 text-error-400'
       } ${className ?? ''}`}
     >
       {isAllow ? t('admin.policies.effectAllow') : t('admin.policies.effectDeny')}
@@ -331,7 +331,7 @@ export default function AdminPolicies() {
             <div className="text-xs text-dark-400">{t('admin.policies.stats.allow')}</div>
           </div>
           <div className="rounded-xl border border-dark-700 bg-dark-800 p-4">
-            <div className="text-2xl font-bold text-red-400">
+            <div className="text-2xl font-bold text-error-400">
               {sortedPolicies.filter((p) => p.effect === 'deny').length}
             </div>
             <div className="text-xs text-dark-400">{t('admin.policies.stats.deny')}</div>

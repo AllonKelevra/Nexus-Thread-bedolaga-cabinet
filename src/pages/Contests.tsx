@@ -83,8 +83,8 @@ export default function Contests() {
 
   if (error) {
     return (
-      <div className="card border-red-500/20 bg-red-500/10">
-        <p className="text-red-400">{t('contests.error')}</p>
+      <div className="card border-error-500/20 bg-error-500/10">
+        <p className="text-error-400">{t('contests.error')}</p>
       </div>
     );
   }
@@ -125,7 +125,7 @@ export default function Contests() {
 
             {result && (
               <div
-                className={`mb-4 rounded-lg p-4 ${result.is_winner ? 'bg-success-500/20 text-success-400' : 'bg-red-500/20 text-red-400'}`}
+                className={`mb-4 rounded-lg p-4 ${result.is_winner ? 'bg-success-500/20 text-success-400' : 'bg-error-500/20 text-error-400'}`}
               >
                 <p className="font-medium">{result.message}</p>
               </div>

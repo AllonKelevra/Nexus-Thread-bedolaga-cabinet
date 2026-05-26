@@ -350,14 +350,14 @@ export default function Support() {
               </div>
             )}
             {att.error && (
-              <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-red-500/30">
-                <span className="text-xs text-red-300">!</span>
+              <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-error-500/30">
+                <span className="text-xs text-error-300">!</span>
               </div>
             )}
             <button
               type="button"
               onClick={() => onRemove(idx)}
-              className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-dark-600 text-dark-300 hover:bg-red-500 hover:text-white"
+              className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-dark-600 text-dark-300 hover:bg-error-500 hover:text-white"
             >
               <CloseIcon />
             </button>

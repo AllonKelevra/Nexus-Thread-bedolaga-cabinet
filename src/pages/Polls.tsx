@@ -122,8 +122,8 @@ export default function Polls() {
 
   if (error) {
     return (
-      <div className="card border-red-500/20 bg-red-500/10">
-        <p className="text-red-400">{t('polls.error')}</p>
+      <div className="card border-error-500/20 bg-error-500/10">
+        <p className="text-error-400">{t('polls.error')}</p>
       </div>
     );
   }

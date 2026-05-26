@@ -234,7 +234,7 @@ function ButtonChip({
         {!isBuiltin && (
           <button
             onClick={onRemove}
-            className="rounded-lg p-1 text-dark-500 transition-colors hover:bg-red-500/10 hover:text-red-400"
+            className="rounded-lg p-1 text-dark-500 transition-colors hover:bg-error-500/10 hover:text-error-400"
           >
             <TrashIcon />
           </button>
@@ -423,7 +423,7 @@ function SortableRow({
         {!allBuiltin && (
           <button
             onClick={() => onRemoveRow(row.id)}
-            className="rounded-lg p-1.5 text-dark-500 transition-colors hover:bg-red-500/10 hover:text-red-400"
+            className="rounded-lg p-1.5 text-dark-500 transition-colors hover:bg-error-500/10 hover:text-error-400"
           >
             <TrashIcon />
           </button>
@@ -796,7 +796,7 @@ export function MenuEditorTab() {
 
   if (isError) {
     return (
-      <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+      <div className="rounded-xl border border-error-500/30 bg-error-500/10 px-4 py-3 text-sm text-error-400">
         {t('common.error')}
       </div>
     );

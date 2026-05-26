@@ -118,7 +118,7 @@ export default function ChannelSubscriptionScreen() {
             {channels.map((ch) => (
               <div
                 key={ch.channel_id}
-                className="flex items-center justify-between rounded-xl border border-red-500/30 bg-red-500/10 p-3"
+                className="flex items-center justify-between rounded-xl border border-error-500/30 bg-error-500/10 p-3"
               >
                 <span className="text-sm font-medium text-white">{ch.title || ch.channel_id}</span>
                 {ch.channel_link && (
@@ -146,8 +146,8 @@ export default function ChannelSubscriptionScreen() {
 
         {/* Error message */}
         {error && (
-          <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3">
-            <p className="text-sm text-red-400">{error}</p>
+          <div className="mb-4 rounded-xl border border-error-500/30 bg-error-500/10 p-3">
+            <p className="text-sm text-error-400">{error}</p>
           </div>
         )}
 

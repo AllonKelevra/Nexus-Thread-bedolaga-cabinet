@@ -595,14 +595,14 @@ export default function AdminTickets() {
                             </div>
                           )}
                           {att.error && (
-                            <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-red-500/30">
-                              <span className="text-xs text-red-300">!</span>
+                            <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-error-500/30">
+                              <span className="text-xs text-error-300">!</span>
                             </div>
                           )}
                           <button
                             type="button"
                             onClick={() => removeAttachment(idx)}
-                            className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-dark-600 text-dark-300 hover:bg-red-500 hover:text-white"
+                            className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-dark-600 text-dark-300 hover:bg-error-500 hover:text-white"
                           >
                             <svg
                               className="h-3 w-3"
@@ -633,7 +633,7 @@ export default function AdminTickets() {
                   />
 
                   {replyError && (
-                    <div className="mt-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+                    <div className="mt-2 rounded-lg border border-error-500/30 bg-error-500/10 px-3 py-2 text-sm text-error-300">
                       {replyError}
                     </div>
                   )}

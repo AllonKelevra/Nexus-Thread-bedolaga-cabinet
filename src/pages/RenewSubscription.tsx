@@ -195,7 +195,7 @@ export default function RenewSubscription() {
                   </div>
                 </div>
                 {!canAfford && (
-                  <div className="mt-1 text-[11px] text-red-400">
+                  <div className="mt-1 text-[11px] text-error-400">
                     {t(
                       'subscription.insufficientBalanceAmount',
                       'Недостаточно средств. Не хватает {{missing}}',
@@ -216,7 +216,9 @@ export default function RenewSubscription() {
 
       {/* Error */}
       {error && !missingAmount && (
-        <div className="rounded-xl bg-red-400/10 p-3 text-center text-sm text-red-400">{error}</div>
+        <div className="rounded-xl bg-error-400/10 p-3 text-center text-sm text-error-400">
+          {error}
+        </div>
       )}
 
       {/* Renew button */}

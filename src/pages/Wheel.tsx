@@ -487,7 +487,7 @@ export default function Wheel() {
   if (error || !config) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-500/10">
+        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-error-500/10">
           <span className="text-4xl">😔</span>
         </div>
         <p className="text-lg text-dark-400">{t('wheel.errors.loadFailed')}</p>
@@ -709,7 +709,7 @@ export default function Wheel() {
                   className={`animate-fade-in rounded-linear border p-4 ${
                     spinResult.success
                       ? 'border-accent-500/30 bg-accent-500/10'
-                      : 'border-red-500/30 bg-red-500/10'
+                      : 'border-error-500/30 bg-error-500/10'
                   }`}
                 >
                   <div className="flex items-center gap-3">

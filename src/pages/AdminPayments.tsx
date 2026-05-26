@@ -50,7 +50,7 @@ function StatusBadge({ status }: StatusBadgeProps) {
   const styles: Record<string, string> = {
     paid: 'bg-green-500/20 text-green-400',
     pending: 'bg-amber-500/20 text-amber-400',
-    cancelled: 'bg-red-500/20 text-red-400',
+    cancelled: 'bg-error-500/20 text-error-400',
   };
 
   const normalized = status.toLowerCase();
@@ -78,7 +78,7 @@ function StatCard({ label, value, color, isActive, onClick }: StatCardProps) {
     blue: 'border-accent-500/30 bg-accent-500/20 text-accent-400',
     amber: 'border-amber-500/30 bg-amber-500/20 text-amber-400',
     green: 'border-green-500/30 bg-green-500/20 text-green-400',
-    red: 'border-red-500/30 bg-red-500/20 text-red-400',
+    red: 'border-error-500/30 bg-error-500/20 text-error-400',
   };
 
   return (
@@ -597,7 +597,7 @@ export default function AdminPayments() {
                   {checkPaymentMutation.isError &&
                     checkPaymentMutation.variables?.paymentId === payment.id &&
                     checkPaymentMutation.variables?.method === payment.method && (
-                      <div className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 p-2 text-sm text-red-400">
+                      <div className="mt-3 rounded-lg border border-error-500/30 bg-error-500/10 p-2 text-sm text-error-400">
                         {t('admin.payments.checkError')}
                       </div>
                     )}

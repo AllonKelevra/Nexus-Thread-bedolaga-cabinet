@@ -19,7 +19,7 @@ const STYLE_OPTIONS: { value: StyleValue; colorClass: string }[] = [
   { value: 'default', colorClass: 'bg-dark-500' },
   { value: 'primary', colorClass: 'bg-blue-500' },
   { value: 'success', colorClass: 'bg-success-500' },
-  { value: 'danger', colorClass: 'bg-red-500' },
+  { value: 'danger', colorClass: 'bg-error-500' },
 ];
 
 function labelsEqual(a: Record<string, string>, b: Record<string, string>): boolean {
@@ -226,7 +226,7 @@ export function ButtonsTab() {
                         : cfg.style === 'success'
                           ? 'bg-success-500 text-white'
                           : cfg.style === 'danger'
-                            ? 'bg-red-500 text-white'
+                            ? 'bg-error-500 text-white'
                             : 'bg-blue-500 text-white'
                     }`}
                   >

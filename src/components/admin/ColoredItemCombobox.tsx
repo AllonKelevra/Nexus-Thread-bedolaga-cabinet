@@ -292,11 +292,11 @@ export function ColoredItemCombobox({
                         type="button"
                         onClick={(e) => handleDelete(e, item)}
                         disabled={deletingId === item.id}
-                        className="shrink-0 rounded p-1 text-dark-600 transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50"
+                        className="shrink-0 rounded p-1 text-dark-600 transition-colors hover:bg-error-500/10 hover:text-error-400 disabled:opacity-50"
                         aria-label={t('news.admin.combobox.delete', { name: item.name })}
                       >
                         {deletingId === item.id ? (
-                          <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-red-400 border-t-transparent" />
+                          <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-error-400 border-t-transparent" />
                         ) : (
                           <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />

@@ -235,7 +235,7 @@ export default function PromoOffersSection({ className = '' }: PromoOffersSectio
               </button>
               <button
                 onClick={handleDeactivateClick}
-                className="flex items-center justify-center gap-1.5 rounded-xl border border-dark-600/50 bg-dark-900/50 px-4 py-2.5 text-sm text-dark-400 transition-colors hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400"
+                className="flex items-center justify-center gap-1.5 rounded-xl border border-dark-600/50 bg-dark-900/50 px-4 py-2.5 text-sm text-dark-400 transition-colors hover:border-error-500/30 hover:bg-error-500/10 hover:text-error-400"
               >
                 <XCircleIcon />
                 <span>{t('promo.deactivate.button')}</span>

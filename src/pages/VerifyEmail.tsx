@@ -102,7 +102,7 @@ export default function VerifyEmail() {
 
         {status === 'error' && (
           <div>
-            <div className="mb-4 text-5xl text-red-500 sm:text-6xl">✗</div>
+            <div className="mb-4 text-5xl text-error-500 sm:text-6xl">✗</div>
             <h2 className="text-lg font-semibold text-gray-900 sm:text-xl">
               {t('emailVerification.failed')}
             </h2>
