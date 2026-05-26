@@ -1704,8 +1704,8 @@ export default function AdminUserDetail() {
                   disabled={actionLoading}
                   className={`rounded-lg px-3 py-2 text-sm font-medium transition-all disabled:opacity-50 ${
                     confirmingAction === 'resetSubscription'
-                      ? 'bg-amber-500 text-white'
-                      : 'bg-amber-500/15 text-amber-400 hover:bg-amber-500/25'
+                      ? 'bg-warning-500 text-white'
+                      : 'bg-warning-500/15 text-warning-400 hover:bg-warning-500/25'
                   }`}
                 >
                   {confirmingAction === 'resetSubscription'

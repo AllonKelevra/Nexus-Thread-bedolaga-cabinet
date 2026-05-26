@@ -56,7 +56,7 @@ export default function AccountDeletedScreen() {
         <div className="mb-8">
           <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-dark-800">
             <svg
-              className="h-12 w-12 text-amber-400"
+              className="h-12 w-12 text-warning-400"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"

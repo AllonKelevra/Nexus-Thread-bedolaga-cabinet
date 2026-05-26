@@ -91,7 +91,7 @@ export function SettingsTableRow({
             )}
 
             {setting.read_only && (
-              <span className="flex items-center gap-0.5 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium leading-none text-amber-400">
+              <span className="flex items-center gap-0.5 rounded-full bg-warning-500/15 px-1.5 py-0.5 text-[10px] font-medium leading-none text-warning-400">
                 {t('admin.settings.badgeEnv')}
                 <LockIcon className="h-3 w-3" />
               </span>

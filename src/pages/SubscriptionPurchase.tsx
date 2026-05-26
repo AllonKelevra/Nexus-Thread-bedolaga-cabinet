@@ -1207,8 +1207,8 @@ export default function SubscriptionPurchase() {
                           selectedTariff.custom_days_enabled &&
                           (selectedTariff.price_per_day_kopeks ?? 0) > 0
                         ) && (
-                          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-center">
-                            <div className="mb-2 text-sm font-medium text-amber-400">
+                          <div className="rounded-xl border border-warning-500/30 bg-warning-500/10 p-4 text-center">
+                            <div className="mb-2 text-sm font-medium text-warning-400">
                               {t('subscription.noPeriodsAvailable')}
                             </div>
                             <div className="text-xs text-dark-400">

@@ -2344,11 +2344,11 @@ export default function Subscription() {
             <button
               onClick={handleRevoke}
               disabled={revokeMutation.isPending || revokeCooldown > 0}
-              className="w-full rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-left transition-colors hover:bg-amber-500/20 disabled:opacity-50"
+              className="w-full rounded-xl border border-warning-500/30 bg-warning-500/10 p-4 text-left transition-colors hover:bg-warning-500/20 disabled:opacity-50"
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-medium text-amber-400">
+                  <div className="font-medium text-warning-400">
                     {t('subscription.revoke.button')}
                   </div>
                   <div className="mt-1 text-sm text-dark-400">
@@ -2360,9 +2360,9 @@ export default function Subscription() {
                       : t('subscription.revoke.description')}
                   </div>
                 </div>
-                <div className="text-amber-400">
+                <div className="text-warning-400">
                   {revokeMutation.isPending ? (
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-amber-400/30 border-t-amber-400" />
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-warning-400/30 border-t-amber-400" />
                   ) : (
                     <svg
                       className="h-5 w-5"

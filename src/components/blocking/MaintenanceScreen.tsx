@@ -21,7 +21,7 @@ export default function MaintenanceScreen() {
         <div className="mb-8">
           <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-dark-800">
             <svg
-              className="h-12 w-12 text-amber-500"
+              className="h-12 w-12 text-warning-500"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -57,15 +57,15 @@ export default function MaintenanceScreen() {
         {/* Decorative dots */}
         <div className="mt-8 flex items-center justify-center gap-2">
           <div
-            className="h-2 w-2 animate-pulse rounded-full bg-amber-500"
+            className="h-2 w-2 animate-pulse rounded-full bg-warning-500"
             style={{ animationDelay: '0ms' }}
           />
           <div
-            className="h-2 w-2 animate-pulse rounded-full bg-amber-500"
+            className="h-2 w-2 animate-pulse rounded-full bg-warning-500"
             style={{ animationDelay: '300ms' }}
           />
           <div
-            className="h-2 w-2 animate-pulse rounded-full bg-amber-500"
+            className="h-2 w-2 animate-pulse rounded-full bg-warning-500"
             style={{ animationDelay: '600ms' }}
           />
         </div>

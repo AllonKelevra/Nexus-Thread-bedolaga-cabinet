@@ -296,7 +296,7 @@ export default function InstallationGuide({
                       : 'border border-dark-700/50 bg-dark-800/80 text-dark-200 hover:border-dark-600/50 hover:bg-dark-700/80'
                 }`}
               >
-                {app.featured && <span className="h-2 w-2 shrink-0 rounded-full bg-amber-400" />}
+                {app.featured && <span className="h-2 w-2 shrink-0 rounded-full bg-warning-400" />}
                 <span className="relative z-10 truncate">{app.name}</span>
                 {appIconSvg && (
                   <div

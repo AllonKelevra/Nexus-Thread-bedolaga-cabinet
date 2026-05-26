@@ -49,7 +49,7 @@ interface StatusBadgeProps {
 function StatusBadge({ status }: StatusBadgeProps) {
   const styles: Record<string, string> = {
     paid: 'bg-success-500/20 text-success-400',
-    pending: 'bg-amber-500/20 text-amber-400',
+    pending: 'bg-warning-500/20 text-warning-400',
     cancelled: 'bg-error-500/20 text-error-400',
   };
 
@@ -76,7 +76,7 @@ interface StatCardProps {
 function StatCard({ label, value, color, isActive, onClick }: StatCardProps) {
   const colors: Record<string, string> = {
     blue: 'border-accent-500/30 bg-accent-500/20 text-accent-400',
-    amber: 'border-amber-500/30 bg-amber-500/20 text-amber-400',
+    amber: 'border-warning-500/30 bg-warning-500/20 text-warning-400',
     green: 'border-success-500/30 bg-success-500/20 text-success-400',
     red: 'border-error-500/30 bg-error-500/20 text-error-400',
   };

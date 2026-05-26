@@ -170,14 +170,18 @@ function SubscriptionSubRow({
 
   const days = subscription.days_remaining;
   const daysColor =
-    days === 0 ? 'text-error-400' : days <= 7 ? 'text-amber-400' : 'text-success-400';
+    days === 0 ? 'text-error-400' : days <= 7 ? 'text-warning-400' : 'text-success-400';
 
   const trafficPercent =
     subscription.traffic_limit_gb > 0
       ? Math.min(100, (subscription.traffic_used_gb / subscription.traffic_limit_gb) * 100)
       : 0;
   const trafficBarColor =
-    trafficPercent >= 90 ? 'bg-error-400' : trafficPercent >= 70 ? 'bg-amber-400' : 'bg-accent-400';
+    trafficPercent >= 90
+      ? 'bg-error-400'
+      : trafficPercent >= 70
+        ? 'bg-warning-400'
+        : 'bg-accent-400';
 
   return (
     <tr
@@ -308,11 +312,11 @@ function StatusBadge({ status }: { status: string | null }) {
       labelKey: 'admin.bulkActions.statuses.expired',
     },
     trial: {
-      class: 'border-amber-500/30 bg-amber-500/15 text-amber-400',
+      class: 'border-warning-500/30 bg-warning-500/15 text-warning-400',
       labelKey: 'admin.bulkActions.statuses.trial',
     },
     limited: {
-      class: 'border-amber-500/30 bg-amber-500/15 text-amber-400',
+      class: 'border-warning-500/30 bg-warning-500/15 text-warning-400',
       labelKey: 'admin.bulkActions.statuses.limited',
     },
     disabled: {
@@ -1007,8 +1011,8 @@ function ActionModal({
               />
             </div>
             {/* Warning about users with existing subscriptions */}
-            <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2.5">
-              <p className="text-xs text-amber-400">
+            <div className="rounded-xl border border-warning-500/20 bg-warning-500/5 px-3 py-2.5">
+              <p className="text-xs text-warning-400">
                 {t('admin.bulkActions.grantSubscription.warning')}
               </p>
             </div>
@@ -1029,8 +1033,8 @@ function ActionModal({
             </div>
             {activePaidCount > 0 && (
               <>
-                <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2.5">
-                  <p className="text-sm font-medium text-amber-400">
+                <div className="rounded-xl border border-warning-500/20 bg-warning-500/5 px-3 py-2.5">
+                  <p className="text-sm font-medium text-warning-400">
                     {t('admin.bulkActions.deleteSubscription.activePaidWarning', {
                       count: activePaidCount,
                       total: totalSelected,
@@ -2309,15 +2313,15 @@ export default function AdminBulkActions() {
             className={cn(
               'flex h-5 w-5 items-center justify-center rounded-md border-2 transition-all duration-150',
               trialOnly
-                ? 'border-amber-500 bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]'
-                : 'border-dark-500 bg-dark-700/60 hover:border-amber-500/50 hover:bg-dark-600/60',
+                ? 'border-warning-500 bg-warning-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]'
+                : 'border-dark-500 bg-dark-700/60 hover:border-warning-500/50 hover:bg-dark-600/60',
             )}
             aria-pressed={trialOnly}
           >
             {trialOnly && <CheckIcon />}
           </button>
           <span
-            className={cn('text-sm', trialOnly ? 'font-medium text-amber-400' : 'text-dark-400')}
+            className={cn('text-sm', trialOnly ? 'font-medium text-warning-400' : 'text-dark-400')}
           >
             {t('admin.bulkActions.filters.trialOnly')}
           </span>
