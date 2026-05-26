@@ -13,6 +13,7 @@ import { staggerContainer, staggerItem } from '@/components/motion/transitions';
 import type { PaymentMethod, PaymentMethodOption } from '../types';
 import BentoCard from '../components/ui/BentoCard';
 import { saveTopUpPendingInfo } from '../utils/topUpStorage';
+import { getSafeRedirectPath } from '../utils/safeRedirect';
 import { copyToClipboard } from '@/utils/clipboard';
 
 // Icons
@@ -145,7 +146,12 @@ export default function TopUpAmount() {
   }, [navigate]);
 
   const handleSuccess = useCallback(() => {
-    navigate(returnTo || '/balance', { replace: true });
+    // returnTo arrives via query string — validate as an in-app path before
+    // navigate(), otherwise an absolute or encoded URL produces ugly
+    // path artefacts in the URL bar. The validator returns '/' for invalid
+    // input; treat that case as "no returnTo" and use the /balance default.
+    const safe = getSafeRedirectPath(returnTo);
+    navigate(returnTo && safe !== '/' ? safe : '/balance', { replace: true });
   }, [navigate, returnTo]);
 
   // Keyboard: Escape to go back

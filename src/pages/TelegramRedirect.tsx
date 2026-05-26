@@ -7,26 +7,7 @@ import { useShallow } from 'zustand/shallow';
 import { brandingApi } from '../api/branding';
 import { isInTelegramWebApp, getTelegramInitData } from '../hooks/useTelegramSDK';
 import { tokenStorage } from '../utils/token';
-
-// Validate redirect URL to prevent open redirect attacks
-const getSafeRedirectUrl = (url: string | null): string => {
-  if (!url) return '/';
-  // Only allow relative paths starting with /
-  // Block protocol-relative URLs (//evil.com) and absolute URLs
-  if (!url.startsWith('/') || url.startsWith('//')) {
-    return '/';
-  }
-  // Additional check for encoded characters that could bypass validation
-  try {
-    const decoded = decodeURIComponent(url);
-    if (!decoded.startsWith('/') || decoded.startsWith('//') || decoded.includes('://')) {
-      return '/';
-    }
-  } catch {
-    return '/';
-  }
-  return url;
-};
+import { getSafeRedirectPath } from '../utils/safeRedirect';
 
 const MAX_RETRY_ATTEMPTS = 3;
 const RETRY_COUNT_KEY = 'telegram_redirect_retry_count';
@@ -65,7 +46,7 @@ export default function TelegramRedirect() {
   const logoUrl = branding ? brandingApi.getLogoUrl(branding) : null;
 
   // Get redirect target from URL params (validated)
-  const redirectTo = getSafeRedirectUrl(searchParams.get('redirect'));
+  const redirectTo = getSafeRedirectPath(searchParams.get('redirect'));
 
   useEffect(() => {
     // All timers scheduled inside this effect funnel through `timers` so the
