@@ -1778,6 +1778,66 @@ export default function AdminBulkActions() {
     [tariffFilter, trialOnly],
   );
 
+  // Selection-related derivations live here so the columns useMemo (below)
+  // can list them as deps without forward-reference warnings.
+  // When multiple tariffs are selected, filter users client-side
+  // (server only supports single tariff_id filter)
+  const filteredUsers = useMemo(() => {
+    let result = users;
+    if (trialOnly) {
+      result = result.filter(
+        (u) => u.subscription_is_trial || (u.subscriptions ?? []).some((s) => s.status === 'trial'),
+      );
+    }
+    return result;
+  }, [users, trialOnly]);
+
+  const allVisibleSubscriptionIds = useMemo(() => {
+    const ids: number[] = [];
+    for (const user of filteredUsers) {
+      const subs = user.subscriptions ?? [];
+      const filtered = getFilteredSubs(subs);
+      for (const sub of filtered) {
+        ids.push(sub.id);
+      }
+    }
+    return ids;
+  }, [filteredUsers, getFilteredSubs]);
+
+  const toggleAllSubscriptions = useCallback(() => {
+    const allSelected =
+      allVisibleSubscriptionIds.length > 0 &&
+      allVisibleSubscriptionIds.every((id) => subscriptionSelection[id]);
+
+    if (allSelected) {
+      const next: Record<number, boolean> = {};
+      for (const key of Object.keys(subscriptionSelection)) {
+        const id = Number(key);
+        if (!allVisibleSubscriptionIds.includes(id)) {
+          next[id] = subscriptionSelection[id];
+        }
+      }
+      setSubscriptionSelection(next);
+    } else {
+      const next = { ...subscriptionSelection };
+      for (const id of allVisibleSubscriptionIds) {
+        next[id] = true;
+      }
+      setSubscriptionSelection(next);
+    }
+
+    // Auto-expand rows that have filtered subs
+    const expanded: Record<number, boolean> = { ...expandedRows };
+    for (const user of users) {
+      const subs = user.subscriptions ?? [];
+      const filtered = getFilteredSubs(subs);
+      if (filtered.length > 1) {
+        expanded[user.id] = true;
+      }
+    }
+    setExpandedRows(expanded);
+  }, [allVisibleSubscriptionIds, subscriptionSelection, expandedRows, users, getFilteredSubs]);
+
   const handleOpenAction = (type: BulkActionType) => {
     setModal({ open: true, action: type, loading: false, result: null, progress: null });
   };
@@ -2125,71 +2185,18 @@ export default function AdminBulkActions() {
         },
       },
     ],
-    [t, formatWithCurrency, expandedRows, toggleExpandRow, getFilteredSubs],
+    [
+      t,
+      formatWithCurrency,
+      expandedRows,
+      toggleExpandRow,
+      getFilteredSubs,
+      allVisibleSubscriptionIds,
+      isMultiTariff,
+      subscriptionSelection,
+      toggleAllSubscriptions,
+    ],
   );
-
-  // When multiple tariffs are selected, filter users client-side
-  // (server only supports single tariff_id filter)
-  const filteredUsers = useMemo(() => {
-    let result = users;
-
-    // Trial-only filter: show users with trial subscription
-    if (trialOnly) {
-      result = result.filter(
-        (u) => u.subscription_is_trial || (u.subscriptions ?? []).some((s) => s.status === 'trial'),
-      );
-    }
-
-    return result;
-  }, [users, trialOnly]);
-
-  const allVisibleSubscriptionIds = useMemo(() => {
-    const ids: number[] = [];
-    for (const user of filteredUsers) {
-      const subs = user.subscriptions ?? [];
-      const filtered = getFilteredSubs(subs);
-      for (const sub of filtered) {
-        ids.push(sub.id);
-      }
-    }
-    return ids;
-  }, [filteredUsers, getFilteredSubs]);
-
-  const toggleAllSubscriptions = useCallback(() => {
-    const allSelected =
-      allVisibleSubscriptionIds.length > 0 &&
-      allVisibleSubscriptionIds.every((id) => subscriptionSelection[id]);
-
-    if (allSelected) {
-      // Deselect all
-      const next: Record<number, boolean> = {};
-      for (const key of Object.keys(subscriptionSelection)) {
-        const id = Number(key);
-        if (!allVisibleSubscriptionIds.includes(id)) {
-          next[id] = subscriptionSelection[id];
-        }
-      }
-      setSubscriptionSelection(next);
-    } else {
-      // Select all visible
-      const next = { ...subscriptionSelection };
-      for (const id of allVisibleSubscriptionIds) {
-        next[id] = true;
-      }
-      setSubscriptionSelection(next);
-    }
-
-    // Auto-expand rows that have filtered subs
-    const expanded: Record<number, boolean> = { ...expandedRows };
-    for (const user of users) {
-      const subs = user.subscriptions ?? [];
-      const filtered = getFilteredSubs(subs);
-      if (filtered.length > 1) {
-        expanded[user.id] = true;
-      }
-    }
-    setExpandedRows(expanded);
-  }, [allVisibleSubscriptionIds, subscriptionSelection, expandedRows, users, getFilteredSubs]);
 
   const table = useReactTable({
     data: filteredUsers,
