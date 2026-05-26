@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
 import i18n from '../i18n';
 import { DEVICE_ALIAS_MAX_LENGTH } from '../constants/devices';
 import { useCurrency } from '../hooks/useCurrency';
@@ -369,19 +370,43 @@ export default function AdminUserDetail() {
 
   const userId = id ? parseInt(id, 10) : null;
 
-  const loadUser = useCallback(async () => {
-    if (!userId) return;
-    try {
-      setLoading(true);
-      const data = await adminUsersApi.getUser(userId);
-      setUser(data);
-    } catch (error) {
-      console.error('Failed to load user:', error);
+  // React Query owns the main user fetch: caching across navigations + auto-loading
+  // state. loadUser is kept as a thin refetch wrapper so the 25+ mutation handlers
+  // that call `await loadUser()` after writes need no changes.
+  const userQuery = useQuery({
+    queryKey: ['admin-user-detail', userId] as const,
+    queryFn: () => {
+      if (!userId) throw new Error('No userId');
+      return adminUsersApi.getUser(userId);
+    },
+    enabled: !!userId && !isNaN(userId),
+  });
+
+  useEffect(() => {
+    if (userQuery.data) setUser(userQuery.data);
+  }, [userQuery.data]);
+
+  useEffect(() => {
+    setLoading(userQuery.isFetching);
+  }, [userQuery.isFetching]);
+
+  useEffect(() => {
+    if (userQuery.isError) {
+      console.error('Failed to load user:', userQuery.error);
       navigate('/admin/users');
-    } finally {
-      setLoading(false);
     }
-  }, [userId, navigate]);
+  }, [userQuery.isError, userQuery.error, navigate]);
+
+  const loadUser = useCallback(
+    async () => {
+      await userQuery.refetch();
+    },
+    // userQuery.refetch is a stable function across renders; including the whole
+    // userQuery object would re-create loadUser on every render and cascade into
+    // useEffects that depend on it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [userQuery.refetch],
+  );
 
   const loadSyncStatus = useCallback(async () => {
     if (!userId) return;
@@ -579,10 +604,9 @@ export default function AdminUserDetail() {
   useEffect(() => {
     if (!userId || isNaN(userId)) {
       navigate('/admin/users');
-      return;
     }
-    loadUser();
-  }, [userId, loadUser, navigate]);
+    // user data is auto-loaded by userQuery (enabled when userId is valid)
+  }, [userId, navigate]);
 
   // Load panel info when subscription changes (separate from mount to avoid redundant loadUser)
   useEffect(() => {
