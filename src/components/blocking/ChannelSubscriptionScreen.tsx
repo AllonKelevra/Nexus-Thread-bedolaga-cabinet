@@ -138,7 +138,7 @@ export default function ChannelSubscriptionScreen() {
         {channels.length === 0 && channelInfo?.channel_link && (
           <button
             onClick={() => openChannel(channelInfo.channel_link)}
-            className="mb-6 flex w-full items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 px-6 py-4 font-semibold text-white transition-all duration-200 hover:from-blue-600 hover:to-cyan-600"
+            className="mb-6 flex w-full items-center justify-center gap-3 rounded-xl bg-accent-500 px-6 py-4 font-semibold text-white transition-colors duration-200 hover:bg-accent-400"
           >
             {t('blocking.channel.openChannel')}
           </button>
