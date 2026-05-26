@@ -64,7 +64,8 @@ export function getRiskColor(score: number): { text: string; bg: string; bar: st
     return { text: 'text-success-400', bg: 'bg-success-500/20', bar: 'bg-success-500' };
   if (score < 50)
     return { text: 'text-warning-400', bg: 'bg-warning-500/20', bar: 'bg-warning-500' };
-  if (score < 70) return { text: 'text-orange-400', bg: 'bg-orange-500/20', bar: 'bg-orange-500' };
+  if (score < 70)
+    return { text: 'text-warning-400', bg: 'bg-warning-500/20', bar: 'bg-warning-500' };
   return { text: 'text-error-400', bg: 'bg-error-500/20', bar: 'bg-error-500' };
 }
 
@@ -75,7 +76,7 @@ export function getRiskLevelColor(level: string): { text: string; bg: string } {
     case 'medium':
       return { text: 'text-warning-400', bg: 'bg-warning-500/20' };
     case 'high':
-      return { text: 'text-orange-400', bg: 'bg-orange-500/20' };
+      return { text: 'text-warning-400', bg: 'bg-warning-500/20' };
     case 'critical':
       return { text: 'text-error-400', bg: 'bg-error-500/20' };
     default:

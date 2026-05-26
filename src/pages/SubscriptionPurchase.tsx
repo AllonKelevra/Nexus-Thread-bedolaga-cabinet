@@ -906,7 +906,7 @@ export default function SubscriptionPurchase() {
                                       className={`rounded px-1.5 py-0.5 text-xs ${
                                         promoDaily.isPromoGroup
                                           ? 'bg-success-500/20 text-success-400'
-                                          : 'bg-orange-500/20 text-orange-400'
+                                          : 'bg-warning-500/20 text-warning-400'
                                       }`}
                                     >
                                       -{promoDaily.percent}%
@@ -938,7 +938,7 @@ export default function SubscriptionPurchase() {
                                       className={`rounded px-1.5 py-0.5 text-xs ${
                                         promoPeriod.isPromoGroup
                                           ? 'bg-success-500/20 text-success-400'
-                                          : 'bg-orange-500/20 text-orange-400'
+                                          : 'bg-warning-500/20 text-warning-400'
                                       }`}
                                     >
                                       -{promoPeriod.percent}%
@@ -1172,7 +1172,7 @@ export default function SubscriptionPurchase() {
                                 {displayDiscount && displayDiscount > 0 && (
                                   <div
                                     className={`absolute -right-2 -top-2 rounded-full px-2 py-0.5 text-xs font-medium text-white ${
-                                      promoPeriod.isPromoGroup ? 'bg-success-500' : 'bg-orange-500'
+                                      promoPeriod.isPromoGroup ? 'bg-success-500' : 'bg-warning-500'
                                     }`}
                                   >
                                     -{displayDiscount}%
@@ -1317,7 +1317,7 @@ export default function SubscriptionPurchase() {
                                                 className={`rounded px-1.5 py-0.5 text-xs ${
                                                   promoCustom.isPromoGroup
                                                     ? 'bg-success-500/20 text-success-400'
-                                                    : 'bg-orange-500/20 text-orange-400'
+                                                    : 'bg-warning-500/20 text-warning-400'
                                                 }`}
                                               >
                                                 -{promoCustom.percent}%
@@ -1538,8 +1538,8 @@ export default function SubscriptionPurchase() {
                               </div>
 
                               {promoPeriod.percent && (
-                                <div className="mb-4 flex items-center justify-center gap-2 rounded-lg border border-orange-500/30 bg-orange-500/10 p-2">
-                                  <span className="text-sm font-medium text-orange-400">
+                                <div className="mb-4 flex items-center justify-center gap-2 rounded-lg border border-warning-500/30 bg-warning-500/10 p-2">
+                                  <span className="text-sm font-medium text-warning-400">
                                     {t('promo.discountApplied')} -{promoPeriod.percent}%
                                   </span>
                                 </div>
@@ -1695,7 +1695,7 @@ export default function SubscriptionPurchase() {
                         {promoPeriod.percent && promoPeriod.percent > 0 && (
                           <div
                             className={`absolute right-2 top-2 z-10 rounded-full px-2 py-0.5 text-xs font-medium text-white shadow-sm ${
-                              promoPeriod.isPromoGroup ? 'bg-success-500' : 'bg-orange-500'
+                              promoPeriod.isPromoGroup ? 'bg-success-500' : 'bg-warning-500'
                             }`}
                           >
                             -{promoPeriod.percent}%
@@ -1741,7 +1741,7 @@ export default function SubscriptionPurchase() {
                         {promoTraffic.percent && promoTraffic.percent > 0 && (
                           <div
                             className={`absolute right-2 top-2 z-10 rounded-full px-2 py-0.5 text-xs font-medium text-white shadow-sm ${
-                              promoTraffic.isPromoGroup ? 'bg-success-500' : 'bg-orange-500'
+                              promoTraffic.isPromoGroup ? 'bg-success-500' : 'bg-warning-500'
                             }`}
                           >
                             -{promoTraffic.percent}%
@@ -1795,7 +1795,7 @@ export default function SubscriptionPurchase() {
                           {promoServer.percent && promoServer.percent > 0 ? (
                             <div
                               className={`absolute right-2 top-2 z-10 rounded-full px-2 py-0.5 text-xs font-medium text-white shadow-sm ${
-                                promoServer.isPromoGroup ? 'bg-success-500' : 'bg-orange-500'
+                                promoServer.isPromoGroup ? 'bg-success-500' : 'bg-warning-500'
                               }`}
                             >
                               -{promoServer.percent}%
@@ -1894,9 +1894,9 @@ export default function SubscriptionPurchase() {
                   ) : preview ? (
                     <div className="space-y-4 rounded-xl bg-dark-800/50 p-5">
                       {activeDiscount?.is_active && activeDiscount.discount_percent && (
-                        <div className="flex items-center justify-center gap-2 rounded-lg border border-orange-500/30 bg-orange-500/10 p-3">
+                        <div className="flex items-center justify-center gap-2 rounded-lg border border-warning-500/30 bg-warning-500/10 p-3">
                           <svg
-                            className="h-4 w-4 text-orange-400"
+                            className="h-4 w-4 text-warning-400"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -1908,7 +1908,7 @@ export default function SubscriptionPurchase() {
                               d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"
                             />
                           </svg>
-                          <span className="text-sm font-medium text-orange-400">
+                          <span className="text-sm font-medium text-warning-400">
                             {t('promo.discountApplied')} -{activeDiscount.discount_percent}%
                           </span>
                         </div>

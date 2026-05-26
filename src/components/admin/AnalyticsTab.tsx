@@ -167,7 +167,7 @@ export function AnalyticsTab() {
             <div className="my-5 border-t border-dark-700/30" />
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <svg className="h-4 w-4 text-orange-400" viewBox="0 0 24 24" fill="currentColor">
+                <svg className="h-4 w-4 text-warning-400" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z" />
                 </svg>
                 <span className="text-sm font-medium text-dark-200">

@@ -153,10 +153,10 @@ const RISK_STYLES: Record<RiskLevel, { dot: string; text: string; bar: string; b
     bg: 'bg-warning-400/10',
   },
   high: {
-    dot: 'bg-orange-400',
-    text: 'text-orange-400',
-    bar: 'bg-orange-400',
-    bg: 'bg-orange-400/10',
+    dot: 'bg-warning-400',
+    text: 'text-warning-400',
+    bar: 'bg-warning-400',
+    bg: 'bg-warning-400/10',
   },
   critical: {
     dot: 'bg-error-400 animate-pulse',
