@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { rbacApi, AuditLogEntry, AuditLogFilters } from '@/api/rbac';
 import { PermissionGate } from '@/components/auth/PermissionGate';
 import { usePlatform } from '@/platform/hooks/usePlatform';
@@ -137,11 +138,7 @@ const INITIAL_FILTERS: FiltersState = {
 
 // === Utility functions ===
 
-function translateAction(
-  action: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  t: any,
-): string {
+function translateAction(action: string, t: TFunction): string {
   return action
     .split(',')
     .map((perm: string) => {
