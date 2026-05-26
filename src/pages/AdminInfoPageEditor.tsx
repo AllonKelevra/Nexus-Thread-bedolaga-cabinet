@@ -1184,12 +1184,16 @@ export default function AdminInfoPageEditor() {
 
         {/* Page type selector */}
         <div>
-          <label className="label">{t('admin.infoPages.fields.pageType')}</label>
-          <div className="flex gap-1">
+          <label id="ip-pagetype-label" className="label">
+            {t('admin.infoPages.fields.pageType')}
+          </label>
+          <div className="flex gap-1" role="radiogroup" aria-labelledby="ip-pagetype-label">
             {(['page', 'faq'] as const).map((pt) => (
               <button
                 key={pt}
                 type="button"
+                role="radio"
+                aria-checked={pageType === pt}
                 onClick={() => setPageType(pt)}
                 className={cn(
                   'min-h-[44px] rounded-lg px-4 py-2.5 text-sm font-medium transition-colors',
@@ -1240,12 +1244,16 @@ export default function AdminInfoPageEditor() {
 
         {/* Locale tabs */}
         <div>
-          <label className="label">{t('admin.infoPages.localeLabel')}</label>
-          <div className="flex flex-wrap gap-1">
+          <label id="ip-locale-label" className="label">
+            {t('admin.infoPages.localeLabel')}
+          </label>
+          <div className="flex flex-wrap gap-1" role="radiogroup" aria-labelledby="ip-locale-label">
             {AVAILABLE_LOCALES.map((loc) => (
               <button
                 key={loc}
                 type="button"
+                role="radio"
+                aria-checked={activeLocale === loc}
                 onClick={() => switchLocale(loc)}
                 className={cn(
                   'min-h-[44px] rounded-lg px-4 py-2.5 text-sm font-medium transition-colors',
