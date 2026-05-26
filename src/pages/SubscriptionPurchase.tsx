@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router';
 import { AxiosError } from 'axios';
 import { subscriptionApi } from '../api/subscription';
-import { promoApi } from '../api/promo';
+import { usePromoDiscount } from '../hooks/usePromoDiscount';
 import { WebBackButton } from '../components/WebBackButton';
 import { getGlassColors } from '../utils/glassTheme';
 import { useTheme } from '../hooks/useTheme';
@@ -66,12 +66,8 @@ export default function SubscriptionPurchase() {
     refetchOnMount: 'always',
   });
 
-  // Active promo discount
-  const { data: activeDiscount } = useQuery({
-    queryKey: ['active-discount'],
-    queryFn: promoApi.getActiveDiscount,
-    staleTime: 30000,
-  });
+  // Active promo discount + applyPromoDiscount helper (hook owns both)
+  const { activeDiscount, applyPromoDiscount } = usePromoDiscount();
 
   // Sales mode detection
   const isTariffsMode = purchaseOptions?.sales_mode === 'tariffs';
@@ -87,47 +83,7 @@ export default function SubscriptionPurchase() {
   });
   const isMultiTariff = multiSubData?.multi_tariff_enabled ?? false;
 
-  // Helper to apply promo discount
-  const applyPromoDiscount = (
-    priceKopeks: number,
-    existingOriginalPrice?: number | null,
-  ): {
-    price: number;
-    original: number | null;
-    percent: number | null;
-    isPromoGroup: boolean;
-  } => {
-    const hasExisting = (existingOriginalPrice ?? 0) > priceKopeks;
-    const hasPromo = !!activeDiscount?.is_active && !!activeDiscount.discount_percent;
-
-    if (!hasExisting && !hasPromo) {
-      return { price: priceKopeks, original: null, percent: null, isPromoGroup: false };
-    }
-
-    let finalPrice = priceKopeks;
-    if (hasPromo) {
-      finalPrice = Math.round(priceKopeks * (1 - activeDiscount!.discount_percent! / 100));
-    }
-
-    if (hasExisting) {
-      const combinedPercent = hasPromo
-        ? Math.round((1 - finalPrice / existingOriginalPrice!) * 100)
-        : Math.round((1 - priceKopeks / existingOriginalPrice!) * 100);
-      return {
-        price: finalPrice,
-        original: existingOriginalPrice!,
-        percent: combinedPercent,
-        isPromoGroup: true,
-      };
-    }
-
-    return {
-      price: finalPrice,
-      original: priceKopeks,
-      percent: activeDiscount!.discount_percent!,
-      isPromoGroup: false,
-    };
-  };
+  // (applyPromoDiscount moved into usePromoDiscount above)
 
   // Classic mode state
   const [currentStep, setCurrentStep] = useState<PurchaseStep>('period');
