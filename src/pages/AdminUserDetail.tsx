@@ -21,11 +21,11 @@ import {
 } from '../api/adminUsers';
 import { adminApi, type AdminTicket, type AdminTicketDetail } from '../api/admin';
 import { promocodesApi, type PromoGroup } from '../api/promocodes';
-import { promoOffersApi } from '../api/promoOffers';
 import { AdminBackButton } from '../components/admin';
 import { GiftsTab } from '../components/admin/userDetail/GiftsTab';
 import { SyncTab } from '../components/admin/userDetail/SyncTab';
 import { ReferralsTab } from '../components/admin/userDetail/ReferralsTab';
+import { BalanceTab } from '../components/admin/userDetail/BalanceTab';
 import { createNumberInputHandler, toNumber } from '../utils/inputHelpers';
 import { usePermissionStore } from '../store/permissions';
 import { MessageMediaGrid } from '../components/tickets/MessageMediaGrid';
@@ -132,9 +132,7 @@ export default function AdminUserDetail() {
   const [confirmingAction, setConfirmingAction] = useState<string | null>(null);
   const confirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Balance form
-  const [balanceAmount, setBalanceAmount] = useState<number | ''>('');
-  const [balanceDescription, setBalanceDescription] = useState('');
+  // (Balance form state moved into BalanceTab.tsx)
 
   // Tickets
   const [tickets, setTickets] = useState<AdminTicket[]>([]);
@@ -163,10 +161,7 @@ export default function AdminUserDetail() {
   const [editingReferralCommission, setEditingReferralCommission] = useState(false);
   const [referralCommissionValue, setReferralCommissionValue] = useState<number | ''>('');
 
-  // Send promo offer
-  const [offerDiscountPercent, setOfferDiscountPercent] = useState<number | ''>('');
-  const [offerValidHours, setOfferValidHours] = useState<number | ''>(24);
-  const [offerSending, setOfferSending] = useState(false);
+  // (Send-promo-offer form state moved into BalanceTab.tsx)
 
   // Traffic packages
   const [selectedTrafficGb, setSelectedTrafficGb] = useState<string>('');
@@ -479,28 +474,7 @@ export default function AdminUserDetail() {
   // All other per-tab data fetching is driven by useQuery `enabled` gating
   // wired to userId / activeSubscriptionId / activeTab — no manual triggers needed.
 
-  const handleUpdateBalance = async (isAdd: boolean) => {
-    if (balanceAmount === '' || !userId) return;
-    setActionLoading(true);
-    try {
-      const amount = Math.abs(toNumber(balanceAmount) * 100);
-      await adminUsersApi.updateBalance(userId, {
-        amount_kopeks: isAdd ? amount : -amount,
-        description:
-          balanceDescription ||
-          (isAdd
-            ? t('admin.users.detail.balance.addByAdmin')
-            : t('admin.users.detail.balance.subtractByAdmin')),
-      });
-      await loadUser();
-      setBalanceAmount('');
-      setBalanceDescription('');
-    } catch (error) {
-      console.error('Failed to update balance:', error);
-    } finally {
-      setActionLoading(false);
-    }
-  };
+  // (handleUpdateBalance moved into BalanceTab.tsx)
 
   const handleUpdateSubscription = async (overrideAction?: string) => {
     if (!userId) return;
@@ -767,42 +741,7 @@ export default function AdminUserDetail() {
     }
   };
 
-  const handleDeactivateOffer = async () => {
-    if (!userId) return;
-    setActionLoading(true);
-    try {
-      await promocodesApi.deactivateDiscount(userId);
-      notify.success(t('admin.users.detail.offerDeactivated'), t('common.success'));
-      await loadUser();
-    } catch {
-      notify.error(t('admin.users.userActions.error'), t('common.error'));
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleSendOffer = async () => {
-    if (!userId || offerDiscountPercent === '' || offerValidHours === '') return;
-    setOfferSending(true);
-    try {
-      await promoOffersApi.broadcastOffer({
-        user_id: userId,
-        notification_type: 'admin_personal',
-        discount_percent: toNumber(offerDiscountPercent),
-        valid_hours: toNumber(offerValidHours, 24),
-        effect_type: 'percent_discount',
-        send_notification: true,
-      });
-      notify.success(t('admin.users.detail.offerSent'), t('common.success'));
-      setOfferDiscountPercent('');
-      setOfferValidHours(24);
-      await loadUser();
-    } catch {
-      notify.error(t('admin.users.detail.offerSendError'), t('common.error'));
-    } finally {
-      setOfferSending(false);
-    }
-  };
+  // (handleDeactivateOffer / handleSendOffer moved into BalanceTab.tsx)
 
   // (Referrals-tab handlers + debounced search useEffects + click-outside
   // useEffects moved into components/admin/userDetail/ReferralsTab.tsx)
@@ -2483,165 +2422,14 @@ export default function AdminUserDetail() {
         )}
 
         {/* Balance Tab */}
-        {activeTab === 'balance' && (
-          <div className="space-y-4">
-            {/* Current balance */}
-            <div className="rounded-xl border border-accent-500/30 bg-gradient-to-r from-accent-500/20 to-accent-700/20 p-4">
-              <div className="mb-1 text-sm text-dark-400">
-                {t('admin.users.detail.balance.current')}
-              </div>
-              <div className="text-3xl font-bold text-dark-100">
-                {formatWithCurrency(user.balance_rubles)}
-              </div>
-            </div>
-
-            {/* Add/subtract form */}
-            {hasPermission('users:balance') && (
-              <div className="space-y-3 rounded-xl bg-dark-800/50 p-4">
-                <input
-                  type="number"
-                  value={balanceAmount}
-                  onChange={createNumberInputHandler(setBalanceAmount)}
-                  placeholder={t('admin.users.detail.balance.amountPlaceholder')}
-                  className="input"
-                />
-                <input
-                  type="text"
-                  value={balanceDescription}
-                  onChange={(e) => setBalanceDescription(e.target.value)}
-                  placeholder={t('admin.users.detail.balance.descriptionPlaceholder')}
-                  className="input"
-                  maxLength={500}
-                />
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleUpdateBalance(true)}
-                    disabled={actionLoading || balanceAmount === ''}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-success-500 py-2 text-white transition-colors hover:bg-success-600 disabled:opacity-50"
-                  >
-                    <PlusIcon /> {t('admin.users.detail.balance.add')}
-                  </button>
-                  <button
-                    onClick={() => handleUpdateBalance(false)}
-                    disabled={actionLoading || balanceAmount === ''}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-error-500 py-2 text-white transition-colors hover:bg-error-600 disabled:opacity-50"
-                  >
-                    <MinusIcon /> {t('admin.users.detail.balance.subtract')}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Active promo offer */}
-            {user.promo_offer_discount_percent > 0 && (
-              <div className="rounded-xl border border-accent-500/20 bg-accent-500/5 p-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <span className="text-sm font-medium text-accent-400">
-                    {t('admin.users.detail.activePromoOffer')}
-                  </span>
-                  <button
-                    onClick={() => handleInlineConfirm('deactivateOffer', handleDeactivateOffer)}
-                    disabled={actionLoading}
-                    className={`rounded-lg px-3 py-1 text-xs font-medium transition-all disabled:opacity-50 ${
-                      confirmingAction === 'deactivateOffer'
-                        ? 'bg-error-500 text-white'
-                        : 'bg-error-500/15 text-error-400 hover:bg-error-500/25'
-                    }`}
-                  >
-                    {confirmingAction === 'deactivateOffer'
-                      ? t('admin.users.detail.actions.areYouSure')
-                      : t('admin.users.detail.deactivateOffer')}
-                  </button>
-                </div>
-                <div className="grid grid-cols-3 gap-3 text-center">
-                  <div>
-                    <div className="text-lg font-bold text-dark-100">
-                      {user.promo_offer_discount_percent}%
-                    </div>
-                    <div className="text-xs text-dark-500">{t('admin.users.detail.discount')}</div>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-dark-100">
-                      {user.promo_offer_discount_source || '-'}
-                    </div>
-                    <div className="text-xs text-dark-500">{t('admin.users.detail.source')}</div>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-dark-100">
-                      {user.promo_offer_discount_expires_at
-                        ? formatDate(user.promo_offer_discount_expires_at)
-                        : '-'}
-                    </div>
-                    <div className="text-xs text-dark-500">{t('admin.users.detail.expiresAt')}</div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Send promo offer */}
-            {hasPermission('users:send_offer') && (
-              <div className="rounded-xl bg-dark-800/50 p-4">
-                <div className="mb-3 text-sm font-medium text-dark-200">
-                  {t('admin.users.detail.sendOffer')}
-                </div>
-                <div className="space-y-3">
-                  <input
-                    type="number"
-                    value={offerDiscountPercent}
-                    onChange={createNumberInputHandler(setOfferDiscountPercent, 1)}
-                    placeholder={t('admin.users.detail.discountPercent')}
-                    className="input"
-                    min={1}
-                    max={100}
-                  />
-                  <input
-                    type="number"
-                    value={offerValidHours}
-                    onChange={createNumberInputHandler(setOfferValidHours, 1)}
-                    placeholder={t('admin.users.detail.validHours')}
-                    className="input"
-                    min={1}
-                    max={8760}
-                  />
-                  <button
-                    onClick={handleSendOffer}
-                    disabled={offerSending || offerDiscountPercent === '' || offerValidHours === ''}
-                    className="btn-primary w-full disabled:opacity-50"
-                  >
-                    {offerSending ? t('common.loading') : t('admin.users.detail.sendOffer')}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Recent transactions */}
-            {user.recent_transactions.length > 0 && (
-              <div className="rounded-xl bg-dark-800/50 p-4">
-                <div className="mb-3 font-medium text-dark-200">
-                  {t('admin.users.detail.balance.recentTransactions')}
-                </div>
-                <div className="max-h-48 space-y-2 overflow-y-auto">
-                  {user.recent_transactions.map((tx) => (
-                    <div
-                      key={tx.id}
-                      className="flex items-center justify-between border-b border-dark-700 py-2 last:border-0"
-                    >
-                      <div>
-                        <div className="text-sm text-dark-200">{tx.description || tx.type}</div>
-                        <div className="text-xs text-dark-500">{formatDate(tx.created_at)}</div>
-                      </div>
-                      <div
-                        className={tx.amount_kopeks >= 0 ? 'text-success-400' : 'text-error-400'}
-                      >
-                        {tx.amount_kopeks >= 0 ? '+' : ''}
-                        {formatWithCurrency(tx.amount_rubles)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+        {activeTab === 'balance' && userId && (
+          <BalanceTab
+            user={user}
+            userId={userId}
+            hasPermission={hasPermission}
+            onUserRefresh={loadUser}
+            formatDate={formatDate}
+          />
         )}
 
         {/* Sync Tab */}
