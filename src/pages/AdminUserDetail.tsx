@@ -408,39 +408,129 @@ export default function AdminUserDetail() {
     [userQuery.refetch],
   );
 
-  const loadSyncStatus = useCallback(async () => {
-    if (!userId) return;
-    try {
-      const data = await adminUsersApi.getSyncStatus(userId, activeSubscriptionId ?? undefined);
-      setSyncStatus(data);
-    } catch (error) {
-      console.error('Failed to load sync status:', error);
-    }
-  }, [userId, activeSubscriptionId]);
+  // ---- React Query hooks for the rest of the leaf loaders -----------------
+  // Each loader callback below becomes a thin refetch wrapper so existing call
+  // sites (mutation handlers, useEffects) continue to work unchanged. queryKey
+  // includes the inputs that drive the request (userId / activeSubscriptionId)
+  // so changing them auto-invalidates.
 
-  const loadTariffs = useCallback(async () => {
-    if (!userId) return;
-    try {
-      const data = await adminUsersApi.getAvailableTariffs(userId, true);
-      setTariffs(data.tariffs);
-    } catch (error) {
-      console.error('Failed to load tariffs:', error);
-    }
-  }, [userId]);
+  const syncStatusQuery = useQuery({
+    queryKey: ['admin-user-sync-status', userId, activeSubscriptionId] as const,
+    queryFn: () => adminUsersApi.getSyncStatus(userId as number, activeSubscriptionId ?? undefined),
+    enabled: !!userId && !isNaN(userId) && activeTab === 'sync' && hasPermission('users:sync'),
+  });
+  const tariffsQuery = useQuery({
+    queryKey: ['admin-user-tariffs', userId] as const,
+    queryFn: () => adminUsersApi.getAvailableTariffs(userId as number, true),
+    enabled: !!userId && !isNaN(userId) && activeTab === 'subscription',
+  });
+  const ticketsQuery = useQuery({
+    queryKey: ['admin-user-tickets', userId] as const,
+    queryFn: () => adminApi.getTickets({ user_id: userId as number, per_page: 50 }),
+    enabled: !!userId && !isNaN(userId) && activeTab === 'tickets',
+  });
+  const referralsQuery = useQuery({
+    queryKey: ['admin-user-referrals', userId] as const,
+    queryFn: () => adminUsersApi.getReferrals(userId as number, 0, 50),
+    enabled: !!userId && !isNaN(userId) && activeTab === 'info',
+  });
+  const referralsListQuery = useQuery({
+    queryKey: ['admin-user-referrals-list', userId] as const,
+    queryFn: () => adminUsersApi.getReferrals(userId as number, 0, 100),
+    enabled: !!userId && !isNaN(userId) && activeTab === 'referrals',
+  });
+  const panelInfoQuery = useQuery({
+    queryKey: ['admin-user-panel-info', userId, activeSubscriptionId] as const,
+    queryFn: () => adminUsersApi.getPanelInfo(userId as number, activeSubscriptionId ?? undefined),
+    enabled: !!userId && !isNaN(userId),
+  });
+  const nodeUsageQuery = useQuery({
+    queryKey: ['admin-user-node-usage', userId, activeSubscriptionId] as const,
+    queryFn: () => adminUsersApi.getNodeUsage(userId as number, activeSubscriptionId ?? undefined),
+    enabled: !!userId && !isNaN(userId) && activeTab === 'subscription',
+  });
+  const devicesQuery = useQuery({
+    queryKey: ['admin-user-devices', userId, activeSubscriptionId] as const,
+    queryFn: () =>
+      adminUsersApi.getUserDevices(userId as number, activeSubscriptionId ?? undefined),
+    enabled: !!userId && !isNaN(userId) && activeTab === 'subscription',
+  });
+  const giftsQuery = useQuery({
+    queryKey: ['admin-user-gifts', userId] as const,
+    queryFn: () => adminUsersApi.getUserGifts(userId as number),
+    enabled: !!userId && !isNaN(userId) && activeTab === 'gifts',
+  });
+  const promoGroupsQuery = useQuery({
+    queryKey: ['admin-promo-groups-all'] as const,
+    queryFn: () => promocodesApi.getPromoGroups({ limit: 100 }),
+    enabled: activeTab === 'info' && hasPermission('users:promo_group'),
+  });
 
-  const loadTickets = useCallback(async () => {
-    if (!userId) return;
-    try {
-      setTicketsLoading(true);
-      const data = await adminApi.getTickets({ user_id: userId, per_page: 50 });
-      setTickets(data.items);
-      setTicketsTotal(data.total);
-    } catch (error) {
-      console.error('Failed to load tickets:', error);
-    } finally {
-      setTicketsLoading(false);
+  // --- Sync each query's data + isFetching into existing state vars --------
+  useEffect(() => {
+    if (syncStatusQuery.data) setSyncStatus(syncStatusQuery.data);
+  }, [syncStatusQuery.data]);
+  useEffect(() => {
+    if (tariffsQuery.data) setTariffs(tariffsQuery.data.tariffs);
+  }, [tariffsQuery.data]);
+  useEffect(() => {
+    if (ticketsQuery.data) {
+      setTickets(ticketsQuery.data.items);
+      setTicketsTotal(ticketsQuery.data.total);
     }
-  }, [userId]);
+    setTicketsLoading(ticketsQuery.isFetching);
+  }, [ticketsQuery.data, ticketsQuery.isFetching]);
+  useEffect(() => {
+    if (referralsQuery.data) setReferrals(referralsQuery.data.users || []);
+    setReferralsLoading(referralsQuery.isFetching);
+  }, [referralsQuery.data, referralsQuery.isFetching]);
+  useEffect(() => {
+    if (referralsListQuery.data) {
+      setReferralsList(referralsListQuery.data.users || []);
+      setReferralsTotal(referralsListQuery.data.total || 0);
+    }
+    setReferralsListLoading(referralsListQuery.isFetching);
+  }, [referralsListQuery.data, referralsListQuery.isFetching]);
+  useEffect(() => {
+    if (panelInfoQuery.data) setPanelInfo(panelInfoQuery.data);
+    setPanelInfoLoading(panelInfoQuery.isFetching);
+  }, [panelInfoQuery.data, panelInfoQuery.isFetching]);
+  useEffect(() => {
+    if (nodeUsageQuery.data) setNodeUsage(nodeUsageQuery.data);
+  }, [nodeUsageQuery.data]);
+  useEffect(() => {
+    if (devicesQuery.data) {
+      setDevices(devicesQuery.data.devices);
+      setDevicesTotal(devicesQuery.data.total);
+      setDeviceLimit(devicesQuery.data.device_limit);
+    }
+    setDevicesLoading(devicesQuery.isFetching);
+  }, [devicesQuery.data, devicesQuery.isFetching]);
+  useEffect(() => {
+    if (giftsQuery.data) setGiftsData(giftsQuery.data);
+    setGiftsLoading(giftsQuery.isFetching);
+  }, [giftsQuery.data, giftsQuery.isFetching]);
+  useEffect(() => {
+    if (promoGroupsQuery.data) setPromoGroups(promoGroupsQuery.data.items);
+  }, [promoGroupsQuery.data]);
+
+  // --- Loader callbacks: thin refetch wrappers (signatures unchanged) ------
+
+  const loadSyncStatus = useCallback(
+    async () => {
+      await syncStatusQuery.refetch();
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [syncStatusQuery.refetch],
+  );
+
+  const loadTickets = useCallback(
+    async () => {
+      await ticketsQuery.refetch();
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [ticketsQuery.refetch],
+  );
 
   const loadTicketDetail = useCallback(async (ticketId: number) => {
     try {
@@ -454,43 +544,21 @@ export default function AdminUserDetail() {
     }
   }, []);
 
-  const loadReferrals = useCallback(async () => {
-    if (!userId) return;
-    try {
-      setReferralsLoading(true);
-      const data = await adminUsersApi.getReferrals(userId, 0, 50);
-      setReferrals(data.users || []);
-    } catch {
-    } finally {
-      setReferralsLoading(false);
-    }
-  }, [userId]);
+  const loadReferralsList = useCallback(
+    async () => {
+      await referralsListQuery.refetch();
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [referralsListQuery.refetch],
+  );
 
-  const loadReferralsList = useCallback(async () => {
-    if (!userId) return;
-    setReferralsListLoading(true);
-    try {
-      const data = await adminUsersApi.getReferrals(userId, 0, 100);
-      setReferralsList(data.users || []);
-      setReferralsTotal(data.total || 0);
-    } catch {
-      // silent
-    } finally {
-      setReferralsListLoading(false);
-    }
-  }, [userId]);
-
-  const loadPanelInfo = useCallback(async () => {
-    if (!userId) return;
-    try {
-      setPanelInfoLoading(true);
-      const data = await adminUsersApi.getPanelInfo(userId, activeSubscriptionId ?? undefined);
-      setPanelInfo(data);
-    } catch {
-    } finally {
-      setPanelInfoLoading(false);
-    }
-  }, [userId, activeSubscriptionId]);
+  const loadPanelInfo = useCallback(
+    async () => {
+      await panelInfoQuery.refetch();
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [panelInfoQuery.refetch],
+  );
 
   const loadRequestHistory = useCallback(
     async (offset = 0, append = false) => {
@@ -515,50 +583,25 @@ export default function AdminUserDetail() {
     [userId, requestHistorySubId],
   );
 
-  const loadNodeUsage = useCallback(async () => {
-    if (!userId) return;
-    try {
-      const data = await adminUsersApi.getNodeUsage(userId, activeSubscriptionId ?? undefined);
-      setNodeUsage(data);
-    } catch {}
-  }, [userId, activeSubscriptionId]);
+  const loadNodeUsage = useCallback(
+    async () => {
+      await nodeUsageQuery.refetch();
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [nodeUsageQuery.refetch],
+  );
 
-  const loadDevices = useCallback(async () => {
-    if (!userId) return;
-    try {
-      setDevicesLoading(true);
-      const data = await adminUsersApi.getUserDevices(userId, activeSubscriptionId ?? undefined);
-      setDevices(data.devices);
-      setDevicesTotal(data.total);
-      setDeviceLimit(data.device_limit);
-    } catch {
-    } finally {
-      setDevicesLoading(false);
-    }
-  }, [userId, activeSubscriptionId]);
+  const loadDevices = useCallback(
+    async () => {
+      await devicesQuery.refetch();
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [devicesQuery.refetch],
+  );
 
   const loadSubscriptionData = useCallback(async () => {
     await Promise.all([loadPanelInfo(), loadNodeUsage(), loadDevices()]);
   }, [loadPanelInfo, loadNodeUsage, loadDevices]);
-
-  const loadGifts = useCallback(async () => {
-    if (!userId) return;
-    try {
-      setGiftsLoading(true);
-      const data = await adminUsersApi.getUserGifts(userId);
-      setGiftsData(data);
-    } catch {
-    } finally {
-      setGiftsLoading(false);
-    }
-  }, [userId]);
-
-  const loadPromoGroups = useCallback(async () => {
-    try {
-      const data = await promocodesApi.getPromoGroups({ limit: 100 });
-      setPromoGroups(data.items);
-    } catch {}
-  }, []);
 
   const handleTicketReply = async () => {
     if (!selectedTicketId || !replyText.trim()) return;
@@ -608,12 +651,6 @@ export default function AdminUserDetail() {
     // user data is auto-loaded by userQuery (enabled when userId is valid)
   }, [userId, navigate]);
 
-  // Load panel info when subscription changes (separate from mount to avoid redundant loadUser)
-  useEffect(() => {
-    if (!userId || isNaN(userId)) return;
-    loadPanelInfo();
-  }, [userId, loadPanelInfo]);
-
   // Reload request history when the request-history subscription selector changes
   useEffect(() => {
     if (!requestHistoryExpanded || requestHistorySubId === null) return;
@@ -623,31 +660,8 @@ export default function AdminUserDetail() {
     loadRequestHistory(0);
   }, [requestHistorySubId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    if (activeTab === 'info') {
-      loadReferrals();
-      if (hasPermission('users:promo_group')) loadPromoGroups();
-    }
-    if (activeTab === 'sync' && hasPermission('users:sync')) loadSyncStatus();
-    if (activeTab === 'subscription') {
-      loadTariffs();
-      loadSubscriptionData();
-    }
-    if (activeTab === 'tickets') loadTickets();
-    if (activeTab === 'gifts') loadGifts();
-    if (activeTab === 'referrals') loadReferralsList();
-  }, [
-    activeTab,
-    loadSyncStatus,
-    loadTariffs,
-    loadTickets,
-    loadReferrals,
-    loadSubscriptionData,
-    loadPromoGroups,
-    loadGifts,
-    loadReferralsList,
-    hasPermission,
-  ]);
+  // All other per-tab data fetching is driven by useQuery `enabled` gating
+  // wired to userId / activeSubscriptionId / activeTab — no manual triggers needed.
 
   const handleUpdateBalance = async (isAdd: boolean) => {
     if (balanceAmount === '' || !userId) return;
