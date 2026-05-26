@@ -178,7 +178,7 @@ function StatCard({ title, value, subtitle, icon, color, trend }: StatCardProps)
   };
 
   return (
-    <div className="rounded-xl border border-dark-700 bg-dark-800/50 p-5 backdrop-blur transition-colors hover:border-dark-600">
+    <div className="rounded-xl border border-dark-700 bg-dark-800/50 p-5 transition-colors hover:border-dark-600">
       <div className="mb-3 flex items-start justify-between">
         <div className={`rounded-lg p-2.5 ${colorClasses[color]}`}>{icon}</div>
         {trend && (
@@ -230,7 +230,7 @@ function NodeCard({ node, onRestart, onToggle, isLoading }: NodeCardProps) {
 
   return (
     <div
-      className={`rounded-xl border bg-dark-800/50 backdrop-blur ${node.is_disabled ? 'border-dark-700' : node.is_connected ? 'border-success-500/30' : 'border-error-500/30'} p-4 transition-colors hover:border-dark-600`}
+      className={`rounded-xl border bg-dark-800/50 ${node.is_disabled ? 'border-dark-700' : node.is_connected ? 'border-success-500/30' : 'border-error-500/30'} p-4 transition-colors hover:border-dark-600`}
     >
       <div className="mb-3 flex items-start justify-between">
         <div className="flex items-center gap-3">
@@ -499,7 +499,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Nodes Section */}
-      <div className="rounded-xl border border-dark-700 bg-dark-800/30 p-5 backdrop-blur">
+      <div className="rounded-xl border border-dark-700 bg-dark-800/30 p-5">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="rounded-lg bg-accent-500/20 p-2.5 text-accent-400">
@@ -568,7 +568,7 @@ export default function AdminDashboard() {
       {/* Revenue and Subscriptions */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Revenue Chart */}
-        <div className="rounded-xl border border-dark-700 bg-dark-800/30 p-5 backdrop-blur">
+        <div className="rounded-xl border border-dark-700 bg-dark-800/30 p-5">
           <div className="mb-4 flex items-center gap-3">
             <div className="rounded-lg bg-warning-500/20 p-2.5 text-warning-400">
               <ChartBarIcon />
@@ -602,7 +602,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Subscription Stats */}
-        <div className="rounded-xl border border-dark-700 bg-dark-800/30 p-5 backdrop-blur">
+        <div className="rounded-xl border border-dark-700 bg-dark-800/30 p-5">
           <div className="mb-4 flex items-center gap-3">
             <div className="rounded-lg bg-accent-500/20 p-2.5 text-accent-400">
               <SparklesIcon />
@@ -701,7 +701,7 @@ export default function AdminDashboard() {
 
       {/* Tariff Stats */}
       {stats?.tariff_stats && stats.tariff_stats.tariffs.length > 0 && (
-        <div className="rounded-xl border border-dark-700 bg-dark-800/30 p-5 backdrop-blur">
+        <div className="rounded-xl border border-dark-700 bg-dark-800/30 p-5">
           <div className="mb-4 flex items-center gap-3">
             <div className="rounded-lg bg-success-500/20 p-2.5 text-success-400">
               <TagIcon />
@@ -778,7 +778,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Top Referrers */}
         {referrers && (referrers.by_earnings.length > 0 || referrers.by_invited.length > 0) && (
-          <div className="rounded-xl border border-dark-700 bg-dark-800/30 p-4 backdrop-blur sm:p-5">
+          <div className="rounded-xl border border-dark-700 bg-dark-800/30 p-4 sm:p-5">
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2 sm:gap-3">
                 <div className="rounded-lg bg-accent-500/20 p-2 text-accent-400 sm:p-2.5">
@@ -918,7 +918,7 @@ export default function AdminDashboard() {
 
         {/* Top Campaigns */}
         {campaigns && campaigns.campaigns.length > 0 && (
-          <div className="rounded-xl border border-dark-700 bg-dark-800/30 p-4 backdrop-blur sm:p-5">
+          <div className="rounded-xl border border-dark-700 bg-dark-800/30 p-4 sm:p-5">
             <div className="mb-4 flex items-center gap-2 sm:gap-3">
               <div className="rounded-lg bg-warning-500/20 p-2 text-warning-400 sm:p-2.5">
                 <MegaphoneIcon />
@@ -981,7 +981,7 @@ export default function AdminDashboard() {
 
       {/* Recent Payments */}
       {payments && payments.payments.length > 0 && (
-        <div className="rounded-xl border border-dark-700 bg-dark-800/30 p-4 backdrop-blur sm:p-5">
+        <div className="rounded-xl border border-dark-700 bg-dark-800/30 p-4 sm:p-5">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="rounded-lg bg-success-500/20 p-2 text-success-400 sm:p-2.5">

@@ -690,7 +690,7 @@ const StatsBar = memo(function StatsBar({ systemInfo, dashboardStats, loading }:
         <div
           key={i}
           className={cn(
-            'flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-dark-700/50 bg-dark-800/40 px-3 py-2 backdrop-blur-lg transition-all duration-200',
+            'flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-dark-700/50 bg-dark-800/40 px-3 py-2 transition-all duration-200',
             'light:border-champagne-300/50 light:bg-champagne-100/60',
             loading && 'animate-pulse',
           )}
@@ -740,30 +740,9 @@ const GlassCard = memo(function GlassCard({ section, index, searchTerm }: GlassC
   const { t } = useTranslation();
   const hasPermission = usePermissionStore((state) => state.hasPermission);
   const [hoveredItem, setHoveredItem] = useState<number | null>(null);
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
-  const tiltRef = useRef({ x: 0, y: 0 });
-  const rafRef = useRef(0);
-
-  useEffect(() => () => cancelAnimationFrame(rafRef.current), []);
-
-  const onMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    tiltRef.current = {
-      x: ((e.clientY - rect.top) / rect.height - 0.5) * -2.5,
-      y: ((e.clientX - rect.left) / rect.width - 0.5) * 2.5,
-    };
-    cancelAnimationFrame(rafRef.current);
-    rafRef.current = requestAnimationFrame(() => {
-      setTilt({ ...tiltRef.current });
-    });
-  }, []);
-
-  const onMouseLeave = useCallback(() => {
-    cancelAnimationFrame(rafRef.current);
-    setTilt({ x: 0, y: 0 });
-  }, []);
+  // 3D mouse-tracking tilt removed: decorative motion that didn't convey state.
+  // Hover styling alone signals interactivity.
+  void index;
 
   const visibleItems = useMemo(
     () =>
@@ -796,31 +775,14 @@ const GlassCard = memo(function GlassCard({ section, index, searchTerm }: GlassC
   if (visibleItems.length === 0) return null;
 
   return (
-    <div
-      ref={cardRef}
-      onMouseMove={onMouseMove}
-      onMouseLeave={onMouseLeave}
-      className="group/card relative overflow-hidden rounded-2xl border border-dark-700/50 bg-dark-800/30 backdrop-blur-xl transition-all duration-300 hover:border-dark-600/80 hover:shadow-lg light:border-champagne-300/50 light:bg-champagne-100/40 light:hover:border-champagne-400/60"
-      style={{
-        transform: `perspective(800px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
-        animation: `adminCardEnter 0.5s cubic-bezier(0.22, 1, 0.36, 1) ${index * 60}ms both`,
-      }}
-    >
-      {/* Top glow line */}
-      <div
-        className="absolute left-0 right-0 top-0 h-px opacity-50 transition-all duration-300 group-hover/card:h-0.5 group-hover/card:opacity-100"
-        style={{ background: section.gradient }}
-      />
-
+    <div className="group/card relative overflow-hidden rounded-2xl border border-dark-700/50 bg-dark-800/30 backdrop-blur-xl transition-colors duration-200 hover:border-dark-600/80 light:border-champagne-300/50 light:bg-champagne-100/40 light:hover:border-champagne-400/60">
       {/* Header */}
       <div className="flex items-center gap-2.5 border-b border-dark-700/30 px-3.5 py-2.5 light:border-champagne-300/30">
         <div
-          className="relative flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg shadow-md"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"
           style={{ background: section.gradient }}
         >
-          {/* Shine overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-white/25" />
-          <span className="relative text-xs font-bold text-white drop-shadow-sm" aria-hidden="true">
+          <span className="text-xs font-bold text-dark-50" aria-hidden="true">
             {visibleItems.length}
           </span>
         </div>
@@ -836,16 +798,13 @@ const GlassCard = memo(function GlassCard({ section, index, searchTerm }: GlassC
             key={item.to}
             to={item.to}
             className={cn(
-              'group/item flex items-center gap-2.5 rounded-xl border border-transparent px-2 py-1.5 transition-all duration-150',
+              'group/item flex items-center gap-2.5 rounded-xl border border-transparent px-2 py-1.5 transition-colors duration-150',
               hoveredItem === i
                 ? 'border-dark-600/50 bg-dark-700/30 light:border-champagne-400/40 light:bg-champagne-200/50'
                 : 'hover:border-dark-600/50 hover:bg-dark-700/30 light:hover:border-champagne-400/40 light:hover:bg-champagne-200/50',
             )}
             onMouseEnter={() => setHoveredItem(i)}
             onMouseLeave={() => setHoveredItem(null)}
-            style={{
-              animation: `adminItemEnter 0.35s cubic-bezier(0.22, 1, 0.36, 1) ${index * 60 + i * 20}ms both`,
-            }}
           >
             {/* Icon */}
             <div
@@ -978,7 +937,7 @@ export default function AdminPanel() {
             <div
               key={i}
               className={cn(
-                'flex items-center gap-2 rounded-xl border border-dark-700/50 bg-dark-800/40 px-2.5 py-2 backdrop-blur-lg',
+                'flex items-center gap-2 rounded-xl border border-dark-700/50 bg-dark-800/40 px-2.5 py-2',
                 'light:border-champagne-300/50 light:bg-champagne-100/60',
                 loading && 'animate-pulse',
               )}
@@ -1003,12 +962,13 @@ export default function AdminPanel() {
 
         {/* Hero + Search */}
         <div className="flex shrink-0 flex-wrap items-center gap-3">
-          <h1 className="bg-gradient-to-r from-dark-50 via-dark-300 to-accent-400 bg-clip-text text-lg font-extrabold tracking-tight text-transparent light:from-champagne-900 light:via-champagne-600 light:to-accent-600 sm:text-xl">
+          <h1 className="text-lg font-bold tracking-tight text-dark-50 light:text-champagne-900 sm:text-xl">
             {t('admin.panel.title')}
           </h1>
           <div className="flex items-center gap-1.5 text-xs text-dark-400 light:text-champagne-500">
-            <div
-              className="h-1.5 w-1.5 rounded-full bg-success-400 shadow-[0_0_10px_rgba(var(--color-success-400),0.6)]"
+            <span
+              aria-hidden="true"
+              className="h-1.5 w-1.5 rounded-full bg-success-400"
               style={{ animation: 'adminPulse 2s ease-in-out infinite' }}
             />
             {t('admin.panel.statsOnline')}
@@ -1060,7 +1020,7 @@ export default function AdminPanel() {
               role="status"
               aria-live="polite"
             >
-              <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl border border-dark-700/50 bg-dark-800/40 text-dark-500 backdrop-blur-lg [&>svg]:h-6 [&>svg]:w-6">
+              <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl border border-dark-700/50 bg-dark-800/40 text-dark-500 [&>svg]:h-6 [&>svg]:w-6">
                 {icons.search}
               </div>
               <h3 className="text-sm font-semibold text-dark-200 light:text-champagne-800">
