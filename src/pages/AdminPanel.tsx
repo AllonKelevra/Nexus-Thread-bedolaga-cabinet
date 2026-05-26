@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
 import { usePermissionStore } from '@/store/permissions';
 import { statsApi, type SystemInfo, type DashboardStats } from '@/api/admin';
 import { useAnimatedNumber } from '@/hooks/useAnimatedNumber';
@@ -878,38 +879,28 @@ export default function AdminPanel() {
   const inputRef = useRef<HTMLInputElement>(null);
   const { safeAreaInset, contentSafeAreaInset } = useTelegramSDK();
 
-  const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
-  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
-
   const safeTop = Math.max(safeAreaInset.top, contentSafeAreaInset.top);
   const safeBottom = Math.max(safeAreaInset.bottom, contentSafeAreaInset.bottom);
 
-  // Fetch stats
-  useEffect(() => {
-    let cancelled = false;
-    const fetchData = async () => {
-      try {
-        const [sysInfo, stats] = await Promise.all([
-          statsApi.getSystemInfo(),
-          statsApi.getDashboardStats(),
-        ]);
-        if (!cancelled) {
-          setSystemInfo(sysInfo);
-          setDashboardStats(stats);
-          setLoading(false);
-        }
-      } catch {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    fetchData();
-    const interval = setInterval(fetchData, 60_000);
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, []);
+  // System info + dashboard stats — polled every 60s via React Query
+  // (replaces the manual setInterval + useState + cancelled-flag pattern).
+  const systemInfoQuery = useQuery<SystemInfo>({
+    queryKey: ['admin-panel-system-info'] as const,
+    queryFn: () => statsApi.getSystemInfo(),
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: false,
+  });
+  const dashboardStatsQuery = useQuery<DashboardStats>({
+    queryKey: ['admin-panel-dashboard-stats'] as const,
+    queryFn: () => statsApi.getDashboardStats(),
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: false,
+  });
+
+  const systemInfo = systemInfoQuery.data ?? null;
+  const dashboardStats = dashboardStatsQuery.data ?? null;
+  // "loading" only counts the very first fetch — once we have any data, render it.
+  const loading = systemInfoQuery.isLoading || dashboardStatsQuery.isLoading;
 
   // Keyboard shortcuts: Cmd+K to focus search, Escape to clear
   useEffect(() => {
