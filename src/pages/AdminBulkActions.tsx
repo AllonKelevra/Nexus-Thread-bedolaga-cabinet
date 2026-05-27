@@ -24,11 +24,7 @@ import { usePlatform } from '../platform/hooks/usePlatform';
 import { useCurrency } from '../hooks/useCurrency';
 import { cn } from '@/lib/utils';
 import { ActionModal, type ModalState } from '@/components/admin/bulkActions/ActionModal';
-import {
-  DropdownSelect,
-  ChevronDownIcon,
-  type DropdownOption,
-} from '@/components/admin/bulkActions/DropdownSelect';
+import { DropdownSelect, type DropdownOption } from '@/components/admin/bulkActions/DropdownSelect';
 import { FloatingActionBar } from '@/components/admin/bulkActions/FloatingActionBar';
 import { isSubscriptionLevelAction } from '@/components/admin/bulkActions/actionTargets';
 import {
