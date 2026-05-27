@@ -8,7 +8,6 @@ import {
   flexRender,
   type ColumnDef,
   type SortingState,
-  type RowData,
 } from '@tanstack/react-table';
 import {
   adminTrafficApi,
@@ -18,160 +17,23 @@ import {
   type TrafficEnrichmentData,
 } from '../api/adminTraffic';
 import { usePlatform } from '../platform/hooks/usePlatform';
-import { getFlagEmoji as _sharedGetFlagEmoji } from '../utils/subscriptionHelpers';
+import {
+  formatBytes,
+  getFlagEmoji,
+  formatCurrency,
+  formatShortDate,
+  toBackendSortField,
+  bytesToGbPerDay,
+  getRatio,
+  getRowBgColor,
+  getNodeTextColor,
+  getRiskLevel,
+  getCompositeRisk,
+  formatGbPerDay,
+} from '../components/admin/trafficUsage/trafficUsageHelpers';
+import { RiskBadge } from '../components/admin/trafficUsage/RiskBadge';
 
-// ============ TanStack Table module augmentation ============
-
-declare module '@tanstack/react-table' {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  interface ColumnMeta<TData extends RowData, TValue> {
-    sticky?: boolean;
-    align?: 'left' | 'center';
-    bold?: boolean;
-  }
-}
-
-// ============ Utils ============
-
-const formatBytes = (bytes: number): string => {
-  if (!Number.isFinite(bytes) || bytes <= 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB'];
-  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-};
-
-// Локальная обёртка над общим helper'ом, чтобы внутренние сигнатуры (string)
-// оставались как были и call-sites не меняли.
-const getFlagEmoji = (countryCode: string): string => _sharedGetFlagEmoji(countryCode);
-
-const formatCurrency = (kopeks: number): string => {
-  const rubles = kopeks / 100;
-  if (rubles === 0) return '0';
-  if (rubles < 10) return rubles.toFixed(2);
-  if (rubles < 1000) return Math.round(rubles).toString();
-  return `${(rubles / 1000).toFixed(1)}k`;
-};
-
-const formatShortDate = (iso: string | null): string => {
-  if (!iso) return '\u2014';
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return '\u2014';
-  return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getFullYear()).slice(2)}`;
-};
-
-const toBackendSortField = (columnId: string): string => {
-  if (columnId === 'user') return 'full_name';
-  return columnId;
-};
-
-// ============ Risk assessment helpers ============
-
-const bytesToGbPerDay = (bytes: number, days: number): number =>
-  days > 0 ? bytes / days / 1024 ** 3 : 0;
-
-const getRatio = (gbPerDay: number, threshold: number): number =>
-  threshold > 0 ? gbPerDay / threshold : 0;
-
-const getRowBgColor = (ratio: number): string | undefined => {
-  if (ratio <= 0) return undefined;
-  const clamped = Math.min(ratio, 1.5);
-  const hue = 120 - Math.min(clamped, 1) * 120;
-  const opacity = clamped <= 1 ? 0.06 + clamped * 0.07 : 0.13 + (clamped - 1) * 0.14;
-  return `hsla(${hue}, 70%, 45%, ${opacity})`;
-};
-
-const getNodeTextColor = (ratio: number): string => {
-  const clamped = Math.min(Math.max(ratio, 0), 1.5);
-  let hue: number;
-  if (clamped <= 0.7) {
-    hue = 210 - (clamped / 0.7) * 180; // 210 (blue) → 30 (amber)
-  } else {
-    hue = Math.max(0, 30 - ((clamped - 0.7) / 0.8) * 30); // 30 (amber) → 0 (red)
-  }
-  const saturation = 70 + clamped * 15;
-  const lightness = 65 - clamped * 10;
-  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-};
-
-type RiskLevel = 'low' | 'medium' | 'high' | 'critical';
-
-const getRiskLevel = (ratio: number): RiskLevel => {
-  if (ratio < 0.5) return 'low';
-  if (ratio < 0.8) return 'medium';
-  if (ratio < 1.2) return 'high';
-  return 'critical';
-};
-
-interface RiskResult {
-  ratio: number;
-  gbPerDay: number; // the dominant daily value (total or worst node)
-  totalRatio: number;
-  maxNodeRatio: number;
-}
-
-const getCompositeRisk = (
-  row: UserTrafficItem,
-  totalThreshold: number,
-  nodeThreshold: number,
-  days: number,
-): RiskResult => {
-  const dailyTotal = bytesToGbPerDay(row.total_bytes, days);
-  const totalR = totalThreshold > 0 ? getRatio(dailyTotal, totalThreshold) : 0;
-
-  let maxNodeR = 0;
-  let worstNodeGbPerDay = 0;
-  if (nodeThreshold > 0) {
-    for (const b of Object.values(row.node_traffic)) {
-      const daily = bytesToGbPerDay(b || 0, days);
-      const r = getRatio(daily, nodeThreshold);
-      if (r > maxNodeR) {
-        maxNodeR = r;
-        worstNodeGbPerDay = daily;
-      }
-    }
-  }
-
-  // The dominant metric determines what GB/d we show
-  const ratio = Math.max(totalR, maxNodeR);
-  const gbPerDay = totalR >= maxNodeR ? dailyTotal : worstNodeGbPerDay;
-
-  return { ratio, gbPerDay, totalRatio: totalR, maxNodeRatio: maxNodeR };
-};
-
-const RISK_STYLES: Record<RiskLevel, { dot: string; text: string; bar: string; bg: string }> = {
-  low: {
-    dot: 'bg-success-400',
-    text: 'text-success-400',
-    bar: 'bg-success-400',
-    bg: 'bg-success-400/10',
-  },
-  medium: {
-    dot: 'bg-warning-400',
-    text: 'text-warning-400',
-    bar: 'bg-warning-400',
-    bg: 'bg-warning-400/10',
-  },
-  high: {
-    dot: 'bg-warning-400',
-    text: 'text-warning-400',
-    bar: 'bg-warning-400',
-    bg: 'bg-warning-400/10',
-  },
-  critical: {
-    dot: 'bg-error-400 animate-pulse',
-    text: 'text-error-400',
-    bar: 'bg-error-400',
-    bg: 'bg-error-400/10',
-  },
-};
-
-const formatGbPerDay = (gbPerDay: number): string => {
-  if (gbPerDay < 0.01) return '<0.01';
-  if (gbPerDay < 10) return gbPerDay.toFixed(2);
-  if (gbPerDay < 100) return gbPerDay.toFixed(1);
-  return Math.round(gbPerDay).toString();
-};
+// (TanStack Table augmentation + utils + risk helpers moved into ./trafficUsage/trafficUsageHelpers.ts)
 
 // ============ Icons ============
 
@@ -1002,39 +864,7 @@ function CountryFilter({
   );
 }
 
-// ============ Risk Badge ============
-
-function RiskBadge({
-  level,
-  ratio,
-  gbPerDay,
-}: {
-  level: RiskLevel;
-  ratio: number;
-  gbPerDay: number;
-}) {
-  const style = RISK_STYLES[level];
-  const barWidth = Math.min(ratio * 100, 100);
-
-  return (
-    <div className="flex flex-col items-center gap-0.5">
-      <div className="flex items-center gap-1">
-        <span className={`inline-block h-1.5 w-1.5 rounded-full ${style.dot}`} />
-        <span className={`text-[11px] font-semibold tabular-nums ${style.text}`}>
-          {formatGbPerDay(gbPerDay)}
-        </span>
-        <span className={`text-[10px] ${style.text} opacity-60`}>GB/d</span>
-      </div>
-      {/* Mini progress bar showing ratio to threshold */}
-      <div className={`h-1 w-full max-w-[60px] rounded-full ${style.bg}`}>
-        <div
-          className={`h-full rounded-full ${style.bar} transition-all`}
-          style={{ width: `${barWidth}%` }}
-        />
-      </div>
-    </div>
-  );
-}
+// (RiskBadge moved into ./trafficUsage/RiskBadge.tsx)
 
 // ============ Main Page ============
 
