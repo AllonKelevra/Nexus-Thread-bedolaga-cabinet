@@ -1,4 +1,5 @@
 import apiClient from './client';
+import { getYandexCid } from '../utils/yandexCid';
 import type {
   Subscription,
   SubscriptionStatusResponse,
@@ -83,7 +84,10 @@ export const subscriptionApi = {
   }> => {
     const response = await apiClient.post(
       '/cabinet/subscription/renew',
-      ...bodyWithSubId({ period_days: periodDays }, subscriptionId),
+      ...bodyWithSubId(
+        { period_days: periodDays, yandex_cid: getYandexCid() || undefined },
+        subscriptionId,
+      ),
     );
     return response.data;
   },
@@ -108,7 +112,7 @@ export const subscriptionApi = {
   }> => {
     const response = await apiClient.post(
       '/cabinet/subscription/traffic',
-      ...bodyWithSubId({ gb }, subscriptionId),
+      ...bodyWithSubId({ gb, yandex_cid: getYandexCid() || undefined }, subscriptionId),
     );
     return response.data;
   },
@@ -181,7 +185,7 @@ export const subscriptionApi = {
   }> => {
     const response = await apiClient.post(
       '/cabinet/subscription/devices/purchase',
-      ...bodyWithSubId({ devices }, subscriptionId),
+      ...bodyWithSubId({ devices, yandex_cid: getYandexCid() || undefined }, subscriptionId),
     );
     return response.data;
   },
@@ -389,7 +393,7 @@ export const subscriptionApi = {
   }> => {
     const response = await apiClient.post(
       '/cabinet/subscription/purchase',
-      ...bodyWithSubId({ selection }, subscriptionId),
+      ...bodyWithSubId({ selection, yandex_cid: getYandexCid() || undefined }, subscriptionId),
     );
     return response.data;
   },
@@ -420,6 +424,7 @@ export const subscriptionApi = {
       period_days: periodDays,
       traffic_gb: trafficGb,
       subscription_id: subscriptionId,
+      yandex_cid: getYandexCid() || undefined,
     });
     return response.data;
   },
