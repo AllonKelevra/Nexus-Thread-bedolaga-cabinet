@@ -9,6 +9,11 @@ import {
   SquadWithLocalInfo,
   SystemStatsResponse,
   AutoSyncStatus,
+  RecapResponse,
+  DevicesStatsResponse,
+  TopConsumersResponse,
+  HealthResponse,
+  SubscriptionRequestStatsResponse,
 } from '../api/adminRemnawave';
 import { usePlatform } from '../platform/hooks/usePlatform';
 import { formatUptime } from '../utils/format';
@@ -25,19 +30,19 @@ import {
   StopIcon,
   ArrowPathIcon,
   RemnawaveIcon,
+  DownloadIcon,
+  UploadIcon,
+  SubscriptionIcon,
+  BackIcon,
+  ChevronRightIcon,
 } from '../components/icons';
-
-const BackIcon = () => (
-  <svg
-    className="h-5 w-5 text-dark-400"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-  </svg>
-);
+import {
+  PiCpuDuotone,
+  PiMemoryDuotone,
+  PiTimerDuotone,
+  PiDevicesDuotone,
+  PiPulseDuotone,
+} from 'react-icons/pi';
 
 const formatBytes = (bytes: number): string => {
   if (bytes === 0) return '0 B';
@@ -231,15 +236,7 @@ function SquadCard({ squad, onClick }: SquadCardProps) {
           </div>
         </div>
 
-        <svg
-          className="h-5 w-5 shrink-0 text-dark-500"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-        </svg>
+        <ChevronRightIcon className="h-5 w-5 shrink-0 text-dark-500" />
       </div>
     </div>
   );
@@ -285,13 +282,67 @@ function SyncCard({ title, description, onAction, isLoading, lastResult }: SyncC
   );
 }
 
+const formatUptimeSince = (iso: string): string => {
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  if (Number.isNaN(days)) return '—';
+  if (days < 1) return '<1d';
+  if (days < 30) return `${days}d`;
+  if (days < 365) return `${Math.floor(days / 30)}mo`;
+  return `${Math.floor(days / 365)}y`;
+};
+
+function BreakdownCard({
+  title,
+  items,
+}: {
+  title: string;
+  items: { label: string; count: number }[];
+}) {
+  const max = Math.max(1, ...items.map((i) => i.count));
+  return (
+    <div className="rounded-xl border border-dark-700 bg-dark-800/50 p-4">
+      <h4 className="mb-3 text-sm font-medium text-dark-200">{title}</h4>
+      <div className="space-y-2">
+        {items.slice(0, 8).map((it) => (
+          <div key={it.label}>
+            <div className="flex items-center justify-between text-xs">
+              <span className="truncate text-dark-300">{it.label}</span>
+              <span className="ml-2 shrink-0 text-dark-400">{it.count}</span>
+            </div>
+            <div className="mt-1 h-1.5 rounded-full bg-dark-700">
+              <div
+                className="h-1.5 rounded-full bg-accent-500"
+                style={{ width: `${(it.count / max) * 100}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 interface OverviewTabProps {
   stats: SystemStatsResponse | undefined;
+  recap?: RecapResponse;
+  devicesStats?: DevicesStatsResponse;
+  topConsumers?: TopConsumersResponse;
+  health?: HealthResponse;
+  subRequests?: SubscriptionRequestStatsResponse;
   isLoading: boolean;
   onRefresh: () => void;
 }
 
-function OverviewTab({ stats, isLoading, onRefresh }: OverviewTabProps) {
+function OverviewTab({
+  stats,
+  recap,
+  devicesStats,
+  topConsumers,
+  health,
+  subRequests,
+  isLoading,
+  onRefresh,
+}: OverviewTabProps) {
   const { t } = useTranslation();
 
   if (isLoading) {
@@ -341,13 +392,13 @@ function OverviewTab({ stats, isLoading, onRefresh }: OverviewTabProps) {
           />
           <StatCard
             label={t('admin.remnawave.overview.nodesOnline', 'Nodes Online')}
-            value={stats.system.nodes_online}
+            value={`${stats.system.nodes_online} / ${stats.system.total_nodes}`}
             icon={<GlobeIcon />}
-            color="purple"
+            color={stats.system.nodes_online < stats.system.total_nodes ? 'orange' : 'purple'}
           />
           <StatCard
-            label={t('admin.remnawave.overview.connections', 'Connections')}
-            value={stats.system.active_connections}
+            label={t('admin.remnawave.overview.active24h', 'Активны за 24ч')}
+            value={stats.system.users_last_day}
             icon={<ServerIcon className="h-5 w-5" />}
             color="orange"
           />
@@ -356,26 +407,27 @@ function OverviewTab({ stats, isLoading, onRefresh }: OverviewTabProps) {
 
       {/* Bandwidth */}
       <div>
-        <h3 className="mb-3 text-sm font-medium text-dark-300">
+        <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-dark-300">
+          <ChartIcon className="h-4 w-4" />
           {t('admin.remnawave.overview.bandwidth', 'Inbound Traffic')}
         </h3>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <StatCard
             label={t('admin.remnawave.overview.download', 'Download')}
             value={formatBytes(stats.bandwidth.realtime_download)}
-            icon={<span className="text-lg">↓</span>}
+            icon={<DownloadIcon className="h-5 w-5" />}
             color="green"
           />
           <StatCard
             label={t('admin.remnawave.overview.upload', 'Upload')}
             value={formatBytes(stats.bandwidth.realtime_upload)}
-            icon={<span className="text-lg">↑</span>}
+            icon={<UploadIcon className="h-5 w-5" />}
             color="blue"
           />
           <StatCard
             label={t('admin.remnawave.overview.total', 'Total')}
             value={formatBytes(stats.bandwidth.realtime_total)}
-            icon={<span className="text-lg">⇅</span>}
+            icon={<ChartIcon className="h-5 w-5" />}
             color="purple"
           />
         </div>
@@ -383,27 +435,28 @@ function OverviewTab({ stats, isLoading, onRefresh }: OverviewTabProps) {
 
       {/* Server Info */}
       <div>
-        <h3 className="mb-3 text-sm font-medium text-dark-300">
+        <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-dark-300">
+          <ServerIcon className="h-4 w-4" />
           {t('admin.remnawave.overview.server', 'Server')}
         </h3>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
           <StatCard
             label={t('admin.remnawave.overview.cpu', 'CPU Cores')}
             value={stats.server_info.cpu_cores}
-            icon={<span className="text-lg">⚡</span>}
+            icon={<PiCpuDuotone className="h-5 w-5" />}
             color="accent"
           />
           <StatCard
             label={t('admin.remnawave.overview.memory', 'Memory')}
             value={`${memoryUsedPercent}%`}
             subValue={`${formatBytes(stats.server_info.memory_used)} / ${formatBytes(stats.server_info.memory_total)}`}
-            icon={<span className="text-lg">💾</span>}
+            icon={<PiMemoryDuotone className="h-5 w-5" />}
             color={memoryUsedPercent > 80 ? 'red' : memoryUsedPercent > 60 ? 'orange' : 'green'}
           />
           <StatCard
             label={t('admin.remnawave.overview.uptime', 'Uptime')}
             value={formatUptime(stats.server_info.uptime_seconds)}
-            icon={<span className="text-lg">⏱️</span>}
+            icon={<PiTimerDuotone className="h-5 w-5" />}
             color="blue"
           />
         </div>
@@ -411,38 +464,39 @@ function OverviewTab({ stats, isLoading, onRefresh }: OverviewTabProps) {
 
       {/* Traffic Periods */}
       <div>
-        <h3 className="mb-3 text-sm font-medium text-dark-300">
+        <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-dark-300">
+          <ChartIcon className="h-4 w-4" />
           {t('admin.remnawave.overview.traffic', 'Traffic Statistics')}
         </h3>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
           <StatCard
             label={t('admin.remnawave.overview.traffic2days', '2 days')}
             value={formatBytes(stats.traffic_periods.last_2_days.current)}
-            icon={<span className="text-xs">📊</span>}
+            icon={<ChartIcon className="h-5 w-5" />}
             color="accent"
           />
           <StatCard
             label={t('admin.remnawave.overview.traffic7days', '7 days')}
             value={formatBytes(stats.traffic_periods.last_7_days.current)}
-            icon={<span className="text-xs">📊</span>}
+            icon={<ChartIcon className="h-5 w-5" />}
             color="blue"
           />
           <StatCard
             label={t('admin.remnawave.overview.traffic30days', '30 days')}
             value={formatBytes(stats.traffic_periods.last_30_days.current)}
-            icon={<span className="text-xs">📊</span>}
+            icon={<ChartIcon className="h-5 w-5" />}
             color="green"
           />
           <StatCard
             label={t('admin.remnawave.overview.trafficMonth', 'Month')}
             value={formatBytes(stats.traffic_periods.current_month.current)}
-            icon={<span className="text-xs">📊</span>}
+            icon={<ChartIcon className="h-5 w-5" />}
             color="purple"
           />
           <StatCard
             label={t('admin.remnawave.overview.trafficYear', 'Year')}
             value={formatBytes(stats.traffic_periods.current_year.current)}
-            icon={<span className="text-xs">📊</span>}
+            icon={<ChartIcon className="h-5 w-5" />}
             color="orange"
           />
         </div>
@@ -450,7 +504,8 @@ function OverviewTab({ stats, isLoading, onRefresh }: OverviewTabProps) {
 
       {/* Users by Status */}
       <div>
-        <h3 className="mb-3 text-sm font-medium text-dark-300">
+        <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-dark-300">
+          <UsersIcon className="h-4 w-4" />
           {t('admin.remnawave.overview.usersByStatus', 'Users by Status')}
         </h3>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -465,6 +520,160 @@ function OverviewTab({ stats, isLoading, onRefresh }: OverviewTabProps) {
           ))}
         </div>
       </div>
+
+      {/* Panel recap */}
+      {recap && (
+        <div>
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-dark-300">
+            <RemnawaveIcon className="h-4 w-4" />
+            {t('admin.remnawave.overview.panel', 'Панель')}
+          </h3>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <StatCard
+              label={t('admin.remnawave.overview.lifetimeTraffic', 'Трафик за всё время')}
+              value={formatBytes(recap.total.traffic_bytes)}
+              icon={<ChartIcon className="h-5 w-5" />}
+              color="purple"
+            />
+            <StatCard
+              label={t('admin.remnawave.overview.thisMonthTraffic', 'Трафик за месяц')}
+              value={formatBytes(recap.this_month.traffic_bytes)}
+              icon={<ChartIcon className="h-5 w-5" />}
+              color="blue"
+            />
+            <StatCard
+              label={t('admin.remnawave.overview.countries', 'Стран')}
+              value={recap.total.distinct_countries}
+              icon={<GlobeIcon className="h-5 w-5" />}
+              color="green"
+            />
+            <StatCard
+              label={t('admin.remnawave.overview.panelVersion', 'Версия панели')}
+              value={recap.version || '—'}
+              subValue={
+                recap.init_date
+                  ? `${t('admin.remnawave.overview.uptime', 'аптайм')} ${formatUptimeSince(recap.init_date)}`
+                  : undefined
+              }
+              icon={<ServerIcon className="h-5 w-5" />}
+              color="accent"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Devices breakdown */}
+      {devicesStats && (devicesStats.by_platform.length > 0 || devicesStats.by_app.length > 0) && (
+        <div>
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-dark-300">
+            <PiDevicesDuotone className="h-4 w-4" />
+            {t('admin.remnawave.overview.devices', 'Устройства')} ·{' '}
+            {devicesStats.total_hwid_devices} ({devicesStats.average_devices_per_user.toFixed(1)}/
+            {t('admin.remnawave.overview.perUser', 'юзер')})
+          </h3>
+          <div className="grid gap-3 lg:grid-cols-3">
+            <BreakdownCard
+              title={t('admin.remnawave.overview.byPlatform', 'По платформам')}
+              items={devicesStats.by_platform.map((p) => ({ label: p.platform, count: p.count }))}
+            />
+            <BreakdownCard
+              title={t('admin.remnawave.overview.byApp', 'По приложениям')}
+              items={devicesStats.by_app.map((a) => ({ label: a.app, count: a.count }))}
+            />
+            {devicesStats.top_users.length > 0 && (
+              <BreakdownCard
+                title={t('admin.remnawave.overview.topByDevices', 'Топ по устройствам')}
+                items={devicesStats.top_users.map((u) => ({
+                  label: u.username,
+                  count: u.devices_count,
+                }))}
+              />
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Top consumers */}
+      {topConsumers && topConsumers.users.length > 0 && (
+        <div>
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-dark-300">
+            <ChartIcon className="h-4 w-4" />
+            {t('admin.remnawave.overview.topConsumers', 'Топ потребителей')} ·{' '}
+            {topConsumers.period_days}
+            {t('admin.remnawave.overview.daysShort', 'д')}
+          </h3>
+          <div className="divide-y divide-dark-700 rounded-xl border border-dark-700 bg-dark-800/50">
+            {topConsumers.users.map((u, i) => (
+              <div
+                key={u.username}
+                className="flex items-center justify-between px-4 py-2.5 text-sm"
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <span className="w-5 shrink-0 text-dark-500">{i + 1}</span>
+                  <span className="truncate text-dark-100">{u.username}</span>
+                </span>
+                <span className="shrink-0 font-medium text-accent-400">
+                  {formatBytes(u.total_bytes)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Panel health */}
+      {health && health.instances > 0 && (
+        <div>
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-dark-300">
+            <ServerIcon className="h-4 w-4" />
+            {t('admin.remnawave.overview.panelHealth', 'Здоровье панели')}
+            {health.instances > 1 ? ` · ${health.instances}` : ''}
+          </h3>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <StatCard
+              label={t('admin.remnawave.overview.panelRam', 'RAM процесса')}
+              value={formatBytes(health.rss_bytes)}
+              icon={<PiMemoryDuotone className="h-5 w-5" />}
+              color="blue"
+            />
+            <StatCard
+              label={t('admin.remnawave.overview.heap', 'Heap')}
+              value={formatBytes(health.heap_used_bytes)}
+              subValue={`/ ${formatBytes(health.heap_total_bytes)}`}
+              icon={<ChartIcon className="h-5 w-5" />}
+              color="purple"
+            />
+            <StatCard
+              label={t('admin.remnawave.overview.eventLoopP99', 'Event-loop p99')}
+              value={`${health.event_loop_p99_ms.toFixed(1)} ms`}
+              icon={<PiPulseDuotone className="h-5 w-5" />}
+              color={health.event_loop_p99_ms > 50 ? 'red' : 'green'}
+            />
+            <StatCard
+              label={t('admin.remnawave.overview.panelUptime', 'Аптайм панели')}
+              value={formatUptime(health.uptime_seconds)}
+              icon={<PiTimerDuotone className="h-5 w-5" />}
+              color="accent"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Subscription requests by app */}
+      {subRequests && subRequests.by_app.length > 0 && (
+        <div>
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-dark-300">
+            <SubscriptionIcon className="h-4 w-4" />
+            {t('admin.remnawave.overview.subRequests', 'Запросы подписки (по клиентам)')}
+          </h3>
+          <div className="grid gap-3 lg:grid-cols-2">
+            <BreakdownCard
+              title={t('admin.remnawave.overview.byApp', 'По приложениям')}
+              items={subRequests.by_app.map((a) => ({ label: a.app, count: a.count }))}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -857,19 +1066,19 @@ function TrafficTab({ data, isLoading, onRefresh }: TrafficTabProps) {
         <StatCard
           label={t('admin.remnawave.traffic.totalDownload', 'Download')}
           value={formatBytes(totalDownload)}
-          icon={<span className="text-lg">↓</span>}
+          icon={<DownloadIcon className="h-5 w-5" />}
           color="green"
         />
         <StatCard
           label={t('admin.remnawave.traffic.totalUpload', 'Upload')}
           value={formatBytes(totalUpload)}
-          icon={<span className="text-lg">↑</span>}
+          icon={<UploadIcon className="h-5 w-5" />}
           color="blue"
         />
         <StatCard
           label={t('admin.remnawave.traffic.totalTraffic', 'Total')}
           value={formatBytes(totalDownload + totalUpload)}
-          icon={<span className="text-lg">⇅</span>}
+          icon={<ChartIcon className="h-5 w-5" />}
           color="purple"
         />
       </div>
@@ -978,6 +1187,42 @@ export default function AdminRemnawave() {
     queryFn: adminRemnawaveApi.getSystemStats,
     enabled: activeTab === 'overview',
     refetchInterval: 30000,
+  });
+
+  const { data: recap } = useQuery({
+    queryKey: ['admin-remnawave-recap'],
+    queryFn: adminRemnawaveApi.getRecap,
+    enabled: activeTab === 'overview',
+    staleTime: 60000,
+  });
+
+  const { data: devicesStats } = useQuery({
+    queryKey: ['admin-remnawave-devices-stats'],
+    queryFn: adminRemnawaveApi.getDevicesStats,
+    enabled: activeTab === 'overview',
+    staleTime: 60000,
+  });
+
+  const { data: topConsumers } = useQuery({
+    queryKey: ['admin-remnawave-top-consumers'],
+    queryFn: () => adminRemnawaveApi.getTopConsumers(7, 10),
+    enabled: activeTab === 'overview',
+    staleTime: 60000,
+  });
+
+  const { data: health } = useQuery({
+    queryKey: ['admin-remnawave-health'],
+    queryFn: adminRemnawaveApi.getHealth,
+    enabled: activeTab === 'overview',
+    refetchInterval: 30000,
+    staleTime: 15000,
+  });
+
+  const { data: subRequests } = useQuery({
+    queryKey: ['admin-remnawave-sub-requests'],
+    queryFn: adminRemnawaveApi.getSubscriptionRequests,
+    enabled: activeTab === 'overview',
+    staleTime: 60000,
   });
 
   const {
@@ -1112,7 +1357,7 @@ export default function AdminRemnawave() {
               onClick={() => navigate('/admin')}
               className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
             >
-              <BackIcon />
+              <BackIcon className="text-dark-400" />
             </button>
           )}
           <div className="rounded-lg bg-accent-500/20 p-2">
@@ -1172,6 +1417,11 @@ export default function AdminRemnawave() {
       {activeTab === 'overview' && (
         <OverviewTab
           stats={systemStats}
+          recap={recap}
+          devicesStats={devicesStats}
+          topConsumers={topConsumers}
+          health={health}
+          subRequests={subRequests}
           isLoading={isLoadingStats}
           onRefresh={() => refetchStats()}
         />
