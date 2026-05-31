@@ -173,7 +173,10 @@ export default function AdminBroadcastCreate() {
     if (selectedButtons.length > 0) {
       const presetLabels: Record<string, string> = {
         balance: t('admin.broadcasts.btnBalance', 'Пополнить баланс'),
-        partners: t('admin.broadcasts.btnPartners', 'Партнёрка'),
+        // Бот отдаёт ключ кнопки как 'referrals' (см. BROADCAST_BUTTONS в admin.py),
+        // раньше тут был 'partners' — из-за рассинхрона кнопка показывалась сырым
+        // ключом 'referrals' вместо «Партнёрка» (Telegram-баг #602989).
+        referrals: t('admin.broadcasts.btnPartners', 'Партнёрка'),
         promocode: t('admin.broadcasts.btnPromocode', 'Промокод'),
         connect: t('admin.broadcasts.btnConnect', 'Подключиться'),
         subscription: t('admin.broadcasts.btnSubscription', 'Подписка'),
