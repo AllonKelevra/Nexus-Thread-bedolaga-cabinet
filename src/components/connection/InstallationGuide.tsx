@@ -12,6 +12,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { CardsBlock, TimelineBlock, AccordionBlock, MinimalBlock, BlockButtons } from './blocks';
 import type { BlockRendererProps } from './blocks';
 import TvQuickConnect from './TvQuickConnect';
+import { BackIcon } from '@/components/icons';
 
 const platformOrder = ['ios', 'android', 'windows', 'macos', 'linux', 'androidTV', 'appleTV'];
 
@@ -32,12 +33,6 @@ const RENDERERS: Record<string, React.ComponentType<BlockRendererProps>> = {
   accordion: AccordionBlock,
   minimal: MinimalBlock,
 };
-
-const BackIcon = () => (
-  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-  </svg>
-);
 
 interface Props {
   appConfig: AppConfig;
@@ -200,7 +195,7 @@ export default function InstallationGuide({
             aria-label={t('common.back', 'Back')}
             className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
           >
-            <BackIcon />
+            <BackIcon className="h-6 w-6" />
           </button>
         )}
         <h2 className="flex-1 text-lg font-bold text-dark-100">

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSortable } from '@dnd-kit/sortable';
+import { PiCaretDownDuotone } from 'react-icons/pi';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '../../lib/utils';
 import { GripIcon, TrashIcon } from '../icons/LandingIcons';
@@ -10,15 +11,7 @@ import type { PaymentMethodSubOptionInfo } from '../../types';
 export type MethodWithId = AdminLandingPaymentMethod & { _id: string };
 
 const ChevronDownIcon = ({ open }: { open: boolean }) => (
-  <svg
-    className={cn('h-5 w-5 transition-transform', open && 'rotate-180')}
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-  </svg>
+  <PiCaretDownDuotone className={cn('h-5 w-5 transition-transform', open && 'rotate-180')} />
 );
 
 interface SortableSelectedMethodProps {

@@ -9,6 +9,7 @@ import { adminApi, AdminTicket, AdminTicketDetail } from '../api/admin';
 import { ticketsApi } from '../api/tickets';
 import { copyToClipboard as copyText } from '../utils/clipboard';
 import { usePlatform } from '../platform/hooks/usePlatform';
+import { BackIcon } from '@/components/icons';
 
 interface MediaAttachment {
   id: string;
@@ -38,19 +39,6 @@ const ALLOWED_FILE_TYPES: Record<string, string> = {
 
 const ACCEPT_STRING = Object.keys(ALLOWED_FILE_TYPES).join(',');
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-
-// BackIcon
-const BackIcon = () => (
-  <svg
-    className="h-5 w-5 text-dark-400"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-  </svg>
-);
 
 export default function AdminTickets() {
   const { t } = useTranslation();

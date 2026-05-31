@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { newsApi } from '../../api/news';
 import { useHapticFeedback } from '../../platform/hooks/useHaptic';
 import { cn } from '../../lib/utils';
+import { ArrowIcon } from '@/components/icons';
 import type { NewsListItem } from '../../types/news';
 
 // --- Security: hex color validation to prevent CSS injection ---
@@ -30,19 +31,6 @@ const fadeSlideUp = {
     },
   }),
 };
-
-// --- Icons ---
-const ArrowIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-    <path
-      d="M3 8h10M9 4l4 4-4 4"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
 
 // --- Sub-components ---
 

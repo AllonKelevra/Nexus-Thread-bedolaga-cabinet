@@ -6,41 +6,7 @@ import { adminPaymentsApi, type SearchStats } from '../api/adminPayments';
 import { useCurrency } from '../hooks/useCurrency';
 import type { PendingPayment, PaginatedResponse } from '../types';
 import { usePlatform } from '../platform/hooks/usePlatform';
-
-// BackIcon
-const BackIcon = () => (
-  <svg
-    className="h-5 w-5 text-dark-400"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-  </svg>
-);
-
-// SearchIcon
-const SearchIcon = () => (
-  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-    />
-  </svg>
-);
-
-// CalendarIcon
-const CalendarIcon = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"
-    />
-  </svg>
-);
+import { BackIcon, SearchIcon, CalendarIcon } from '@/components/icons';
 
 interface StatusBadgeProps {
   status: string;
@@ -338,7 +304,7 @@ export default function AdminPayments() {
                 : 'bg-dark-800 text-dark-300 hover:bg-dark-700'
             }`}
           >
-            <CalendarIcon />
+            <CalendarIcon className="h-4 w-4" />
             {t('admin.payments.periodCustom')}
           </button>
 

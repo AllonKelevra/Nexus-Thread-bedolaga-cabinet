@@ -52,14 +52,14 @@ export function NodeFilter({
             : 'border-dark-700 bg-dark-800 text-dark-200 hover:border-dark-600 hover:bg-dark-700'
         }`}
       >
-        <ServerIcon />
+        <ServerIcon className="h-4 w-4" />
         {t('admin.trafficUsage.nodes')}
         {activeCount > 0 && (
           <span className="rounded-full bg-accent-500 px-1.5 text-[10px] text-white">
             {activeCount}
           </span>
         )}
-        <ChevronDownIcon />
+        <ChevronDownIcon className="h-3 w-3" />
       </button>
 
       {open && (

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
+import { CheckIcon, XCloseIcon } from '@/components/icons';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { DropdownSelect } from './DropdownSelect';
 import type { UserListItem } from '../../../api/adminUsers';
@@ -47,24 +48,6 @@ export interface ModalState {
   result: BulkActionResult | null;
   progress: ProgressState | null;
 }
-
-const CheckIcon = () => (
-  <svg
-    className="h-3 w-3 text-white"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={3}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-  </svg>
-);
-
-const XCloseIcon = () => (
-  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-  </svg>
-);
 
 function ProgressView({ progress }: { progress: ProgressState }) {
   const { t } = useTranslation();
@@ -520,7 +503,7 @@ export function ActionModal({
                     )}
                     aria-pressed={forceDeleteActivePaid}
                   >
-                    {forceDeleteActivePaid && <CheckIcon />}
+                    {forceDeleteActivePaid && <CheckIcon className="h-3 w-3" />}
                   </button>
                   <span
                     className={cn(
@@ -558,7 +541,7 @@ export function ActionModal({
                 )}
                 aria-pressed={deleteFromPanel}
               >
-                {deleteFromPanel && <CheckIcon />}
+                {deleteFromPanel && <CheckIcon className="h-3 w-3" />}
               </button>
               <span
                 className={cn(
