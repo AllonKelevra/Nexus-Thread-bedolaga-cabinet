@@ -36,13 +36,7 @@ import {
   BackIcon,
   ChevronRightIcon,
 } from '../components/icons';
-import {
-  PiCpuDuotone,
-  PiMemoryDuotone,
-  PiTimerDuotone,
-  PiDevicesDuotone,
-  PiPulseDuotone,
-} from 'react-icons/pi';
+import { PiCpu, PiMemory, PiTimer, PiDevices, PiPulse } from 'react-icons/pi';
 
 const formatBytes = (bytes: number): string => {
   if (bytes === 0) return '0 B';
@@ -294,16 +288,18 @@ const formatUptimeSince = (iso: string): string => {
 function BreakdownCard({
   title,
   items,
+  wide = false,
 }: {
   title: string;
   items: { label: string; count: number }[];
+  wide?: boolean;
 }) {
   const max = Math.max(1, ...items.map((i) => i.count));
   return (
     <div className="rounded-xl border border-dark-700 bg-dark-800/50 p-4">
       <h4 className="mb-3 text-sm font-medium text-dark-200">{title}</h4>
-      <div className="space-y-2">
-        {items.slice(0, 8).map((it) => (
+      <div className={wide ? 'grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2' : 'space-y-2'}>
+        {items.slice(0, wide ? 16 : 8).map((it) => (
           <div key={it.label}>
             <div className="flex items-center justify-between text-xs">
               <span className="truncate text-dark-300">{it.label}</span>
@@ -377,7 +373,7 @@ function OverviewTab({
           <ChartIcon className="h-4 w-4" />
           {t('admin.remnawave.overview.system', 'System')}
         </h3>
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 [&>*:last-child:nth-child(odd)]:col-span-2 lg:[&>*:last-child]:col-span-1">
           <StatCard
             label={t('admin.remnawave.overview.usersOnline', 'Users Online')}
             value={stats.system.users_online}
@@ -411,7 +407,7 @@ function OverviewTab({
           <ChartIcon className="h-4 w-4" />
           {t('admin.remnawave.overview.bandwidth', 'Inbound Traffic')}
         </h3>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 [&>*:last-child:nth-child(odd)]:col-span-2 sm:[&>*:last-child]:col-span-1">
           <StatCard
             label={t('admin.remnawave.overview.download', 'Download')}
             value={formatBytes(stats.bandwidth.realtime_download)}
@@ -439,24 +435,24 @@ function OverviewTab({
           <ServerIcon className="h-4 w-4" />
           {t('admin.remnawave.overview.server', 'Server')}
         </h3>
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 [&>*:last-child:nth-child(odd)]:col-span-2 lg:[&>*:last-child]:col-span-1">
           <StatCard
             label={t('admin.remnawave.overview.cpu', 'CPU Cores')}
             value={stats.server_info.cpu_cores}
-            icon={<PiCpuDuotone className="h-5 w-5" />}
+            icon={<PiCpu className="h-5 w-5" />}
             color="accent"
           />
           <StatCard
             label={t('admin.remnawave.overview.memory', 'Memory')}
             value={`${memoryUsedPercent}%`}
             subValue={`${formatBytes(stats.server_info.memory_used)} / ${formatBytes(stats.server_info.memory_total)}`}
-            icon={<PiMemoryDuotone className="h-5 w-5" />}
+            icon={<PiMemory className="h-5 w-5" />}
             color={memoryUsedPercent > 80 ? 'red' : memoryUsedPercent > 60 ? 'orange' : 'green'}
           />
           <StatCard
             label={t('admin.remnawave.overview.uptime', 'Uptime')}
             value={formatUptime(stats.server_info.uptime_seconds)}
-            icon={<PiTimerDuotone className="h-5 w-5" />}
+            icon={<PiTimer className="h-5 w-5" />}
             color="blue"
           />
         </div>
@@ -468,7 +464,7 @@ function OverviewTab({
           <ChartIcon className="h-4 w-4" />
           {t('admin.remnawave.overview.traffic', 'Traffic Statistics')}
         </h3>
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-5 [&>*:last-child:nth-child(odd)]:col-span-2 lg:[&>*:last-child]:col-span-1">
           <StatCard
             label={t('admin.remnawave.overview.traffic2days', '2 days')}
             value={formatBytes(stats.traffic_periods.last_2_days.current)}
@@ -508,7 +504,7 @@ function OverviewTab({
           <UsersIcon className="h-4 w-4" />
           {t('admin.remnawave.overview.usersByStatus', 'Users by Status')}
         </h3>
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 [&>*:last-child:nth-child(odd)]:col-span-2 lg:[&>*:last-child]:col-span-1">
           {Object.entries(stats.users_by_status).map(([status, count]) => (
             <StatCard
               key={status}
@@ -528,7 +524,7 @@ function OverviewTab({
             <RemnawaveIcon className="h-4 w-4" />
             {t('admin.remnawave.overview.panel', 'Панель')}
           </h3>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 [&>*:last-child:nth-child(odd)]:col-span-2 lg:[&>*:last-child]:col-span-1">
             <StatCard
               label={t('admin.remnawave.overview.lifetimeTraffic', 'Трафик за всё время')}
               value={formatBytes(recap.total.traffic_bytes)}
@@ -566,7 +562,7 @@ function OverviewTab({
       {devicesStats && (devicesStats.by_platform.length > 0 || devicesStats.by_app.length > 0) && (
         <div>
           <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-dark-300">
-            <PiDevicesDuotone className="h-4 w-4" />
+            <PiDevices className="h-4 w-4" />
             {t('admin.remnawave.overview.devices', 'Устройства')} ·{' '}
             {devicesStats.total_hwid_devices} ({devicesStats.average_devices_per_user.toFixed(1)}/
             {t('admin.remnawave.overview.perUser', 'юзер')})
@@ -629,11 +625,11 @@ function OverviewTab({
             {t('admin.remnawave.overview.panelHealth', 'Здоровье панели')}
             {health.instances > 1 ? ` · ${health.instances}` : ''}
           </h3>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 [&>*:last-child:nth-child(odd)]:col-span-2 lg:[&>*:last-child]:col-span-1">
             <StatCard
               label={t('admin.remnawave.overview.panelRam', 'RAM процесса')}
               value={formatBytes(health.rss_bytes)}
-              icon={<PiMemoryDuotone className="h-5 w-5" />}
+              icon={<PiMemory className="h-5 w-5" />}
               color="blue"
             />
             <StatCard
@@ -646,13 +642,13 @@ function OverviewTab({
             <StatCard
               label={t('admin.remnawave.overview.eventLoopP99', 'Event-loop p99')}
               value={`${health.event_loop_p99_ms.toFixed(1)} ms`}
-              icon={<PiPulseDuotone className="h-5 w-5" />}
+              icon={<PiPulse className="h-5 w-5" />}
               color={health.event_loop_p99_ms > 50 ? 'red' : 'green'}
             />
             <StatCard
               label={t('admin.remnawave.overview.panelUptime', 'Аптайм панели')}
               value={formatUptime(health.uptime_seconds)}
-              icon={<PiTimerDuotone className="h-5 w-5" />}
+              icon={<PiTimer className="h-5 w-5" />}
               color="accent"
             />
           </div>
@@ -664,14 +660,14 @@ function OverviewTab({
         <div>
           <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-dark-300">
             <SubscriptionIcon className="h-4 w-4" />
-            {t('admin.remnawave.overview.subRequests', 'Запросы подписки (по клиентам)')}
+            {t('admin.remnawave.overview.subRequests', 'Запросы подписки (по клиентам)')} ·{' '}
+            {subRequests.by_app.reduce((acc, a) => acc + a.count, 0)}
           </h3>
-          <div className="grid gap-3 lg:grid-cols-2">
-            <BreakdownCard
-              title={t('admin.remnawave.overview.byApp', 'По приложениям')}
-              items={subRequests.by_app.map((a) => ({ label: a.app, count: a.count }))}
-            />
-          </div>
+          <BreakdownCard
+            wide
+            title={t('admin.remnawave.overview.byApp', 'По приложениям')}
+            items={subRequests.by_app.map((a) => ({ label: a.app, count: a.count }))}
+          />
         </div>
       )}
     </div>
@@ -719,7 +715,7 @@ function NodesTab({
   return (
     <div className="space-y-4">
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5 [&>*:last-child:nth-child(odd)]:col-span-2 lg:[&>*:last-child]:col-span-1">
         <StatCard
           label={t('admin.remnawave.nodes.stats.total', 'Total')}
           value={stats.total}
@@ -825,7 +821,7 @@ function SquadsTab({
   return (
     <div className="space-y-4">
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 [&>*:last-child:nth-child(odd)]:col-span-2 lg:[&>*:last-child]:col-span-1">
         <StatCard
           label={t('admin.remnawave.squads.stats.total', 'Total')}
           value={stats.total}
@@ -1193,6 +1189,7 @@ export default function AdminRemnawave() {
     queryKey: ['admin-remnawave-recap'],
     queryFn: adminRemnawaveApi.getRecap,
     enabled: activeTab === 'overview',
+    refetchInterval: 60000,
     staleTime: 60000,
   });
 
@@ -1200,6 +1197,7 @@ export default function AdminRemnawave() {
     queryKey: ['admin-remnawave-devices-stats'],
     queryFn: adminRemnawaveApi.getDevicesStats,
     enabled: activeTab === 'overview',
+    refetchInterval: 60000,
     staleTime: 60000,
   });
 
@@ -1207,6 +1205,7 @@ export default function AdminRemnawave() {
     queryKey: ['admin-remnawave-top-consumers'],
     queryFn: () => adminRemnawaveApi.getTopConsumers(7, 10),
     enabled: activeTab === 'overview',
+    refetchInterval: 60000,
     staleTime: 60000,
   });
 
@@ -1222,6 +1221,7 @@ export default function AdminRemnawave() {
     queryKey: ['admin-remnawave-sub-requests'],
     queryFn: adminRemnawaveApi.getSubscriptionRequests,
     enabled: activeTab === 'overview',
+    refetchInterval: 60000,
     staleTime: 60000,
   });
 
