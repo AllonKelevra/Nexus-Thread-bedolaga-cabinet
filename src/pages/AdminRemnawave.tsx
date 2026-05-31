@@ -50,6 +50,18 @@ const formatBytes = (bytes: number): string => {
 // сохранён для случая пустого кода (важно для UI-плейсхолдеров).
 const getCountryFlag = (code: string | null | undefined): string => getFlagEmoji(code) || '🌍';
 
+// Realtime interface throughput (bytes/s) → network-style speed, matching the
+// panel exactly: the unit step is by 1024 bytes, but the value is shown in bits
+// (×8 / 1000), e.g. 341 KB/s → "2728 Kb/s", 1.34 MB/s → "10.72 Mb/s".
+const formatSpeed = (bytesPerSec: number): string => {
+  const bps = bytesPerSec || 0;
+  const bits = bps * 8;
+  if (bps < 1024) return `${bits.toFixed(0)} b/s`;
+  if (bps < 1024 ** 2) return `${(bits / 1000).toFixed(2)} Kb/s`;
+  if (bps < 1024 ** 3) return `${(bits / 1e6).toFixed(2)} Mb/s`;
+  return `${(bits / 1e9).toFixed(2)} Gb/s`;
+};
+
 interface StatCardProps {
   label: string;
   value: string | number;
@@ -84,73 +96,75 @@ function StatCard({ label, value, icon, color = 'accent', subValue }: StatCardPr
 
 interface NodeCardProps {
   node: NodeInfo;
+  providerName?: string;
   onAction: (uuid: string, action: 'enable' | 'disable' | 'restart') => void;
   isLoading?: boolean;
 }
 
-function NodeCard({ node, onAction, isLoading }: NodeCardProps) {
+function NodeCard({ node, providerName, onAction, isLoading }: NodeCardProps) {
   const { t } = useTranslation();
 
-  const statusColor = node.is_disabled
-    ? 'text-dark-500'
-    : node.is_connected && node.is_node_online
-      ? 'text-success-400'
-      : 'text-error-400';
-
+  const isUp = node.is_connected && node.is_node_online && !node.is_disabled;
+  const dotColor = node.is_disabled ? 'bg-dark-500' : isUp ? 'bg-success-400' : 'bg-error-400';
   const statusText = node.is_disabled
     ? t('admin.remnawave.nodes.disabled', 'Disabled')
-    : node.is_connected && node.is_node_online
+    : isUp
       ? t('admin.remnawave.nodes.online', 'Online')
       : t('admin.remnawave.nodes.offline', 'Offline');
 
-  return (
-    <div className="rounded-xl border border-dark-700 bg-dark-800/50 p-4 transition-colors hover:border-dark-600">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">{getCountryFlag(node.country_code)}</span>
-            <h3 className="truncate font-medium text-dark-100">{node.name}</h3>
-            <span className={`rounded-full px-2 py-0.5 text-xs ${statusColor} bg-current/10`}>
-              {statusText}
-            </span>
-          </div>
-          <p className="mt-1 truncate text-xs text-dark-500">{node.address}</p>
+  const s = node.system?.stats;
+  const memTotal = s ? s.memoryUsed + s.memoryFree : 0;
+  const ramPct = memTotal > 0 && s ? Math.round((s.memoryUsed / memTotal) * 100) : null;
+  const loadAvg = s?.loadAvg?.length
+    ? s.loadAvg
+        .slice(0, 3)
+        .map((n) => n.toFixed(2))
+        .join('  ')
+    : null;
+  const rx = s?.interface?.rxBytesPerSec ?? 0;
+  const tx = s?.interface?.txBytesPerSec ?? 0;
 
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-dark-400">
-            <span className="flex items-center gap-1">
-              <UsersIcon className="h-3.5 w-3.5" />
-              {t('admin.remnawave.nodes.usersOnlineCount', '{{count}} online', {
-                count: node.users_online ?? 0,
-              })}
+  const used = node.traffic_used_bytes ?? 0;
+  const limit = node.traffic_limit_bytes ?? 0;
+  const trafficPct = limit > 0 ? Math.min(100, (used / limit) * 100) : null;
+
+  return (
+    <div className="rounded-xl border border-dark-700 bg-dark-800/50 p-3.5 transition-colors hover:border-dark-600">
+      {/* Identity + actions */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <span
+            className={`h-2 w-2 shrink-0 rounded-full ${dotColor} ${isUp ? 'animate-pulse' : ''}`}
+            title={statusText}
+          />
+          <span className="flex shrink-0 items-center gap-1 rounded-md bg-dark-700/60 px-1.5 py-0.5 text-[11px] text-dark-300">
+            <UsersIcon className="h-3 w-3" />
+            {node.users_online ?? 0}
+          </span>
+          <span className="shrink-0 text-base leading-none">
+            {getCountryFlag(node.country_code)}
+          </span>
+          <h3 className="truncate font-semibold text-dark-100">{node.name}</h3>
+          {providerName && (
+            <span className="shrink-0 truncate rounded-md bg-accent-500/15 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-accent-300">
+              {providerName}
             </span>
-            {node.traffic_used_bytes !== undefined && (
-              <span>
-                {formatBytes(node.traffic_used_bytes)}{' '}
-                {t('admin.remnawave.nodes.trafficUsed', 'used')}
-              </span>
-            )}
-            {node.xray_uptime > 0 && (
-              <span>
-                {t('admin.remnawave.nodes.uptimeLabel', 'Uptime')}: {formatUptime(node.xray_uptime)}
-              </span>
-            )}
-            {node.versions?.xray && <span>Xray {node.versions.xray}</span>}
-          </div>
+          )}
         </div>
 
-        <div className="flex shrink-0 gap-1.5">
+        <div className="flex shrink-0 items-center gap-1.5">
           <button
             onClick={() => onAction(node.uuid, 'restart')}
             disabled={isLoading || node.is_disabled}
-            className="rounded-lg bg-dark-700 p-2 text-dark-300 transition-colors hover:bg-dark-600 hover:text-dark-100 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg bg-dark-700 p-1.5 text-dark-300 transition-colors hover:bg-dark-600 hover:text-dark-100 disabled:cursor-not-allowed disabled:opacity-50"
             title={t('admin.remnawave.nodes.restart', 'Restart')}
           >
-            <ArrowPathIcon className="h-4 w-4" />
+            <ArrowPathIcon className="h-3.5 w-3.5" />
           </button>
           <button
             onClick={() => onAction(node.uuid, node.is_disabled ? 'enable' : 'disable')}
             disabled={isLoading}
-            className={`rounded-lg p-2 transition-colors disabled:opacity-50 ${
+            className={`rounded-lg p-1.5 transition-colors disabled:opacity-50 ${
               node.is_disabled
                 ? 'bg-success-500/20 text-success-400 hover:bg-success-500/30'
                 : 'bg-error-500/20 text-error-400 hover:bg-error-500/30'
@@ -161,10 +175,84 @@ function NodeCard({ node, onAction, isLoading }: NodeCardProps) {
                 : t('admin.remnawave.nodes.disable', 'Disable')
             }
           >
-            {node.is_disabled ? <PlayIcon className="h-4 w-4" /> : <StopIcon className="h-4 w-4" />}
+            {node.is_disabled ? (
+              <PlayIcon className="h-3.5 w-3.5" />
+            ) : (
+              <StopIcon className="h-3.5 w-3.5" />
+            )}
           </button>
         </div>
       </div>
+
+      {/* Address + traffic + uptime */}
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-dark-400">
+        <span className="flex items-center gap-1 font-mono text-dark-500">
+          <GlobeIcon className="h-3 w-3" />
+          {node.address}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="text-dark-300">{formatBytes(used)}</span>
+          {trafficPct !== null && (
+            <span className="h-1 w-16 overflow-hidden rounded-full bg-dark-700">
+              <span
+                className="block h-full rounded-full bg-accent-500"
+                style={{ width: `${trafficPct}%` }}
+              />
+            </span>
+          )}
+          <span className="text-dark-500">{limit > 0 ? formatBytes(limit) : '∞'}</span>
+        </span>
+        {node.xray_uptime > 0 && (
+          <span className="flex items-center gap-1 text-dark-500">
+            <PiTimer className="h-3 w-3" />
+            {formatUptime(node.xray_uptime)}
+          </span>
+        )}
+      </div>
+
+      {/* Live metrics: RAM · load · speeds · versions */}
+      {(ramPct !== null || loadAvg || rx > 0 || tx > 0 || node.versions) && (
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-dark-700/60 pt-2 font-mono text-[10.5px] text-dark-500">
+          {ramPct !== null && (
+            <span className="flex items-center gap-1.5" title="RAM">
+              <span
+                className={
+                  ramPct > 85
+                    ? 'text-error-400'
+                    : ramPct > 65
+                      ? 'text-warning-400'
+                      : 'text-dark-400'
+                }
+              >
+                {ramPct}%
+              </span>
+              <span className="h-1 w-10 overflow-hidden rounded-full bg-dark-700">
+                <span
+                  className="block h-full rounded-full bg-dark-400"
+                  style={{ width: `${ramPct}%` }}
+                />
+              </span>
+            </span>
+          )}
+          {loadAvg && <span title="load average 1 / 5 / 15 min">{loadAvg}</span>}
+          <span className="flex items-center gap-2">
+            <span className="flex items-center gap-0.5">
+              <DownloadIcon className="h-3 w-3 text-success-400/70" />
+              {formatSpeed(rx)}
+            </span>
+            <span className="flex items-center gap-0.5">
+              <UploadIcon className="h-3 w-3 text-accent-400/70" />
+              {formatSpeed(tx)}
+            </span>
+          </span>
+          {(node.versions?.node || node.versions?.xray) && (
+            <span className="ml-auto flex items-center gap-2 text-dark-600">
+              {node.versions?.node && <span>{node.versions.node}</span>}
+              {node.versions?.xray && <span>xray {node.versions.xray}</span>}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -676,6 +764,7 @@ function OverviewTab({
 
 interface NodesTabProps {
   nodes: NodeInfo[];
+  providerByUuid: Record<string, string>;
   isLoading: boolean;
   onRefresh: () => void;
   onAction: (uuid: string, action: 'enable' | 'disable' | 'restart') => void;
@@ -685,6 +774,7 @@ interface NodesTabProps {
 
 function NodesTab({
   nodes,
+  providerByUuid,
   isLoading,
   onRefresh,
   onAction,
@@ -775,7 +865,13 @@ function NodesTab({
           </p>
         ) : (
           nodes.map((node) => (
-            <NodeCard key={node.uuid} node={node} onAction={onAction} isLoading={isActionLoading} />
+            <NodeCard
+              key={node.uuid}
+              node={node}
+              providerName={providerByUuid[node.uuid]}
+              onAction={onAction}
+              isLoading={isActionLoading}
+            />
           ))
         )}
       </div>
@@ -1233,7 +1329,8 @@ export default function AdminRemnawave() {
     queryKey: ['admin-remnawave-nodes'],
     queryFn: adminRemnawaveApi.getNodes,
     enabled: activeTab === 'nodes',
-    refetchInterval: 15000,
+    // Fast poll so realtime metrics (RAM, load, speeds) stay live like the panel.
+    refetchInterval: 5000,
   });
 
   const {
@@ -1253,9 +1350,20 @@ export default function AdminRemnawave() {
   } = useQuery({
     queryKey: ['admin-remnawave-realtime'],
     queryFn: adminRemnawaveApi.getNodesRealtime,
-    enabled: activeTab === 'traffic',
+    // Loaded on the Nodes tab too — realtime carries the provider name per node.
+    enabled: activeTab === 'nodes' || activeTab === 'traffic',
     refetchInterval: 10000,
   });
+
+  // Provider name (e.g. "WAICORE") only comes through the realtime stats; map it
+  // by node uuid so the Nodes tab can show the provider badge like the panel.
+  const providerByUuid = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const r of realtimeData ?? []) {
+      if (r.providerName) map[r.nodeUuid] = r.providerName;
+    }
+    return map;
+  }, [realtimeData]);
 
   const { data: autoSyncStatus, isLoading: isLoadingAutoSync } = useQuery({
     queryKey: ['admin-remnawave-autosync'],
@@ -1430,6 +1538,7 @@ export default function AdminRemnawave() {
       {activeTab === 'nodes' && (
         <NodesTab
           nodes={nodesData?.items || []}
+          providerByUuid={providerByUuid}
           isLoading={isLoadingNodes}
           onRefresh={() => refetchNodes()}
           onAction={handleNodeAction}
