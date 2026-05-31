@@ -157,13 +157,26 @@ export default function Subscriptions() {
 
       {/* Empty state: показываем триал, если доступен; иначе — обычный empty */}
       {hasNoSubscriptions && !trialLoading && trialInfo?.is_available && (
-        <TrialOfferCard
-          trialInfo={trialInfo}
-          balanceKopeks={balanceData?.balance_kopeks ?? 0}
-          balanceRubles={balanceData?.balance_rubles ?? 0}
-          activateTrialMutation={activateTrialMutation}
-          trialError={trialError}
-        />
+        <div className="space-y-4">
+          <TrialOfferCard
+            trialInfo={trialInfo}
+            balanceKopeks={balanceData?.balance_kopeks ?? 0}
+            balanceRubles={balanceData?.balance_rubles ?? 0}
+            activateTrialMutation={activateTrialMutation}
+            trialError={trialError}
+          />
+          {/* Новый пользователь не обязан активировать триал, чтобы попасть
+              в витрину — даём явный путь к покупке подписки. Раньше при
+              доступном триале это был единственный экран без кнопки «Купить»
+              (Telegram-баг #605056/#605063). */}
+          <button
+            onClick={() => navigate('/subscription/purchase')}
+            className="w-full rounded-xl border px-6 py-3 text-sm font-medium transition-colors"
+            style={{ background: g.innerBg, borderColor: g.cardBorder, color: g.text }}
+          >
+            {t('subscriptions.browsePlans', 'Посмотреть тарифы и купить подписку')}
+          </button>
+        </div>
       )}
       {hasNoSubscriptions && !trialLoading && !trialInfo?.is_available && (
         <EmptyState onBuy={() => navigate('/subscription/purchase')} />
