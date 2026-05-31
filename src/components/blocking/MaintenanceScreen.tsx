@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useBlockingStore } from '../../store/blocking';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { AdjustmentsIcon } from '@/components/icons';
+import { WrenchIcon } from '@/components/icons';
 
 export default function MaintenanceScreen() {
   const { t } = useTranslation();
@@ -21,7 +21,7 @@ export default function MaintenanceScreen() {
         {/* Icon */}
         <div className="mb-8">
           <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-dark-800">
-            <AdjustmentsIcon className="h-12 w-12 text-warning-500" />
+            <WrenchIcon className="h-12 w-12 text-warning-500" />
           </div>
         </div>
 

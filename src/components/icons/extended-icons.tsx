@@ -1,5 +1,7 @@
 import {
   PiSlidersHorizontal,
+  PiWrench,
+  PiBookOpen,
   PiHeadset,
   PiArrowDown,
   PiArrowRight,
@@ -88,6 +90,14 @@ interface IconProps {
 
 export const AdjustmentsIcon = ({ className }: IconProps) => (
   <PiSlidersHorizontal className={cn('h-5 w-5', className)} />
+);
+
+export const WrenchIcon = ({ className }: IconProps) => (
+  <PiWrench className={cn('h-5 w-5', className)} />
+);
+
+export const BookOpenIcon = ({ className }: IconProps) => (
+  <PiBookOpen className={cn('h-5 w-5', className)} />
 );
 
 export const AgentIcon = ({ className }: IconProps) => (

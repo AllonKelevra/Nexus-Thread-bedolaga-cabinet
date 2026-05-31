@@ -12,7 +12,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { CardsBlock, TimelineBlock, AccordionBlock, MinimalBlock, BlockButtons } from './blocks';
 import type { BlockRendererProps } from './blocks';
 import TvQuickConnect from './TvQuickConnect';
-import { BackIcon, ChevronIcon, DocumentIcon } from '@/components/icons';
+import { BackIcon, BookOpenIcon, ChevronIcon } from '@/components/icons';
 
 const platformOrder = ['ios', 'android', 'windows', 'macos', 'linux', 'androidTV', 'appleTV'];
 
@@ -307,7 +307,7 @@ export default function InstallationGuide({
           rel="noopener noreferrer"
           className="btn-secondary w-full justify-center"
         >
-          <DocumentIcon className="h-5 w-5" />
+          <BookOpenIcon className="h-5 w-5" />
           {getBaseTranslation('tutorial', 'subscription.connection.tutorial')}
         </a>
       )}
