@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useNativeDialog } from '../../platform/hooks/useNativeDialog';
 
 interface SbpConfirmButtonProps {
   ticketId: number;
@@ -7,14 +7,16 @@ interface SbpConfirmButtonProps {
 }
 
 export function SbpConfirmButton({ ticketId, onConfirm }: SbpConfirmButtonProps) {
-  const { t } = useTranslation();
+  const { confirm: confirmDialog } = useNativeDialog();
   const [loading, setLoading] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleConfirm = async () => {
-    const confirmText = 'Подтвердить платёж СБП и зачислить баланс пользователю?';
-    if (!window.confirm(confirmText)) return;
+    const userConfirmed = await confirmDialog(
+      'Подтвердить платёж СБП и зачислить баланс пользователю?',
+    );
+    if (!userConfirmed) return;
 
     setLoading(true);
     setError(null);
@@ -33,7 +35,7 @@ export function SbpConfirmButton({ ticketId, onConfirm }: SbpConfirmButtonProps)
         throw new Error(errorData.detail || `HTTP ${resp.status}`);
       }
 
-      const result = await resp.json();
+      await resp.json();
       setConfirmed(true);
 
       onConfirm?.();
@@ -73,9 +75,9 @@ export function SbpConfirmButton({ ticketId, onConfirm }: SbpConfirmButtonProps)
         type="button"
         className={`w-full rounded-lg px-4 py-3 font-semibold transition-all ${
           confirmed
-            ? 'bg-green-500 text-white cursor-not-allowed'
+            ? 'cursor-not-allowed bg-green-500 text-white'
             : loading
-              ? 'bg-accent-400/50 text-dark-900 cursor-wait'
+              ? 'cursor-wait bg-accent-400/50 text-dark-900'
               : 'bg-accent-400 text-dark-900 hover:bg-accent-500 active:scale-[0.98]'
         }`}
       >
