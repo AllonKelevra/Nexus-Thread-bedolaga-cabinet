@@ -11,7 +11,7 @@ export default function AdminApps() {
   const queryClient = useQueryClient();
   const { capabilities } = usePlatform();
 
-  // RemnaWave status
+  // Remnawave status
   const { data: status } = useQuery({
     queryKey: ['remnawave-status'],
     queryFn: adminAppsApi.getRemnaWaveStatus,
@@ -60,8 +60,8 @@ export default function AdminApps() {
           />
           <span className="text-sm font-medium text-dark-200">
             {status?.enabled
-              ? t('admin.apps.remnaWaveConnected', 'RemnaWave connected')
-              : t('admin.apps.remnaWaveDisconnected', 'RemnaWave not connected')}
+              ? t('admin.apps.remnaWaveConnected', 'Remnawave connected')
+              : t('admin.apps.remnaWaveDisconnected', 'Remnawave not connected')}
           </span>
         </div>
         {status?.config_uuid && (

@@ -1122,7 +1122,7 @@ function SyncTab({
           title={t('admin.remnawave.sync.fromPanel', 'Sync from Panel')}
           description={t(
             'admin.remnawave.sync.fromPanelDesc',
-            'Import users from RemnaWave panel to bot',
+            'Import users from Remnawave panel to bot',
           )}
           onAction={onSyncFromPanel}
           isLoading={loadingStates.fromPanel}
@@ -1132,7 +1132,7 @@ function SyncTab({
           title={t('admin.remnawave.sync.toPanel', 'Sync to Panel')}
           description={t(
             'admin.remnawave.sync.toPanelDesc',
-            'Export users from bot to RemnaWave panel',
+            'Export users from bot to Remnawave panel',
           )}
           onAction={onSyncToPanel}
           isLoading={loadingStates.toPanel}
@@ -1498,7 +1498,7 @@ export default function AdminRemnawave() {
           </div>
           <div>
             <h1 className="text-xl font-semibold text-dark-100">
-              {t('admin.remnawave.title', 'RemnaWave')}
+              {t('admin.remnawave.title', 'Remnawave')}
             </h1>
             <p className="text-sm text-dark-400">
               {t('admin.remnawave.subtitle', 'Panel management and statistics')}
