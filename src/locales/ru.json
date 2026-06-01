@@ -1645,6 +1645,7 @@
         "totalUpload": "Отдача",
         "totalTraffic": "Всего",
         "online": "онлайн",
+        "realtimeTitle": "Текущий трафик",
         "inbounds": "Inbounds",
         "outbounds": "Outbounds"
       },

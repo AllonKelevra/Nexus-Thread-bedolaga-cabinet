@@ -139,15 +139,46 @@ function StatCard({ label, value, icon, color = 'accent', subValue }: StatCardPr
   );
 }
 
+function NodeTrafficBreakdown({
+  title,
+  items,
+}: {
+  title: string;
+  items: { tag: string; downloadBytes: number; uploadBytes: number; totalBytes: number }[];
+}) {
+  return (
+    <div className="space-y-1">
+      <p className="text-[10px] font-medium uppercase tracking-wide text-dark-500">{title}</p>
+      {[...items]
+        .sort((a, b) => b.totalBytes - a.totalBytes)
+        .map((it) => (
+          <div
+            key={it.tag}
+            className="flex items-center justify-between gap-3 rounded-lg bg-dark-900/50 px-2.5 py-1.5"
+          >
+            <span className="truncate text-xs text-dark-200">{it.tag}</span>
+            <div className="flex shrink-0 gap-3 font-mono text-[11px] text-dark-400">
+              <span>↓ {formatBytes(it.downloadBytes)}</span>
+              <span>↑ {formatBytes(it.uploadBytes)}</span>
+              <span className="font-medium text-dark-300">{formatBytes(it.totalBytes)}</span>
+            </div>
+          </div>
+        ))}
+    </div>
+  );
+}
+
 interface NodeCardProps {
   node: NodeInfo;
   providerName?: string;
+  realtime?: NodeRealtimeStats;
   onAction: (uuid: string, action: 'enable' | 'disable' | 'restart') => void;
   isLoading?: boolean;
 }
 
-function NodeCard({ node, providerName, onAction, isLoading }: NodeCardProps) {
+function NodeCard({ node, providerName, realtime, onAction, isLoading }: NodeCardProps) {
   const { t } = useTranslation();
+  const [expanded, setExpanded] = useState(false);
 
   const isUp = node.is_connected && node.is_node_online && !node.is_disabled;
   const dotColor = node.is_disabled ? 'bg-dark-500' : isUp ? 'bg-success-400' : 'bg-error-400';
@@ -177,8 +208,19 @@ function NodeCard({ node, providerName, onAction, isLoading }: NodeCardProps) {
   const providerLabel = providerName || node.provider_name;
   const providerFavicon = providerFaviconUrl(node.provider_favicon);
 
+  // Per-node traffic breakdown (merged from the former Traffic tab) — shown in
+  // an accordion that toggles when the card is clicked.
+  const inbounds = realtime?.inbounds ?? [];
+  const outbounds = realtime?.outbounds ?? [];
+  const hasBreakdown = inbounds.length + outbounds.length > 0;
+
   return (
-    <div className="rounded-xl border border-dark-700 bg-dark-800/50 p-3.5 transition-colors hover:border-dark-600">
+    <div
+      className={`rounded-xl border border-dark-700 bg-dark-800/50 p-3.5 transition-colors hover:border-dark-600 ${
+        hasBreakdown ? 'cursor-pointer' : ''
+      }`}
+      onClick={hasBreakdown ? () => setExpanded((v) => !v) : undefined}
+    >
       {/* Identity + actions */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
@@ -213,7 +255,10 @@ function NodeCard({ node, providerName, onAction, isLoading }: NodeCardProps) {
 
         <div className="flex shrink-0 items-center gap-1.5">
           <button
-            onClick={() => onAction(node.uuid, 'restart')}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAction(node.uuid, 'restart');
+            }}
             disabled={isLoading || node.is_disabled}
             className="rounded-lg bg-dark-700 p-1.5 text-dark-300 transition-colors hover:bg-dark-600 hover:text-dark-100 disabled:cursor-not-allowed disabled:opacity-50"
             title={t('admin.remnawave.nodes.restart', 'Restart')}
@@ -221,7 +266,10 @@ function NodeCard({ node, providerName, onAction, isLoading }: NodeCardProps) {
             <ArrowPathIcon className="h-3.5 w-3.5" />
           </button>
           <button
-            onClick={() => onAction(node.uuid, node.is_disabled ? 'enable' : 'disable')}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAction(node.uuid, node.is_disabled ? 'enable' : 'disable');
+            }}
             disabled={isLoading}
             className={`rounded-lg p-1.5 transition-colors disabled:opacity-50 ${
               node.is_disabled
@@ -240,6 +288,13 @@ function NodeCard({ node, providerName, onAction, isLoading }: NodeCardProps) {
               <StopIcon className="h-3.5 w-3.5" />
             )}
           </button>
+          {hasBreakdown && (
+            <ChevronRightIcon
+              className={`h-4 w-4 text-dark-500 transition-transform ${
+                expanded ? 'rotate-90' : ''
+              }`}
+            />
+          )}
         </div>
       </div>
 
@@ -309,6 +364,27 @@ function NodeCard({ node, providerName, onAction, isLoading }: NodeCardProps) {
               {node.versions?.node && <span>{node.versions.node}</span>}
               {node.versions?.xray && <span>xray {node.versions.xray}</span>}
             </span>
+          )}
+        </div>
+      )}
+
+      {/* Per-node traffic accordion (merged from the former Traffic tab) */}
+      {expanded && hasBreakdown && (
+        <div
+          className="mt-3 space-y-3 border-t border-dark-700/60 pt-3"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {inbounds.length > 0 && (
+            <NodeTrafficBreakdown
+              title={t('admin.remnawave.traffic.inbounds', 'Inbounds')}
+              items={inbounds}
+            />
+          )}
+          {outbounds.length > 0 && (
+            <NodeTrafficBreakdown
+              title={t('admin.remnawave.traffic.outbounds', 'Outbounds')}
+              items={outbounds}
+            />
           )}
         </div>
       )}
@@ -824,6 +900,7 @@ function OverviewTab({
 interface NodesTabProps {
   nodes: NodeInfo[];
   providerByUuid: Record<string, string>;
+  realtimeByUuid: Record<string, NodeRealtimeStats>;
   isLoading: boolean;
   onRefresh: () => void;
   onAction: (uuid: string, action: 'enable' | 'disable' | 'restart') => void;
@@ -834,6 +911,7 @@ interface NodesTabProps {
 function NodesTab({
   nodes,
   providerByUuid,
+  realtimeByUuid,
   isLoading,
   onRefresh,
   onAction,
@@ -852,6 +930,13 @@ function NodesTab({
     const totalUsers = nodes.reduce((acc, n) => acc + (n.users_online ?? 0), 0);
     return { total, online, offline, disabled, totalUsers };
   }, [nodes]);
+
+  const traffic = useMemo(() => {
+    const vals = Object.values(realtimeByUuid);
+    const download = vals.reduce((a, n) => a + (n.downloadBytes ?? 0), 0);
+    const upload = vals.reduce((a, n) => a + (n.uploadBytes ?? 0), 0);
+    return { download, upload, total: download + upload };
+  }, [realtimeByUuid]);
 
   if (isLoading) {
     return (
@@ -916,6 +1001,26 @@ function NodesTab({
         </button>
       </div>
 
+      {/* Realtime traffic totals (merged from the former Traffic tab) */}
+      {traffic.total > 0 && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-xs text-dark-400">
+          <span className="font-medium text-dark-300">
+            {t('admin.remnawave.traffic.realtimeTitle', 'Realtime traffic')}
+          </span>
+          <span className="flex items-center gap-1">
+            <DownloadIcon className="h-3 w-3 text-success-400/70" />
+            {formatBytes(traffic.download)}
+          </span>
+          <span className="flex items-center gap-1">
+            <UploadIcon className="h-3 w-3 text-accent-400/70" />
+            {formatBytes(traffic.upload)}
+          </span>
+          <span className="text-dark-300">
+            {'Σ'} {formatBytes(traffic.total)}
+          </span>
+        </div>
+      )}
+
       {/* Nodes List */}
       <div className="space-y-3">
         {nodes.length === 0 ? (
@@ -928,6 +1033,7 @@ function NodesTab({
               key={node.uuid}
               node={node}
               providerName={providerByUuid[node.uuid]}
+              realtime={realtimeByUuid[node.uuid]}
               onAction={onAction}
               isLoading={isActionLoading}
             />
@@ -1177,138 +1283,7 @@ function SyncTab({
   );
 }
 
-interface TrafficTabProps {
-  data: NodeRealtimeStats[] | undefined;
-  isLoading: boolean;
-  onRefresh: () => void;
-}
-
-function TrafficTab({ data, isLoading, onRefresh }: TrafficTabProps) {
-  const { t } = useTranslation();
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
-      </div>
-    );
-  }
-
-  if (!data || data.length === 0) {
-    return (
-      <div className="py-12 text-center">
-        <p className="text-dark-400">
-          {t('admin.remnawave.traffic.noData', 'No traffic data available')}
-        </p>
-        <button onClick={onRefresh} className="btn-primary mt-4">
-          {t('common.retry', 'Retry')}
-        </button>
-      </div>
-    );
-  }
-
-  const totalDownload = data.reduce((acc, n) => acc + n.downloadBytes, 0);
-  const totalUpload = data.reduce((acc, n) => acc + n.uploadBytes, 0);
-
-  return (
-    <div className="space-y-6">
-      {/* Totals */}
-      <div className="grid grid-cols-3 gap-3">
-        <StatCard
-          label={t('admin.remnawave.traffic.totalDownload', 'Download')}
-          value={formatBytes(totalDownload)}
-          icon={<DownloadIcon className="h-5 w-5" />}
-          color="green"
-        />
-        <StatCard
-          label={t('admin.remnawave.traffic.totalUpload', 'Upload')}
-          value={formatBytes(totalUpload)}
-          icon={<UploadIcon className="h-5 w-5" />}
-          color="blue"
-        />
-        <StatCard
-          label={t('admin.remnawave.traffic.totalTraffic', 'Total')}
-          value={formatBytes(totalDownload + totalUpload)}
-          icon={<ChartIcon className="h-5 w-5" />}
-          color="purple"
-        />
-      </div>
-
-      {/* Per-node inbound breakdown */}
-      {data.map((node) => (
-        <div key={node.nodeUuid} className="rounded-xl border border-dark-700 bg-dark-800/50 p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {node.countryEmoji && <span className="text-lg">{node.countryEmoji}</span>}
-              <h3 className="font-medium text-dark-100">{node.nodeName}</h3>
-              {node.providerName && (
-                <span className="rounded bg-dark-700/50 px-1.5 py-0.5 text-xs text-dark-400">
-                  {node.providerName}
-                </span>
-              )}
-              <span className="text-xs text-dark-500">
-                {node.usersOnline} {t('admin.remnawave.traffic.online', 'online')}
-              </span>
-            </div>
-            <span className="text-sm text-dark-300">{formatBytes(node.totalBytes)}</span>
-          </div>
-
-          {(node.inbounds?.length ?? 0) > 0 && (
-            <div className="space-y-1">
-              <p className="mb-2 text-xs font-medium text-dark-400">
-                {t('admin.remnawave.traffic.inbounds', 'Inbounds')}
-              </p>
-              {[...(node.inbounds ?? [])]
-                .sort((a, b) => b.totalBytes - a.totalBytes)
-                .map((ib) => (
-                  <div
-                    key={ib.tag}
-                    className="flex items-center justify-between rounded-lg bg-dark-900/50 px-3 py-2"
-                  >
-                    <span className="truncate text-sm text-dark-200">{ib.tag}</span>
-                    <div className="flex shrink-0 gap-4 text-xs text-dark-400">
-                      <span>↓ {formatBytes(ib.downloadBytes)}</span>
-                      <span>↑ {formatBytes(ib.uploadBytes)}</span>
-                      <span className="font-medium text-dark-300">
-                        {formatBytes(ib.totalBytes)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          )}
-
-          {(node.outbounds?.length ?? 0) > 0 && (
-            <div className="mt-3 space-y-1">
-              <p className="mb-2 text-xs font-medium text-dark-400">
-                {t('admin.remnawave.traffic.outbounds', 'Outbounds')}
-              </p>
-              {[...(node.outbounds ?? [])]
-                .sort((a, b) => b.totalBytes - a.totalBytes)
-                .map((ob) => (
-                  <div
-                    key={ob.tag}
-                    className="flex items-center justify-between rounded-lg bg-dark-900/50 px-3 py-2"
-                  >
-                    <span className="truncate text-sm text-dark-200">{ob.tag}</span>
-                    <div className="flex shrink-0 gap-4 text-xs text-dark-400">
-                      <span>↓ {formatBytes(ob.downloadBytes)}</span>
-                      <span>↑ {formatBytes(ob.uploadBytes)}</span>
-                      <span className="font-medium text-dark-300">
-                        {formatBytes(ob.totalBytes)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-type TabType = 'overview' | 'nodes' | 'traffic' | 'squads' | 'sync';
+type TabType = 'overview' | 'nodes' | 'squads' | 'sync';
 
 export default function AdminRemnawave() {
   const { t } = useTranslation();
@@ -1402,15 +1377,12 @@ export default function AdminRemnawave() {
     enabled: activeTab === 'squads',
   });
 
-  const {
-    data: realtimeData,
-    isLoading: isLoadingRealtime,
-    refetch: refetchRealtime,
-  } = useQuery({
+  const { data: realtimeData } = useQuery({
     queryKey: ['admin-remnawave-realtime'],
     queryFn: adminRemnawaveApi.getNodesRealtime,
-    // Loaded on the Nodes tab too — realtime carries the provider name per node.
-    enabled: activeTab === 'nodes' || activeTab === 'traffic',
+    // Realtime carries the provider name + per-node inbound/outbound breakdown
+    // that the Nodes tab shows (provider badge + the per-node traffic accordion).
+    enabled: activeTab === 'nodes',
     refetchInterval: 10000,
   });
 
@@ -1421,6 +1393,14 @@ export default function AdminRemnawave() {
     for (const r of realtimeData ?? []) {
       if (r.providerName) map[r.nodeUuid] = r.providerName;
     }
+    return map;
+  }, [realtimeData]);
+
+  // Full realtime stats by node uuid — feeds the per-node traffic accordion
+  // (inbounds/outbounds) merged into the Nodes tab.
+  const realtimeByUuid = useMemo(() => {
+    const map: Record<string, NodeRealtimeStats> = {};
+    for (const r of realtimeData ?? []) map[r.nodeUuid] = r;
     return map;
   }, [realtimeData]);
 
@@ -1498,11 +1478,6 @@ export default function AdminRemnawave() {
       icon: <ChartIcon />,
     },
     { id: 'nodes' as const, label: t('admin.remnawave.tabs.nodes', 'Nodes'), icon: <GlobeIcon /> },
-    {
-      id: 'traffic' as const,
-      label: t('admin.remnawave.tabs.traffic', 'Traffic'),
-      icon: <ChartIcon />,
-    },
     {
       id: 'squads' as const,
       label: t('admin.remnawave.tabs.squads', 'Squads'),
@@ -1598,19 +1573,12 @@ export default function AdminRemnawave() {
         <NodesTab
           nodes={nodesData?.items || []}
           providerByUuid={providerByUuid}
+          realtimeByUuid={realtimeByUuid}
           isLoading={isLoadingNodes}
           onRefresh={() => refetchNodes()}
           onAction={handleNodeAction}
           onRestartAll={handleRestartAll}
           isActionLoading={nodeActionMutation.isPending || restartAllMutation.isPending}
-        />
-      )}
-
-      {activeTab === 'traffic' && (
-        <TrafficTab
-          data={realtimeData}
-          isLoading={isLoadingRealtime}
-          onRefresh={() => refetchRealtime()}
         />
       )}
 
