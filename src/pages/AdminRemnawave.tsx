@@ -37,6 +37,10 @@ import {
   DevicesIcon,
   StatUptimeIcon,
   UsersIcon,
+  CheckCircleIcon,
+  BanIcon,
+  TrafficIcon,
+  ClockIcon,
   SyncIcon,
   RefreshIcon,
   PlayIcon,
@@ -72,6 +76,22 @@ const providerFaviconUrl = (link: string | null | undefined): string | null => {
     return host ? `https://www.google.com/s2/favicons?domain=${host}&sz=64` : null;
   } catch {
     return null;
+  }
+};
+
+// Meaningful icon per Remnawave user status (instead of the same people glyph).
+const userStatusIcon = (status: string): React.ReactNode => {
+  switch (status.toUpperCase()) {
+    case 'ACTIVE':
+      return <CheckCircleIcon className="h-4 w-4" />;
+    case 'DISABLED':
+      return <BanIcon className="h-4 w-4" />;
+    case 'LIMITED':
+      return <TrafficIcon className="h-4 w-4" />;
+    case 'EXPIRED':
+      return <ClockIcon className="h-4 w-4" />;
+    default:
+      return <UsersIcon className="h-4 w-4" />;
   }
 };
 
@@ -637,7 +657,7 @@ function OverviewTab({
               key={status}
               label={status}
               value={count}
-              icon={<UsersIcon className="h-4 w-4" />}
+              icon={userStatusIcon(status)}
               color={status === 'ACTIVE' ? 'green' : status === 'DISABLED' ? 'red' : 'accent'}
             />
           ))}
