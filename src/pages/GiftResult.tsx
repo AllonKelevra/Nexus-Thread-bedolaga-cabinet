@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { giftApi } from '../api/gift';
+import { brandingApi, type TelegramWidgetConfig } from '../api/branding';
 import { Spinner } from '@/components/ui/Spinner';
 import { AnimatedCheckmark } from '@/components/ui/AnimatedCheckmark';
 import { AnimatedCrossmark } from '@/components/ui/AnimatedCrossmark';
@@ -54,13 +55,25 @@ function CodeOnlySuccessState({
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
 
+  // Bot username comes from the runtime branding config; the build-time env var
+  // is only a fallback. Otherwise the "activate via bot" line silently vanishes
+  // on deployments that don't set VITE_TELEGRAM_BOT_USERNAME at build time.
+  const { data: widgetConfig } = useQuery<TelegramWidgetConfig>({
+    queryKey: ['telegram-widget-config'],
+    queryFn: brandingApi.getTelegramWidgetConfig,
+    staleTime: 60000,
+  });
+  const botUsername =
+    widgetConfig?.bot_username || import.meta.env.VITE_TELEGRAM_BOT_USERNAME || '';
+
   const shortCode = purchaseToken.slice(0, 12);
   const giftCode = `GIFT-${shortCode}`;
-  const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string | undefined;
-  // Encode underscores as %5F so Telegram auto-link detection doesn't strip them
-  const safeCode = shortCode.replace(/_/g, '%5F');
-  const botLink = botUsername ? `https://t.me/${botUsername}?start=GIFT%5F${safeCode}` : null;
-  const cabinetLink = `${window.location.origin}/gift?tab=activate&code=${safeCode}`;
+  // Telegram forwards the start parameter to the bot verbatim (no URL-decoding),
+  // and "_" is a valid start-param char — so use a literal "GIFT_" prefix to
+  // match the bot's `start_parameter.startswith('GIFT_')` handler. Encoding the
+  // underscore as %5F made the bot receive "GIFT%5F…" and silently fail.
+  const botLink = botUsername ? `https://t.me/${botUsername}?start=GIFT_${shortCode}` : null;
+  const cabinetLink = `${window.location.origin}/gift?tab=activate&code=${encodeURIComponent(shortCode)}`;
 
   const fullMessage = [
     t('gift.shareText', 'I have a gift for you! Activate it here:'),
