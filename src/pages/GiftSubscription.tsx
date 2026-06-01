@@ -1110,7 +1110,7 @@ function MyGiftsTabContent() {
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-dark-400">
             {t('gift.activeGiftsTitle')}
           </h2>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-3">
             {activeGifts.map((gift) => (
               <SentGiftCard key={gift.token} gift={gift} />
             ))}
@@ -1124,7 +1124,7 @@ function MyGiftsTabContent() {
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-dark-400">
             {t('gift.activatedGiftsTitle')}
           </h2>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-3">
             {activatedGifts.map((gift) => (
               <SentGiftCard key={gift.token} gift={gift} />
             ))}
@@ -1138,7 +1138,7 @@ function MyGiftsTabContent() {
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-dark-400">
             {t('gift.receivedGiftsTitle')}
           </h2>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-3">
             {receivedGifts!.map((gift) => (
               <ReceivedGiftCard key={gift.token} gift={gift} />
             ))}
