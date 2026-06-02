@@ -150,7 +150,7 @@ export default function AdminSalesStats() {
           {t('admin.salesStats.loadError')}
         </div>
       )}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <StatCard
           label={t('admin.salesStats.summary.revenue')}
           value={
