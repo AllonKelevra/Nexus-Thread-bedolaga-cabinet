@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
 import type { SalesStatsParams } from '../../api/adminSalesStats';
@@ -27,6 +27,7 @@ export function DepositsTab({ params }: DepositsTabProps) {
     queryKey: ['sales-stats', 'deposits', params],
     queryFn: () => salesStatsApi.getDeposits(params),
     staleTime: SALES_STATS.STALE_TIME,
+    placeholderData: keepPreviousData,
   });
 
   const formatValue = useCallback((v: number) => formatWithCurrency(v), [formatWithCurrency]);

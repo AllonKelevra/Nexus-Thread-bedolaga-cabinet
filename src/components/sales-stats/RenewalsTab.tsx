@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
 import type { SalesStatsParams } from '../../api/adminSalesStats';
@@ -22,6 +22,7 @@ export function RenewalsTab({ params }: RenewalsTabProps) {
     queryKey: ['sales-stats', 'renewals', params],
     queryFn: () => salesStatsApi.getRenewals(params),
     staleTime: SALES_STATS.STALE_TIME,
+    placeholderData: keepPreviousData,
   });
 
   if (isLoading) {

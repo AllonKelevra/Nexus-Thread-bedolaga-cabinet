@@ -1,12 +1,22 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
 import type { SalesStatsParams } from '../api/adminSalesStats';
 import { salesStatsApi } from '../api/adminSalesStats';
 import { SALES_STATS } from '../constants/salesStats';
 import { useCurrency } from '../hooks/useCurrency';
 import { AdminBackButton } from '../components/admin/AdminBackButton';
+import {
+  BanknotesIcon,
+  GiftIcon,
+  PercentIcon,
+  RepeatIcon,
+  RocketIcon,
+  SparklesIcon,
+  SubscriptionIcon,
+  WalletIcon,
+} from '../components/icons';
 import { StatCard } from '../components/stats';
 import {
   AddonsTab,
@@ -84,6 +94,7 @@ export default function AdminSalesStats() {
     queryFn: () => salesStatsApi.getSummary(params),
     staleTime: SALES_STATS.STALE_TIME,
     enabled: isValidPeriod,
+    placeholderData: keepPreviousData,
   });
 
   const prevParams = useMemo(() => getPreviousPeriodParams(period), [period]);
@@ -92,6 +103,7 @@ export default function AdminSalesStats() {
     queryFn: () => salesStatsApi.getSummary(prevParams as SalesStatsParams),
     staleTime: SALES_STATS.STALE_TIME,
     enabled: isValidPeriod && prevParams !== null,
+    placeholderData: keepPreviousData,
   });
 
   const deltas = useMemo(() => {
@@ -146,33 +158,40 @@ export default function AdminSalesStats() {
                   0,
                 )
           }
-          valueClassName="text-success-400"
+          icon={<BanknotesIcon className="h-5 w-5" />}
+          tone="success"
           delta={deltas?.revenue}
         />
         <StatCard
           label={t('admin.salesStats.summary.activeSubs')}
           value={summaryLoading ? '...' : (summary?.active_subscriptions ?? 0)}
-          valueClassName="text-accent-400"
+          icon={<SubscriptionIcon className="h-5 w-5" />}
+          tone="accent"
         />
         <StatCard
           label={t('admin.salesStats.summary.activeTrials')}
           value={summaryLoading ? '...' : (summary?.active_trials ?? 0)}
+          icon={<GiftIcon className="h-5 w-5" />}
+          tone="neutral"
         />
         <StatCard
           label={t('admin.salesStats.summary.newTrials')}
           value={summaryLoading ? '...' : (summary?.new_trials ?? 0)}
-          valueClassName="text-accent-400"
+          icon={<SparklesIcon className="h-5 w-5" />}
+          tone="accent"
           delta={deltas?.newTrials}
         />
         <StatCard
           label={t('admin.salesStats.summary.conversion')}
           value={summaryLoading ? '...' : `${summary?.trial_to_paid_conversion ?? 0}%`}
-          valueClassName="text-warning-400"
+          icon={<PercentIcon className="h-5 w-5" />}
+          tone="warning"
         />
         <StatCard
           label={t('admin.salesStats.summary.renewals')}
           value={summaryLoading ? '...' : (summary?.renewals_count ?? 0)}
-          valueClassName="text-success-400"
+          icon={<RepeatIcon className="h-5 w-5" />}
+          tone="success"
           delta={deltas?.renewals}
         />
         <StatCard
@@ -185,7 +204,8 @@ export default function AdminSalesStats() {
                   0,
                 )
           }
-          valueClassName="text-accent-400"
+          icon={<RocketIcon className="h-5 w-5" />}
+          tone="accent"
           delta={deltas?.addonRevenue}
         />
         <StatCard
@@ -198,7 +218,8 @@ export default function AdminSalesStats() {
                   0,
                 )
           }
-          valueClassName="text-warning-400"
+          icon={<WalletIcon className="h-5 w-5" />}
+          tone="warning"
           delta={deltas?.manualTopup}
         />
       </div>

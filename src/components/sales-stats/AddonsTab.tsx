@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
 import type { SalesStatsParams } from '../../api/adminSalesStats';
@@ -23,6 +23,7 @@ export function AddonsTab({ params }: AddonsTabProps) {
     queryKey: ['sales-stats', 'addons', params],
     queryFn: () => salesStatsApi.getAddons(params),
     staleTime: SALES_STATS.STALE_TIME,
+    placeholderData: keepPreviousData,
   });
 
   const dailyChartData = useMemo(() => {

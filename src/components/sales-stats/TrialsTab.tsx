@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
 import type { SalesStatsParams } from '../../api/adminSalesStats';
@@ -29,6 +29,7 @@ export function TrialsTab({ params }: TrialsTabProps) {
     queryKey: ['sales-stats', 'trials', params],
     queryFn: () => salesStatsApi.getTrials(params),
     staleTime: SALES_STATS.STALE_TIME,
+    placeholderData: keepPreviousData,
   });
 
   if (isLoading) {
