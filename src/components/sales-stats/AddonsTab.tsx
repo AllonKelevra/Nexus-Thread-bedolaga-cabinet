@@ -8,8 +8,8 @@ import { SALES_STATS } from '../../constants/salesStats';
 import { useCurrency } from '../../hooks/useCurrency';
 import { StatCard } from '../stats';
 
+import { BreakdownList } from './BreakdownList';
 import { DualAreaChart } from './DualAreaChart';
-import { SimpleBarChart } from './SimpleBarChart';
 
 interface AddonsTabProps {
   params: SalesStatsParams;
@@ -51,8 +51,9 @@ export function AddonsTab({ params }: AddonsTabProps) {
     return <div className="py-8 text-center text-error-400">{t('admin.salesStats.loadError')}</div>;
   }
 
-  const packageBarData = data.by_package.map((item) => ({
-    name: `${item.traffic_gb} GB`,
+  const packageBreakdown = data.by_package.map((item) => ({
+    key: String(item.traffic_gb),
+    label: `${item.traffic_gb} GB`,
     value: item.count,
   }));
 
@@ -84,7 +85,7 @@ export function AddonsTab({ params }: AddonsTabProps) {
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <SimpleBarChart data={packageBarData} title={t('admin.salesStats.addons.byPackage')} />
+        <BreakdownList title={t('admin.salesStats.addons.byPackage')} items={packageBreakdown} />
         <DualAreaChart
           data={dailyChartData}
           title={t('admin.salesStats.addons.dailyChart')}
