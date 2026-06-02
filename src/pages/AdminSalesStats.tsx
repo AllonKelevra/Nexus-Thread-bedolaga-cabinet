@@ -6,6 +6,7 @@ import type { SalesStatsParams } from '../api/adminSalesStats';
 import { salesStatsApi } from '../api/adminSalesStats';
 import { SALES_STATS } from '../constants/salesStats';
 import { useCurrency } from '../hooks/useCurrency';
+import { getMonthToDateRange } from '../utils/period';
 import { AdminBackButton } from '../components/admin/AdminBackButton';
 import {
   BanknotesIcon,
@@ -72,7 +73,7 @@ export default function AdminSalesStats() {
     days?: number;
     startDate?: string;
     endDate?: string;
-  }>({ days: SALES_STATS.DEFAULT_PERIOD });
+  }>(() => getMonthToDateRange());
 
   const params: SalesStatsParams = useMemo(
     () => ({
