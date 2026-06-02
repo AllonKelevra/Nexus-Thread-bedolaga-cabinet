@@ -6,6 +6,7 @@ import type { SalesStatsParams } from '../../api/adminSalesStats';
 import { salesStatsApi } from '../../api/adminSalesStats';
 import { SALES_STATS } from '../../constants/salesStats';
 import { useCurrency } from '../../hooks/useCurrency';
+import { BanknotesIcon, CardIcon, TicketIcon, TrophyIcon } from '../../components/icons';
 import { StatCard } from '../stats';
 
 import { BreakdownList } from './BreakdownList';
@@ -68,18 +69,30 @@ export function SalesTab({ params }: SalesTabProps) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label={t('admin.salesStats.sales.totalSales')} value={data.total_sales} />
+        <StatCard
+          label={t('admin.salesStats.sales.totalSales')}
+          value={data.total_sales}
+          icon={<TicketIcon className="h-5 w-5" />}
+          tone="accent"
+        />
         <StatCard
           label={t('admin.salesStats.sales.totalRevenue')}
-          value={formatWithCurrency(data.total_revenue_kopeks / SALES_STATS.KOPEKS_DIVISOR)}
-          valueClassName="text-success-400"
+          value={formatWithCurrency(data.total_revenue_kopeks / SALES_STATS.KOPEKS_DIVISOR, 0)}
+          icon={<BanknotesIcon className="h-5 w-5" />}
+          tone="success"
         />
         <StatCard
           label={t('admin.salesStats.sales.avgOrder')}
           value={formatWithCurrency(data.avg_order_kopeks / SALES_STATS.KOPEKS_DIVISOR)}
-          valueClassName="text-success-400"
+          icon={<CardIcon className="h-5 w-5" />}
+          tone="success"
         />
-        <StatCard label={t('admin.salesStats.sales.topTariff')} value={data.top_tariff_name} />
+        <StatCard
+          label={t('admin.salesStats.sales.topTariff')}
+          value={data.top_tariff_name}
+          icon={<TrophyIcon className="h-5 w-5" />}
+          tone="warning"
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

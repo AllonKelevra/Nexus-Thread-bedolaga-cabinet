@@ -7,6 +7,7 @@ import { salesStatsApi } from '../../api/adminSalesStats';
 import { METHOD_LABELS } from '../../constants/paymentMethods';
 import { SALES_STATS } from '../../constants/salesStats';
 import { useCurrency } from '../../hooks/useCurrency';
+import { BanknotesIcon, CardIcon, WalletIcon } from '../../components/icons';
 import { StatCard } from '../stats';
 
 import PaymentMethodIcon from '../PaymentMethodIcon';
@@ -82,15 +83,20 @@ export function DepositsTab({ params }: DepositsTabProps) {
         <StatCard
           label={t('admin.salesStats.deposits.totalDeposits')}
           value={data.total_deposits}
+          icon={<WalletIcon className="h-5 w-5" />}
+          tone="accent"
         />
         <StatCard
           label={t('admin.salesStats.deposits.totalAmount')}
-          value={formatWithCurrency(data.total_amount_kopeks / SALES_STATS.KOPEKS_DIVISOR)}
-          valueClassName="text-success-400"
+          value={formatWithCurrency(data.total_amount_kopeks / SALES_STATS.KOPEKS_DIVISOR, 0)}
+          icon={<BanknotesIcon className="h-5 w-5" />}
+          tone="success"
         />
         <StatCard
           label={t('admin.salesStats.deposits.avgDeposit')}
           value={formatWithCurrency(data.avg_deposit_kopeks / SALES_STATS.KOPEKS_DIVISOR)}
+          icon={<CardIcon className="h-5 w-5" />}
+          tone="neutral"
         />
       </div>
 

@@ -6,6 +6,13 @@ import type { SalesStatsParams } from '../../api/adminSalesStats';
 import { salesStatsApi } from '../../api/adminSalesStats';
 import { SALES_STATS } from '../../constants/salesStats';
 import { useCurrency } from '../../hooks/useCurrency';
+import {
+  BanknotesIcon,
+  CardIcon,
+  DevicesIcon,
+  PlusIcon,
+  TrafficIcon,
+} from '../../components/icons';
 import { StatCard } from '../stats';
 
 import { BreakdownList } from './BreakdownList';
@@ -64,24 +71,32 @@ export function AddonsTab({ params }: AddonsTabProps) {
         <StatCard
           label={t('admin.salesStats.addons.totalPurchases')}
           value={data.total_purchases}
+          icon={<PlusIcon className="h-5 w-5" />}
+          tone="accent"
         />
         <StatCard
           label={t('admin.salesStats.addons.totalGb')}
           value={`${data.total_gb_purchased} GB`}
+          icon={<TrafficIcon className="h-5 w-5" />}
+          tone="neutral"
         />
         <StatCard
           label={t('admin.salesStats.addons.revenue')}
-          value={formatWithCurrency(data.addon_revenue_kopeks / SALES_STATS.KOPEKS_DIVISOR)}
-          valueClassName="text-success-400"
+          value={formatWithCurrency(data.addon_revenue_kopeks / SALES_STATS.KOPEKS_DIVISOR, 0)}
+          icon={<BanknotesIcon className="h-5 w-5" />}
+          tone="success"
         />
         <StatCard
           label={t('admin.salesStats.addons.devicePurchases')}
           value={data.device_purchases}
+          icon={<DevicesIcon className="h-5 w-5" />}
+          tone="accent"
         />
         <StatCard
           label={t('admin.salesStats.addons.deviceRevenue')}
-          value={formatWithCurrency(data.device_revenue_kopeks / SALES_STATS.KOPEKS_DIVISOR)}
-          valueClassName="text-success-400"
+          value={formatWithCurrency(data.device_revenue_kopeks / SALES_STATS.KOPEKS_DIVISOR, 0)}
+          icon={<CardIcon className="h-5 w-5" />}
+          tone="success"
         />
       </div>
 
