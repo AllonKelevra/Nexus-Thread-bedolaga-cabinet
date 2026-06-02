@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import { SALES_STATS } from '../../constants/salesStats';
 import { getMonthToDateRange, isMonthToDate } from '../../utils/period';
+import { DateField } from '../DateField';
 
 interface PeriodSelectorProps {
   value: { days?: number; startDate?: string; endDate?: string };
@@ -68,18 +69,18 @@ export function PeriodSelector({ value, onChange }: PeriodSelectorProps) {
 
       {showCustom && (
         <div className="flex items-center gap-2">
-          <input
-            type="date"
+          <DateField
             value={value.startDate || ''}
-            onChange={(e) => handleDateChange('startDate', e.target.value)}
-            className="rounded-lg border border-dark-600 bg-dark-800 px-2 py-1 text-sm text-dark-200"
+            onChange={(v) => handleDateChange('startDate', v)}
+            max={value.endDate}
+            placeholder={t('admin.salesStats.period.from')}
           />
           <span className="text-dark-500">{'—'}</span>
-          <input
-            type="date"
+          <DateField
             value={value.endDate || ''}
-            onChange={(e) => handleDateChange('endDate', e.target.value)}
-            className="rounded-lg border border-dark-600 bg-dark-800 px-2 py-1 text-sm text-dark-200"
+            onChange={(v) => handleDateChange('endDate', v)}
+            min={value.startDate}
+            placeholder={t('admin.salesStats.period.to')}
           />
         </div>
       )}

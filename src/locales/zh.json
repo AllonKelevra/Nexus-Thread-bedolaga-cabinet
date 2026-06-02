@@ -1156,6 +1156,8 @@
       "subtitle": "收入、试用、订阅和续订",
       "period": {
         "thisMonth": "本月",
+        "from": "从",
+        "to": "到",
         "week": "7天",
         "month": "30天",
         "quarter": "90天",

@@ -1392,6 +1392,44 @@ input[type='checkbox']:hover:not(:checked) {
   outline: none;
 }
 
+/* react-day-picker (DateField) — dark theme via the library's CSS variables. */
+.rdp-dark {
+  --rdp-accent-color: rgb(var(--color-accent-500));
+  --rdp-accent-background-color: rgb(var(--color-accent-500) / 0.18);
+  --rdp-today-color: rgb(var(--color-accent-400));
+  --rdp-day-height: 2.25rem;
+  --rdp-day-width: 2.25rem;
+  --rdp-outside-opacity: 0.35;
+  --rdp-disabled-opacity: 0.3;
+  --rdp-selected-border: none;
+  color: rgb(var(--color-dark-200));
+  font-size: 0.85rem;
+}
+.rdp-dark .rdp-month_caption,
+.rdp-dark .rdp-caption_label {
+  color: rgb(var(--color-dark-100));
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.rdp-dark .rdp-weekday {
+  color: rgb(var(--color-dark-500));
+  font-weight: 500;
+  text-transform: capitalize;
+}
+.rdp-dark .rdp-day_button {
+  border-radius: 0.5rem;
+}
+.rdp-dark .rdp-day_button:hover:not([disabled]) {
+  background-color: rgb(var(--color-dark-700));
+}
+.rdp-dark .rdp-selected .rdp-day_button {
+  color: #fff;
+  font-weight: 600;
+}
+.rdp-dark .rdp-chevron {
+  fill: currentColor;
+}
+
 .light input[type='checkbox'] {
   border-color: rgb(var(--color-champagne-400));
   background-color: rgb(var(--color-champagne-100));

@@ -1283,6 +1283,8 @@
       "subtitle": "Revenue, trials, subscriptions, and renewals",
       "period": {
         "thisMonth": "This month",
+        "from": "From",
+        "to": "To",
         "week": "7 days",
         "month": "30 days",
         "quarter": "90 days",
