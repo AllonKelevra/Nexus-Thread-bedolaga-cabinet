@@ -8,10 +8,10 @@ import { SALES_STATS } from '../../constants/salesStats';
 import { useCurrency } from '../../hooks/useCurrency';
 import { StatCard } from '../stats';
 
+import { BreakdownList } from './BreakdownList';
 import { DonutChart } from './DonutChart';
-import { MultiSeriesAreaChart } from './MultiSeriesAreaChart';
 import { SimpleAreaChart } from './SimpleAreaChart';
-import { SimpleBarChart } from './SimpleBarChart';
+import { StackedBarChart } from './StackedBarChart';
 
 interface SalesTabProps {
   params: SalesStatsParams;
@@ -48,8 +48,9 @@ export function SalesTab({ params }: SalesTabProps) {
     return <div className="py-8 text-center text-error-400">{t('admin.salesStats.loadError')}</div>;
   }
 
-  const tariffBarData = data.by_tariff.map((item) => ({
-    name: item.tariff_name,
+  const tariffBreakdown = data.by_tariff.map((item) => ({
+    key: String(item.tariff_id),
+    label: item.tariff_name,
     value: item.count,
   }));
 
@@ -65,8 +66,13 @@ export function SalesTab({ params }: SalesTabProps) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard label={t('admin.salesStats.sales.totalSales')} value={data.total_sales} />
+        <StatCard
+          label={t('admin.salesStats.sales.totalRevenue')}
+          value={formatWithCurrency(data.total_revenue_kopeks / SALES_STATS.KOPEKS_DIVISOR)}
+          valueClassName="text-success-400"
+        />
         <StatCard
           label={t('admin.salesStats.sales.avgOrder')}
           value={formatWithCurrency(data.avg_order_kopeks / SALES_STATS.KOPEKS_DIVISOR)}
@@ -76,7 +82,7 @@ export function SalesTab({ params }: SalesTabProps) {
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <SimpleBarChart data={tariffBarData} title={t('admin.salesStats.sales.byTariff')} />
+        <BreakdownList title={t('admin.salesStats.sales.byTariff')} items={tariffBreakdown} />
         <DonutChart data={periodPieData} title={t('admin.salesStats.sales.byPeriod')} />
       </div>
 
@@ -87,11 +93,10 @@ export function SalesTab({ params }: SalesTabProps) {
         valueLabel={t('admin.salesStats.summary.revenue')}
       />
 
-      <MultiSeriesAreaChart
+      <StackedBarChart
         data={dailyByTariffData}
         title={t('admin.salesStats.sales.dailyByTariff')}
-        chartId="sales-daily-by-tariff"
-        valueLabel={t('admin.salesStats.sales.subscriptions')}
+        valueFormatter={(v) => String(v)}
       />
     </div>
   );

@@ -1190,6 +1190,7 @@
       },
       "sales": {
         "totalSales": "کل فروش",
+        "totalRevenue": "درآمد",
         "avgOrder": "میانگین سفارش",
         "topTariff": "تعرفه برتر",
         "byTariff": "بر اساس تعرفه",

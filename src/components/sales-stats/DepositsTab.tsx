@@ -9,9 +9,11 @@ import { SALES_STATS } from '../../constants/salesStats';
 import { useCurrency } from '../../hooks/useCurrency';
 import { StatCard } from '../stats';
 
-import { MultiSeriesAreaChart } from './MultiSeriesAreaChart';
+import PaymentMethodIcon from '../PaymentMethodIcon';
+
+import { BreakdownList } from './BreakdownList';
 import { SimpleAreaChart } from './SimpleAreaChart';
-import { SimpleBarChart } from './SimpleBarChart';
+import { StackedBarChart } from './StackedBarChart';
 
 interface DepositsTabProps {
   params: SalesStatsParams;
@@ -29,11 +31,13 @@ export function DepositsTab({ params }: DepositsTabProps) {
 
   const formatValue = useCallback((v: number) => formatWithCurrency(v), [formatWithCurrency]);
 
-  const methodBarData = useMemo(
+  const methodBreakdown = useMemo(
     () =>
       data?.by_method.map((item) => ({
-        name: METHOD_LABELS[item.method] || item.method,
+        key: item.method,
+        label: METHOD_LABELS[item.method] || item.method,
         value: item.amount_kopeks / SALES_STATS.KOPEKS_DIVISOR,
+        icon: <PaymentMethodIcon method={item.method} className="h-5 w-5 shrink-0" />,
       })) ?? [],
     [data?.by_method],
   );
@@ -89,9 +93,9 @@ export function DepositsTab({ params }: DepositsTabProps) {
         />
       </div>
 
-      <SimpleBarChart
-        data={methodBarData}
+      <BreakdownList
         title={t('admin.salesStats.deposits.byMethod')}
+        items={methodBreakdown}
         valueFormatter={formatValue}
       />
 
@@ -102,11 +106,9 @@ export function DepositsTab({ params }: DepositsTabProps) {
         valueLabel={t('admin.salesStats.deposits.revenue')}
       />
 
-      <MultiSeriesAreaChart
+      <StackedBarChart
         data={dailyByMethodData}
         title={t('admin.salesStats.deposits.dailyByMethod')}
-        chartId="deposits-daily-by-method"
-        valueLabel={t('admin.salesStats.deposits.revenue')}
         valueFormatter={formatValue}
       />
     </div>

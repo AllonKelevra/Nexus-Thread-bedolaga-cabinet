@@ -1317,6 +1317,7 @@
       },
       "sales": {
         "totalSales": "Total Sales",
+        "totalRevenue": "Revenue",
         "avgOrder": "Avg Order",
         "topTariff": "Top Tariff",
         "byTariff": "Sales by Tariff",

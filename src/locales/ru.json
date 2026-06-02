@@ -1339,6 +1339,7 @@
       },
       "sales": {
         "totalSales": "Всего продаж",
+        "totalRevenue": "Выручка",
         "avgOrder": "Средний чек",
         "topTariff": "Топ тариф",
         "byTariff": "Продажи по тарифам",
