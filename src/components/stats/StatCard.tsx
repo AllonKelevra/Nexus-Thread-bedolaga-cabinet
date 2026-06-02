@@ -34,14 +34,14 @@ export function StatCard({
         {icon}
         <span>{label}</span>
       </div>
-      <div className="mt-1 flex items-baseline gap-1.5">
-        <span className={`truncate text-base font-semibold sm:text-lg ${valueClassName}`}>
+      <div className="mt-1">
+        <div className={`truncate text-base font-semibold sm:text-lg ${valueClassName}`}>
           {value}
-        </span>
+        </div>
         {trendStyle && (
-          <span className={`shrink-0 text-xs font-medium ${trendStyle.className}`}>
+          <div className={`mt-0.5 text-xs font-medium ${trendStyle.className}`}>
             {trendStyle.arrow} {Math.abs(delta!.percent)}%
-          </span>
+          </div>
         )}
       </div>
     </div>
