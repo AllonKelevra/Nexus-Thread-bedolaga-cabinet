@@ -1380,6 +1380,18 @@ input[type='checkbox']:hover:not(:checked) {
   background-color: rgb(var(--color-dark-600));
 }
 
+/* Recharts: bars, pie sectors and dots become focusable, so clicking one draws
+   the browser's focus outline — a visual artifact on read-only charts. Kill it. */
+.recharts-wrapper:focus,
+.recharts-wrapper:focus-visible,
+.recharts-wrapper :focus,
+.recharts-wrapper :focus-visible,
+.recharts-surface,
+.recharts-sector,
+.recharts-rectangle {
+  outline: none;
+}
+
 .light input[type='checkbox'] {
   border-color: rgb(var(--color-champagne-400));
   background-color: rgb(var(--color-champagne-100));
