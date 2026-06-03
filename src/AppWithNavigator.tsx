@@ -16,6 +16,7 @@ import { ToastProvider } from './components/Toast';
 import { TooltipProvider } from './components/primitives/Tooltip';
 import { isInTelegramWebApp } from './hooks/useTelegramSDK';
 import { hasInAppHistory, getFallbackParentPath } from './utils/navigation';
+import { NexusThreadBackground, useCustomDesignMode } from './custom/design';
 
 const TWEMOJI_OPTIONS = { className: 'twemoji', folder: 'svg', ext: '.svg' } as const;
 
@@ -71,11 +72,17 @@ function TelegramBackButton() {
   return null;
 }
 
+function CustomDesignBootstrap() {
+  const { data } = useCustomDesignMode();
+  return data?.enabled ? <NexusThreadBackground /> : null;
+}
+
 export function AppWithNavigator() {
   const isTelegram = isInTelegramWebApp();
 
   return (
     <BrowserRouter>
+      <CustomDesignBootstrap />
       {isTelegram && <TelegramBackButton />}
       <ErrorBoundary level="page">
         <PlatformProvider>

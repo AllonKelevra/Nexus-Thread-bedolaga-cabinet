@@ -17,6 +17,12 @@ const fadeInOut = (t: number, m: number) => {
 };
 const rand = (n: number) => n * Math.random();
 const randRange = (n: number) => n - rand(2 * n);
+const getSafeCanvasSize = (canvas: HTMLCanvasElement): [number, number] => {
+  const parent = canvas.parentElement;
+  const width = parent?.offsetWidth || window.innerWidth || 1;
+  const height = parent?.offsetHeight || window.innerHeight || 1;
+  return [Math.max(1, width), Math.max(1, height)];
+};
 
 interface VortexState {
   ctx: CanvasRenderingContext2D;
@@ -46,9 +52,7 @@ export default function VortexBackground({ settings }: Props) {
     if (!canvas) return;
 
     const dpr = getMobileDpr();
-    const parent = canvas.parentElement;
-    const w = parent?.offsetWidth ?? window.innerWidth;
-    const h = parent?.offsetHeight ?? window.innerHeight;
+    const [w, h] = getSafeCanvasSize(canvas);
     canvas.width = w * dpr;
     canvas.height = h * dpr;
     canvas.style.width = `${w}px`;
@@ -79,8 +83,7 @@ export default function VortexBackground({ settings }: Props) {
     stateRef.current = { ctx, noise3D, particleProps, tick: 0, center, w, h, dpr };
 
     const onResize = () => {
-      const nw = parent?.offsetWidth ?? window.innerWidth;
-      const nh = parent?.offsetHeight ?? window.innerHeight;
+      const [nw, nh] = getSafeCanvasSize(canvas);
       canvas.width = nw * dpr;
       canvas.height = nh * dpr;
       canvas.style.width = `${nw}px`;
@@ -103,6 +106,7 @@ export default function VortexBackground({ settings }: Props) {
     if (!state) return;
 
     const { ctx, noise3D, particleProps, w, h } = state;
+    if (w <= 0 || h <= 0 || ctx.canvas.width <= 0 || ctx.canvas.height <= 0) return;
     const particlePropsLength = particleCount * particlePropCount;
 
     state.tick++;
@@ -157,7 +161,9 @@ export default function VortexBackground({ settings }: Props) {
       ctx.filter = 'blur(8px) brightness(200%)';
       ctx.globalCompositeOperation = 'lighter';
       const canvas = canvasRef.current;
-      if (canvas) ctx.drawImage(canvas, 0, 0, w, h);
+      if (canvas && canvas.width > 0 && canvas.height > 0 && w > 0 && h > 0) {
+        ctx.drawImage(canvas, 0, 0, w, h);
+      }
       ctx.restore();
     }
   }, [particleCount, rangeY, baseHue, rangeSpeed, backgroundColor]);

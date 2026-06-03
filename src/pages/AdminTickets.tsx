@@ -3,7 +3,7 @@ import logger from '../utils/logger';
 import { linkifyText } from '../utils/linkify';
 import { MessageMediaGrid } from '../components/tickets/MessageMediaGrid';
 import { useNavigate } from 'react-router';
-import { SbpConfirmButton } from '../components/tickets/SbpConfirmButton';
+import { SbpTicketActions } from '../custom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { adminApi, AdminTicket, AdminTicketDetail } from '../api/admin';
@@ -99,18 +99,6 @@ export default function AdminTickets() {
   const { data: selectedTicket, isLoading: ticketLoading } = useQuery({
     queryKey: ['admin-ticket', selectedTicketId],
     queryFn: () => adminApi.getTicket(selectedTicketId!),
-    enabled: !!selectedTicketId,
-  });
-
-
-  // Check if SBP confirm button should be shown
-  const { data: ticketActions } = useQuery({
-    queryKey: ["ticket-actions", selectedTicketId],
-    queryFn: async () => {
-      if (!selectedTicketId) return null;
-      const resp = await fetch(`/api/cabinet/balance/ticket-actions/${selectedTicketId}`, { credentials: "include" });
-      return resp.ok ? resp.json() : null;
-    },
     enabled: !!selectedTicketId,
   });
   const statusMutation = useMutation({
@@ -574,13 +562,8 @@ export default function AdminTickets() {
                 ))}
               </div>
 
-              {/* SBP payment confirmation */}
-              {ticketActions?.has_sbp_confirm && selectedTicket && (
-                <SbpConfirmButton
-                  ticketId={selectedTicket.id}
-                  onConfirm={() => queryClient.invalidateQueries({ queryKey: ["admin-ticket", selectedTicketId] })}
-                />
-              )}
+              {/* Custom ticket actions */}
+              <SbpTicketActions ticketId={selectedTicket.id} />
 
               {/* Reply form */}
               {selectedTicket.status !== 'closed' && (

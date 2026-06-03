@@ -373,15 +373,7 @@ function PeriodCard({
   );
 }
 
-function PaymentModeToggle({
-  mode,
-  onToggle,
-  balanceLabel,
-}: {
-  mode: 'balance' | 'gateway';
-  onToggle: (mode: 'balance' | 'gateway') => void;
-  balanceLabel: string;
-}) {
+function PaymentModeToggle({ balanceLabel }: { balanceLabel: string }) {
   const { t } = useTranslation();
 
   return (
@@ -392,29 +384,12 @@ function PaymentModeToggle({
     >
       <button
         type="button"
-        onClick={() => onToggle('balance')}
-        aria-pressed={mode === 'balance'}
+        aria-pressed
         className={cn(
-          'flex-1 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200',
-          mode === 'balance'
-            ? 'bg-dark-700 text-dark-50 shadow-sm'
-            : 'text-dark-400 hover:text-dark-200',
+          'w-full rounded-lg bg-dark-700 px-4 py-2.5 text-sm font-medium text-dark-50 shadow-sm transition-all duration-200',
         )}
       >
         {balanceLabel}
-      </button>
-      <button
-        type="button"
-        onClick={() => onToggle('gateway')}
-        aria-pressed={mode === 'gateway'}
-        className={cn(
-          'flex-1 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200',
-          mode === 'gateway'
-            ? 'bg-dark-700 text-dark-50 shadow-sm'
-            : 'text-dark-400 hover:text-dark-200',
-        )}
-      >
-        {t('gift.viaGateway')}
       </button>
     </div>
   );
@@ -512,7 +487,7 @@ function BuyTabContent({
   // Selection state
   const [selectedTariffId, setSelectedTariffId] = useState<number | null>(null);
   const [selectedPeriodDays, setSelectedPeriodDays] = useState<number | null>(null);
-  const [paymentMode, setPaymentMode] = useState<'balance' | 'gateway'>('balance');
+  const [paymentMode] = useState<'balance' | 'gateway'>('balance');
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [selectedSubOption, setSelectedSubOption] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -755,11 +730,7 @@ function BuyTabContent({
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-dark-400">
           {t('gift.paymentMode')}
         </h2>
-        <PaymentModeToggle
-          mode={paymentMode}
-          onToggle={setPaymentMode}
-          balanceLabel={balanceLabel}
-        />
+        <PaymentModeToggle balanceLabel={balanceLabel} />
       </div>
 
       {/* Payment method cards (gateway mode only) */}

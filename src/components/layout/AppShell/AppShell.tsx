@@ -26,6 +26,7 @@ import { SubscriptionIcon, GiftIcon } from '@/components/icons';
 import { MobileBottomNav } from './MobileBottomNav';
 import { AppHeader } from './AppHeader';
 import { BackgroundRenderer } from '@/components/backgrounds/BackgroundRenderer';
+import { useCustomDesignMode } from '@/custom/design';
 
 // Desktop nav icons
 const HomeIcon = ({ className }: { className?: string }) => (
@@ -206,6 +207,7 @@ export function AppShell({ children }: AppShellProps) {
   // Extracted hooks
   const { appName, logoLetter, hasCustomLogo, logoUrl } = useBranding();
   const { referralEnabled, wheelEnabled, hasContests, hasPolls, giftEnabled } = useFeatureFlags();
+  const { data: customDesign } = useCustomDesignMode();
   useScrollRestoration();
 
   // Theme toggle visibility
@@ -281,7 +283,7 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <div className="min-h-viewport">
       {/* Animated background renders via portal on document.body at z-index: -1 */}
-      <BackgroundRenderer />
+      {!customDesign?.enabled && <BackgroundRenderer />}
 
       {/* Global components */}
       <WebSocketNotifications />

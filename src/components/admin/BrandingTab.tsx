@@ -1,11 +1,12 @@
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { brandingApi, setCachedBranding } from '../../api/branding';
+import { brandingApi, preloadLogo, setCachedBranding } from '../../api/branding';
 import { setCachedFullscreenEnabled } from '../../hooks/useTelegramSDK';
 import { UploadIcon, TrashIcon, PencilIcon, CheckIcon, CloseIcon } from './icons';
 import { Toggle } from './Toggle';
 import { BackgroundEditor } from './BackgroundEditor';
+import { NexusDesignToggle } from '@/custom/design';
 
 interface BrandingTabProps {
   accentColor?: string;
@@ -22,7 +23,11 @@ export function BrandingTab({ accentColor = '#3b82f6' }: BrandingTabProps) {
   // Queries
   const { data: branding } = useQuery({
     queryKey: ['branding'],
-    queryFn: brandingApi.getBranding,
+    queryFn: async () => {
+      const data = await brandingApi.getBranding();
+      await preloadLogo(data);
+      return data;
+    },
   });
 
   const { data: fullscreenSettings } = useQuery({
@@ -43,7 +48,8 @@ export function BrandingTab({ accentColor = '#3b82f6' }: BrandingTabProps) {
   // Mutations
   const updateBrandingMutation = useMutation({
     mutationFn: brandingApi.updateName,
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      await preloadLogo(data);
       setCachedBranding(data);
       queryClient.invalidateQueries({ queryKey: ['branding'] });
       setEditingName(false);
@@ -52,7 +58,8 @@ export function BrandingTab({ accentColor = '#3b82f6' }: BrandingTabProps) {
 
   const uploadLogoMutation = useMutation({
     mutationFn: brandingApi.uploadLogo,
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      await preloadLogo(data);
       setCachedBranding(data);
       queryClient.invalidateQueries({ queryKey: ['branding'] });
     },
@@ -95,6 +102,8 @@ export function BrandingTab({ accentColor = '#3b82f6' }: BrandingTabProps) {
     }
   };
 
+  const logoUrl = branding ? brandingApi.getLogoUrl(branding) : null;
+
   return (
     <div className="space-y-6">
       {/* Logo & Name */}
@@ -112,9 +121,9 @@ export function BrandingTab({ accentColor = '#3b82f6' }: BrandingTabProps) {
                 background: `linear-gradient(135deg, ${accentColor}, ${accentColor}dd)`,
               }}
             >
-              {branding?.has_custom_logo ? (
+              {branding?.has_custom_logo && logoUrl ? (
                 <img
-                  src={brandingApi.getLogoUrl(branding) ?? undefined}
+                  src={logoUrl}
                   alt="Logo"
                   loading="lazy"
                   className="h-full w-full object-cover"
@@ -198,6 +207,9 @@ export function BrandingTab({ accentColor = '#3b82f6' }: BrandingTabProps) {
           </div>
         </div>
       </div>
+
+      {/* Custom Design */}
+      <NexusDesignToggle />
 
       {/* Animated Background Editor */}
       <div className="rounded-2xl border border-dark-700/50 bg-dark-800/50 p-6">

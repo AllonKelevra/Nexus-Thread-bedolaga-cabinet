@@ -28,6 +28,10 @@ export interface GiftEnabled {
   enabled: boolean;
 }
 
+export interface CustomDesignEnabled {
+  enabled: boolean;
+}
+
 export interface TelegramWidgetConfig {
   bot_username: string;
   size: 'large' | 'medium' | 'small';
@@ -119,11 +123,8 @@ export const preloadLogo = async (branding: BrandingInfo): Promise<void> => {
   }
 
   try {
-    const logoUrl = `${import.meta.env.VITE_API_URL || ''}${branding.logo_url}`;
-    const response = await fetch(logoUrl);
-    if (!response.ok) return;
-
-    const blob = await response.blob();
+    const response = await apiClient.get<Blob>(branding.logo_url, { responseType: 'blob' });
+    const blob = response.data;
     // Revoke previous blob URL if exists
     if (_logoBlobUrl) {
       URL.revokeObjectURL(_logoBlobUrl);
@@ -273,6 +274,24 @@ export const brandingApi = {
   // Update gift enabled (admin only)
   updateGiftEnabled: async (enabled: boolean): Promise<GiftEnabled> => {
     const response = await apiClient.patch<GiftEnabled>('/cabinet/branding/gift-enabled', {
+      enabled,
+    });
+    return response.data;
+  },
+
+  // Get Nexus Thread custom design enabled (public, no auth required)
+  getCustomDesignEnabled: async (): Promise<CustomDesignEnabled> => {
+    try {
+      const response = await apiClient.get<CustomDesignEnabled>('/cabinet/branding/custom-design');
+      return response.data;
+    } catch {
+      return { enabled: false };
+    }
+  },
+
+  // Update Nexus Thread custom design enabled (Superadmin only)
+  updateCustomDesignEnabled: async (enabled: boolean): Promise<CustomDesignEnabled> => {
+    const response = await apiClient.patch<CustomDesignEnabled>('/cabinet/branding/custom-design', {
       enabled,
     });
     return response.data;

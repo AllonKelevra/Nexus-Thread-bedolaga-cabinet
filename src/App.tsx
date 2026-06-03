@@ -70,6 +70,10 @@ const AutoLogin = lazyWithRetry(() => import('./pages/AutoLogin'));
 const TopUpMethodSelect = lazyWithRetry(() => import('./pages/TopUpMethodSelect'));
 const TopUpAmount = lazyWithRetry(() => import('./pages/TopUpAmount'));
 const TopUpResult = lazyWithRetry(() => import('./pages/TopUpResult'));
+const SbpManualTopUpPage = lazyWithRetry(() => import('./custom/sbp/SbpManualTopUpPage'));
+const YooMoneyDonateTopUpPage = lazyWithRetry(
+  () => import('./custom/yoomoney/YooMoneyDonateTopUpPage'),
+);
 const ConnectedAccounts = lazyWithRetry(() => import('./pages/ConnectedAccounts'));
 const LinkTelegramCallback = lazyWithRetry(() => import('./pages/LinkTelegramCallback'));
 const MergeAccounts = lazyWithRetry(() => import('./pages/MergeAccounts'));
@@ -390,6 +394,26 @@ function App() {
             <ProtectedRoute withLayout={false}>
               <LazyPage>
                 <TopUpResult />
+              </LazyPage>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/balance/top-up/manual"
+          element={
+            <ProtectedRoute>
+              <LazyPage>
+                <SbpManualTopUpPage />
+              </LazyPage>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/balance/top-up/yoomoney_donate"
+          element={
+            <ProtectedRoute>
+              <LazyPage>
+                <YooMoneyDonateTopUpPage />
               </LazyPage>
             </ProtectedRoute>
           }
