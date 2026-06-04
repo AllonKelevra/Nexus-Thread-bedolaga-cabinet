@@ -20,6 +20,7 @@ import CampaignBonusNotifier from '@/components/CampaignBonusNotifier';
 import SuccessNotificationModal from '@/components/SuccessNotificationModal';
 import { PromptDialogHost } from '@/components/PromptDialogHost';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import TelegramProxyButton from '@/components/TelegramProxyButton';
 import TicketNotificationBell from '@/components/TicketNotificationBell';
 import {
   SubscriptionIcon,
@@ -269,6 +270,7 @@ export function AppShell({ children }: AppShellProps) {
             >
               {isDark ? <MoonIcon className="h-5 w-5" /> : <SunIcon className="h-5 w-5" />}
             </button>
+            <TelegramProxyButton />
             <TicketNotificationBell isAdmin={location.pathname.startsWith('/admin')} />
             <LanguageSwitcher />
             <button
