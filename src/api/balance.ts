@@ -8,6 +8,8 @@ import type {
   PendingPayment,
   ManualCheckResponse,
   SavedCardsResponse,
+  ManualProviderConfig,
+  YooMoneyProviderConfig,
 } from '../types';
 
 export const balanceApi = {
@@ -35,6 +37,15 @@ export const balanceApi = {
   // Get available payment methods
   getPaymentMethods: async (): Promise<PaymentMethod[]> => {
     const response = await apiClient.get<PaymentMethod[]>('/cabinet/balance/payment-methods');
+    return response.data;
+  },
+
+  getCustomPaymentConfig: async <T = ManualProviderConfig | YooMoneyProviderConfig>(
+    methodId: string,
+  ): Promise<T> => {
+    const response = await apiClient.get<T>(
+      `/cabinet/balance/custom-payment-config/${encodeURIComponent(methodId)}`,
+    );
     return response.data;
   },
 

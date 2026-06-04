@@ -8,6 +8,7 @@ import type { PromoGroupSimple } from '../types';
 import { usePlatform } from '../platform/hooks/usePlatform';
 import { createNumberInputHandler, toNumber } from '../utils/inputHelpers';
 import { BackIcon, CheckIcon, SaveIcon } from '@/components/icons';
+import { PaymentProviderConfigEditor } from '../components/admin/PaymentProviderConfigEditor';
 
 export default function AdminPaymentMethodEdit() {
   const { t } = useTranslation();
@@ -422,6 +423,10 @@ export default function AdminPaymentMethodEdit() {
           </div>
         </div>
       </div>
+
+      {(methodId === 'manual' || methodId === 'yoomoney_donate') && (
+        <PaymentProviderConfigEditor methodId={methodId} />
+      )}
 
       {/* Actions */}
       <div className="flex items-center gap-3">

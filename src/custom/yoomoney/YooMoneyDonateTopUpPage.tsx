@@ -10,6 +10,7 @@ import { staggerContainer, staggerItem } from '../../components/motion/transitio
 import { useCurrency } from '../../hooks/useCurrency';
 import { yoomoneyApi } from './api';
 import type { YooMoneyAutoPaymentResponse } from './types';
+import type { YooMoneyProviderConfig } from '../../types';
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof AxiosError) {
@@ -31,18 +32,23 @@ export default function YooMoneyDonateTopUpPage() {
     queryKey: ['payment-methods'],
     queryFn: balanceApi.getPaymentMethods,
   });
+  const { data: providerConfig, isLoading: isProviderLoading } = useQuery<YooMoneyProviderConfig>({
+    queryKey: ['custom-payment-config', 'yoomoney_donate'],
+    queryFn: () => balanceApi.getCustomPaymentConfig<YooMoneyProviderConfig>('yoomoney_donate'),
+  });
 
   const yoomoneyMethod = paymentMethods?.find((method) => method.id === 'yoomoney_donate');
   const minRubles = yoomoneyMethod ? yoomoneyMethod.min_amount_kopeks / 100 : 100;
   const maxRubles = yoomoneyMethod ? yoomoneyMethod.max_amount_kopeks / 100 : 50000;
-  const quickAmounts = [100, 300, 500, 1000].filter(
-    (value) => value >= minRubles && value <= maxRubles,
-  );
+  const quickAmounts = (providerConfig?.quick_amounts_kopeks ?? [])
+    .map((value) => value / 100)
+    .filter((value) => value >= minRubles && value <= maxRubles);
+  const feePercent = (providerConfig?.fee_basis_points ?? 0) / 100;
   const creditPreview = useMemo(() => {
     const amountCurrency = Number.parseFloat(amount);
     if (Number.isNaN(amountCurrency) || amountCurrency <= 0) return null;
-    return convertToRub(amountCurrency) * 0.97;
-  }, [amount, convertToRub]);
+    return convertToRub(amountCurrency) * (1 - feePercent / 100);
+  }, [amount, convertToRub, feePercent]);
 
   const getAmountKopeks = (): number | null => {
     if (!yoomoneyMethod || !yoomoneyMethod.is_available) {
@@ -110,7 +116,7 @@ export default function YooMoneyDonateTopUpPage() {
 
   const isAutoPending = createAutoPaymentMutation.isPending;
 
-  if (isLoading) {
+  if (isLoading || isProviderLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
@@ -128,9 +134,7 @@ export default function YooMoneyDonateTopUpPage() {
       <motion.div variants={staggerItem} className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-dark-50 sm:text-3xl">YooMoney</h1>
-          <p className="mt-1 text-sm text-dark-400">
-            Оплата картой, комиссия 3%, автоматическое пополнение
-          </p>
+          <p className="mt-1 text-sm text-dark-400">{providerConfig?.description}</p>
         </div>
         <button
           type="button"
@@ -188,7 +192,7 @@ export default function YooMoneyDonateTopUpPage() {
             </div>
             {creditPreview !== null && (
               <p className="text-xs text-dark-400">
-                К зачислению после комиссии 3%: {formatAmount(creditPreview, 0)} ₽
+                К зачислению после комиссии {feePercent}%: {formatAmount(creditPreview, 0)} ₽
               </p>
             )}
           </div>

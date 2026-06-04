@@ -702,6 +702,41 @@ export interface PromoGroupSimple {
   name: string;
 }
 
+export interface SecretStatus {
+  configured: boolean;
+  source: 'database' | 'environment' | 'none';
+  updated_at: string | null;
+}
+
+export interface SbpBankConfig {
+  id: string;
+  label: string;
+  enabled: boolean;
+  sort_order: number;
+  recommended: boolean;
+}
+
+export interface ManualProviderConfig {
+  phone: string;
+  banks: SbpBankConfig[];
+  instruction_html: string;
+  description: string;
+  quick_amounts_kopeks: number[];
+}
+
+export interface YooMoneyProviderConfig {
+  receiver_wallet: string;
+  fee_basis_points: number;
+  description: string;
+  quick_amounts_kopeks: number[];
+}
+
+export interface ProviderConfigResponse<T = ManualProviderConfig | YooMoneyProviderConfig> {
+  method_id: string;
+  config: T;
+  secret_status: SecretStatus | null;
+}
+
 // Account Linking
 export interface LinkedProvider {
   provider: string;

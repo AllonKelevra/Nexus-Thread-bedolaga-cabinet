@@ -3,6 +3,7 @@ import { AxiosError } from 'axios';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router';
 import { motion } from 'framer-motion';
+import DOMPurify from 'dompurify';
 
 import { balanceApi } from '../../api/balance';
 import { Card } from '../../components/data-display/Card';
@@ -10,13 +11,7 @@ import { staggerContainer, staggerItem } from '../../components/motion/transitio
 import { useCurrency } from '../../hooks/useCurrency';
 import { sbpApi } from './api';
 import type { SbpTicketCreateResponse } from './types';
-
-const BANKS = [
-  { id: 'yandex', label: 'Яндекс', note: 'рекомендуется' },
-  { id: 'alfa', label: 'Альфа Банк' },
-  { id: 'tbank', label: 'Т-Банк' },
-  { id: 'sber', label: 'Сбербанк' },
-];
+import type { ManualProviderConfig } from '../../types';
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof AxiosError) {
@@ -46,7 +41,7 @@ export default function SbpManualTopUpPage() {
   }, [convertAmount, initialAmountRubles, targetCurrency]);
 
   const [amount, setAmount] = useState(initialAmount);
-  const [bank, setBank] = useState('yandex');
+  const [bank, setBank] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [createdTicket, setCreatedTicket] = useState<SbpTicketCreateResponse | null>(null);
 
@@ -54,17 +49,23 @@ export default function SbpManualTopUpPage() {
     queryKey: ['payment-methods'],
     queryFn: balanceApi.getPaymentMethods,
   });
+  const { data: providerConfig, isLoading: isProviderLoading } = useQuery<ManualProviderConfig>({
+    queryKey: ['custom-payment-config', 'manual'],
+    queryFn: () => balanceApi.getCustomPaymentConfig<ManualProviderConfig>('manual'),
+  });
 
   const manualMethod = paymentMethods?.find((method) => method.id === 'manual');
   const minRubles = manualMethod ? manualMethod.min_amount_kopeks / 100 : 100;
   const maxRubles = manualMethod ? manualMethod.max_amount_kopeks / 100 : 50000;
-  const quickAmounts = [100, 300, 500, 1000].filter(
-    (value) => value >= minRubles && value <= maxRubles,
-  );
+  const quickAmounts = (providerConfig?.quick_amounts_kopeks ?? [])
+    .map((value) => value / 100)
+    .filter((value) => value >= minRubles && value <= maxRubles);
+  const banks = providerConfig?.banks ?? [];
+  const selectedBank = bank || banks[0]?.id || '';
 
   const createTicketMutation = useMutation({
     mutationFn: (amountKopeks: number) =>
-      sbpApi.createTicket({ amount_kopeks: amountKopeks, bank }),
+      sbpApi.createTicket({ amount_kopeks: amountKopeks, bank: selectedBank }),
     onSuccess: async (data) => {
       setCreatedTicket(data);
       setError(null);
@@ -103,7 +104,7 @@ export default function SbpManualTopUpPage() {
 
   const isPending = createTicketMutation.isPending;
 
-  if (isLoading) {
+  if (isLoading || isProviderLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
@@ -141,30 +142,24 @@ export default function SbpManualTopUpPage() {
           <div className="rounded-xl border border-accent-500/20 bg-accent-500/10 p-4 text-sm text-dark-200">
             <div className="font-semibold text-accent-400">Инструкция:</div>
             <div className="mt-3 space-y-3 leading-relaxed text-dark-300">
-              <p>Для пополнения баланса направьте перевод по номеру телефона через СБП.</p>
               <div>
                 <span className="text-base">📱</span> <span className="text-dark-400">Номер:</span>{' '}
-                <span className="font-semibold text-dark-100">REMOVED_PAYMENT_PHONE</span>
+                <span className="font-semibold text-dark-100">{providerConfig?.phone}</span>
               </div>
-              <p>Переведите выбранную сумму через СБП на один из банков ниже.</p>
-              <p>После перевода нажмите «Я перевёл», чтобы создать тикет на проверку.</p>
-              <div className="border-t border-accent-500/15 pt-3">
-                <p>Администратор проверит ваш перевод и пополнит ваш баланс.</p>
-                <p className="mt-2 text-dark-400">
-                  <span className="text-base">⏱️</span> Время пополнения до 2-х часов.
-                </p>
-                <p className="text-dark-500">
-                  Обработка платежа в нерабочие часы может занять больше времени.
-                </p>
-              </div>
+              <div
+                className="prose prose-invert prose-sm max-w-none"
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(providerConfig?.instruction_html ?? ''),
+                }}
+              />
             </div>
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-dark-400">Банк получателя</label>
             <div className="grid grid-cols-2 gap-2">
-              {BANKS.map((item) => {
-                const selected = bank === item.id;
+              {banks.map((item) => {
+                const selected = selectedBank === item.id;
                 return (
                   <button
                     key={item.id}
@@ -177,8 +172,10 @@ export default function SbpManualTopUpPage() {
                     }`}
                   >
                     <span>{item.label}</span>
-                    {item.note && (
-                      <span className="ml-2 text-xs font-medium text-warning-400">{item.note}</span>
+                    {item.recommended && (
+                      <span className="ml-2 text-xs font-medium text-warning-400">
+                        рекомендуется
+                      </span>
                     )}
                   </button>
                 );
