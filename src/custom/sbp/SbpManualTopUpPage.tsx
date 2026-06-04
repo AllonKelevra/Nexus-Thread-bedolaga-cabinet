@@ -265,7 +265,7 @@ export default function SbpManualTopUpPage() {
               <button
                 type="button"
                 onClick={() => navigate('/')}
-                className="w-full rounded-xl border border-success-500/40 bg-success-500/15 px-4 py-3 text-sm font-semibold text-success-300 transition-colors hover:bg-success-500/25 active:bg-success-500/30"
+                className="w-full rounded-xl bg-accent-500 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-accent-600 active:bg-accent-700"
               >
                 Вернуться домой
               </button>
