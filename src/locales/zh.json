@@ -1536,7 +1536,9 @@
           "emoji": "表情",
           "color": "颜色",
           "active": "启用",
-          "worth": "价值"
+          "worth": "价值",
+          "probability": "手动概率 (0–1)",
+          "probabilityHint": "留空 = 按 RTP 自动"
         },
         "promo": {
           "title": "优惠码设置",

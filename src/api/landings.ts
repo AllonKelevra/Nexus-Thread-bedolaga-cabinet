@@ -134,6 +134,17 @@ export interface PurchaseStatus {
   auto_login_token: string | null;
   recipient_in_bot: boolean | null;
   bot_link: string | null;
+  is_claimable?: boolean;
+  bot_claim_link?: string | null;
+}
+
+export interface GiftClaimResult {
+  status: string;
+  tariff_name: string | null;
+  period_days: number | null;
+  subscription_url: string | null;
+  subscription_crypto_link: string | null;
+  auto_login_token: string | null;
 }
 
 /** Locale dict for multi-language text fields (admin API) */
@@ -277,6 +288,16 @@ export const landingApi = {
 
   activatePurchase: async (token: string): Promise<PurchaseStatus> => {
     const response = await apiClient.post(`/cabinet/landing/activate/${token}`);
+    return response.data;
+  },
+
+  getGiftClaim: async (token: string): Promise<PurchaseStatus> => {
+    const response = await apiClient.get(`/cabinet/landing/gift/${token}`);
+    return response.data;
+  },
+
+  claimGift: async (token: string, email: string): Promise<GiftClaimResult> => {
+    const response = await apiClient.post(`/cabinet/landing/gift/${token}/claim`, { email });
     return response.data;
   },
 };

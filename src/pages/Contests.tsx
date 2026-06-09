@@ -205,7 +205,7 @@ export default function Contests() {
                     <p className="mt-1 text-sm text-dark-400">{contest.description}</p>
                   )}
                 </div>
-                <div className="flex items-center gap-1 text-accent-400">
+                <div className="flex shrink-0 items-center gap-1 text-accent-400">
                   <TrophyIcon />
                   <span className="text-sm font-medium">
                     +{t('contests.days', { count: contest.prize_days })}

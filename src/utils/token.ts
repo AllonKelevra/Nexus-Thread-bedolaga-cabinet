@@ -5,6 +5,8 @@ import {
   deleteCloudStorageItem,
 } from '@telegram-apps/sdk-react';
 import { isInTelegramWebApp } from '../hooks/useTelegramSDK';
+import { API } from '../config/constants';
+import { reportPossibleBackendDown } from '../api/health';
 
 const TOKEN_KEYS = {
   ACCESS: 'access_token',
@@ -204,6 +206,7 @@ class TokenRefreshManager {
   private refreshPromise: Promise<string | null> | null = null;
   private subscribers: ((token: string | null) => void)[] = [];
   private refreshEndpoint = '/api/cabinet/auth/refresh';
+  lastFailureWasTransport = false;
 
   setRefreshEndpoint(endpoint: string): void {
     this.refreshEndpoint = endpoint;
@@ -213,6 +216,8 @@ class TokenRefreshManager {
     if (this.isRefreshing && this.refreshPromise) {
       return this.refreshPromise;
     }
+
+    this.lastFailureWasTransport = false;
 
     const refreshToken = tokenStorage.getRefreshToken();
     if (!refreshToken) {
@@ -238,7 +243,7 @@ class TokenRefreshManager {
       const response = await axios.post<{ access_token?: string }>(
         this.refreshEndpoint,
         { refresh_token: refreshToken },
-        { headers: { 'Content-Type': 'application/json' } },
+        { headers: { 'Content-Type': 'application/json' }, timeout: API.TIMEOUT_MS },
       );
 
       const newAccessToken = response.data.access_token;
@@ -249,7 +254,11 @@ class TokenRefreshManager {
       }
 
       return null;
-    } catch {
+    } catch (err) {
+      if (axios.isAxiosError(err) && !err.response) {
+        this.lastFailureWasTransport = true;
+        void reportPossibleBackendDown();
+      }
       return null;
     }
   }

@@ -100,7 +100,6 @@ export default function ChannelSubscriptionScreen() {
             <TelegramIcon className="h-12 w-12 text-blue-400" />
           </div>
         </div>
-
         {/* Title */}
         <h1 id="channel-sub-title" className="mb-4 text-2xl font-bold text-white">
           {t('blocking.channel.title')}

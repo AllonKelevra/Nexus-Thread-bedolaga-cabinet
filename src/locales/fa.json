@@ -1459,7 +1459,9 @@
           "emoji": "ایموجی",
           "color": "رنگ",
           "active": "فعال",
-          "worth": "ارزش"
+          "worth": "ارزش",
+          "probability": "احتمال دستی (۰–۱)",
+          "probabilityHint": "خالی = خودکار بر اساس RTP"
         },
         "promo": {
           "title": "تنظیمات کد تخفیف",

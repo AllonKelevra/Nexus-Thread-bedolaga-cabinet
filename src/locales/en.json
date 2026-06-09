@@ -1783,7 +1783,9 @@
           "emoji": "Emoji",
           "color": "Color",
           "active": "Active",
-          "worth": "Worth"
+          "worth": "Worth",
+          "probability": "Manual probability (0–1)",
+          "probabilityHint": "Empty = auto by RTP"
         },
         "promo": {
           "title": "Promo Code Settings",
